@@ -59,7 +59,11 @@ src/
 │       ├── supervised-learning.ts
 │       ├── unsupervised-learning.ts
 │       ├── deep-learning.ts
-│       └── model-evaluation.ts
+│       ├── model-evaluation.ts
+│       ├── neural-networks.ts
+│       ├── cnn.ts
+│       ├── transformers.ts
+│       └── generative-models.ts
 ├── hooks/
 │   ├── usePyodide.ts    # Python execution hook
 │   └── useProgress.ts   # Progress tracking (if needed separately)
@@ -75,8 +79,8 @@ src/
 ## Key Files to Understand
 
 ### Data Layer
-- **`src/data/sections.ts`** - Defines the 6 learning sections with titles, descriptions, introductions (markdown), and problem IDs
-- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions
+- **`src/data/sections.ts`** - Defines the 10 learning sections with titles, descriptions, introductions (markdown), and problem IDs
+- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (~35 problems total)
 
 ### State Management
 - **`src/context/ProgressContext.tsx`** - React Context for tracking problem completion, saved code, stored in localStorage under key `ml-interview-progress`
@@ -86,6 +90,21 @@ src/
 
 ### Main UI
 - **`src/pages/ProblemPage.tsx`** - The main coding interface with split panes (problem description | code editor + console)
+
+## Current Sections & Problems
+
+| Section | File | Problems |
+|---------|------|----------|
+| **Python Basics for ML** | `python-basics.ts` | Array Sum, Matrix Multiply, Broadcast Add |
+| **Data Preprocessing** | `data-preprocessing.ts` | Normalize Features, Handle Missing Data, One-Hot Encode |
+| **Supervised Learning** | `supervised-learning.ts` | Linear Regression (GD), Sigmoid, Gini Impurity, Logistic Regression (full), Binary Cross-Entropy |
+| **Unsupervised Learning** | `unsupervised-learning.ts` | K-Means Clustering, PCA Implementation |
+| **Deep Learning Basics** | `deep-learning.ts` | Perceptron, Neural Network Forward, Backpropagation |
+| **Model Evaluation** | `model-evaluation.ts` | Precision/Recall/F1, Cross-Validation, Confusion Matrix |
+| **Neural Networks** | `neural-networks.ts` | Cross-Entropy Loss, MLP Forward Pass, Backprop Gradients, Weight Init (Xavier/He), Batch Normalization, Dropout |
+| **CNNs** | `cnn.ts` | Conv Output Size, 2D Convolution, Max Pooling, Flatten Layer |
+| **Transformers** | `transformers.ts` | Scaled Dot-Product Attention, Multi-Head Attention, Positional Encoding, Layer Normalization, Causal Mask |
+| **Generative Models** | `generative-models.ts` | KL Divergence, VAE Reparameterization, VAE Loss, Diffusion Noise Schedule, Diffusion Forward Process |
 
 ## Commands
 
@@ -192,6 +211,13 @@ The `base` path in `vite.config.ts` is set to `/ml-interview-prep/` for GitHub P
 3. **No code execution timeout** - Long-running code can freeze the browser
 4. **localStorage only** - Progress doesn't sync across devices
 
+## Content References
+
+The problem content was developed using these resources:
+- [CS231n: Convolutional Neural Networks for Visual Recognition](https://cs231n.github.io/) - Stanford's deep learning course
+- [CS231n Course Schedule](https://cs231n.stanford.edu/schedule.html) - Lecture topics and assignments
+- [ML Interview Grind](https://twopug.com/interview-prep-ml-grind/) - Common ML interview topics
+
 ## Future Improvements to Consider
 
 - Add more ML packages (sklearn, pandas)
@@ -202,6 +228,9 @@ The `base` path in `vite.config.ts` is set to `/ml-interview-prep/` for GitHub P
 - Add code submission history
 - Add discussion/comments section
 - Add dark/light theme toggle
+- Add RNN/LSTM section
+- Add reinforcement learning basics
+- Add more optimization algorithms (SGD variants, Adam details)
 
 ## Testing
 
