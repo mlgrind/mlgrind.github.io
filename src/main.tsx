@@ -7,7 +7,7 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/ml-interview-prep">
+    <BrowserRouter basename="/ml-coding-lab">
       <ProgressProvider>
         <App />
       </ProgressProvider>
