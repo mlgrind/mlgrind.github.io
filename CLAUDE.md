@@ -1,18 +1,18 @@
-# ML Interview Prep - Claude Project Guide
+# ML Coding Lab - Claude Project Guide
 
 This file contains context and instructions for Claude to work on this project effectively.
 
 ## Project Overview
 
-This is a LeetCode/HelloInterview-style web application for ML interview preparation. Users can:
+This is a LeetCode/HelloInterview-style web application for learning ML by building. Users can:
 - Read problem descriptions and theory introductions
 - Write Python code in a Monaco editor
 - Execute code in-browser via Pyodide (WebAssembly)
 - Run tests and see pass/fail results
 - Track progress across sections
 
-**Live site:** https://itzsid.github.io/ml-interview-prep/
-**Repository:** https://github.com/itzsid/ml-interview-prep
+**Live site:** https://itzsid.github.io/ml-coding-lab/
+**Repository:** https://github.com/itzsid/ml-coding-lab
 
 ## Tech Stack
 
@@ -229,7 +229,7 @@ The site deploys to GitHub Pages via the `gh-pages` npm package:
 npm run deploy   # Builds and pushes to gh-pages branch
 ```
 
-The `base` path in `vite.config.ts` is set to `/ml-interview-prep/` for GitHub Pages.
+The `base` path in `vite.config.ts` is set to `/ml-coding-lab/` for GitHub Pages.
 
 ## Known Limitations
 
