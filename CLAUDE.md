@@ -187,6 +187,95 @@ def function_name(arr):
 
 3. Add the problem ID to the section's `problems` array in `src/data/sections.ts`
 
+### Problem Description Best Practices
+
+When writing problem descriptions, follow these guidelines to ensure clarity:
+
+#### 1. Always Document Dictionary Return Formats
+
+If a function returns a dictionary, **always** include an "Expected Return Format" section listing all required keys:
+
+```markdown
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'key1'\`: Description of what this contains
+- \`'key2'\`: Description of what this contains
+- \`'key3'\`: Description of what this contains
+```
+
+**Bad example** (vague):
+```typescript
+examples: [{ output: "{'zeros': array([[0,0,0,0],...]), ...}" }]
+```
+
+**Good example** (explicit):
+```typescript
+description: `
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'zeros'\`: 3x4 array of zeros
+- \`'ones'\`: 2x3 array of ones
+- \`'arange'\`: array from 0 to 9
+`,
+examples: [{ output: "{'zeros': shape (3,4), 'ones': shape (2,3), ...}" }]
+```
+
+#### 2. Ensure Example Keys Match Solution Keys
+
+The keys shown in examples must exactly match what the solution returns:
+
+**Wrong** (example uses different keys than solution):
+```typescript
+// Example shows 'shape_4x6' but solution returns 'arr_2d'
+examples: [{ output: "{'shape_4x6': (4,6), ...}" }]
+solution: `return { 'arr_2d': arr.reshape(4, 6), ... }`
+```
+
+**Correct** (keys match):
+```typescript
+examples: [{ output: "{'arr_2d': shape (4,6), ...}" }]
+solution: `return { 'arr_2d': arr.reshape(4, 6), ... }`
+```
+
+#### 3. Match Return Type in Docstring to Actual Return
+
+Ensure the docstring's return description matches what the solution actually returns:
+
+**Wrong** (docstring says matrix, but returns scalar):
+```python
+def initialize_weights(n_in, n_out):
+    """
+    Returns:
+        W: Initialized weight matrix (n_in, n_out)  # Wrong!
+    """
+    ...
+    return round(np.std(W), 4)  # Actually returns scalar
+```
+
+**Correct**:
+```python
+def initialize_weights(n_in, n_out):
+    """
+    Returns:
+        std: Standard deviation of initialized weights (rounded to 4 decimals)
+    """
+    ...
+    return round(np.std(W), 4)
+```
+
+#### 4. Organize Dictionary Keys by Category
+
+For functions returning many keys, group them logically:
+
+```markdown
+### Expected Return Format
+Return a dictionary with these keys:
+- **Global**: \`'global_mean'\`, \`'global_std'\`, \`'global_min'\`, \`'global_max'\`, \`'global_sum'\`
+- **Row-wise**: \`'row_mean'\`, \`'row_sum'\`
+- **Column-wise**: \`'col_mean'\`, \`'col_sum'\`
+- **Indices**: \`'argmax'\` (2D index tuple), \`'argmin'\` (2D index tuple)
+```
+
 ### Adding a New Section
 
 1. Add to `src/data/sections.ts`:
