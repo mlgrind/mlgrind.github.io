@@ -136,7 +136,7 @@ export default function ProblemPage() {
         gutterAlign="center"
       >
         {/* Left Panel - Problem Description */}
-        <div className="overflow-auto p-6 bg-gray-50">
+        <div className="problem-panel overflow-y-auto overflow-x-hidden p-6 bg-gray-50 min-w-0">
           <ProblemDescription problem={problem} />
           <Examples examples={problem.examples} />
           <Hints hints={problem.hints} solution={problem.solution} />

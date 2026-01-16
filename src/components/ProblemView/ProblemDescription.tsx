@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Problem } from '../../types';
 
 interface ProblemDescriptionProps {
@@ -7,7 +8,7 @@ interface ProblemDescriptionProps {
 
 export default function ProblemDescription({ problem }: ProblemDescriptionProps) {
   return (
-    <div className="prose prose-sm max-w-none">
+    <div className="prose prose-sm max-w-none overflow-hidden">
       <div className="flex items-center gap-3 mb-4">
         <h1 className="text-xl font-bold text-gray-900 m-0">{problem.title}</h1>
         <span
@@ -24,6 +25,7 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
       </div>
 
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           h2: ({ children }) => (
             <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3">{children}</h2>
@@ -44,7 +46,7 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
               );
             }
             return (
-              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-primary-600 text-sm">
+              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-primary-600 text-sm break-words">
                 {children}
               </code>
             );
@@ -53,6 +55,32 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
             <ul className="list-disc list-inside text-gray-600 space-y-1 mb-3">{children}</ul>
           ),
           li: ({ children }) => <li className="text-gray-600">{children}</li>,
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-4">
+              <table className="min-w-full border-collapse border border-gray-300 text-sm">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-gray-100">{children}</thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody className="divide-y divide-gray-200">{children}</tbody>
+          ),
+          tr: ({ children }) => (
+            <tr>{children}</tr>
+          ),
+          th: ({ children }) => (
+            <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-700">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-gray-300 px-3 py-2 text-gray-600">
+              {children}
+            </td>
+          ),
         }}
       >
         {problem.description}

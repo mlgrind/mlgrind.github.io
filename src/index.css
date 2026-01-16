@@ -77,3 +77,19 @@ code {
 .gutter:hover {
   background-color: #22c55e;
 }
+
+/* Problem description panel - prevent horizontal overflow */
+.problem-panel {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.problem-panel pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: hidden;
+}
+
+.problem-panel code {
+  word-break: break-all;
+}

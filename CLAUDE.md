@@ -28,6 +28,8 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 | Pyodide | In-browser Python | 0.26 |
 | React Router | Routing | 6.x |
 | Vitest | Testing | 2.x |
+| react-markdown | Markdown rendering | 9.x |
+| remark-gfm | GitHub Flavored Markdown (tables, etc.) | - |
 
 ## Project Structure
 
@@ -407,6 +409,57 @@ Before adding new test cases, verify they pass with the solution:
 - **Problem page layout**: `src/pages/ProblemPage.tsx` (uses react-split for panes)
 - **Editor settings**: `src/components/CodeEditor/CodeEditor.tsx`
 - **Styling**: Tailwind classes, theme colors in `tailwind.config.js`
+
+### Markdown Rendering
+
+Problem descriptions use `react-markdown` with `remark-gfm` for GitHub Flavored Markdown support (tables, strikethrough, etc.).
+
+**Key file**: `src/components/ProblemView/ProblemDescription.tsx`
+
+#### Table Support
+
+Tables require:
+1. `remark-gfm` plugin (already installed)
+2. Custom component renderers for `table`, `thead`, `tbody`, `tr`, `th`, `td`
+
+Example table in problem description:
+```markdown
+| Einsum | NumPy |
+|--------|-------|
+| `'ij->'` | `np.sum(A)` |
+```
+
+#### Preventing Horizontal Scrolling
+
+The left panel uses the `.problem-panel` CSS class (defined in `src/index.css`) to prevent horizontal overflow:
+
+```css
+.problem-panel {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.problem-panel pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: hidden;
+}
+
+.problem-panel code {
+  word-break: break-all;
+}
+```
+
+**Key strategies used:**
+1. `overflow-x-hidden` on the container
+2. `min-w-0` on flex children (fixes flexbox overflow issues)
+3. `break-words` / `break-all` on text elements
+4. `whitespace-pre-wrap` on `<pre>` tags (allows wrapping while preserving whitespace)
+
+**When adding new components to the problem panel**, ensure they:
+- Don't use `whitespace-nowrap` on text that could be long
+- Have proper overflow handling
+- Use `break-words` or `break-all` for long strings
 
 ### Fixing Python Execution Issues
 
