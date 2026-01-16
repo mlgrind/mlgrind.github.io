@@ -28,12 +28,23 @@ Learn tensor creation patterns used in PyTorch, implemented with NumPy.
 
 ### Task
 Create tensors matching PyTorch patterns.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'from_list'\`: Array from [1,2,3,4] with float32 dtype
+- \`'zeros'\`: Zero array of shape (3, 4)
+- \`'ones'\`: Ones array of shape (2, 3)
+- \`'randn'\`: Random normal array of shape (2, 3)
+- \`'arange'\`: Array from 0 to 9
+- \`'linspace'\`: 5 evenly spaced values from 0 to 1
+- \`'eye'\`: 4x4 identity matrix
+- \`'full'\`: (2, 3) array filled with 7.0
     `,
     examples: [
       {
         input: 'create_tensors()',
-        output: 'Dictionary of tensors',
-        explanation: 'Various tensor creation methods',
+        output: "{'zeros': shape (3,4), 'ones': shape (2,3), 'randn': shape (2,3), 'arange': [0..9], ...}",
+        explanation: 'Dictionary containing tensors created with various methods',
       },
     ],
     starterCode: `import numpy as np
@@ -114,12 +125,18 @@ Common tensor operations used in neural networks.
 
 ### Task
 Implement common tensor operations.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- **Arithmetic**: \`'add'\`, \`'sub'\`, \`'mul'\`, \`'div'\`, \`'pow'\`
+- **Reductions**: \`'sum_all'\`, \`'sum_axis0'\`, \`'sum_axis1'\`, \`'mean'\`, \`'std'\`, \`'max'\`, \`'argmax'\`
+- **Shape ops**: \`'reshape'\` (to 3,2), \`'flatten'\`, \`'unsqueeze'\` (add dim 0), \`'squeeze'\`, \`'transpose'\`
     `,
     examples: [
       {
-        input: 'tensor_ops(x, y)',
-        output: 'Dictionary with operation results',
-        explanation: 'Various tensor operations',
+        input: 'x=[[1,2,3],[4,5,6]], y=[[1,1,1],[2,2,2]]',
+        output: "{'add': [[2,3,4],[6,7,8]], 'mean': 3.5, 'reshape': [[1,2],[3,4],[5,6]], ...}",
+        explanation: 'Arithmetic, reduction, and shape operations on tensors',
       },
     ],
     starterCode: `import numpy as np

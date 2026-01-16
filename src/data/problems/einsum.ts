@@ -25,12 +25,20 @@ np.einsum('subscripts', operands)
 
 ### Task
 Implement basic einsum operations on a 2D array.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'sum_all'\`: Sum of all elements
+- \`'row_sum'\`: Sum along each row
+- \`'col_sum'\`: Sum along each column
+- \`'transpose'\`: Transposed array
+- \`'diagonal'\`: Diagonal elements (for square matrices, else None)
     `,
     examples: [
       {
         input: 'np.array([[1,2],[3,4]])',
-        output: "{'sum': 10, 'row_sum': [3,7], 'transpose': [[1,3],[2,4]]}",
-        explanation: 'Basic einsum operations',
+        output: "{'sum_all': 10, 'row_sum': [3,7], 'col_sum': [4,6], 'transpose': [[1,3],[2,4]], 'diagonal': [1,4]}",
+        explanation: 'Basic einsum operations on a 2x2 matrix',
       },
     ],
     starterCode: `import numpy as np
@@ -102,15 +110,19 @@ Einsum can express matrix multiplication and more complex operations.
 ### Task
 Implement matrix operations using einsum.
 
-### Function Signature
-\`\`\`python
-def einsum_matrix_ops(A: np.ndarray, B: np.ndarray, v: np.ndarray) -> dict:
-\`\`\`
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'matmul'\`: Matrix multiplication A @ B
+- \`'matvec'\`: Matrix-vector multiplication A @ v
+- \`'outer_product'\`: Outer product of v with itself
+- \`'hadamard'\`: Element-wise A * A
+- \`'frobenius'\`: Sum of A * A (Frobenius inner product)
+- \`'trace'\`: Trace of A (if square, else None)
     `,
     examples: [
       {
-        input: 'A (2,3), B (3,2), v (3,)',
-        output: "{'matmul': A@B, 'matvec': A@v, ...}",
+        input: 'A=[[1,2],[3,4]], B=[[5,6],[7,8]], v=[1,2]',
+        output: "{'matmul': [[19,22],[43,50]], 'matvec': [5,11], 'outer_product': [[1,2],[2,4]], 'hadamard': [[1,4],[9,16]], 'frobenius': 30, 'trace': 5}",
         explanation: 'Matrix operations via einsum',
       },
     ],
@@ -186,12 +198,18 @@ Einsum shines for batch operations - multiple matrices at once.
 
 ### Task
 Implement batch operations common in deep learning.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'scores'\`: Raw attention scores Q @ K.T per batch, shape (batch, seq_q, seq_k)
+- \`'attention_weights'\`: Softmax of scaled scores, shape (batch, seq_q, seq_k)
+- \`'output'\`: Weighted sum of values, shape (batch, seq_q, dim_v)
     `,
     examples: [
       {
-        input: 'batch of 4 matrices (4, 3, 3)',
-        output: 'Batch-wise operations',
-        explanation: 'Operations applied independently to each batch',
+        input: 'Q (2,4,8), K (2,6,8), V (2,6,16)',
+        output: "{'scores': shape (2,4,6), 'attention_weights': shape (2,4,6), 'output': shape (2,4,16)}",
+        explanation: 'Batch attention: scores from Q@K.T, then weighted sum of V',
       },
     ],
     starterCode: `import numpy as np
@@ -392,12 +410,17 @@ Compare einsum with equivalent NumPy operations.
 
 ### Task
 Verify einsum produces same results as traditional operations.
+
+### Expected Return Format
+Return a dictionary with:
+- \`'results'\`: Dict mapping operation names to {'einsum': ..., 'numpy': ...}
+- \`'all_match'\`: Boolean indicating if all einsum results match numpy equivalents
     `,
     examples: [
       {
-        input: 'Two matrices A, B',
-        output: 'Comparison showing equivalence',
-        explanation: 'All operations produce identical results',
+        input: 'A=[[1,2,3],[4,5,6]], B=[[1,2],[3,4],[5,6]]',
+        output: "{'results': {'sum': {...}, 'matmul': {...}, ...}, 'all_match': True}",
+        explanation: 'All einsum operations produce identical results to NumPy equivalents',
       },
     ],
     starterCode: `import numpy as np
@@ -420,7 +443,14 @@ def einsum_equivalence(A: np.ndarray, B: np.ndarray) -> dict:
       {
         id: '1',
         description: 'All results match',
-        input: '(np.random.randn(3, 4), np.random.randn(4, 5))',
+        input: 'einsum_equivalence(np.array([[1.0,2.0,3.0],[4.0,5.0,6.0]]), np.array([[1.0,2.0],[3.0,4.0],[5.0,6.0]]))["all_match"]',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Matrix multiplication matches',
+        input: 'bool(np.allclose(einsum_equivalence(np.array([[1.0,2.0],[3.0,4.0]]), np.array([[5.0,6.0],[7.0,8.0]]))["results"]["matmul"]["einsum"], np.array([[19.0,22.0],[43.0,50.0]])))',
         expected: 'True',
         hidden: false,
       },
