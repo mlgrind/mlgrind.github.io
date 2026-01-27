@@ -394,11 +394,16 @@ Implement batch normalization to stabilize training.
 
 ### Forward Pass
 \`\`\`
-1. Compute batch mean: μ = mean(x)
-2. Compute batch variance: σ² = var(x)
+1. Compute batch mean: μ = mean(x, axis=0)
+2. Compute batch variance: σ² = var(x, axis=0)
 3. Normalize: x_norm = (x - μ) / sqrt(σ² + ε)
 4. Scale and shift: out = γ * x_norm + β
 \`\`\`
+
+### Return Format
+Return \`(out, cache)\` where:
+- \`out\`: Normalized and scaled output
+- \`cache\`: Tuple \`(X, X_norm, mu, var, gamma, eps)\` for backward pass
 
 ### Benefits
 - Reduces internal covariate shift
@@ -425,8 +430,8 @@ def batch_norm_forward(X, gamma, beta, eps=1e-5):
         eps: Small constant for numerical stability
 
     Returns:
-        out: Normalized output
-        cache: Values needed for backward pass
+        out: Normalized output (batch_size, features)
+        cache: Tuple (X, X_norm, mu, var, gamma, eps) for backward pass
     """
     # Your code here
     pass
