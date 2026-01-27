@@ -56,8 +56,10 @@ export default function ProblemPage() {
   }, [problem, clearOutput]);
 
   const extractFunctionName = (starterCode: string): string => {
-    const match = starterCode.match(/def\s+(\w+)\s*\(/);
-    return match ? match[1] : 'solution';
+    // Find all function definitions and return the last one
+    // This handles cases where helper functions (like sigmoid) are defined before the main function
+    const matches = [...starterCode.matchAll(/def\s+(\w+)\s*\(/g)];
+    return matches.length > 0 ? matches[matches.length - 1][1] : 'solution';
   };
 
   const handleRunTests = useCallback(async () => {
