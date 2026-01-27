@@ -72,13 +72,21 @@ export function usePyodide(): UsePyodideReturn {
       // Set up stdout/stderr capture
       pyodide.setStdout({
         batched: (text: string) => {
-          if (text.trim()) appendOutput(text);
+          // Split batched output by newlines to show each line separately
+          const lines = text.split('\n');
+          lines.forEach(line => {
+            if (line.trim()) appendOutput(line);
+          });
         },
       });
 
       pyodide.setStderr({
         batched: (text: string) => {
-          if (text.trim()) appendOutput(`[Error] ${text}`);
+          // Split batched output by newlines to show each line separately
+          const lines = text.split('\n');
+          lines.forEach(line => {
+            if (line.trim()) appendOutput(`[Error] ${line}`);
+          });
         },
       });
 
