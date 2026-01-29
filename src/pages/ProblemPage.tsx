@@ -156,6 +156,23 @@ export default function ProblemPage() {
               >
                 {isRunning ? 'Running...' : 'Run Tests'}
               </button>
+              <span className="text-xs text-gray-400">or</span>
+              <div className="flex items-center gap-1 text-gray-500">
+                <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
+                <span className="text-xs">+</span>
+                <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {testResults.length > 0 && testResults.every(r => r.passed) && nextProblemId && (
+                <Link
+                  to={`/problem/${sectionId}/${nextProblemId}`}
+                  className="px-4 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-md hover:bg-green-200 transition-colors"
+                >
+                  Next Problem →
+                </Link>
+              )}
               <button
                 onClick={handleReset}
                 className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
@@ -163,15 +180,6 @@ export default function ProblemPage() {
                 Reset
               </button>
             </div>
-
-            {testResults.length > 0 && testResults.every(r => r.passed) && nextProblemId && (
-              <Link
-                to={`/problem/${sectionId}/${nextProblemId}`}
-                className="px-4 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-md hover:bg-green-200 transition-colors"
-              >
-                Next Problem →
-              </Link>
-            )}
           </div>
 
           {/* Editor and Results */}
@@ -188,6 +196,7 @@ export default function ProblemPage() {
                 value={code}
                 onChange={handleCodeChange}
                 height="100%"
+                onRun={handleRunTests}
               />
             </div>
 
