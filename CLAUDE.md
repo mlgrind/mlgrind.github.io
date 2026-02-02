@@ -40,6 +40,7 @@ src/
 ├── components/           # Reusable UI components
 │   ├── Layout/
 │   │   ├── Header.tsx   # Top navigation with progress
+│   │   ├── Footer.tsx   # Copyright notice and legal links
 │   │   ├── Sidebar.tsx  # Section navigation
 │   │   └── Layout.tsx   # Main layout wrapper
 │   ├── CodeEditor/
@@ -85,7 +86,9 @@ src/
 │   ├── HomePage.tsx     # Landing page with section cards
 │   ├── SectionPage.tsx  # Section intro + problem list
 │   ├── ProblemPage.tsx  # Main coding interface (split-pane)
-│   └── ScratchpadPage.tsx  # Python playground for experimentation
+│   ├── ScratchpadPage.tsx  # Python playground for experimentation
+│   ├── TermsPage.tsx    # Terms of Service
+│   └── PrivacyPage.tsx  # Privacy Policy
 ├── types/
 │   └── index.ts         # TypeScript interfaces
 └── __tests__/           # Test files
@@ -598,6 +601,8 @@ Each page has customized meta tags:
 - **SectionPage**: Section title and description
 - **ProblemPage**: Problem title, difficulty, and description excerpt
 - **ScratchpadPage**: Python playground description
+- **TermsPage**: Terms of Service
+- **PrivacyPage**: Privacy Policy
 
 ### index.html Meta Tags
 
@@ -614,3 +619,38 @@ When adding new sections or problems:
 1. The sitemap.xml should be updated with new URLs
 2. The llms.txt and llms-full.txt should be updated with new content
 3. Dynamic meta tags are automatic via the SEO component
+
+## Legal & Copyright
+
+The project includes copyright protection for educational content.
+
+### License Structure
+
+| Content Type | License | File |
+|--------------|---------|------|
+| Source code | MIT License | `LICENSE` |
+| Educational content | All Rights Reserved | `LICENSE` |
+
+**Educational content** includes problem descriptions, solutions, explanations, test cases, and learning materials. This content may not be reproduced or redistributed without permission.
+
+### Legal Pages
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| Terms of Service | `/terms` | Usage terms, IP rights, prohibited uses |
+| Privacy Policy | `/privacy` | Data collection practices, local storage usage |
+
+### Footer
+
+The `Footer.tsx` component appears on all pages and includes:
+- Dynamic copyright year
+- Links to Terms and Privacy pages
+- GitHub repository link
+- License summary text
+
+### Copyright Metadata
+
+Copyright information is included in:
+- `index.html` meta tags (`copyright`, `rights`)
+- JSON-LD structured data (`copyrightYear`, `copyrightHolder`)
+- Footer on every page
