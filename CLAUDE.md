@@ -31,6 +31,7 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 | Vitest | Testing | 2.x |
 | react-markdown | Markdown rendering | 9.x |
 | remark-gfm | GitHub Flavored Markdown (tables, etc.) | - |
+| react-helmet-async | Dynamic SEO meta tags | 2.x |
 
 ## Project Structure
 
@@ -53,8 +54,10 @@ src/
 │   │   └── TestResults.tsx  # Pass/fail display
 │   ├── Progress/
 │   │   └── ProgressBar.tsx  # Progress indicator
-│   └── FeedbackModal/
-│       └── FeedbackModal.tsx  # Feedback form modal (Formspree)
+│   ├── FeedbackModal/
+│   │   └── FeedbackModal.tsx  # Feedback form modal (Formspree)
+│   └── SEO/
+│       └── SEO.tsx          # Dynamic meta tags component
 ├── context/
 │   └── ProgressContext.tsx  # Global progress state (localStorage)
 ├── data/
@@ -558,3 +561,56 @@ Run with: `npm test`
 3. **Monaco Editor** - Feature-rich, familiar to developers
 4. **Tailwind CSS** - Rapid styling, consistent design system
 5. **React Context over Redux** - Simpler state management for this scale
+
+## SEO & LLM Agent Crawling
+
+The site is optimized for both traditional search engines and LLM-based crawlers.
+
+### SEO Files (in `public/`)
+
+| File | Purpose |
+|------|---------|
+| `robots.txt` | Crawler permissions, allows all major search engines and LLM bots (GPTBot, Claude-Web, etc.) |
+| `sitemap.xml` | Complete URL index of all sections and problems |
+| `llms.txt` | Summary for LLM agents - site structure, content overview, key URLs |
+| `llms-full.txt` | Comprehensive documentation for LLM agents - all sections, problems, formulas |
+| `.well-known/ai-plugin.json` | AI agent discovery file |
+| `og-image.svg` | Social sharing preview image |
+
+### Dynamic Meta Tags
+
+The `src/components/SEO/SEO.tsx` component provides dynamic meta tags per page using `react-helmet-async`:
+
+```tsx
+import SEO from '../components/SEO/SEO';
+
+// In a page component:
+<SEO
+  title="Page Title"           // Appended with " | ML Coding Lab"
+  description="Page description for search results"
+  canonical="/path/to/page"    // Canonical URL path
+  keywords="optional, extra, keywords"
+/>
+```
+
+Each page has customized meta tags:
+- **HomePage**: Default site-wide tags
+- **SectionPage**: Section title and description
+- **ProblemPage**: Problem title, difficulty, and description excerpt
+- **ScratchpadPage**: Python playground description
+
+### index.html Meta Tags
+
+The `index.html` contains:
+- Primary meta tags (title, description, keywords)
+- Open Graph tags for Facebook/LinkedIn
+- Twitter Card tags
+- JSON-LD structured data (WebSite + Course schemas)
+- Canonical URL
+
+### Updating SEO Content
+
+When adding new sections or problems:
+1. The sitemap.xml should be updated with new URLs
+2. The llms.txt and llms-full.txt should be updated with new content
+3. Dynamic meta tags are automatic via the SEO component
