@@ -281,7 +281,7 @@ Interviewers often ask you to:
 
 Let's build these algorithms!
     `,
-    problems: ['linear-regression-gd', 'logistic-regression', 'logistic-regression-full', 'binary-cross-entropy', 'hinge-loss', 'linear-svm', 'decision-tree-split'],
+    problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm'],
   },
   {
     id: 'unsupervised-learning',

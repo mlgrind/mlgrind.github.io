@@ -2,6 +2,384 @@ import { Problem } from '../../types';
 
 export const supervisedLearningProblems: Problem[] = [
   {
+    id: 'logistic-regression',
+    title: 'Sigmoid Function',
+    section: 'supervised-learning',
+    difficulty: 'easy',
+    description: `
+## Sigmoid Function
+
+Implement the sigmoid activation function used in logistic regression.
+
+### Formula
+\`\`\`
+sigmoid(x) = 1 / (1 + exp(-x))
+\`\`\`
+
+### Properties
+- Output is always between 0 and 1
+- sigmoid(0) = 0.5
+- Monotonically increasing
+
+### Function Signature
+\`\`\`python
+def sigmoid(x: np.ndarray) -> np.ndarray:
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'np.array([0, 1, -1])',
+        output: '[0.5, 0.731059, 0.268941]',
+        explanation: 'sigmoid(0)=0.5, sigmoid(1)≈0.73, sigmoid(-1)≈0.27',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    """
+    Compute the sigmoid activation function.
+
+    Args:
+        x: Input array of any shape
+
+    Returns:
+        Array of same shape with sigmoid applied element-wise
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Zero input',
+        input: '[0]',
+        expected: '[0.5]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Positive and negative',
+        input: 'bool(np.allclose(sigmoid(np.array([-1, 0, 1])), [0.268941, 0.5, 0.731059], atol=1e-5))',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Large values',
+        input: 'bool(np.allclose(sigmoid(np.array([-10, 10])), [4.5e-05, 0.999955], atol=1e-5))',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Use np.exp() for the exponential function.',
+      'The formula is 1 / (1 + exp(-x))',
+    ],
+    solution: `import numpy as np
+
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    """
+    Compute the sigmoid activation function.
+    """
+    return 1 / (1 + np.exp(-x))
+`,
+  },
+  {
+    id: 'binary-cross-entropy',
+    title: 'Binary Cross-Entropy Loss',
+    section: 'supervised-learning',
+    difficulty: 'easy',
+    description: `
+## Binary Cross-Entropy Loss
+
+Implement the binary cross-entropy (log loss) function.
+
+### Formula
+\`\`\`
+BCE = -1/m * sum(y * log(p) + (1-y) * log(1-p))
+\`\`\`
+
+Where:
+- y: True labels (0 or 1)
+- p: Predicted probabilities
+- m: Number of samples
+
+### Numerical Stability
+Clip predictions to avoid log(0):
+\`\`\`python
+p = np.clip(p, 1e-15, 1 - 1e-15)
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'y = [1, 0, 1], p = [0.9, 0.1, 0.8]',
+        output: '0.1446',
+        explanation: 'Low loss for confident correct predictions',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def binary_cross_entropy(y_true, y_pred):
+    """
+    Compute binary cross-entropy loss.
+
+    Args:
+        y_true: True labels (0 or 1)
+        y_pred: Predicted probabilities
+
+    Returns:
+        loss: Scalar BCE loss
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Perfect predictions',
+        input: '([1, 0, 1, 0], [1.0, 0.0, 1.0, 0.0])',
+        expected: '0.0',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Typical case',
+        input: '([1, 0, 1], [0.9, 0.1, 0.8])',
+        expected: '0.1446',
+        hidden: false,
+      },
+    ],
+    hints: [
+      'Clip predictions for numerical stability',
+      'Apply the formula element-wise',
+      'Take the mean over all samples',
+    ],
+    solution: `import numpy as np
+
+def binary_cross_entropy(y_true, y_pred):
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    # Clip for numerical stability
+    y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
+
+    # BCE formula
+    loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+
+    return round(loss, 4)
+`,
+  },
+  {
+    id: 'hinge-loss',
+    title: 'Hinge Loss',
+    section: 'supervised-learning',
+    difficulty: 'easy',
+    description: `
+## Hinge Loss
+
+Implement the hinge loss function used in Support Vector Machines (SVMs).
+
+### Formula
+\`\`\`
+L = (1/n) * sum(max(0, 1 - y * s))
+\`\`\`
+
+Where:
+- **y**: True labels in {-1, +1}
+- **s**: Raw model scores (not probabilities)
+- **n**: Number of samples
+
+### Properties
+- Loss is **0** when the prediction has the correct sign AND confidence margin >= 1
+- Loss increases linearly when the prediction is wrong or within the margin
+- Unlike cross-entropy, hinge loss encourages a "margin" of separation between classes
+
+### Function Signature
+\`\`\`python
+def hinge_loss(y_true: np.ndarray, scores: np.ndarray) -> float:
+\`\`\`
+
+Returns the mean hinge loss rounded to 4 decimal places.
+    `,
+    examples: [
+      {
+        input: 'y_true = [1, -1, 1], scores = [0.5, -0.8, 1.5]',
+        output: '0.2333',
+        explanation: 'Margins: [0.5, 0.2, -0.5] → losses: [0.5, 0.2, 0.0] → mean = 0.2333',
+      },
+      {
+        input: 'y_true = [1, -1], scores = [2.0, -3.0]',
+        output: '0.0',
+        explanation: 'Both predictions correct with margin >= 1, so zero loss',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def hinge_loss(y_true, scores):
+    """
+    Compute the mean hinge loss.
+
+    Args:
+        y_true: True labels in {-1, +1}, shape (n,)
+        scores: Raw model scores, shape (n,)
+
+    Returns:
+        Mean hinge loss (float, rounded to 4 decimals)
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Perfect predictions with large margin',
+        input: '([1, -1], [2.0, -3.0])',
+        expected: '0.0',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Partial margin violations',
+        input: '([1, -1, 1], [0.5, -0.8, 1.5])',
+        expected: '0.2333',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'All misclassified',
+        input: '([1, 1], [-1.0, -2.0])',
+        expected: '2.5',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'On the decision boundary (margin = 1)',
+        input: '([1, -1], [1.0, -1.0])',
+        expected: '0.0',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Compute element-wise margins: y_true * scores',
+      'Apply max(0, 1 - margin) using np.maximum',
+      'Return the mean of the losses, rounded to 4 decimals',
+    ],
+    solution: `import numpy as np
+
+def hinge_loss(y_true, scores):
+    """
+    Compute the mean hinge loss.
+    """
+    y_true = np.array(y_true, dtype=float)
+    scores = np.array(scores, dtype=float)
+
+    # Compute hinge loss for each sample
+    losses = np.maximum(0, 1 - y_true * scores)
+
+    return round(float(np.mean(losses)), 4)
+`,
+  },
+  {
+    id: 'decision-tree-split',
+    title: 'Gini Impurity',
+    section: 'supervised-learning',
+    difficulty: 'medium',
+    description: `
+## Gini Impurity
+
+Calculate the Gini impurity for a set of labels. This metric is used in decision trees to determine the best split.
+
+### Formula
+\`\`\`
+Gini = 1 - sum(p_i^2)
+\`\`\`
+
+Where p_i is the proportion of class i in the set.
+
+### Properties
+- Gini = 0 means pure (all same class)
+- Gini = 0.5 means maximum impurity (for binary classification with equal split)
+
+### Function Signature
+\`\`\`python
+def gini_impurity(labels: np.ndarray) -> float:
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'np.array([0, 0, 0, 0])',
+        output: '0.0',
+        explanation: 'All same class, pure node',
+      },
+      {
+        input: 'np.array([0, 0, 1, 1])',
+        output: '0.5',
+        explanation: 'Equal split, maximum impurity for binary',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def gini_impurity(labels: np.ndarray) -> float:
+    """
+    Calculate Gini impurity for a set of labels.
+
+    Args:
+        labels: Array of class labels (integers)
+
+    Returns:
+        Gini impurity value between 0 and 1
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Pure node',
+        input: '[0, 0, 0, 0]',
+        expected: '0.0',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Maximum impurity',
+        input: '[0, 0, 1, 1]',
+        expected: '0.5',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Unequal split',
+        input: '[0, 0, 0, 1]',
+        expected: '0.375',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Count the occurrences of each class.',
+      'Calculate the proportion (probability) of each class.',
+      'Gini = 1 - sum of squared probabilities.',
+    ],
+    solution: `import numpy as np
+
+def gini_impurity(labels: np.ndarray) -> float:
+    """
+    Calculate Gini impurity for a set of labels.
+    """
+    if len(labels) == 0:
+        return 0.0
+
+    # Count occurrences of each class
+    _, counts = np.unique(labels, return_counts=True)
+
+    # Calculate probabilities
+    probabilities = counts / len(labels)
+
+    # Gini = 1 - sum(p^2)
+    return 1 - np.sum(probabilities ** 2)
+`,
+  },
+  {
     id: 'linear-regression-gd',
     title: 'Linear Regression with Gradient Descent',
     section: 'supervised-learning',
@@ -124,189 +502,6 @@ def linear_regression(X: np.ndarray, y: np.ndarray,
 `,
   },
   {
-    id: 'logistic-regression',
-    title: 'Sigmoid Function',
-    section: 'supervised-learning',
-    difficulty: 'easy',
-    description: `
-## Sigmoid Function
-
-Implement the sigmoid activation function used in logistic regression.
-
-### Formula
-\`\`\`
-sigmoid(x) = 1 / (1 + exp(-x))
-\`\`\`
-
-### Properties
-- Output is always between 0 and 1
-- sigmoid(0) = 0.5
-- Monotonically increasing
-
-### Function Signature
-\`\`\`python
-def sigmoid(x: np.ndarray) -> np.ndarray:
-\`\`\`
-    `,
-    examples: [
-      {
-        input: 'np.array([0, 1, -1])',
-        output: '[0.5, 0.731059, 0.268941]',
-        explanation: 'sigmoid(0)=0.5, sigmoid(1)≈0.73, sigmoid(-1)≈0.27',
-      },
-    ],
-    starterCode: `import numpy as np
-
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Compute the sigmoid activation function.
-
-    Args:
-        x: Input array of any shape
-
-    Returns:
-        Array of same shape with sigmoid applied element-wise
-    """
-    # Your code here
-    pass
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Zero input',
-        input: '[0]',
-        expected: '[0.5]',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Positive and negative',
-        input: 'bool(np.allclose(sigmoid(np.array([-1, 0, 1])), [0.268941, 0.5, 0.731059], atol=1e-5))',
-        expected: 'True',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'Large values',
-        input: 'bool(np.allclose(sigmoid(np.array([-10, 10])), [4.5e-05, 0.999955], atol=1e-5))',
-        expected: 'True',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'Use np.exp() for the exponential function.',
-      'The formula is 1 / (1 + exp(-x))',
-    ],
-    solution: `import numpy as np
-
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    """
-    Compute the sigmoid activation function.
-    """
-    return 1 / (1 + np.exp(-x))
-`,
-  },
-  {
-    id: 'decision-tree-split',
-    title: 'Gini Impurity',
-    section: 'supervised-learning',
-    difficulty: 'medium',
-    description: `
-## Gini Impurity
-
-Calculate the Gini impurity for a set of labels. This metric is used in decision trees to determine the best split.
-
-### Formula
-\`\`\`
-Gini = 1 - sum(p_i^2)
-\`\`\`
-
-Where p_i is the proportion of class i in the set.
-
-### Properties
-- Gini = 0 means pure (all same class)
-- Gini = 0.5 means maximum impurity (for binary classification with equal split)
-
-### Function Signature
-\`\`\`python
-def gini_impurity(labels: np.ndarray) -> float:
-\`\`\`
-    `,
-    examples: [
-      {
-        input: 'np.array([0, 0, 0, 0])',
-        output: '0.0',
-        explanation: 'All same class, pure node',
-      },
-      {
-        input: 'np.array([0, 0, 1, 1])',
-        output: '0.5',
-        explanation: 'Equal split, maximum impurity for binary',
-      },
-    ],
-    starterCode: `import numpy as np
-
-def gini_impurity(labels: np.ndarray) -> float:
-    """
-    Calculate Gini impurity for a set of labels.
-
-    Args:
-        labels: Array of class labels (integers)
-
-    Returns:
-        Gini impurity value between 0 and 1
-    """
-    # Your code here
-    pass
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Pure node',
-        input: '[0, 0, 0, 0]',
-        expected: '0.0',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Maximum impurity',
-        input: '[0, 0, 1, 1]',
-        expected: '0.5',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'Unequal split',
-        input: '[0, 0, 0, 1]',
-        expected: '0.375',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'Count the occurrences of each class.',
-      'Calculate the proportion (probability) of each class.',
-      'Gini = 1 - sum of squared probabilities.',
-    ],
-    solution: `import numpy as np
-
-def gini_impurity(labels: np.ndarray) -> float:
-    """
-    Calculate Gini impurity for a set of labels.
-    """
-    if len(labels) == 0:
-        return 0.0
-
-    # Count occurrences of each class
-    _, counts = np.unique(labels, return_counts=True)
-
-    # Calculate probabilities
-    probabilities = counts / len(labels)
-
-    # Gini = 1 - sum(p^2)
-    return 1 - np.sum(probabilities ** 2)
-`,
-  },
-  {
     id: 'logistic-regression-full',
     title: 'Logistic Regression with Gradient Descent',
     section: 'supervised-learning',
@@ -406,116 +601,6 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
         b = b - learning_rate * db
 
     return np.round(w, 4), round(b, 4)
-`,
-  },
-  {
-    id: 'hinge-loss',
-    title: 'Hinge Loss',
-    section: 'supervised-learning',
-    difficulty: 'easy',
-    description: `
-## Hinge Loss
-
-Implement the hinge loss function used in Support Vector Machines (SVMs).
-
-### Formula
-\`\`\`
-L = (1/n) * sum(max(0, 1 - y * s))
-\`\`\`
-
-Where:
-- **y**: True labels in {-1, +1}
-- **s**: Raw model scores (not probabilities)
-- **n**: Number of samples
-
-### Properties
-- Loss is **0** when the prediction has the correct sign AND confidence margin >= 1
-- Loss increases linearly when the prediction is wrong or within the margin
-- Unlike cross-entropy, hinge loss encourages a "margin" of separation between classes
-
-### Function Signature
-\`\`\`python
-def hinge_loss(y_true: np.ndarray, scores: np.ndarray) -> float:
-\`\`\`
-
-Returns the mean hinge loss rounded to 4 decimal places.
-    `,
-    examples: [
-      {
-        input: 'y_true = [1, -1, 1], scores = [0.5, -0.8, 1.5]',
-        output: '0.2333',
-        explanation: 'Margins: [0.5, 0.2, -0.5] → losses: [0.5, 0.2, 0.0] → mean = 0.2333',
-      },
-      {
-        input: 'y_true = [1, -1], scores = [2.0, -3.0]',
-        output: '0.0',
-        explanation: 'Both predictions correct with margin >= 1, so zero loss',
-      },
-    ],
-    starterCode: `import numpy as np
-
-def hinge_loss(y_true, scores):
-    """
-    Compute the mean hinge loss.
-
-    Args:
-        y_true: True labels in {-1, +1}, shape (n,)
-        scores: Raw model scores, shape (n,)
-
-    Returns:
-        Mean hinge loss (float, rounded to 4 decimals)
-    """
-    # Your code here
-    pass
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Perfect predictions with large margin',
-        input: '([1, -1], [2.0, -3.0])',
-        expected: '0.0',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Partial margin violations',
-        input: '([1, -1, 1], [0.5, -0.8, 1.5])',
-        expected: '0.2333',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'All misclassified',
-        input: '([1, 1], [-1.0, -2.0])',
-        expected: '2.5',
-        hidden: false,
-      },
-      {
-        id: '4',
-        description: 'On the decision boundary (margin = 1)',
-        input: '([1, -1], [1.0, -1.0])',
-        expected: '0.0',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'Compute element-wise margins: y_true * scores',
-      'Apply max(0, 1 - margin) using np.maximum',
-      'Return the mean of the losses, rounded to 4 decimals',
-    ],
-    solution: `import numpy as np
-
-def hinge_loss(y_true, scores):
-    """
-    Compute the mean hinge loss.
-    """
-    y_true = np.array(y_true, dtype=float)
-    scores = np.array(scores, dtype=float)
-
-    # Compute hinge loss for each sample
-    losses = np.maximum(0, 1 - y_true * scores)
-
-    return round(float(np.mean(losses)), 4)
 `,
   },
   {
@@ -660,91 +745,6 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
         b -= learning_rate * db
 
     return np.round(w, 4), round(b, 4)
-`,
-  },
-  {
-    id: 'binary-cross-entropy',
-    title: 'Binary Cross-Entropy Loss',
-    section: 'supervised-learning',
-    difficulty: 'easy',
-    description: `
-## Binary Cross-Entropy Loss
-
-Implement the binary cross-entropy (log loss) function.
-
-### Formula
-\`\`\`
-BCE = -1/m * sum(y * log(p) + (1-y) * log(1-p))
-\`\`\`
-
-Where:
-- y: True labels (0 or 1)
-- p: Predicted probabilities
-- m: Number of samples
-
-### Numerical Stability
-Clip predictions to avoid log(0):
-\`\`\`python
-p = np.clip(p, 1e-15, 1 - 1e-15)
-\`\`\`
-    `,
-    examples: [
-      {
-        input: 'y = [1, 0, 1], p = [0.9, 0.1, 0.8]',
-        output: '0.1446',
-        explanation: 'Low loss for confident correct predictions',
-      },
-    ],
-    starterCode: `import numpy as np
-
-def binary_cross_entropy(y_true, y_pred):
-    """
-    Compute binary cross-entropy loss.
-
-    Args:
-        y_true: True labels (0 or 1)
-        y_pred: Predicted probabilities
-
-    Returns:
-        loss: Scalar BCE loss
-    """
-    # Your code here
-    pass
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Perfect predictions',
-        input: '([1, 0, 1, 0], [1.0, 0.0, 1.0, 0.0])',
-        expected: '0.0',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Typical case',
-        input: '([1, 0, 1], [0.9, 0.1, 0.8])',
-        expected: '0.1446',
-        hidden: false,
-      },
-    ],
-    hints: [
-      'Clip predictions for numerical stability',
-      'Apply the formula element-wise',
-      'Take the mean over all samples',
-    ],
-    solution: `import numpy as np
-
-def binary_cross_entropy(y_true, y_pred):
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-
-    # Clip for numerical stability
-    y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-
-    # BCE formula
-    loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
-
-    return round(loss, 4)
 `,
   },
 ];
