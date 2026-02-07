@@ -28,6 +28,7 @@ export default function ProblemPage() {
   const [isEditorMaximized, setIsEditorMaximized] = useState(false);
   const [editableTestCases, setEditableTestCases] = useState<TestCase[]>([]);
   const [resetKey, setResetKey] = useState(0);
+  const [descriptionTab, setDescriptionTab] = useState<'description' | 'examples' | 'hints'>('description');
 
   // Load saved code or starter code
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function ProblemPage() {
       const savedProgress = getProblemProgress(sectionId, problem.id);
       setCode(savedProgress.code || problem.starterCode);
       setEditableTestCases(problem.testCases);
+      setDescriptionTab('description');
     }
   }, [problem, sectionId, getProblemProgress]);
 
@@ -239,11 +241,57 @@ export default function ProblemPage() {
           gutterSize={8}
           gutterAlign="center"
         >
-          {/* Left Panel - Problem Description */}
-          <div className="problem-panel overflow-y-auto overflow-x-hidden p-6 bg-gray-50 min-w-0">
-            <ProblemDescription problem={problem} />
-            <Examples examples={problem.examples} />
-            <Hints hints={problem.hints} solution={problem.solution} />
+          {/* Left Panel - Tabbed Problem Description */}
+          <div className="problem-panel flex flex-col overflow-hidden bg-gray-50 min-w-0">
+            {/* Tab Bar */}
+            <div className="flex border-b border-gray-200 bg-white px-4 shrink-0">
+              <button
+                onClick={() => setDescriptionTab('description')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  descriptionTab === 'description'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Description
+              </button>
+              <button
+                onClick={() => setDescriptionTab('examples')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  descriptionTab === 'examples'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Examples
+              </button>
+              <button
+                onClick={() => setDescriptionTab('hints')}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  descriptionTab === 'hints'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Hints & Solution
+              </button>
+            </div>
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
+              {descriptionTab === 'description' && (
+                <ProblemDescription problem={problem} />
+              )}
+              {descriptionTab === 'examples' && (
+                <div>
+                  <Examples examples={problem.examples} />
+                </div>
+              )}
+              {descriptionTab === 'hints' && (
+                <div>
+                  <Hints hints={problem.hints} solution={problem.solution} />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Panel - Editor and Console */}

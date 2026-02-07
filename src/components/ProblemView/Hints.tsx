@@ -20,7 +20,7 @@ export default function Hints({ hints, solution }: HintsProps) {
   };
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="space-y-4">
       {/* Hints Section */}
       <div>
         <div className="flex items-center justify-between mb-3">
