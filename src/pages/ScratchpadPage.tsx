@@ -73,28 +73,28 @@ export default function ScratchpadPage() {
         keywords="Python playground, online Python, NumPy, code sandbox, ML practice, browser Python"
       />
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className="text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 transition-colors"
           >
             Home
           </Link>
-          <span className="text-gray-300 dark:text-gray-600">/</span>
-          <span className="text-gray-900 dark:text-gray-100 font-medium">Python Scratchpad</span>
+          <span className="text-gray-300 dark:text-dark-500">/</span>
+          <span className="text-gray-900 dark:text-dark-100 font-medium">Python Scratchpad</span>
         </div>
 
         <div className="flex items-center gap-3">
           {!isReady && (
-            <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
+            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
               {isLoading ? 'Loading Python...' : 'Python ready'}
             </span>
           )}
           {isReady && (
-            <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
+              <div className="w-2 h-2 bg-accent-500 rounded-full" />
               Python ready
             </span>
           )}
@@ -102,31 +102,31 @@ export default function ScratchpadPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-gray-900">
+      <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-dark-800">
         {/* Action Bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
           <div className="flex items-center gap-2">
             <button
               onClick={handleRunCode}
               disabled={!isReady || isRunning}
-              className="px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-md hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isRunning ? 'Running...' : 'Run Code'}
             </button>
             <button
               onClick={handleReset}
-              className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
               Reset
             </button>
             <button
               onClick={clearOutput}
-              className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
               Clear Output
             </button>
           </div>
-          <span className="text-gray-400 dark:text-gray-500 text-sm">Code is auto-saved</span>
+          <span className="text-gray-400 dark:text-dark-300 text-sm">Code is auto-saved</span>
         </div>
 
         {/* Editor and Console */}
@@ -148,7 +148,7 @@ export default function ScratchpadPage() {
           </div>
 
           {/* Console */}
-          <div className="overflow-auto p-4 bg-gray-50 dark:bg-gray-800">
+          <div className="overflow-auto p-4 bg-gray-50 dark:bg-dark-900">
             <Console output={output} isLoading={isRunning} />
           </div>
         </Split>

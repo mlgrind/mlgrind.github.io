@@ -130,16 +130,16 @@ export default function Console({
   const visibleResults = testResults?.filter(r => !r.hidden) ?? [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg h-full flex flex-col shadow-sm">
-      <div className="flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+    <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-500 rounded-lg h-full flex flex-col">
+      <div className="flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-900">
         <div className="flex">
           {showTestsTab && (
             <button
               onClick={() => setActiveTab('tests')}
               className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
                 activeTab === 'tests'
-                  ? 'text-primary-600 bg-white dark:bg-gray-900 border-t border-l border-r border-gray-200 dark:border-gray-700 -mb-px'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
+                  : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
               }`}
             >
               Tests ({visibleTestCount})
@@ -149,8 +149,8 @@ export default function Console({
             onClick={() => setActiveTab('output')}
             className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
               activeTab === 'output'
-                ? 'text-primary-600 bg-white dark:bg-gray-900 border-t border-l border-r border-gray-200 dark:border-gray-700 -mb-px'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
+                : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
             }`}
           >
             Output
@@ -160,8 +160,8 @@ export default function Console({
               onClick={() => setActiveTab('results')}
               className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
                 activeTab === 'results'
-                  ? 'text-primary-600 bg-white border-t border-l border-r border-gray-200 -mb-px'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
+                  : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
               }`}
             >
               Results ({passedCount}/{totalCount})
@@ -171,7 +171,7 @@ export default function Console({
         {isLoading && (
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-            <span className="text-xs text-gray-500 dark:text-gray-400">Running...</span>
+            <span className="text-xs text-gray-500 dark:text-dark-200">Running...</span>
           </div>
         )}
       </div>
@@ -181,42 +181,42 @@ export default function Console({
           <textarea
             value={testCaseText}
             onChange={(e) => handleTestCaseTextChange(e.target.value)}
-            className="flex-1 p-4 font-mono text-sm bg-gray-900 text-gray-300 resize-none focus:outline-none"
+            className="flex-1 p-4 font-mono text-sm bg-dark-900 text-dark-200 resize-none focus:outline-none"
             placeholder="# Test 1: Description&#10;input: your_function(args)&#10;expected: expected_result"
             spellCheck={false}
           />
           {hiddenCount > 0 && (
-            <div className="px-4 py-2 bg-gray-800 text-gray-400 text-xs border-t border-gray-700">
+            <div className="px-4 py-2 bg-dark-800 text-dark-300 text-xs border-t border-dark-500">
               + {hiddenCount} hidden test{hiddenCount > 1 ? 's' : ''} (not editable)
             </div>
           )}
         </div>
       ) : activeTab === 'results' && testResults && testResults.length > 0 ? (
         <div className="flex-1 overflow-auto">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <span className="font-medium text-gray-900 text-sm">Test Results</span>
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-dark-500 flex items-center justify-between bg-gray-50 dark:bg-dark-900">
+            <span className="font-medium text-gray-900 dark:text-dark-100 text-sm">Test Results</span>
             <span
-              className={`text-sm font-medium ${
-                passedCount === totalCount ? 'text-green-600' : 'text-yellow-600'
+              className={`text-sm font-medium font-mono ${
+                passedCount === totalCount ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'
               }`}
             >
               {passedCount}/{totalCount} passed
             </span>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 dark:divide-dark-500">
             {visibleResults.map(result => (
               <div key={result.id} className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span
                     className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
                       result.passed
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-red-100 text-red-600'
+                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     }`}
                   >
                     {result.passed ? '\u2713' : '\u2717'}
                   </span>
-                  <span className="text-gray-700 text-sm font-medium">
+                  <span className="text-gray-700 dark:text-dark-100 text-sm font-medium">
                     Test {result.id}: {result.description}
                   </span>
                 </div>
@@ -224,12 +224,12 @@ export default function Console({
                 {!result.passed && (
                   <div className="ml-7 space-y-1 text-sm">
                     <div>
-                      <span className="text-gray-500">Expected: </span>
-                      <span className="text-green-600 font-mono">{result.expected}</span>
+                      <span className="text-gray-500 dark:text-dark-300">Expected: </span>
+                      <span className="text-green-600 dark:text-green-400 font-mono">{result.expected}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Actual: </span>
-                      <span className="text-red-600 font-mono">{result.actual}</span>
+                      <span className="text-gray-500 dark:text-dark-300">Actual: </span>
+                      <span className="text-red-600 dark:text-red-400 font-mono">{result.actual}</span>
                     </div>
                   </div>
                 )}
@@ -237,13 +237,13 @@ export default function Console({
             ))}
 
             {testResults.some(r => r.hidden) && (
-              <div className="p-4 text-gray-500 text-sm italic">
+              <div className="p-4 text-gray-500 dark:text-dark-300 text-sm italic">
                 + {testResults.filter(r => r.hidden).length} hidden test(s)
                 {testResults.filter(r => r.hidden && r.passed).length ===
                 testResults.filter(r => r.hidden).length ? (
-                  <span className="text-green-600 ml-2">(all passed)</span>
+                  <span className="text-green-600 dark:text-green-400 ml-2">(all passed)</span>
                 ) : (
-                  <span className="text-red-600 ml-2">
+                  <span className="text-red-600 dark:text-red-400 ml-2">
                     ({testResults.filter(r => r.hidden && !r.passed).length} failed)
                   </span>
                 )}
@@ -252,9 +252,9 @@ export default function Console({
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-900 rounded-b-lg">
+        <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-dark-900 rounded-b-lg">
           {output.length === 0 ? (
-            <div className="text-gray-500 italic">
+            <div className="text-dark-300 italic">
               Output will appear here when you run your code...
             </div>
           ) : (
@@ -268,7 +268,7 @@ export default function Console({
                     ? 'text-green-400'
                     : line.includes('FAILED')
                     ? 'text-red-400'
-                    : 'text-gray-300'
+                    : 'text-dark-200'
                 }`}
               >
                 {line.startsWith('Test') ? (
