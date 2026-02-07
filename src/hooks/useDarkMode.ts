@@ -4,7 +4,7 @@ export function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('ml-lab-dark-mode');
     if (saved !== null) return saved === 'true';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return false;
   });
 
   useEffect(() => {
