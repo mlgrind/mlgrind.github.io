@@ -6,7 +6,7 @@ interface ExamplesProps {
 
 export default function Examples({ examples }: ExamplesProps) {
   return (
-    <div className="mt-6">
+    <div>
       <h3 className="text-base font-medium text-gray-900 mb-3">Examples</h3>
       <div className="space-y-4">
         {examples.map((example, index) => (
