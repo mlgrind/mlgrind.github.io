@@ -3,11 +3,13 @@ import { useState } from 'react';
 interface HintsProps {
   hints: string[];
   solution: string;
+  onLoadToEditor?: (code: string) => void;
 }
 
-export default function Hints({ hints, solution }: HintsProps) {
+export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
   const [revealedHints, setRevealedHints] = useState<number>(0);
   const [showSolution, setShowSolution] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleRevealHint = () => {
     if (revealedHints < hints.length) {
@@ -17,6 +19,30 @@ export default function Hints({ hints, solution }: HintsProps) {
 
   const handleShowSolution = () => {
     setShowSolution(true);
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(solution);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = solution;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleLoadToEditor = () => {
+    if (onLoadToEditor) {
+      onLoadToEditor(solution);
+    }
   };
 
   return (
@@ -72,8 +98,24 @@ export default function Hints({ hints, solution }: HintsProps) {
 
         {showSolution ? (
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-            <div className="px-4 py-2 bg-gray-100 border-b border-gray-200">
+            <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 flex items-center justify-between">
               <span className="text-sm text-gray-600">Solution Code</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyToClipboard}
+                  className="px-3 py-1 text-xs font-medium rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                >
+                  {copied ? 'Copied!' : 'Copy to Clipboard'}
+                </button>
+                {onLoadToEditor && (
+                  <button
+                    onClick={handleLoadToEditor}
+                    className="px-3 py-1 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+                  >
+                    Load into Editor
+                  </button>
+                )}
+              </div>
             </div>
             <pre className="p-4 text-sm text-gray-300 font-mono overflow-x-auto bg-gray-900">
               {solution}

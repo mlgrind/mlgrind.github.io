@@ -243,7 +243,7 @@ export default function ProblemPage() {
           <div className="problem-panel overflow-y-auto overflow-x-hidden p-6 bg-gray-50 min-w-0">
             <ProblemDescription problem={problem} />
             <Examples examples={problem.examples} />
-            <Hints hints={problem.hints} solution={problem.solution} />
+            <Hints hints={problem.hints} solution={problem.solution} onLoadToEditor={setCode} />
           </div>
 
           {/* Right Panel - Editor and Console */}
