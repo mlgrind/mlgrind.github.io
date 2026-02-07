@@ -13,6 +13,7 @@ import Hints from '../components/ProblemView/Hints';
 import SEO from '../components/SEO/SEO';
 import { TestResult, TestCase } from '../types';
 import SuccessBanner from '../components/SuccessBanner/SuccessBanner';
+import { useDarkMode } from '../hooks/useDarkMode';
 
 export default function ProblemPage() {
   const { sectionId, problemId } = useParams<{ sectionId: string; problemId: string }>();
@@ -36,6 +37,7 @@ export default function ProblemPage() {
   const [descriptionTab, setDescriptionTab] = useState<'description' | 'examples' | 'hints'>('description');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [mobileTab, setMobileTab] = useState<'problem' | 'code'>('problem');
+  const { isDark } = useDarkMode();
 
   // Load saved code or starter code
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function ProblemPage() {
   if (!problem || !section) {
     return (
       <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Problem Not Found</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Problem Not Found</h1>
         <Link to="/" className="text-primary-600 hover:text-primary-500">
           Return to Home
         </Link>
@@ -172,16 +174,16 @@ export default function ProblemPage() {
       />
       <SuccessBanner show={showCelebration} onDismiss={() => setShowCelebration(false)} />
       {/* Problem Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <Link
             to={`/section/${sectionId}`}
-            className="text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             &larr; {section.title}
           </Link>
-          <span className="text-gray-300">/</span>
-          <span className="text-gray-900 font-medium">{problem.title}</span>
+          <span className="text-gray-300 dark:text-gray-600">/</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium">{problem.title}</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -190,38 +192,38 @@ export default function ProblemPage() {
             {prevProblemId ? (
               <Link
                 to={`/problem/${sectionId}/${prevProblemId}`}
-                className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                className="px-2 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
               >
                 ← Prev
               </Link>
             ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 cursor-default">← Prev</span>
+              <span className="px-2 py-1 text-sm text-gray-300 dark:text-gray-600 cursor-default">← Prev</span>
             )}
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
               ({currentIndex + 1}/{section.problems.length})
             </span>
             {nextProblemId ? (
               <Link
                 to={`/problem/${sectionId}/${nextProblemId}`}
-                className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                className="px-2 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
               >
                 Next →
               </Link>
             ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 cursor-default">Next →</span>
+              <span className="px-2 py-1 text-sm text-gray-300 dark:text-gray-600 cursor-default">Next →</span>
             )}
           </div>
 
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
 
           {!isReady && (
-            <span className="text-gray-500 text-sm flex items-center gap-2">
+            <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
               {isLoading ? 'Loading Python...' : 'Python ready'}
             </span>
           )}
           {isReady && (
-            <span className="text-gray-500 text-sm flex items-center gap-2">
+            <span className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               Python ready
             </span>
@@ -231,15 +233,15 @@ export default function ProblemPage() {
 
       {/* Mobile Layout */}
       {isMobile ? (
-        <div className="flex flex-col flex-1 overflow-hidden bg-white">
+        <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-gray-900">
           {/* Mobile Tab Switcher */}
-          <div className="flex border-b border-gray-200 bg-gray-50">
+          <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <button
               onClick={() => setMobileTab('problem')}
               className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors ${
                 mobileTab === 'problem'
-                  ? 'text-primary-600 border-b-2 border-primary-500 bg-white'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-primary-600 border-b-2 border-primary-500 bg-white dark:bg-gray-900'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               Problem
@@ -248,8 +250,8 @@ export default function ProblemPage() {
               onClick={() => setMobileTab('code')}
               className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors ${
                 mobileTab === 'code'
-                  ? 'text-primary-600 border-b-2 border-primary-500 bg-white'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-primary-600 border-b-2 border-primary-500 bg-white dark:bg-gray-900'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               Code
@@ -265,7 +267,7 @@ export default function ProblemPage() {
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Action Bar */}
-              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleRunTests}
@@ -276,7 +278,7 @@ export default function ProblemPage() {
                   </button>
                   <button
                     onClick={handleReset}
-                    className="px-3 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
+                    className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
                     Reset
                   </button>
@@ -297,11 +299,11 @@ export default function ProblemPage() {
                   onChange={handleCodeChange}
                   height="100%"
                   onRun={handleRunTests}
+                  darkMode={isDark}
                 />
               </div>
               {/* Console */}
-              <div className="flex-[2] overflow-auto p-2 space-y-2 bg-gray-50 border-t border-gray-200">
-                <TestResults results={testResults} isRunning={isRunning} />
+              <div className="flex-[2] overflow-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                 <Console
                   output={output}
                   isLoading={isRunning}
@@ -309,6 +311,7 @@ export default function ProblemPage() {
                   onTestCasesChange={setEditableTestCases}
                   problemId={problemId}
                   resetKey={resetKey}
+                  testResults={testResults}
                 />
               </div>
             </div>
@@ -316,9 +319,9 @@ export default function ProblemPage() {
         </div>
       ) : isEditorMaximized ? (
         /* Maximized Layout - Editor and Console side by side */
-        <div className="flex flex-col flex-1 overflow-hidden bg-white">
+        <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-gray-900">
           {/* Action Bar */}
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <button
                 onClick={handleRunTests}
@@ -329,10 +332,10 @@ export default function ProblemPage() {
               </button>
               <span className="text-xs text-gray-400">or</span>
               <div className="relative">
-                <div className="flex items-center gap-1 text-gray-500">
-                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
+                <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm">Shift</kbd>
                   <span className="text-xs">+</span>
-                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm">Enter</kbd>
                 </div>
                 {showShortcutHint && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
@@ -362,14 +365,14 @@ export default function ProblemPage() {
               )}
               <button
                 onClick={() => setIsEditorMaximized(!isEditorMaximized)}
-                className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 title={isEditorMaximized ? 'Restore layout' : 'Maximize editor'}
               >
                 {isEditorMaximized ? '\u229f Restore' : '\u229e Maximize'}
               </button>
               <button
                 onClick={handleReset}
-                className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 Reset
               </button>
@@ -391,11 +394,12 @@ export default function ProblemPage() {
                 onChange={handleCodeChange}
                 height="100%"
                 onRun={handleRunTests}
+                darkMode={isDark}
               />
             </div>
 
             {/* Console with inline Test Results */}
-            <div className="overflow-auto p-4 bg-gray-50">
+            <div className="overflow-auto p-4 bg-gray-50 dark:bg-gray-800">
               <Console
                 output={output}
                 isLoading={isRunning}
@@ -418,15 +422,15 @@ export default function ProblemPage() {
           gutterAlign="center"
         >
           {/* Left Panel - Tabbed Problem Description */}
-          <div className="problem-panel flex flex-col overflow-hidden bg-gray-50 min-w-0">
+          <div className="problem-panel flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-800 min-w-0">
             {/* Tab Bar */}
-            <div className="flex border-b border-gray-200 bg-white px-4 shrink-0">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 shrink-0">
               <button
                 onClick={() => setDescriptionTab('description')}
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'description'
                     ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Description
@@ -436,7 +440,7 @@ export default function ProblemPage() {
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'examples'
                     ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Examples
@@ -446,7 +450,7 @@ export default function ProblemPage() {
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'hints'
                     ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 Hints & Solution
@@ -471,9 +475,9 @@ export default function ProblemPage() {
           </div>
 
           {/* Right Panel - Editor and Console */}
-          <div className="flex flex-col overflow-hidden bg-white">
+          <div className="flex flex-col overflow-hidden bg-white dark:bg-gray-900">
             {/* Action Bar */}
-            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleRunTests}
@@ -484,10 +488,10 @@ export default function ProblemPage() {
                 </button>
                 <span className="text-xs text-gray-400">or</span>
                 <div className="relative">
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm">Shift</kbd>
                     <span className="text-xs">+</span>
-                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm">Enter</kbd>
                   </div>
                   {showShortcutHint && (
                     <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
@@ -517,14 +521,14 @@ export default function ProblemPage() {
                 )}
                 <button
                   onClick={() => setIsEditorMaximized(!isEditorMaximized)}
-                  className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
+                  className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   title={isEditorMaximized ? 'Restore layout' : 'Maximize editor'}
                 >
                   {isEditorMaximized ? '\u229f Restore' : '\u229e Maximize'}
                 </button>
                 <button
                   onClick={handleReset}
-                  className="px-4 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
+                  className="px-4 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Reset
                 </button>
@@ -546,11 +550,12 @@ export default function ProblemPage() {
                   onChange={handleCodeChange}
                   height="100%"
                   onRun={handleRunTests}
+                  darkMode={isDark}
                 />
               </div>
 
               {/* Console with inline Test Results */}
-              <div className="overflow-auto p-4 bg-gray-50">
+              <div className="overflow-auto p-4 bg-gray-50 dark:bg-gray-800">
                 <Console
                   output={output}
                   isLoading={isRunning}

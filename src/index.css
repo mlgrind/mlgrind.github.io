@@ -15,6 +15,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.dark {
+  color-scheme: dark;
+  color: #e2e8f0;
+  background-color: #0f172a;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -37,13 +43,25 @@ body {
   background: #f1f5f9;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Code block styling */
@@ -52,6 +70,10 @@ pre {
   border-radius: 0.5rem;
   padding: 1rem;
   overflow-x: auto;
+}
+
+.dark pre {
+  background-color: #1e293b;
 }
 
 code {
@@ -64,6 +86,10 @@ code {
   background-color: #e2e8f0;
   background-repeat: no-repeat;
   background-position: 50%;
+}
+
+.dark .gutter {
+  background-color: #334155;
 }
 
 .gutter.gutter-horizontal {

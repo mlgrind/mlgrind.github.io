@@ -7,13 +7,13 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
   height?: string;
   onRun?: () => void;
+  darkMode?: boolean;
 }
 
-export default function CodeEditor({ value, onChange, height = '400px', onRun }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, height = '400px', onRun, darkMode }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const onRunRef = useRef(onRun);
 
-  // Keep the ref updated with latest onRun callback
   useEffect(() => {
     onRunRef.current = onRun;
   }, [onRun]);
@@ -25,7 +25,6 @@ export default function CodeEditor({ value, onChange, height = '400px', onRun }:
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
 
-    // Add Shift+Enter keybinding to run tests
     editor.addAction({
       id: 'run-tests',
       label: 'Run Tests',
@@ -38,12 +37,14 @@ export default function CodeEditor({ value, onChange, height = '400px', onRun }:
     });
   }, []);
 
+  const theme = darkMode ? 'vs-dark' : 'light';
+
   return (
-    <div className="h-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+    <div className="h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
       <Editor
         height={height}
         defaultLanguage="python"
-        theme="light"
+        theme={theme}
         value={value}
         onChange={handleChange}
         onMount={handleEditorMount}

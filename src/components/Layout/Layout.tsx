@@ -11,7 +11,7 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
       <Header onMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
       <div className="flex flex-1">
         {/* Desktop sidebar */}
@@ -26,7 +26,7 @@ export default function Layout({ children }: LayoutProps) {
               className="fixed inset-0 bg-black/50"
               onClick={() => setIsMobileSidebarOpen(false)}
             />
-            <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl overflow-y-auto">
+            <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 shadow-xl overflow-y-auto">
               <div className="pt-2">
                 <Sidebar onNavigate={() => setIsMobileSidebarOpen(false)} />
               </div>
