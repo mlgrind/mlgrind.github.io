@@ -28,6 +28,9 @@ export default function ProblemPage() {
   const [isEditorMaximized, setIsEditorMaximized] = useState(false);
   const [editableTestCases, setEditableTestCases] = useState<TestCase[]>([]);
   const [resetKey, setResetKey] = useState(0);
+  const [showShortcutHint, setShowShortcutHint] = useState(
+    () => !localStorage.getItem('ml-lab-shortcut-hint-dismissed')
+  );
 
   // Load saved code or starter code
   useEffect(() => {
@@ -47,6 +50,22 @@ export default function ProblemPage() {
       return () => clearTimeout(timer);
     }
   }, [code, problem, sectionId, saveProblemCode]);
+
+  // Auto-dismiss shortcut hint after 10 seconds
+  useEffect(() => {
+    if (showShortcutHint) {
+      const timer = setTimeout(() => {
+        setShowShortcutHint(false);
+        localStorage.setItem('ml-lab-shortcut-hint-dismissed', 'true');
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [showShortcutHint]);
+
+  const dismissShortcutHint = useCallback(() => {
+    setShowShortcutHint(false);
+    localStorage.setItem('ml-lab-shortcut-hint-dismissed', 'true');
+  }, []);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
@@ -169,10 +188,26 @@ export default function ProblemPage() {
                 {isRunning ? 'Running...' : 'Run Tests'}
               </button>
               <span className="text-xs text-gray-400">or</span>
-              <div className="flex items-center gap-1 text-gray-500">
-                <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
-                <span className="text-xs">+</span>
-                <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+              <div className="relative">
+                <div className="flex items-center gap-1 text-gray-500">
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
+                  <span className="text-xs">+</span>
+                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+                </div>
+                {showShortcutHint && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45" />
+                    <span>Pro tip: </span>
+                    <span className="font-medium">Shift+Enter</span>
+                    <span> runs tests</span>
+                    <button
+                      onClick={dismissShortcutHint}
+                      className="ml-2 text-gray-400 hover:text-white underline"
+                    >
+                      Got it
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -262,10 +297,26 @@ export default function ProblemPage() {
                   {isRunning ? 'Running...' : 'Run Tests'}
                 </button>
                 <span className="text-xs text-gray-400">or</span>
-                <div className="flex items-center gap-1 text-gray-500">
-                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
-                  <span className="text-xs">+</span>
-                  <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+                <div className="relative">
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Shift</kbd>
+                    <span className="text-xs">+</span>
+                    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Enter</kbd>
+                  </div>
+                  {showShortcutHint && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45" />
+                      <span>Pro tip: </span>
+                      <span className="font-medium">Shift+Enter</span>
+                      <span> runs tests</span>
+                      <button
+                        onClick={dismissShortcutHint}
+                        className="ml-2 text-gray-400 hover:text-white underline"
+                      >
+                        Got it
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
