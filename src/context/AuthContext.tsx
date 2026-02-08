@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
-import { logEvent, setUserId } from 'firebase/analytics';
-import { auth, googleProvider, isConfigured, analytics } from '../lib/firebase';
+import { auth, googleProvider, isConfigured, gtagEvent, gtagSetUserId } from '../lib/firebase';
 import { logSignIn } from '../lib/signInLogger';
 
 interface AuthContextType {
@@ -25,9 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
-      if (analytics) {
-        setUserId(analytics, firebaseUser?.uid ?? null);
-      }
+      gtagSetUserId(firebaseUser?.uid ?? null);
     });
     return unsubscribe;
   }, []);
@@ -37,9 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       await logSignIn(result.user);
-      if (analytics) {
-        logEvent(analytics, 'login', { method: 'google' });
-      }
+      gtagEvent('login', { method: 'google' });
     } catch (error) {
       console.error('Google sign-in failed:', error);
     }

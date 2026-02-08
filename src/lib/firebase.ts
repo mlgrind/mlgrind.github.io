@@ -1,7 +1,12 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAnalytics, Analytics } from 'firebase/analytics';
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,7 +15,6 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
@@ -19,17 +23,24 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let googleProvider: GoogleAuthProvider | null = null;
-let analytics: Analytics | null = null;
 
 if (isConfigured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
   googleProvider = new GoogleAuthProvider();
+}
 
-  if (typeof window !== 'undefined') {
-    analytics = getAnalytics(app);
+function gtagEvent(eventName: string, params?: Record<string, unknown>) {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', eventName, params);
   }
 }
 
-export { auth, db, googleProvider, isConfigured, analytics };
+function gtagSetUserId(userId: string | null) {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('set', { user_id: userId });
+  }
+}
+
+export { auth, db, googleProvider, isConfigured, gtagEvent, gtagSetUserId };

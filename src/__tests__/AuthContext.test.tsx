@@ -7,9 +7,9 @@ import { ReactNode } from 'react';
 const mockOnAuthStateChanged = vi.fn();
 const mockSignInWithPopup = vi.fn();
 const mockFirebaseSignOut = vi.fn();
-const mockLogEvent = vi.fn();
-const mockSetUserId = vi.fn();
 const mockLogSignIn = vi.fn();
+const mockGtagEvent = vi.fn();
+const mockGtagSetUserId = vi.fn();
 
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: (...args: unknown[]) => mockOnAuthStateChanged(...args),
@@ -17,21 +17,16 @@ vi.mock('firebase/auth', () => ({
   signOut: (...args: unknown[]) => mockFirebaseSignOut(...args),
 }));
 
-vi.mock('firebase/analytics', () => ({
-  logEvent: (...args: unknown[]) => mockLogEvent(...args),
-  setUserId: (...args: unknown[]) => mockSetUserId(...args),
-}));
-
 let mockAuth: object | null = {};
 let mockGoogleProvider: object | null = {};
 let mockIsConfigured = true;
-let mockAnalytics: object | null = {};
 
 vi.mock('../lib/firebase', () => ({
   get auth() { return mockAuth; },
   get googleProvider() { return mockGoogleProvider; },
   get isConfigured() { return mockIsConfigured; },
-  get analytics() { return mockAnalytics; },
+  gtagEvent: (...args: unknown[]) => mockGtagEvent(...args),
+  gtagSetUserId: (...args: unknown[]) => mockGtagSetUserId(...args),
 }));
 
 vi.mock('../lib/signInLogger', () => ({
@@ -54,7 +49,6 @@ describe('AuthContext', () => {
     mockAuth = { type: 'auth' };
     mockGoogleProvider = { providerId: 'google.com' };
     mockIsConfigured = true;
-    mockAnalytics = { type: 'analytics' };
 
     // Default: onAuthStateChanged calls callback with null immediately, returns unsubscribe
     mockOnAuthStateChanged.mockImplementation((_auth, callback) => {
@@ -98,7 +92,7 @@ describe('AuthContext', () => {
       });
     });
 
-    it('should call setUserId with user uid when analytics is available', async () => {
+    it('should call gtagSetUserId with user uid on auth state change', async () => {
       const mockUser = createMockUser('uid-456');
       mockOnAuthStateChanged.mockImplementation((_auth, callback) => {
         callback(mockUser);
@@ -108,11 +102,11 @@ describe('AuthContext', () => {
       renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
-        expect(mockSetUserId).toHaveBeenCalledWith(mockAnalytics, 'uid-456');
+        expect(mockGtagSetUserId).toHaveBeenCalledWith('uid-456');
       });
     });
 
-    it('should call setUserId with null when user signs out', async () => {
+    it('should call gtagSetUserId with null when user signs out', async () => {
       mockOnAuthStateChanged.mockImplementation((_auth, callback) => {
         callback(null);
         return vi.fn();
@@ -121,22 +115,7 @@ describe('AuthContext', () => {
       renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
-        expect(mockSetUserId).toHaveBeenCalledWith(mockAnalytics, null);
-      });
-    });
-
-    it('should not call setUserId when analytics is null', async () => {
-      mockAnalytics = null;
-      const mockUser = createMockUser();
-      mockOnAuthStateChanged.mockImplementation((_auth, callback) => {
-        callback(mockUser);
-        return vi.fn();
-      });
-
-      renderHook(() => useAuth(), { wrapper });
-
-      await waitFor(() => {
-        expect(mockSetUserId).not.toHaveBeenCalled();
+        expect(mockGtagSetUserId).toHaveBeenCalledWith(null);
       });
     });
 
@@ -167,7 +146,7 @@ describe('AuthContext', () => {
       expect(mockLogSignIn).toHaveBeenCalledWith(mockUser);
     });
 
-    it('should log analytics event on successful sign-in', async () => {
+    it('should fire gtag login event on successful sign-in', async () => {
       const mockUser = createMockUser();
       mockSignInWithPopup.mockResolvedValue({ user: mockUser });
       mockLogSignIn.mockResolvedValue(undefined);
@@ -178,22 +157,7 @@ describe('AuthContext', () => {
         await result.current.signInWithGoogle();
       });
 
-      expect(mockLogEvent).toHaveBeenCalledWith(mockAnalytics, 'login', { method: 'google' });
-    });
-
-    it('should not log analytics event when analytics is null', async () => {
-      mockAnalytics = null;
-      const mockUser = createMockUser();
-      mockSignInWithPopup.mockResolvedValue({ user: mockUser });
-      mockLogSignIn.mockResolvedValue(undefined);
-
-      const { result } = renderHook(() => useAuth(), { wrapper });
-
-      await act(async () => {
-        await result.current.signInWithGoogle();
-      });
-
-      expect(mockLogEvent).not.toHaveBeenCalled();
+      expect(mockGtagEvent).toHaveBeenCalledWith('login', { method: 'google' });
     });
 
     it('should handle sign-in failure gracefully', async () => {
@@ -208,7 +172,7 @@ describe('AuthContext', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith('Google sign-in failed:', expect.any(Error));
       expect(mockLogSignIn).not.toHaveBeenCalled();
-      expect(mockLogEvent).not.toHaveBeenCalled();
+      expect(mockGtagEvent).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
     });
