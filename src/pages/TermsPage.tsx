@@ -5,7 +5,7 @@ export default function TermsPage() {
     <>
       <SEO
         title="Terms of Service"
-        description="Terms of Service for ML Coding Lab - an interactive platform for learning machine learning through hands-on coding exercises."
+        description="Terms of Service for ML Grind - an interactive platform for learning machine learning through hands-on coding exercises."
         canonical="/terms"
       />
 
@@ -20,7 +20,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">1. Acceptance of Terms</h2>
             <p className="text-gray-600 mb-4">
-              By accessing and using ML Coding Lab ("the Service"), you accept and agree to be bound
+              By accessing and using ML Grind ("the Service"), you accept and agree to be bound
               by these Terms of Service. If you do not agree to these terms, please do not use the Service.
             </p>
           </section>
@@ -28,7 +28,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">2. Description of Service</h2>
             <p className="text-gray-600 mb-4">
-              ML Coding Lab is an educational platform that provides interactive machine learning
+              ML Grind is an educational platform that provides interactive machine learning
               coding exercises, tutorials, and learning materials. The Service allows users to:
             </p>
             <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
@@ -43,7 +43,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">3. Intellectual Property Rights</h2>
             <p className="text-gray-600 mb-4">
-              <strong>Software Code:</strong> The source code of ML Coding Lab is licensed under the
+              <strong>Software Code:</strong> The source code of ML Grind is licensed under the
               MIT License. You may use, modify, and distribute the code in accordance with the terms
               of that license.
             </p>

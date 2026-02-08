@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <>
       <SEO
         title="Privacy Policy"
-        description="Privacy Policy for ML Coding Lab - learn how we handle your data on our machine learning education platform."
+        description="Privacy Policy for ML Grind - learn how we handle your data on our machine learning education platform."
         canonical="/privacy"
       />
 
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview</h2>
             <p className="text-gray-600 mb-4">
-              ML Coding Lab is committed to protecting your privacy. This Privacy Policy explains
+              ML Grind is committed to protecting your privacy. This Privacy Policy explains
               how we collect, use, and protect information when you use our Service.
             </p>
             <p className="text-gray-600 mb-4">
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="text-gray-600 mb-4">
               This data is stored securely in Firestore and is only accessible by you (authenticated
-              via your Google account). You can continue using ML Coding Lab without signing in — all
+              via your Google account). You can continue using ML Grind without signing in — all
               features work with local storage only.
             </p>
 
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
               and service improvement purposes.
             </p>
             <p className="text-gray-600 mb-4">
-              ML Coding Lab is hosted on GitHub Pages. GitHub may collect standard server logs
+              ML Grind is hosted on GitHub Pages. GitHub may collect standard server logs
               including IP addresses and page requests. Please refer to{' '}
               <a
                 href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"

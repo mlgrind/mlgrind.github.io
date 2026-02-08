@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test runner for ML Coding Lab problems.
+Test runner for ML Grind problems.
 Runs each problem's solution against its test cases.
 """
 
@@ -244,7 +244,7 @@ def main():
         problems = json.load(f)
 
     print(f"\n{'='*60}")
-    print(f"ML Coding Lab - Solution Test Runner")
+    print(f"ML Grind - Solution Test Runner")
     print(f"{'='*60}")
     print(f"Testing {len(problems)} problems...\n")
 

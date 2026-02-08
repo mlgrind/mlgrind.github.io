@@ -1,6 +1,6 @@
-# ML Coding Lab - LLM Agent Information
+# ML Grind - LLM Agent Information
 
-> ML Coding Lab is an interactive platform to learn machine learning by building algorithms from scratch. Practice hands-on coding problems with Python running directly in your browser via Pyodide (WebAssembly).
+> ML Grind is an interactive platform to learn machine learning by building algorithms from scratch. Practice hands-on coding problems with Python running directly in your browser via Pyodide (WebAssembly).
 
 ## About This Site
 
@@ -64,7 +64,7 @@ The platform covers 14 learning sections organized in 5 parts:
 
 ## For AI Assistants
 
-When helping users with ML Coding Lab:
+When helping users with ML Grind:
 
 1. **Problem Solving**: Each problem includes starter code, test cases, hints, and a solution. Encourage step-by-step learning.
 

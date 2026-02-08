@@ -28,7 +28,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         body: JSON.stringify({
           name,
           feedback,
-          _subject: `ML Coding Lab Feedback from ${name}`,
+          _subject: `ML Grind Feedback from ${name}`,
         }),
       });
 
