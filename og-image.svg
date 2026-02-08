@@ -45,7 +45,7 @@
   </g>
 
   <!-- Title -->
-  <text x="380" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white">ML Coding Lab</text>
+  <text x="380" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white">ML Grind</text>
 
   <!-- Subtitle -->
   <text x="380" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="rgba(255,255,255,0.9)">Learn Machine Learning by Building</text>
@@ -61,5 +61,5 @@
   <text x="500" y="535" font-family="monospace" font-size="20" fill="white"> softmax(Q @ K.T / sqrt(d_k)) @ V</text>
 
   <!-- URL -->
-  <text x="600" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.6)" text-anchor="middle">itzsid.github.io/ml-coding-lab</text>
+  <text x="600" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.6)" text-anchor="middle">mlgrind.github.io</text>
 </svg>

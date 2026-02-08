@@ -1,4 +1,4 @@
-# ML Coding Lab - robots.txt
+# ML Grind - robots.txt
 # https://mlgrind.github.io/
 
 User-agent: *

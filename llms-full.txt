@@ -1,10 +1,10 @@
-# ML Coding Lab - Complete Documentation for LLM Agents
+# ML Grind - Complete Documentation for LLM Agents
 
-> This document provides comprehensive information about ML Coding Lab for AI assistants and LLM-based crawlers. Use this to understand the platform's full content and help users effectively.
+> This document provides comprehensive information about ML Grind for AI assistants and LLM-based crawlers. Use this to understand the platform's full content and help users effectively.
 
 ## Platform Overview
 
-ML Coding Lab is a LeetCode-style web application for learning machine learning through hands-on coding. Users implement ML algorithms from scratch using Python (via Pyodide WebAssembly) directly in the browser.
+ML Grind is a LeetCode-style web application for learning machine learning through hands-on coding. Users implement ML algorithms from scratch using Python (via Pyodide WebAssembly) directly in the browser.
 
 **Live Site**: https://mlgrind.github.io/
 **Repository**: https://github.com/mlgrind/mlgrind.github.io
