@@ -14,7 +14,7 @@ export default function PrivacyPage() {
 
         <div className="prose prose-gray max-w-none">
           <p className="text-gray-600 mb-6">
-            <strong>Last updated:</strong> February 1, 2026
+            <strong>Last updated:</strong> February 8, 2026
           </p>
 
           <section className="mb-8">
@@ -75,6 +75,18 @@ export default function PrivacyPage() {
 
             <h3 className="text-lg font-medium text-gray-700 mb-3">Analytics and Hosting</h3>
             <p className="text-gray-600 mb-4">
+              We use Firebase Analytics (Google Analytics 4) to understand how the Service is used
+              and to improve the user experience. Firebase Analytics automatically collects
+              anonymous usage data including approximate geographic location, browser type, device
+              type, and page views. This data is processed by Google under their data processing
+              terms. No personally identifiable information is shared with analytics beyond what
+              Google automatically collects from standard web interactions.
+            </p>
+            <p className="text-gray-600 mb-4">
+              If you sign in with Google, sign-in events are logged with timestamps for security
+              and service improvement purposes.
+            </p>
+            <p className="text-gray-600 mb-4">
               ML Coding Lab is hosted on GitHub Pages. GitHub may collect standard server logs
               including IP addresses and page requests. Please refer to{' '}
               <a
@@ -94,7 +106,7 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
               <li>We do not require account registration</li>
               <li>We do not use cookies for tracking</li>
-              <li>We do not use third-party analytics services</li>
+              <li>We use Firebase Analytics only for aggregate usage insights (see above)</li>
               <li>We do not collect personal information beyond what you voluntarily provide</li>
               <li>We do not sell or share your data with third parties</li>
             </ul>
