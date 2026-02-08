@@ -2,7 +2,7 @@
 
 A LeetCode-style web application for machine learning interview preparation with browser-based Python execution.
 
-**Live Demo:** https://itzsid.github.io/ml-coding-lab/
+**Live Demo:** https://mlgrind.github.io/
 
 ![ML Interview Prep](https://img.shields.io/badge/Python-In_Browser-blue) ![React](https://img.shields.io/badge/React-18-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)
 
@@ -35,13 +35,13 @@ A LeetCode-style web application for machine learning interview preparation with
 
 ### Online
 
-Visit https://itzsid.github.io/ml-coding-lab/ - no installation needed!
+Visit https://mlgrind.github.io/ - no installation needed!
 
 ### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/itzsid/ml-coding-lab.git
+git clone https://github.com/mlgrind/mlgrind.github.io.git
 cd ml-coding-lab
 
 # Install dependencies

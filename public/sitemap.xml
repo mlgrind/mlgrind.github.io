@@ -2,26 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Home Page -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/</loc>
+    <loc>https://mlgrind.github.io/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Scratchpad -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/scratchpad</loc>
+    <loc>https://mlgrind.github.io/scratchpad</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Legal Pages -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/terms</loc>
+    <loc>https://mlgrind.github.io/terms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/privacy</loc>
+    <loc>https://mlgrind.github.io/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -29,80 +29,80 @@
   <!-- Section Pages -->
   <!-- Part 1: Foundations -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/numpy-fundamentals</loc>
+    <loc>https://mlgrind.github.io/section/numpy-fundamentals</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/python-basics</loc>
+    <loc>https://mlgrind.github.io/section/python-basics</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/einsum</loc>
+    <loc>https://mlgrind.github.io/section/einsum</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/pytorch-basics</loc>
+    <loc>https://mlgrind.github.io/section/pytorch-basics</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Part 2: Data -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/data-preprocessing</loc>
+    <loc>https://mlgrind.github.io/section/data-preprocessing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Part 3: Classical ML -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/supervised-learning</loc>
+    <loc>https://mlgrind.github.io/section/supervised-learning</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/unsupervised-learning</loc>
+    <loc>https://mlgrind.github.io/section/unsupervised-learning</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/model-evaluation</loc>
+    <loc>https://mlgrind.github.io/section/model-evaluation</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Part 4: Deep Learning -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/deep-learning</loc>
+    <loc>https://mlgrind.github.io/section/deep-learning</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/neural-networks</loc>
+    <loc>https://mlgrind.github.io/section/neural-networks</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/cnn</loc>
+    <loc>https://mlgrind.github.io/section/cnn</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/transformers</loc>
+    <loc>https://mlgrind.github.io/section/transformers</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/generative-models</loc>
+    <loc>https://mlgrind.github.io/section/generative-models</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Part 5: Capstone -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/section/e2e-implementations</loc>
+    <loc>https://mlgrind.github.io/section/e2e-implementations</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -110,333 +110,333 @@
   <!-- Problem Pages -->
   <!-- NumPy Fundamentals Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-array-creation</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-array-creation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-indexing</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-indexing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-broadcasting</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-broadcasting</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-aggregations</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-aggregations</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-reshape-transpose</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-reshape-transpose</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Python Basics Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-array-sum</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-array-sum</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-matrix-multiply</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-matrix-multiply</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/numpy-broadcast-add</loc>
+    <loc>https://mlgrind.github.io/problem/numpy-broadcast-add</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Einstein Summation Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/einsum-basics</loc>
+    <loc>https://mlgrind.github.io/problem/einsum-basics</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/einsum-matrix-ops</loc>
+    <loc>https://mlgrind.github.io/problem/einsum-matrix-ops</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/einsum-batch-ops</loc>
+    <loc>https://mlgrind.github.io/problem/einsum-batch-ops</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/einsum-advanced</loc>
+    <loc>https://mlgrind.github.io/problem/einsum-advanced</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/einsum-vs-matmul</loc>
+    <loc>https://mlgrind.github.io/problem/einsum-vs-matmul</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- PyTorch Basics Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/tensor-creation</loc>
+    <loc>https://mlgrind.github.io/problem/tensor-creation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/tensor-operations</loc>
+    <loc>https://mlgrind.github.io/problem/tensor-operations</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/autograd-concepts</loc>
+    <loc>https://mlgrind.github.io/problem/autograd-concepts</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/nn-modules</loc>
+    <loc>https://mlgrind.github.io/problem/nn-modules</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/loss-functions</loc>
+    <loc>https://mlgrind.github.io/problem/loss-functions</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Data Preprocessing Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/normalize-features</loc>
+    <loc>https://mlgrind.github.io/problem/normalize-features</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/handle-missing-data</loc>
+    <loc>https://mlgrind.github.io/problem/handle-missing-data</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/one-hot-encode</loc>
+    <loc>https://mlgrind.github.io/problem/one-hot-encode</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Supervised Learning Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/linear-regression-gd</loc>
+    <loc>https://mlgrind.github.io/problem/linear-regression-gd</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/logistic-regression</loc>
+    <loc>https://mlgrind.github.io/problem/logistic-regression</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/logistic-regression-full</loc>
+    <loc>https://mlgrind.github.io/problem/logistic-regression-full</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/binary-cross-entropy</loc>
+    <loc>https://mlgrind.github.io/problem/binary-cross-entropy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/decision-tree-split</loc>
+    <loc>https://mlgrind.github.io/problem/decision-tree-split</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Unsupervised Learning Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/kmeans-clustering</loc>
+    <loc>https://mlgrind.github.io/problem/kmeans-clustering</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/pca-implementation</loc>
+    <loc>https://mlgrind.github.io/problem/pca-implementation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Model Evaluation Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/precision-recall-f1</loc>
+    <loc>https://mlgrind.github.io/problem/precision-recall-f1</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/cross-validation</loc>
+    <loc>https://mlgrind.github.io/problem/cross-validation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/confusion-matrix</loc>
+    <loc>https://mlgrind.github.io/problem/confusion-matrix</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Deep Learning Basics Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/perceptron</loc>
+    <loc>https://mlgrind.github.io/problem/perceptron</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/neural-network-forward</loc>
+    <loc>https://mlgrind.github.io/problem/neural-network-forward</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/backpropagation</loc>
+    <loc>https://mlgrind.github.io/problem/backpropagation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Neural Networks Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/cross-entropy-loss</loc>
+    <loc>https://mlgrind.github.io/problem/cross-entropy-loss</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/mlp-forward-backward</loc>
+    <loc>https://mlgrind.github.io/problem/mlp-forward-backward</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/weight-init</loc>
+    <loc>https://mlgrind.github.io/problem/weight-init</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/batch-norm</loc>
+    <loc>https://mlgrind.github.io/problem/batch-norm</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/dropout</loc>
+    <loc>https://mlgrind.github.io/problem/dropout</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- CNN Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/conv-output-size</loc>
+    <loc>https://mlgrind.github.io/problem/conv-output-size</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/conv2d-forward</loc>
+    <loc>https://mlgrind.github.io/problem/conv2d-forward</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/max-pool</loc>
+    <loc>https://mlgrind.github.io/problem/max-pool</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/flatten-layer</loc>
+    <loc>https://mlgrind.github.io/problem/flatten-layer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/conv2d-advanced</loc>
+    <loc>https://mlgrind.github.io/problem/conv2d-advanced</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Transformer Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/scaled-dot-product-attention</loc>
+    <loc>https://mlgrind.github.io/problem/scaled-dot-product-attention</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/multi-head-attention</loc>
+    <loc>https://mlgrind.github.io/problem/multi-head-attention</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/positional-encoding</loc>
+    <loc>https://mlgrind.github.io/problem/positional-encoding</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/layer-norm</loc>
+    <loc>https://mlgrind.github.io/problem/layer-norm</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/causal-mask</loc>
+    <loc>https://mlgrind.github.io/problem/causal-mask</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Generative Models Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/kl-divergence</loc>
+    <loc>https://mlgrind.github.io/problem/kl-divergence</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/vae-reparameterization</loc>
+    <loc>https://mlgrind.github.io/problem/vae-reparameterization</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/vae-loss</loc>
+    <loc>https://mlgrind.github.io/problem/vae-loss</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/vqvae-quantization</loc>
+    <loc>https://mlgrind.github.io/problem/vqvae-quantization</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/diffusion-noise-schedule</loc>
+    <loc>https://mlgrind.github.io/problem/diffusion-noise-schedule</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/diffusion-forward</loc>
+    <loc>https://mlgrind.github.io/problem/diffusion-forward</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- E2E Implementation Problems -->
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-mlp</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-mlp</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-transformer</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-transformer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-vae</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-vae</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-vqvae</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-vqvae</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-diffusion</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-diffusion</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://itzsid.github.io/ml-coding-lab/problem/e2e-cnn</loc>
+    <loc>https://mlgrind.github.io/problem/e2e-cnn</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

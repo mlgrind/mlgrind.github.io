@@ -11,7 +11,7 @@
     "type": "none",
     "info": "This is a static educational website, not an API. See /llms-full.txt for complete content documentation."
   },
-  "logo_url": "https://itzsid.github.io/ml-coding-lab/vite.svg",
+  "logo_url": "https://mlgrind.github.io/vite.svg",
   "contact_email": "",
-  "legal_info_url": "https://github.com/itzsid/ml-coding-lab"
+  "legal_info_url": "https://github.com/mlgrind/mlgrind.github.io"
 }

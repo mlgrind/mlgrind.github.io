@@ -14,8 +14,8 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 - Use a Python scratchpad to experiment with code (NumPy pre-loaded)
 - Submit feedback via in-app form (sends email via Formspree)
 
-**Live site:** https://itzsid.github.io/ml-coding-lab/
-**Repository:** https://github.com/itzsid/ml-coding-lab
+**Live site:** https://mlgrind.github.io/
+**Repository:** https://github.com/mlgrind/mlgrind.github.io
 
 ## Tech Stack
 
@@ -591,7 +591,7 @@ The site deploys to GitHub Pages via the `gh-pages` npm package:
 npm run deploy   # Builds and pushes to gh-pages branch
 ```
 
-The `base` path in `vite.config.ts` is set to `/ml-coding-lab/` for GitHub Pages.
+The `base` path in `vite.config.ts` is set to `/` for GitHub Pages (org site at `mlgrind.github.io`).
 
 ## Known Limitations
 

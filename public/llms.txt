@@ -4,7 +4,7 @@
 
 ## About This Site
 
-- **URL**: https://itzsid.github.io/ml-coding-lab/
+- **URL**: https://mlgrind.github.io/
 - **Type**: Educational / Learning Platform
 - **Topic**: Machine Learning, Deep Learning, Neural Networks, AI
 - **Language**: English
@@ -50,10 +50,10 @@ The platform covers 14 learning sections organized in 5 parts:
 
 ## Key URLs
 
-- Home: https://itzsid.github.io/ml-coding-lab/
-- Scratchpad: https://itzsid.github.io/ml-coding-lab/scratchpad
-- Sections: https://itzsid.github.io/ml-coding-lab/section/{section-id}
-- Problems: https://itzsid.github.io/ml-coding-lab/problem/{problem-id}
+- Home: https://mlgrind.github.io/
+- Scratchpad: https://mlgrind.github.io/scratchpad
+- Sections: https://mlgrind.github.io/section/{section-id}
+- Problems: https://mlgrind.github.io/problem/{problem-id}
 
 ## Technical Details
 
@@ -84,8 +84,8 @@ When helping users with ML Coding Lab:
 
 ## Contact & Repository
 
-- **Repository**: https://github.com/itzsid/ml-coding-lab
-- **Issues**: https://github.com/itzsid/ml-coding-lab/issues
+- **Repository**: https://github.com/mlgrind/mlgrind.github.io
+- **Issues**: https://github.com/mlgrind/mlgrind.github.io/issues
 
 ## Detailed Documentation
 

@@ -6,8 +6,8 @@
 
 ML Coding Lab is a LeetCode-style web application for learning machine learning through hands-on coding. Users implement ML algorithms from scratch using Python (via Pyodide WebAssembly) directly in the browser.
 
-**Live Site**: https://itzsid.github.io/ml-coding-lab/
-**Repository**: https://github.com/itzsid/ml-coding-lab
+**Live Site**: https://mlgrind.github.io/
+**Repository**: https://github.com/mlgrind/mlgrind.github.io
 
 ### Core Features
 - Interactive code editor (Monaco)
@@ -402,5 +402,5 @@ Tests can be:
 
 ## Contact
 
-- **GitHub Repository**: https://github.com/itzsid/ml-coding-lab
-- **Issues/Feedback**: https://github.com/itzsid/ml-coding-lab/issues
+- **GitHub Repository**: https://github.com/mlgrind/mlgrind.github.io
+- **Issues/Feedback**: https://github.com/mlgrind/mlgrind.github.io/issues

@@ -143,7 +143,7 @@ export default function PrivacyPage() {
             <p className="text-gray-600 mb-4">
               For questions about this Privacy Policy, please open an issue on our{' '}
               <a
-                href="https://github.com/itzsid/ml-coding-lab"
+                href="https://github.com/mlgrind/mlgrind.github.io"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:text-primary-700"

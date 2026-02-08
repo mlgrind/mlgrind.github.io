@@ -25,7 +25,7 @@ export default function Footer() {
               Privacy
             </Link>
             <a
-              href="https://github.com/itzsid/ml-coding-lab"
+              href="https://github.com/mlgrind/mlgrind.github.io"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100 transition-colors flex items-center gap-1"

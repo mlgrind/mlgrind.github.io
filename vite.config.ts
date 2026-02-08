@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/ml-coding-lab/',
+  base: '/',
   optimizeDeps: {
     exclude: ['pyodide']
   },

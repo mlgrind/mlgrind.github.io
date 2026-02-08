@@ -1,15 +1,15 @@
 # ML Coding Lab - robots.txt
-# https://itzsid.github.io/ml-coding-lab/
+# https://mlgrind.github.io/
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://itzsid.github.io/ml-coding-lab/sitemap.xml
+Sitemap: https://mlgrind.github.io/sitemap.xml
 
 # LLM Agent Discovery
 # For AI assistants and LLM-based crawlers, see llms.txt for structured content
-# https://itzsid.github.io/ml-coding-lab/llms.txt
+# https://mlgrind.github.io/llms.txt
 
 # Crawl-delay for polite crawling (optional, not all bots respect this)
 Crawl-delay: 1
