@@ -4,6 +4,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { sections } from '../../data/sections';
 import FeedbackModal from '../FeedbackModal/FeedbackModal';
 import { useDarkMode } from '../../hooks/useDarkMode';
+import UserMenu from '../Auth/UserMenu';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -93,6 +94,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 </svg>
               )}
             </button>
+            <UserMenu />
             {/* Progress pill */}
             <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-200 dark:border-dark-500 text-xs">
               <div className="w-20 h-1 bg-gray-200 dark:bg-dark-500 rounded-full overflow-hidden">

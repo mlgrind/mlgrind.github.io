@@ -58,6 +58,21 @@ export default function PrivacyPage() {
               and improve the Service.
             </p>
 
+            <h3 className="text-lg font-medium text-gray-700 mb-3">Google Sign-In (Optional)</h3>
+            <p className="text-gray-600 mb-4">
+              If you choose to sign in with Google, we collect and store the following information
+              in Google Cloud Firestore to sync your progress across devices:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
+              <li><strong>Google profile information:</strong> Your name, email address, and profile photo URL</li>
+              <li><strong>Progress data:</strong> Problem completion status, saved code, and timestamps</li>
+            </ul>
+            <p className="text-gray-600 mb-4">
+              This data is stored securely in Firestore and is only accessible by you (authenticated
+              via your Google account). You can continue using ML Coding Lab without signing in — all
+              features work with local storage only.
+            </p>
+
             <h3 className="text-lg font-medium text-gray-700 mb-3">Analytics and Hosting</h3>
             <p className="text-gray-600 mb-4">
               ML Coding Lab is hosted on GitHub Pages. GitHub may collect standard server logs

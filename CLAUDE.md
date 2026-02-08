@@ -13,6 +13,7 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 - Track progress across sections
 - Use a Python scratchpad to experiment with code (NumPy pre-loaded)
 - Submit feedback via in-app form (sends email via Formspree)
+- Sign in with Google to sync progress across devices (Firebase Auth + Firestore)
 
 **Live site:** https://mlgrind.github.io/
 **Repository:** https://github.com/mlgrind/mlgrind.github.io
@@ -32,6 +33,7 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 | react-markdown | Markdown rendering | 9.x |
 | remark-gfm | GitHub Flavored Markdown (tables, etc.) | - |
 | react-helmet-async | Dynamic SEO meta tags | 2.x |
+| Firebase | Auth + Firestore cloud sync | 11.x |
 
 ## Project Structure
 
@@ -55,12 +57,19 @@ src/
 │   │   └── TestResults.tsx  # Pass/fail display
 │   ├── Progress/
 │   │   └── ProgressBar.tsx  # Progress indicator
+│   ├── Auth/
+│   │   └── UserMenu.tsx     # Google sign-in button / avatar dropdown
 │   ├── FeedbackModal/
 │   │   └── FeedbackModal.tsx  # Feedback form modal (Formspree)
 │   └── SEO/
 │       └── SEO.tsx          # Dynamic meta tags component
 ├── context/
-│   └── ProgressContext.tsx  # Global progress state (localStorage)
+│   ├── AuthContext.tsx      # Firebase auth state (Google sign-in/out)
+│   └── ProgressContext.tsx  # Global progress state (localStorage + Firestore sync)
+├── lib/
+│   ├── firebase.ts          # Firebase app init, auth, Firestore exports
+│   ├── firestoreSync.ts     # Firestore read/write for progress data
+│   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
 │   ├── sections.ts          # Section definitions with intros (14 sections)
 │   └── problems/            # Problem definitions by section (~55 problems)
@@ -100,8 +109,14 @@ src/
 - **`src/data/sections.ts`** - Defines the 14 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
 - **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (~55 problems total)
 
+### Authentication & Sync
+- **`src/lib/firebase.ts`** - Initializes Firebase app from `VITE_FIREBASE_*` env vars. Exports `auth`, `db` (Firestore), `googleProvider`, and `isConfigured` boolean. Gracefully no-ops when env vars are missing.
+- **`src/context/AuthContext.tsx`** - React Context wrapping Firebase Auth. Provides `user`, `loading`, `signInWithGoogle` (popup-based), `signOut`, and `useAuth()` hook.
+- **`src/lib/firestoreSync.ts`** - `loadProgressFromFirestore(uid)` and `saveProgressToFirestore(uid, progress, userInfo)`. Document path: `users/{uid}`.
+- **`src/lib/mergeProgress.ts`** - Per-problem merge: `completed` > `in_progress` > `not_started`. On tie, keeps the more recent `lastAttempt`.
+
 ### State Management
-- **`src/context/ProgressContext.tsx`** - React Context for tracking problem completion, saved code, stored in localStorage under key `ml-interview-progress`
+- **`src/context/ProgressContext.tsx`** - React Context for tracking problem completion, saved code. Stored in localStorage under key `ml-interview-progress`. When signed in, also syncs to Firestore with debounced writes (2s). Merges local + cloud progress on login.
 
 ### Python Execution
 - **`src/hooks/usePyodide.ts`** - Loads Pyodide, executes user code, runs test cases, captures stdout/stderr
@@ -158,6 +173,39 @@ npm run build    # Production build
 npm test         # Run tests
 npm run deploy   # Build and deploy to GitHub Pages
 ```
+
+## Firebase / Environment Setup
+
+Firebase is used for Google Sign-In and cross-device progress sync. The app works without Firebase config (auth features are hidden when `isConfigured` is false).
+
+### Environment Variables
+
+Create `.env.local` (gitignored) with:
+
+```
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+These are public Firebase identifiers (not secrets). Security is enforced by Firestore rules.
+
+### Firebase Console Requirements
+
+- **Authentication**: Google sign-in provider enabled, `mlgrind.github.io` in authorized domains
+- **Firestore**: Production mode, `nam5` (US) location
+- **Firestore Rules**: Users can only read/write their own `users/{uid}` document
+
+### Provider Nesting Order (src/main.tsx)
+
+```
+HelmetProvider > BrowserRouter > AuthProvider > ProgressProvider > App
+```
+
+`AuthProvider` must wrap `ProgressProvider` because `ProgressContext` calls `useAuth()`.
 
 ## Common Tasks
 
@@ -598,7 +646,7 @@ The `base` path in `vite.config.ts` is set to `/` for GitHub Pages (org site at 
 1. **Pyodide loading time** - First load takes a few seconds to download WebAssembly
 2. **Limited Python packages** - Only numpy is pre-loaded; sklearn requires additional loading
 3. **No code execution timeout** - Long-running code can freeze the browser
-4. **localStorage only** - Progress doesn't sync across devices
+4. **Firestore sync requires sign-in** - Anonymous users still use localStorage only
 
 ## Content References
 
@@ -611,7 +659,7 @@ The problem content was developed using these resources:
 
 - Add more ML packages (sklearn, pandas)
 - Implement code execution timeout
-- Add user authentication for cloud sync
+- ~~Add user authentication for cloud sync~~ (Done - Firebase Auth + Firestore)
 - Add problem difficulty filters
 - Add search functionality
 - Add code submission history
@@ -634,7 +682,7 @@ Run with: `npm test`
 ## Architecture Decisions
 
 1. **Pyodide over backend** - Eliminates need for server, enables offline use
-2. **localStorage for progress** - Simple, no auth needed for MVP
+2. **localStorage + Firestore for progress** - localStorage for all users, Firestore sync when signed in via Google
 3. **Monaco Editor** - Feature-rich, familiar to developers
 4. **Tailwind CSS** - Rapid styling, consistent design system
 5. **React Context over Redux** - Simpler state management for this scale

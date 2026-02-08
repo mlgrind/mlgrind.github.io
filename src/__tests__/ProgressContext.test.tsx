@@ -1,7 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { ProgressProvider, useProgress } from '../context/ProgressContext';
 import { ReactNode } from 'react';
+
+// Mock AuthContext before importing ProgressContext
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: null, loading: false, signInWithGoogle: vi.fn(), signOut: vi.fn() }),
+}));
+
+// Mock Firestore sync to avoid Firebase initialization
+vi.mock('../lib/firestoreSync', () => ({
+  loadProgressFromFirestore: vi.fn(),
+  saveProgressToFirestore: vi.fn(),
+}));
+
+import { ProgressProvider, useProgress } from '../context/ProgressContext';
 
 // Mock localStorage
 const localStorageMock = (() => {
