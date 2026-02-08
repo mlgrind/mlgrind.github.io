@@ -40,25 +40,19 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 </svg>
               </button>
             )}
-            <Link to="/" className="flex items-center gap-2.5">
+            <Link to="/" className="flex items-center gap-3">
               <svg className="w-8 h-8 shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="32" height="32" rx="8" fill="url(#header-logo-grad)" />
-                <line x1="10" y1="9" x2="22" y2="16" stroke="white" strokeWidth="1.3" opacity="0.35" strokeLinecap="round" />
-                <line x1="10" y1="16" x2="22" y2="16" stroke="white" strokeWidth="1.3" opacity="0.35" strokeLinecap="round" />
-                <line x1="10" y1="23" x2="22" y2="16" stroke="white" strokeWidth="1.3" opacity="0.35" strokeLinecap="round" />
-                <circle cx="10" cy="9" r="2.5" fill="white" fillOpacity="0.85" />
-                <circle cx="10" cy="16" r="2.5" fill="white" fillOpacity="0.85" />
-                <circle cx="10" cy="23" r="2.5" fill="white" fillOpacity="0.85" />
-                <circle cx="22" cy="16" r="3" fill="white" />
-                <defs>
-                  <linearGradient id="header-logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#6c5ce7" />
-                    <stop offset="1" stopColor="#00c9a7" />
-                  </linearGradient>
-                </defs>
+                <rect width="32" height="32" rx="8" fill="#6c5ce7" />
+                <line x1="10" y1="8.5" x2="22" y2="16" stroke="white" strokeWidth="1.8" opacity="0.4" strokeLinecap="round" />
+                <line x1="10" y1="16" x2="22" y2="16" stroke="white" strokeWidth="1.8" opacity="0.4" strokeLinecap="round" />
+                <line x1="10" y1="23.5" x2="22" y2="16" stroke="white" strokeWidth="1.8" opacity="0.4" strokeLinecap="round" />
+                <circle cx="10" cy="8.5" r="2.8" fill="white" fillOpacity="0.9" />
+                <circle cx="10" cy="16" r="2.8" fill="white" fillOpacity="0.9" />
+                <circle cx="10" cy="23.5" r="2.8" fill="white" fillOpacity="0.9" />
+                <circle cx="22" cy="16" r="3.5" fill="white" />
               </svg>
-              <span className="text-[17px] font-bold tracking-tight whitespace-nowrap">
-                <span className="bg-gradient-to-r from-primary-400 to-accent-500 bg-clip-text text-transparent">ML</span>
+              <span className="text-lg font-extrabold tracking-tight whitespace-nowrap">
+                <span className="text-primary-500">ML</span>
                 <span className="text-gray-900 dark:text-dark-100"> Grind</span>
               </span>
             </Link>
