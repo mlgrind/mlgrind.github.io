@@ -1,0 +1,92 @@
+# ML Coding Lab - LLM Agent Information
+
+> ML Coding Lab is an interactive platform to learn machine learning by building algorithms from scratch. Practice hands-on coding problems with Python running directly in your browser via Pyodide (WebAssembly).
+
+## About This Site
+
+- **URL**: https://mlgrind.github.io/
+- **Type**: Educational / Learning Platform
+- **Topic**: Machine Learning, Deep Learning, Neural Networks, AI
+- **Language**: English
+- **Tech Stack**: React, TypeScript, Pyodide (in-browser Python), Monaco Editor
+
+## What Users Can Do
+
+1. Read problem descriptions with theory introductions
+2. Write Python code in a Monaco editor
+3. Execute code in-browser (no server required)
+4. Run automated test cases and see pass/fail results
+5. Edit test cases to experiment with different inputs
+6. Track progress across sections (saved locally)
+7. Use a Python scratchpad for experimentation
+
+## Content Structure
+
+The platform covers 14 learning sections organized in 5 parts:
+
+### Part 1: Foundations
+- **NumPy Fundamentals**: Array creation, indexing, broadcasting, aggregations, reshape/transpose
+- **Python Basics for ML**: Array sum, matrix multiply, broadcast add
+- **Einstein Summation (Einsum)**: Basics, matrix ops, batch ops, multi-head attention patterns
+- **PyTorch Basics**: Tensor creation, operations, autograd concepts, NN modules, loss functions
+
+### Part 2: Data
+- **Data Preprocessing**: Normalize features, handle missing data, one-hot encoding
+
+### Part 3: Classical ML
+- **Supervised Learning**: Linear regression (gradient descent), logistic regression, binary cross-entropy, decision tree split
+- **Unsupervised Learning**: K-means clustering, PCA implementation
+- **Model Evaluation**: Precision/recall/F1, cross-validation, confusion matrix
+
+### Part 4: Deep Learning
+- **Deep Learning Basics**: Perceptron, neural network forward pass, backpropagation
+- **Neural Networks**: Cross-entropy loss, MLP forward/backward, weight initialization, batch norm, dropout
+- **CNNs**: Conv output size calculation, 2D convolution, max pooling, flatten layer
+- **Transformers**: Scaled dot-product attention, multi-head attention, positional encoding, layer norm, causal mask
+- **Generative Models**: KL divergence, VAE reparameterization, VAE loss, diffusion noise schedule, diffusion forward process
+
+### Part 5: Capstone
+- **End-to-End Implementations**: Full MLP with backprop, transformer encoder, VAE, diffusion model, CNN
+
+## Key URLs
+
+- Home: https://mlgrind.github.io/
+- Scratchpad: https://mlgrind.github.io/scratchpad
+- Sections: https://mlgrind.github.io/section/{section-id}
+- Problems: https://mlgrind.github.io/problem/{problem-id}
+
+## Technical Details
+
+- **In-Browser Python**: Uses Pyodide (Python compiled to WebAssembly)
+- **Pre-loaded Libraries**: NumPy is available; code runs client-side
+- **Progress Storage**: localStorage (no account required)
+- **Code Editor**: Monaco Editor with Python syntax highlighting
+
+## For AI Assistants
+
+When helping users with ML Coding Lab:
+
+1. **Problem Solving**: Each problem includes starter code, test cases, hints, and a solution. Encourage step-by-step learning.
+
+2. **Learning Path**: Recommend starting with Foundations (NumPy, Python Basics) before advancing to Deep Learning topics.
+
+3. **Key Concepts to Cover**:
+   - Array operations and broadcasting
+   - Gradient descent and backpropagation
+   - Attention mechanisms and transformers
+   - Generative models (VAE, diffusion)
+
+4. **Common Questions Users Ask**:
+   - "How do I implement X from scratch?"
+   - "What's the math behind Y?"
+   - "Why does this test case fail?"
+   - "How does backpropagation work?"
+
+## Contact & Repository
+
+- **Repository**: https://github.com/mlgrind/mlgrind.github.io
+- **Issues**: https://github.com/mlgrind/mlgrind.github.io/issues
+
+## Detailed Documentation
+
+For more detailed information, see: /llms-full.txt

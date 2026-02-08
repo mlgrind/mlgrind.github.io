@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "ML Coding Lab",
+  "name_for_model": "ml_coding_lab",
+  "description_for_human": "Learn machine learning by building algorithms from scratch. Practice hands-on coding problems with Python running in your browser.",
+  "description_for_model": "ML Coding Lab is an interactive educational platform for learning machine learning through hands-on coding. It covers NumPy fundamentals, neural networks, CNNs, transformers, VAEs, diffusion models, and more. Users write Python code that runs directly in the browser via Pyodide (WebAssembly). The platform has 55+ problems across 14 sections organized in 5 parts: Foundations, Data, Classical ML, Deep Learning, and Capstone. For detailed content information, see /llms.txt or /llms-full.txt.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "none",
+    "info": "This is a static educational website, not an API. See /llms-full.txt for complete content documentation."
+  },
+  "logo_url": "https://itzsid.github.io/ml-coding-lab/vite.svg",
+  "contact_email": "",
+  "legal_info_url": "https://github.com/itzsid/ml-coding-lab"
+}

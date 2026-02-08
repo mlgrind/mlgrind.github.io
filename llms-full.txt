@@ -1,0 +1,406 @@
+# ML Coding Lab - Complete Documentation for LLM Agents
+
+> This document provides comprehensive information about ML Coding Lab for AI assistants and LLM-based crawlers. Use this to understand the platform's full content and help users effectively.
+
+## Platform Overview
+
+ML Coding Lab is a LeetCode-style web application for learning machine learning through hands-on coding. Users implement ML algorithms from scratch using Python (via Pyodide WebAssembly) directly in the browser.
+
+**Live Site**: https://mlgrind.github.io/
+**Repository**: https://github.com/mlgrind/mlgrind.github.io
+
+### Core Features
+- Interactive code editor (Monaco)
+- In-browser Python execution (no backend required)
+- Automated test case validation
+- Editable test cases for experimentation
+- Progressive hints and full solutions
+- Progress tracking (localStorage)
+- Python scratchpad for freeform coding
+
+---
+
+## Complete Curriculum
+
+### Part 1: Foundations
+
+#### Section: NumPy Fundamentals
+**URL**: /section/numpy-fundamentals
+**Topics**: Array creation, indexing, broadcasting, aggregations, shape manipulation
+
+**Problems**:
+1. **Array Creation** (/problem/numpy-array-creation)
+   - Create arrays using np.zeros, np.ones, np.arange, np.eye
+   - Understand array shapes and dtypes
+
+2. **Indexing and Slicing** (/problem/numpy-indexing)
+   - Basic indexing: arr[0], arr[1:5]
+   - Advanced indexing: boolean masks, fancy indexing
+   - Multi-dimensional: arr[1, :], arr[:, 2:4]
+
+3. **Broadcasting** (/problem/numpy-broadcasting)
+   - Broadcasting rules and shape compatibility
+   - Operations between different-shaped arrays
+   - Common patterns: (3,4) + (4,), (3,1) * (1,4)
+
+4. **Aggregations** (/problem/numpy-aggregations)
+   - sum, mean, std, min, max with axis parameter
+   - argmax, argmin for finding indices
+   - Global vs row-wise vs column-wise operations
+
+5. **Reshape and Transpose** (/problem/numpy-reshape-transpose)
+   - reshape(): change dimensions
+   - transpose(), .T: swap axes
+   - flatten(), ravel(): convert to 1D
+
+#### Section: Python Basics for ML
+**URL**: /section/python-basics
+**Topics**: Essential NumPy operations for ML workflows
+
+**Problems**:
+1. **Array Sum** (/problem/numpy-array-sum) - Implement array summation
+2. **Matrix Multiply** (/problem/numpy-matrix-multiply) - Implement matrix multiplication
+3. **Broadcast Add** (/problem/numpy-broadcast-add) - Add arrays with broadcasting
+
+#### Section: Einstein Summation (Einsum)
+**URL**: /section/einsum
+**Topics**: Powerful tensor notation for complex operations
+
+**Key Concepts**:
+- Subscript notation: 'ij->i' means sum over j
+- Letters that disappear are contracted (summed)
+- Essential for attention mechanisms
+
+**Problems**:
+1. **Einsum Basics** (/problem/einsum-basics)
+   - 'ij->' sum all, 'ij->i' row sums, 'ij->ji' transpose
+
+2. **Matrix Operations** (/problem/einsum-matrix-ops)
+   - 'ik,kj->ij' matrix multiply, 'ij,ij->' Frobenius product
+
+3. **Batch Operations** (/problem/einsum-batch-ops)
+   - 'bij,bjk->bik' batch matmul, 'bqd,bkd->bqk' attention scores
+
+4. **Advanced (Multi-Head)** (/problem/einsum-advanced)
+   - 'bhqk,bhkd->bhqd' multi-head attention patterns
+
+5. **Einsum vs Matmul** (/problem/einsum-vs-matmul)
+   - Equivalence between einsum and standard operations
+
+#### Section: PyTorch Basics
+**URL**: /section/pytorch-basics
+**Topics**: PyTorch concepts implemented in NumPy
+
+**Problems**:
+1. **Tensor Creation** (/problem/tensor-creation)
+2. **Tensor Operations** (/problem/tensor-operations)
+3. **Autograd Concepts** (/problem/autograd-concepts)
+4. **NN Modules** (/problem/nn-modules)
+5. **Loss Functions** (/problem/loss-functions)
+
+---
+
+### Part 2: Data
+
+#### Section: Data Preprocessing
+**URL**: /section/data-preprocessing
+**Topics**: Cleaning and transforming real-world data
+
+**Problems**:
+1. **Normalize Features** (/problem/normalize-features)
+   - Min-max normalization to [0,1]
+   - Z-score standardization (zero mean, unit variance)
+
+2. **Handle Missing Data** (/problem/handle-missing-data)
+   - Detection with np.isnan()
+   - Imputation strategies: mean, median, mode
+
+3. **One-Hot Encode** (/problem/one-hot-encode)
+   - Convert categorical variables to binary vectors
+
+---
+
+### Part 3: Classical Machine Learning
+
+#### Section: Supervised Learning
+**URL**: /section/supervised-learning
+**Topics**: Core supervised algorithms from scratch
+
+**Problems**:
+1. **Linear Regression (GD)** (/problem/linear-regression-gd)
+   - Implement gradient descent for linear regression
+   - Formula: y = wx + b
+   - Loss: Mean Squared Error
+
+2. **Logistic Regression** (/problem/logistic-regression)
+   - Sigmoid function: 1/(1+e^-x)
+   - Binary classification
+
+3. **Logistic Regression Full** (/problem/logistic-regression-full)
+   - Complete implementation with training loop
+
+4. **Binary Cross-Entropy** (/problem/binary-cross-entropy)
+   - Loss function for binary classification
+   - L = -[y*log(p) + (1-y)*log(1-p)]
+
+5. **Decision Tree Split** (/problem/decision-tree-split)
+   - Gini impurity calculation
+   - Finding optimal split points
+
+#### Section: Unsupervised Learning
+**URL**: /section/unsupervised-learning
+**Topics**: Clustering and dimensionality reduction
+
+**Problems**:
+1. **K-Means Clustering** (/problem/kmeans-clustering)
+   - Initialize centroids
+   - Assign points to nearest centroid
+   - Update centroids as cluster means
+   - Iterate until convergence
+
+2. **PCA Implementation** (/problem/pca-implementation)
+   - Center data (subtract mean)
+   - Compute covariance matrix
+   - Find eigenvectors/eigenvalues
+   - Project onto top components
+
+#### Section: Model Evaluation
+**URL**: /section/model-evaluation
+**Topics**: Metrics and validation techniques
+
+**Problems**:
+1. **Precision/Recall/F1** (/problem/precision-recall-f1)
+   - Precision: TP/(TP+FP)
+   - Recall: TP/(TP+FN)
+   - F1: Harmonic mean
+
+2. **Cross-Validation** (/problem/cross-validation)
+   - K-fold implementation
+   - Stratified splitting
+
+3. **Confusion Matrix** (/problem/confusion-matrix)
+   - True positives, negatives, false positives, negatives
+
+---
+
+### Part 4: Deep Learning
+
+#### Section: Deep Learning Basics
+**URL**: /section/deep-learning
+**Topics**: Fundamental building blocks
+
+**Problems**:
+1. **Perceptron** (/problem/perceptron)
+   - Single neuron implementation
+   - Activation functions
+
+2. **Neural Network Forward** (/problem/neural-network-forward)
+   - Forward pass: output = activation(W @ x + b)
+
+3. **Backpropagation** (/problem/backpropagation)
+   - Chain rule for gradients
+   - Weight updates
+
+#### Section: Neural Networks
+**URL**: /section/neural-networks
+**Topics**: MLP implementation and training techniques
+
+**Problems**:
+1. **Cross-Entropy Loss** (/problem/cross-entropy-loss)
+   - Multi-class classification loss
+   - Softmax + negative log likelihood
+
+2. **MLP Forward/Backward** (/problem/mlp-forward-backward)
+   - Complete forward and backward pass
+
+3. **Weight Initialization** (/problem/weight-init)
+   - Xavier initialization
+   - He initialization
+
+4. **Batch Normalization** (/problem/batch-norm)
+   - Normalize activations across batch
+   - Learnable scale (gamma) and shift (beta)
+
+5. **Dropout** (/problem/dropout)
+   - Randomly zero neurons during training
+   - Scale by 1/(1-p) during training
+
+#### Section: Convolutional Neural Networks
+**URL**: /section/cnn
+**Topics**: CNN operations for computer vision
+
+**Key Formula**: output_size = (input - kernel + 2*padding) / stride + 1
+
+**Problems**:
+1. **Conv Output Size** (/problem/conv-output-size)
+   - Calculate output dimensions
+
+2. **Conv2D Forward** (/problem/conv2d-forward)
+   - Implement 2D convolution operation
+
+3. **Max Pooling** (/problem/max-pool)
+   - Take maximum in each region
+
+4. **Flatten Layer** (/problem/flatten-layer)
+   - Convert 2D feature maps to 1D
+
+5. **Conv2D Advanced** (/problem/conv2d-advanced)
+   - Multiple filters, padding, stride
+
+#### Section: Attention & Transformers
+**URL**: /section/transformers
+**Topics**: The architecture behind modern NLP
+
+**Key Formula**: Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) @ V
+
+**Problems**:
+1. **Scaled Dot-Product Attention** (/problem/scaled-dot-product-attention)
+   - Q @ K.T / sqrt(d_k)
+   - Softmax over attention scores
+   - Weighted sum of values
+
+2. **Multi-Head Attention** (/problem/multi-head-attention)
+   - Multiple parallel attention heads
+   - Concatenate and project outputs
+
+3. **Positional Encoding** (/problem/positional-encoding)
+   - Sine/cosine position embeddings
+   - Inject sequence position information
+
+4. **Layer Normalization** (/problem/layer-norm)
+   - Normalize across features (not batch)
+   - Formula: (x - mean) / std * gamma + beta
+
+5. **Causal Mask** (/problem/causal-mask)
+   - Prevent attending to future tokens
+   - Upper triangular mask with -inf
+
+#### Section: Generative Models
+**URL**: /section/generative-models
+**Topics**: VAEs and diffusion models
+
+**Problems**:
+1. **KL Divergence** (/problem/kl-divergence)
+   - Measure difference between distributions
+   - KL(P||Q) = sum(P * log(P/Q))
+
+2. **VAE Reparameterization** (/problem/vae-reparameterization)
+   - z = mu + sigma * epsilon
+   - Enable backprop through sampling
+
+3. **VAE Loss** (/problem/vae-loss)
+   - ELBO = Reconstruction + KL divergence
+   - L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
+
+4. **VQ-VAE Quantization** (/problem/vqvae-quantization)
+   - Vector quantization for discrete latents
+
+5. **Diffusion Noise Schedule** (/problem/diffusion-noise-schedule)
+   - Beta schedule (linear, cosine)
+   - Alpha and alpha_bar computation
+
+6. **Diffusion Forward** (/problem/diffusion-forward)
+   - x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * epsilon
+
+---
+
+### Part 5: Capstone
+
+#### Section: End-to-End Implementations
+**URL**: /section/e2e-implementations
+**Topics**: Complete model implementations
+
+**Problems**:
+1. **E2E MLP** (/problem/e2e-mlp)
+   - Full 2-layer MLP with backpropagation
+   - Forward pass, loss, backward pass, weight updates
+
+2. **E2E Transformer Encoder** (/problem/e2e-transformer)
+   - Multi-head attention
+   - Positional encoding
+   - Layer norm and residual connections
+   - Feed-forward network
+
+3. **E2E VAE** (/problem/e2e-vae)
+   - Encoder to latent distribution
+   - Reparameterization trick
+   - Decoder reconstruction
+   - ELBO loss computation
+
+4. **E2E VQ-VAE** (/problem/e2e-vqvae)
+   - Vector quantized variational autoencoder
+
+5. **E2E Diffusion** (/problem/e2e-diffusion)
+   - Noise schedule
+   - Forward diffusion process
+   - Training objective
+
+6. **E2E CNN** (/problem/e2e-cnn)
+   - Conv layers + pooling
+   - Flatten + fully connected
+   - Complete forward pass
+
+---
+
+## Technical Implementation Notes
+
+### Pyodide Environment
+- Python runs in WebAssembly (client-side)
+- NumPy is pre-loaded and available
+- No network requests for code execution
+- Memory limited by browser
+
+### Test Case Format
+Tests can be:
+1. **Expression-based**: `function_name(input).shape` → `'(4, 8)'`
+2. **Argument-based**: Direct input passed to function
+
+### Common Testing Patterns
+- Shape check: `function(x).shape` → `'(2, 3)'`
+- Boolean: `bool(np.allclose(a, b))` → `'True'`
+- Rounded float: `round(function(x), 4)` → `'0.1234'`
+
+---
+
+## User Assistance Guidelines
+
+### When Users Are Stuck
+1. Point them to the progressive hints (revealed one at a time)
+2. Explain the underlying math/concept
+3. Break down the problem into smaller steps
+4. Reference similar, simpler problems if applicable
+
+### Common Misconceptions
+1. **Broadcasting confusion**: Explain shape compatibility rules
+2. **Gradient flow**: Trace the chain rule step by step
+3. **Attention dimensions**: Q(seq, d_k), K(seq, d_k), V(seq, d_v)
+4. **VAE loss components**: Reconstruction vs KL divergence roles
+
+### Recommended Learning Path
+1. Start with NumPy Fundamentals
+2. Practice Einsum (crucial for transformers)
+3. Build up through supervised → unsupervised → deep learning
+4. Tackle E2E implementations as capstone
+
+---
+
+## API for Crawlers
+
+### Main Routes
+- `GET /` - Home page with section overview
+- `GET /scratchpad` - Python playground
+- `GET /section/:id` - Section intro + problem list
+- `GET /problem/:id` - Coding interface
+
+### Content Availability
+- All content is client-rendered (React SPA)
+- Static content available via sitemap.xml
+- No authentication required
+- No rate limiting
+
+---
+
+## Contact
+
+- **GitHub Repository**: https://github.com/mlgrind/mlgrind.github.io
+- **Issues/Feedback**: https://github.com/mlgrind/mlgrind.github.io/issues

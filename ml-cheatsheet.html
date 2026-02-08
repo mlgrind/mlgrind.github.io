@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Interview Cheat Sheet</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 9pt;
+      line-height: 1.3;
+      color: #1a1a1a;
+      background: white;
+      padding: 0.3in;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        padding: 0;
+        font-size: 8pt;
+      }
+      .no-print { display: none; }
+      .page-break { page-break-before: always; }
+      section { page-break-inside: avoid; }
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    header h1 {
+      font-size: 18pt;
+      color: #1e40af;
+      margin-bottom: 2px;
+    }
+
+    header p {
+      color: #64748b;
+      font-size: 9pt;
+    }
+
+    /* Print button */
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    .print-btn:hover {
+      background: #1d4ed8;
+    }
+
+    /* Grid layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Sections */
+    section {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px;
+      break-inside: avoid;
+    }
+
+    section h2 {
+      font-size: 11pt;
+      color: #1e40af;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    section h3 {
+      font-size: 9pt;
+      color: #475569;
+      margin-top: 6px;
+      margin-bottom: 3px;
+    }
+
+    /* Code blocks */
+    pre, code {
+      font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+      font-size: 8pt;
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    code {
+      padding: 1px 3px;
+    }
+
+    pre {
+      padding: 6px;
+      overflow-x: auto;
+      margin: 4px 0;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 14px;
+      margin-bottom: 4px;
+    }
+
+    li {
+      margin-bottom: 2px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+      margin: 4px 0;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 3px 5px;
+      text-align: left;
+    }
+
+    th {
+      background: #e2e8f0;
+      font-weight: 600;
+    }
+
+    /* Formula box */
+    .formula {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin: 4px 0;
+      font-family: 'SF Mono', monospace;
+      font-size: 9pt;
+    }
+
+    /* Tip box */
+    .tip {
+      background: #dcfce7;
+      border-left: 3px solid #22c55e;
+      padding: 4px 8px;
+      margin: 4px 0;
+      font-size: 8pt;
+    }
+
+    /* Full width section */
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Span 2 columns */
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    /* Small text */
+    .small {
+      font-size: 7pt;
+      color: #64748b;
+    }
+
+    /* Divider */
+    .divider {
+      grid-column: 1 / -1;
+      border-top: 2px solid #2563eb;
+      margin: 8px 0;
+      padding-top: 8px;
+    }
+
+    .divider h2 {
+      font-size: 12pt;
+      color: #1e40af;
+      text-align: center;
+      background: none;
+      border: none;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
+
+  <header>
+    <h1>ML Interview Cheat Sheet</h1>
+    <p>Essential formulas, algorithms, and concepts for machine learning interviews</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- ==================== NUMPY & PYTHON ==================== -->
+    <section>
+      <h2>NumPy Essentials</h2>
+      <h3>Array Creation</h3>
+      <pre>np.array([1,2,3])        # From list
+np.zeros((3,4))          # 3x4 zeros
+np.ones((2,3))           # 2x3 ones
+np.eye(3)                # 3x3 identity
+np.arange(0,10,2)        # [0,2,4,6,8]
+np.linspace(0,1,5)       # 5 points [0,1]
+np.random.randn(3,4)     # Normal dist</pre>
+
+      <h3>Indexing & Slicing</h3>
+      <pre>arr[1:5]          # Elements 1-4
+arr[::2]          # Every 2nd element
+arr[-1]           # Last element
+arr[arr > 0]      # Boolean indexing
+arr[[0,2,4]]      # Fancy indexing
+arr[1, :]         # Row 1, all columns
+arr[:, 2:4]       # All rows, cols 2-3</pre>
+    </section>
+
+    <section>
+      <h2>NumPy Operations</h2>
+      <h3>Broadcasting Rules</h3>
+      <pre>(3,4) + (4,)   -> (3,4)  # OK
+(3,1) * (1,4)  -> (3,4)  # OK
+(3,4) + (3,)   -> Error  # Mismatch</pre>
+
+      <h3>Aggregations</h3>
+      <pre>np.sum(arr)           # Total sum
+np.sum(arr, axis=0)   # Column sums
+np.sum(arr, axis=1)   # Row sums
+np.mean(), np.std()   # Statistics
+np.argmax(), np.argmin()  # Indices</pre>
+
+      <h3>Shape Manipulation</h3>
+      <pre>arr.reshape(2, -1)    # -1 = inferred
+arr.T                 # Transpose
+arr.flatten()         # Copy to 1D
+arr.ravel()           # View to 1D
+np.expand_dims(arr, 0) # Add axis</pre>
+    </section>
+
+    <section>
+      <h2>Einstein Summation</h2>
+      <h3>Basic Patterns</h3>
+      <pre>'ij->'      # Sum all elements
+'ij->i'     # Row sums
+'ij->j'     # Column sums
+'ij->ji'    # Transpose
+'ii->i'     # Diagonal
+'ii->'      # Trace</pre>
+
+      <h3>Matrix Operations</h3>
+      <pre>'ik,kj->ij'   # Matrix multiply
+'ij,ij->ij'   # Element-wise
+'ij,ij->'     # Frobenius product
+'i,j->ij'     # Outer product
+'i,i->'       # Dot product</pre>
+
+      <h3>Batch Operations</h3>
+      <pre>'bij,bjk->bik'   # Batch matmul
+'bqd,bkd->bqk'   # Attention scores
+'bhqk,bhkd->bhqd' # Multi-head attn</pre>
+      <div class="tip">Letters that disappear are summed over!</div>
+    </section>
+
+    <!-- ==================== DATA PREPROCESSING ==================== -->
+    <section>
+      <h2>Data Preprocessing</h2>
+      <h3>Normalization (Min-Max)</h3>
+      <div class="formula">X_norm = (X - X_min) / (X_max - X_min)</div>
+      <pre>X_norm = (X - X.min()) / (X.max() - X.min())</pre>
+
+      <h3>Standardization (Z-score)</h3>
+      <div class="formula">X_std = (X - mean) / std</div>
+      <pre>X_std = (X - X.mean()) / X.std()</pre>
+
+      <h3>One-Hot Encoding</h3>
+      <pre>n_classes = len(np.unique(labels))
+one_hot = np.eye(n_classes)[labels]</pre>
+
+      <h3>Handle Missing Data</h3>
+      <pre>col_mean = np.nanmean(X, axis=0)
+inds = np.where(np.isnan(X))
+X[inds] = col_mean[inds[1]]</pre>
+    </section>
+
+    <!-- ==================== SUPERVISED LEARNING ==================== -->
+    <div class="divider">
+      <h2>Classical Machine Learning</h2>
+    </div>
+
+    <section class="span-2">
+      <h2>Linear Regression</h2>
+      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <h3>Model</h3>
+          <div class="formula">y = Xw + b</div>
+          <h3>Loss (MSE)</h3>
+          <div class="formula">L = (1/n) * sum((y - y_pred)^2)</div>
+          <h3>Gradients</h3>
+          <div class="formula">dw = (2/n) * X.T @ (y_pred - y)</div>
+          <div class="formula">db = (2/n) * sum(y_pred - y)</div>
+        </div>
+        <div>
+          <h3>Implementation</h3>
+          <pre>for _ in range(epochs):
+    y_pred = X @ w + b
+    error = y_pred - y
+    dw = (2/n) * X.T @ error
+    db = (2/n) * np.sum(error)
+    w -= lr * dw
+    b -= lr * db</pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Logistic Regression</h2>
+      <h3>Sigmoid Function</h3>
+      <div class="formula">sigma(z) = 1 / (1 + exp(-z))</div>
+      <pre>def sigmoid(z):
+    return 1 / (1 + np.exp(-z))</pre>
+
+      <h3>Binary Cross-Entropy</h3>
+      <div class="formula">L = -[y*log(p) + (1-y)*log(1-p)]</div>
+
+      <h3>Gradients</h3>
+      <div class="formula">dw = (1/n) * X.T @ (y_pred - y)</div>
+      <div class="formula">db = (1/n) * sum(y_pred - y)</div>
+
+      <div class="tip">Same gradient form as linear regression!</div>
+    </section>
+
+    <section>
+      <h2>K-Means Clustering</h2>
+      <h3>Algorithm</h3>
+      <ol>
+        <li>Initialize K centroids randomly</li>
+        <li>Assign points to nearest centroid</li>
+        <li>Update centroids = mean of cluster</li>
+        <li>Repeat until convergence</li>
+      </ol>
+      <pre>for _ in range(max_iters):
+    # Assign points
+    dists = np.linalg.norm(
+        X[:, None] - centroids, axis=2)
+    labels = np.argmin(dists, axis=1)
+
+    # Update centroids
+    for k in range(K):
+        centroids[k] = X[labels == k].mean(0)</pre>
+    </section>
+
+    <section>
+      <h2>PCA</h2>
+      <h3>Steps</h3>
+      <ol>
+        <li>Center data: X = X - mean</li>
+        <li>Covariance: C = (1/n) * X.T @ X</li>
+        <li>Eigendecomposition of C</li>
+        <li>Project onto top k eigenvectors</li>
+      </ol>
+      <pre>X_centered = X - X.mean(axis=0)
+cov = X_centered.T @ X_centered / n
+eigvals, eigvecs = np.linalg.eigh(cov)
+# Sort by descending eigenvalue
+idx = np.argsort(eigvals)[::-1]
+components = eigvecs[:, idx[:k]]
+X_reduced = X_centered @ components</pre>
+    </section>
+
+    <section>
+      <h2>Decision Trees</h2>
+      <h3>Gini Impurity</h3>
+      <div class="formula">Gini = 1 - sum(p_i^2)</div>
+      <pre>def gini(y):
+    _, counts = np.unique(y, return_counts=True)
+    probs = counts / len(y)
+    return 1 - np.sum(probs ** 2)</pre>
+
+      <h3>Information Gain</h3>
+      <div class="formula">IG = H(parent) - weighted_avg(H(children))</div>
+
+      <h3>Entropy</h3>
+      <div class="formula">H = -sum(p_i * log2(p_i))</div>
+    </section>
+
+    <section>
+      <h2>Evaluation Metrics</h2>
+      <h3>Classification</h3>
+      <div class="formula">Precision = TP / (TP + FP)</div>
+      <div class="formula">Recall = TP / (TP + FN)</div>
+      <div class="formula">F1 = 2 * (P * R) / (P + R)</div>
+      <div class="formula">Accuracy = (TP + TN) / Total</div>
+
+      <h3>Regression</h3>
+      <div class="formula">MSE = (1/n) * sum((y - y_pred)^2)</div>
+      <div class="formula">MAE = (1/n) * sum(|y - y_pred|)</div>
+      <div class="formula">R^2 = 1 - SS_res / SS_tot</div>
+
+      <div class="tip">Use F1 for imbalanced classes!</div>
+    </section>
+
+    <!-- ==================== DEEP LEARNING ==================== -->
+    <div class="divider page-break">
+      <h2>Deep Learning</h2>
+    </div>
+
+    <section>
+      <h2>Activation Functions</h2>
+      <table>
+        <tr><th>Name</th><th>Formula</th><th>Range</th></tr>
+        <tr><td>ReLU</td><td><code>max(0, x)</code></td><td>[0, inf)</td></tr>
+        <tr><td>Sigmoid</td><td><code>1/(1+e^-x)</code></td><td>(0, 1)</td></tr>
+        <tr><td>Tanh</td><td><code>(e^x-e^-x)/(e^x+e^-x)</code></td><td>(-1, 1)</td></tr>
+        <tr><td>LeakyReLU</td><td><code>max(0.01x, x)</code></td><td>(-inf, inf)</td></tr>
+        <tr><td>GELU</td><td><code>x*Phi(x)</code></td><td>(-inf, inf)</td></tr>
+      </table>
+      <h3>Softmax</h3>
+      <div class="formula">softmax(x)_i = exp(x_i) / sum(exp(x_j))</div>
+      <pre>def softmax(x):
+    e_x = np.exp(x - np.max(x))  # Stability
+    return e_x / e_x.sum(axis=-1, keepdims=True)</pre>
+    </section>
+
+    <section>
+      <h2>Loss Functions</h2>
+      <h3>Cross-Entropy (Multi-class)</h3>
+      <div class="formula">L = -sum(y_true * log(y_pred))</div>
+      <pre>def cross_entropy(y_true, y_pred):
+    return -np.sum(y_true * np.log(y_pred + 1e-8))</pre>
+
+      <h3>Binary Cross-Entropy</h3>
+      <div class="formula">L = -[y*log(p) + (1-y)*log(1-p)]</div>
+
+      <h3>MSE Loss</h3>
+      <div class="formula">L = (1/n) * sum((y - y_pred)^2)</div>
+
+      <h3>Softmax + Cross-Entropy Gradient</h3>
+      <div class="formula">dL/dz = y_pred - y_true</div>
+      <div class="tip">Simple gradient when combined!</div>
+    </section>
+
+    <section>
+      <h2>Backpropagation</h2>
+      <h3>Chain Rule</h3>
+      <div class="formula">dL/dw = dL/dy * dy/dz * dz/dw</div>
+
+      <h3>2-Layer MLP Gradients</h3>
+      <pre># Forward
+z1 = X @ W1 + b1
+a1 = relu(z1)
+z2 = a1 @ W2 + b2
+y_pred = softmax(z2)
+
+# Backward
+dz2 = y_pred - y_true
+dW2 = a1.T @ dz2
+db2 = dz2.sum(axis=0)
+
+da1 = dz2 @ W2.T
+dz1 = da1 * (z1 > 0)  # ReLU grad
+dW1 = X.T @ dz1
+db1 = dz1.sum(axis=0)</pre>
+    </section>
+
+    <section>
+      <h2>Weight Initialization</h2>
+      <h3>Xavier/Glorot (tanh, sigmoid)</h3>
+      <div class="formula">W ~ N(0, sqrt(2/(n_in + n_out)))</div>
+      <pre>std = np.sqrt(2 / (n_in + n_out))
+W = np.random.randn(n_in, n_out) * std</pre>
+
+      <h3>He/Kaiming (ReLU)</h3>
+      <div class="formula">W ~ N(0, sqrt(2/n_in))</div>
+      <pre>std = np.sqrt(2 / n_in)
+W = np.random.randn(n_in, n_out) * std</pre>
+
+      <div class="tip">He for ReLU, Xavier for others</div>
+    </section>
+
+    <section>
+      <h2>Batch Normalization</h2>
+      <h3>Forward Pass</h3>
+      <div class="formula">x_norm = (x - mean) / sqrt(var + eps)</div>
+      <div class="formula">y = gamma * x_norm + beta</div>
+      <pre>mean = x.mean(axis=0)
+var = x.var(axis=0)
+x_norm = (x - mean) / np.sqrt(var + 1e-8)
+out = gamma * x_norm + beta</pre>
+
+      <h3>Key Points</h3>
+      <ul>
+        <li>Normalize per feature across batch</li>
+        <li>Learnable gamma (scale) and beta (shift)</li>
+        <li>Use running stats at inference</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Dropout</h2>
+      <h3>Training</h3>
+      <pre>mask = np.random.rand(*x.shape) > p
+out = x * mask / (1 - p)  # Inverted</pre>
+
+      <h3>Inference</h3>
+      <pre>out = x  # No dropout</pre>
+
+      <h3>Key Points</h3>
+      <ul>
+        <li>Randomly zero out neurons</li>
+        <li>Scale by 1/(1-p) during training</li>
+        <li>Prevents co-adaptation</li>
+        <li>Disabled during evaluation</li>
+      </ul>
+    </section>
+
+    <!-- ==================== CNNs ==================== -->
+    <section>
+      <h2>CNN Operations</h2>
+      <h3>Output Size Formula</h3>
+      <div class="formula">out = (in - kernel + 2*pad) / stride + 1</div>
+
+      <h3>Conv2D</h3>
+      <pre>for i in range(out_h):
+    for j in range(out_w):
+        h_start = i * stride
+        w_start = j * stride
+        region = input[h_start:h_start+k,
+                       w_start:w_start+k]
+        out[i,j] = np.sum(region * kernel)</pre>
+
+      <h3>Max Pooling</h3>
+      <pre>for i in range(out_h):
+    for j in range(out_w):
+        region = input[i*s:i*s+k, j*s:j*s+k]
+        out[i,j] = np.max(region)</pre>
+    </section>
+
+    <section>
+      <h2>CNN Architecture</h2>
+      <h3>Typical Structure</h3>
+      <pre>Input Image
+    |
+Conv2D + ReLU
+    |
+MaxPool (reduce size)
+    |
+Conv2D + ReLU
+    |
+MaxPool
+    |
+Flatten
+    |
+Dense + ReLU
+    |
+Dense + Softmax
+    |
+Output (class probs)</pre>
+
+      <h3>Parameter Count</h3>
+      <div class="formula">Conv: k*k*C_in*C_out + C_out</div>
+      <div class="formula">Dense: in_feat*out_feat + out_feat</div>
+    </section>
+
+    <!-- ==================== TRANSFORMERS ==================== -->
+    <section class="span-2">
+      <h2>Attention Mechanism</h2>
+      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <h3>Scaled Dot-Product Attention</h3>
+          <div class="formula">Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V</div>
+          <pre>def attention(Q, K, V, mask=None):
+    d_k = Q.shape[-1]
+    scores = Q @ K.transpose(-2, -1)
+    scores = scores / np.sqrt(d_k)
+    if mask is not None:
+        scores += mask * -1e9
+    weights = softmax(scores, axis=-1)
+    return weights @ V</pre>
+          <div class="tip">Scale by sqrt(d_k) to prevent vanishing gradients in softmax!</div>
+        </div>
+        <div>
+          <h3>Multi-Head Attention</h3>
+          <pre>def multi_head_attention(x, W_q, W_k, W_v, W_o):
+    # Project to multiple heads
+    Q = x @ W_q  # (B, T, n_heads * d_k)
+    K = x @ W_k
+    V = x @ W_v
+
+    # Reshape: (B, n_heads, T, d_k)
+    Q = Q.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
+    K = K.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
+    V = V.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
+
+    # Attention per head
+    out = attention(Q, K, V)
+
+    # Concat and project
+    out = out.transpose(0,2,1,3).reshape(B, T, -1)
+    return out @ W_o</pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Positional Encoding</h2>
+      <h3>Sinusoidal Encoding</h3>
+      <div class="formula">PE(pos,2i) = sin(pos / 10000^(2i/d))</div>
+      <div class="formula">PE(pos,2i+1) = cos(pos / 10000^(2i/d))</div>
+      <pre>def positional_encoding(seq_len, d_model):
+    pos = np.arange(seq_len)[:, None]
+    i = np.arange(d_model)[None, :]
+    angle = pos / (10000 ** (2*(i//2) / d_model))
+
+    pe = np.zeros((seq_len, d_model))
+    pe[:, 0::2] = np.sin(angle[:, 0::2])
+    pe[:, 1::2] = np.cos(angle[:, 1::2])
+    return pe</pre>
+    </section>
+
+    <section>
+      <h2>Transformer Components</h2>
+      <h3>Layer Normalization</h3>
+      <div class="formula">LN(x) = gamma * (x - mean) / sqrt(var + eps) + beta</div>
+      <pre>def layer_norm(x, gamma, beta, eps=1e-5):
+    mean = x.mean(axis=-1, keepdims=True)
+    var = x.var(axis=-1, keepdims=True)
+    return gamma * (x - mean) / np.sqrt(var + eps) + beta</pre>
+
+      <h3>Causal Mask</h3>
+      <pre>mask = np.triu(np.ones((T, T)), k=1)
+# Apply: scores += mask * -1e9</pre>
+
+      <h3>Encoder Block</h3>
+      <pre>x = x + MultiHeadAttn(LN(x))
+x = x + FFN(LN(x))</pre>
+    </section>
+
+    <!-- ==================== GENERATIVE MODELS ==================== -->
+    <div class="divider">
+      <h2>Generative Models</h2>
+    </div>
+
+    <section>
+      <h2>VAE (Variational Autoencoder)</h2>
+      <h3>Architecture</h3>
+      <pre>Input x
+    |
+Encoder -> mu, log_var
+    |
+Sample z (reparameterization)
+    |
+Decoder -> x_reconstructed</pre>
+
+      <h3>Reparameterization Trick</h3>
+      <div class="formula">z = mu + sigma * epsilon</div>
+      <div class="formula">epsilon ~ N(0, 1)</div>
+      <pre>def reparameterize(mu, log_var):
+    std = np.exp(0.5 * log_var)
+    eps = np.random.randn(*mu.shape)
+    return mu + std * eps</pre>
+    </section>
+
+    <section>
+      <h2>VAE Loss (ELBO)</h2>
+      <h3>Loss Components</h3>
+      <div class="formula">L = Reconstruction + KL Divergence</div>
+
+      <h3>Reconstruction Loss</h3>
+      <div class="formula">L_rec = ||x - x_recon||^2 or BCE</div>
+
+      <h3>KL Divergence</h3>
+      <div class="formula">KL = -0.5 * sum(1 + log_var - mu^2 - exp(log_var))</div>
+      <pre>def kl_divergence(mu, log_var):
+    return -0.5 * np.sum(
+        1 + log_var - mu**2 - np.exp(log_var)
+    )</pre>
+
+      <div class="tip">KL regularizes latent space toward N(0,1)</div>
+    </section>
+
+    <section class="span-2">
+      <h2>Diffusion Models (DDPM)</h2>
+      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <h3>Noise Schedule</h3>
+          <div class="formula">beta_t: Linear from beta_start to beta_end</div>
+          <div class="formula">alpha_t = 1 - beta_t</div>
+          <div class="formula">alpha_bar_t = prod(alpha_1:t)</div>
+          <pre>betas = np.linspace(1e-4, 0.02, T)
+alphas = 1 - betas
+alpha_bars = np.cumprod(alphas)</pre>
+
+          <h3>Forward Process (Add Noise)</h3>
+          <div class="formula">x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * eps</div>
+          <pre>def forward(x_0, t, alpha_bars):
+    noise = np.random.randn(*x_0.shape)
+    sqrt_ab = np.sqrt(alpha_bars[t])
+    sqrt_1_ab = np.sqrt(1 - alpha_bars[t])
+    return sqrt_ab * x_0 + sqrt_1_ab * noise, noise</pre>
+        </div>
+        <div>
+          <h3>Training Objective</h3>
+          <div class="formula">L = ||eps - eps_theta(x_t, t)||^2</div>
+          <ul>
+            <li>Sample x_0 from data</li>
+            <li>Sample t uniformly from [1, T]</li>
+            <li>Sample noise eps ~ N(0, I)</li>
+            <li>Compute x_t from x_0 and eps</li>
+            <li>Train network to predict eps from x_t</li>
+          </ul>
+
+          <h3>Reverse Process (Denoise)</h3>
+          <pre>for t in reversed(range(T)):
+    eps_pred = model(x_t, t)
+    x_t = denoise_step(x_t, eps_pred, t)</pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>KL Divergence</h2>
+      <h3>Definition</h3>
+      <div class="formula">KL(P||Q) = sum(P(x) * log(P(x)/Q(x)))</div>
+
+      <h3>Properties</h3>
+      <ul>
+        <li>KL >= 0 (always non-negative)</li>
+        <li>KL = 0 iff P = Q</li>
+        <li>Not symmetric: KL(P||Q) != KL(Q||P)</li>
+      </ul>
+
+      <pre>def kl_divergence(p, q, eps=1e-10):
+    p = p + eps
+    q = q + eps
+    return np.sum(p * np.log(p / q))</pre>
+    </section>
+
+    <!-- ==================== QUICK REFERENCE ==================== -->
+    <div class="divider">
+      <h2>Quick Reference</h2>
+    </div>
+
+    <section>
+      <h2>Optimizer Updates</h2>
+      <h3>SGD</h3>
+      <div class="formula">w = w - lr * grad</div>
+
+      <h3>SGD + Momentum</h3>
+      <div class="formula">v = beta * v + grad</div>
+      <div class="formula">w = w - lr * v</div>
+
+      <h3>Adam</h3>
+      <div class="formula">m = b1*m + (1-b1)*grad</div>
+      <div class="formula">v = b2*v + (1-b2)*grad^2</div>
+      <div class="formula">m_hat = m / (1-b1^t)</div>
+      <div class="formula">v_hat = v / (1-b2^t)</div>
+      <div class="formula">w = w - lr * m_hat / (sqrt(v_hat) + eps)</div>
+    </section>
+
+    <section>
+      <h2>Common Dimensions</h2>
+      <table>
+        <tr><th>Symbol</th><th>Meaning</th></tr>
+        <tr><td>B</td><td>Batch size</td></tr>
+        <tr><td>T, L</td><td>Sequence length</td></tr>
+        <tr><td>D, d_model</td><td>Model/embedding dim</td></tr>
+        <tr><td>H</td><td>Number of heads</td></tr>
+        <tr><td>d_k, d_v</td><td>Key/value dim per head</td></tr>
+        <tr><td>C</td><td>Channels (CNN)</td></tr>
+        <tr><td>H, W</td><td>Height, Width</td></tr>
+        <tr><td>K</td><td>Kernel size</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Interview Tips</h2>
+      <h3>Common Questions</h3>
+      <ul>
+        <li>Implement gradient descent from scratch</li>
+        <li>Explain backprop through a network</li>
+        <li>Why scale attention by sqrt(d_k)?</li>
+        <li>Difference: BatchNorm vs LayerNorm?</li>
+        <li>Why reparameterization trick in VAEs?</li>
+        <li>Explain vanishing/exploding gradients</li>
+        <li>When to use which activation?</li>
+      </ul>
+
+      <h3>Key Concepts</h3>
+      <ul>
+        <li>Bias-variance tradeoff</li>
+        <li>Regularization (L1, L2, Dropout)</li>
+        <li>Overfitting vs underfitting</li>
+        <li>Train/val/test splits</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer style="margin-top: 16px; text-align: center; color: #64748b; font-size: 8pt; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+    ML Coding Lab Cheat Sheet | <a href="https://mlgrind.github.io/" style="color: #2563eb;">mlgrind.github.io</a>
+  </footer>
+
+</body>
+</html>

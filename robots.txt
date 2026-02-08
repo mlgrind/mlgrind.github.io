@@ -1,0 +1,52 @@
+# ML Coding Lab - robots.txt
+# https://mlgrind.github.io/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://mlgrind.github.io/sitemap.xml
+
+# LLM Agent Discovery
+# For AI assistants and LLM-based crawlers, see llms.txt for structured content
+# https://mlgrind.github.io/llms.txt
+
+# Crawl-delay for polite crawling (optional, not all bots respect this)
+Crawl-delay: 1
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Allow AI/LLM crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+# Disallow assets that don't need indexing
+User-agent: *
+Disallow: /assets/*.js$
+Disallow: /assets/*.css$
