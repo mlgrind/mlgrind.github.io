@@ -981,7 +981,7 @@ def segmentation_metrics(prediction, target):
     examples: [
       {
         input: 'prediction=[[1,1],[0,0]], target=[[1,0],[0,1]]',
-        output: "{'iou': 0.3333, 'pixel_accuracy': 0.5, 'dice': 0.5}",
+        output: '{"iou": 0.3333, "pixel_accuracy": 0.5, "dice": 0.5}',
         explanation: 'Intersection=1, Union=3, IoU=1/3; 2 correct out of 4 pixels; Dice=2*1/(2+2)=0.5',
       },
     ],
@@ -1006,14 +1006,14 @@ def segmentation_metrics(prediction, target):
         id: '1',
         description: 'Partial overlap',
         input: 'segmentation_metrics(np.array([[1,1],[0,0]]), np.array([[1,0],[0,1]]))',
-        expected: "{'iou': 0.3333, 'pixel_accuracy': 0.5, 'dice': 0.5}",
+        expected: '{"iou": 0.3333, "pixel_accuracy": 0.5, "dice": 0.5}',
         hidden: false,
       },
       {
         id: '2',
         description: 'Perfect match',
         input: 'segmentation_metrics(np.array([[1,0],[0,1]]), np.array([[1,0],[0,1]]))',
-        expected: "{'iou': 1.0, 'pixel_accuracy': 1.0, 'dice': 1.0}",
+        expected: '{"iou": 1.0, "pixel_accuracy": 1.0, "dice": 1.0}',
         hidden: false,
       },
       {
