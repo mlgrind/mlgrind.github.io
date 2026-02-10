@@ -194,8 +194,8 @@ def top_k_sampling(logits, k, temperature=1.0):
         id: '1',
         description: 'Only k tokens have non-zero probability',
         input: `(lambda: (
-    _, probs := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.sum(probs > 0) == 3)
+    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
+    bool(np.sum(result[1] > 0) == 3)
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -204,8 +204,8 @@ def top_k_sampling(logits, k, temperature=1.0):
         id: '2',
         description: 'Filtered probs sum to 1',
         input: `(lambda: (
-    _, probs := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.allclose(np.sum(probs), 1.0))
+    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
+    bool(np.allclose(np.sum(result[1]), 1.0))
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -216,8 +216,8 @@ def top_k_sampling(logits, k, temperature=1.0):
         input: `(lambda: (
     logits := np.array([5.0, 3.0, 2.0, 1.0, 0.1]),
     top_k_indices := np.argsort(logits)[-3:],
-    token, _ := top_k_sampling(logits, 3),
-    bool(token in top_k_indices)
+    result := top_k_sampling(logits, 3),
+    bool(result[0] in top_k_indices)
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -226,8 +226,8 @@ def top_k_sampling(logits, k, temperature=1.0):
         id: '4',
         description: 'k=1 always picks the top token',
         input: `(lambda: (
-    token, _ := top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1),
-    bool(token == 1)
+    result := top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1),
+    bool(result[0] == 1)
 )[-1])()`,
         expected: 'True',
         hidden: true,
@@ -331,8 +331,8 @@ def top_p_sampling(logits, p, temperature=1.0):
         id: '1',
         description: 'Filtered probs sum to 1',
         input: `(lambda: (
-    _, probs := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9),
-    bool(np.allclose(np.sum(probs), 1.0))
+    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9),
+    bool(np.allclose(np.sum(result[1]), 1.0))
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -341,8 +341,8 @@ def top_p_sampling(logits, p, temperature=1.0):
         id: '2',
         description: 'p=1.0 keeps all tokens',
         input: `(lambda: (
-    _, probs := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0),
-    bool(np.sum(probs > 0) == 5)
+    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0),
+    bool(np.sum(result[1] > 0) == 5)
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -351,9 +351,9 @@ def top_p_sampling(logits, p, temperature=1.0):
         id: '3',
         description: 'Small p keeps fewer tokens',
         input: `(lambda: (
-    _, probs_small := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5),
-    _, probs_large := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.95),
-    bool(np.sum(probs_small > 0) <= np.sum(probs_large > 0))
+    result_small := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5),
+    result_large := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.95),
+    bool(np.sum(result_small[1] > 0) <= np.sum(result_large[1] > 0))
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -363,8 +363,8 @@ def top_p_sampling(logits, p, temperature=1.0):
         description: 'Dominant token with very small p',
         input: `(lambda: (
     logits := np.array([10.0, 1.0, 0.5, 0.1]),
-    _, probs := top_p_sampling(logits, 0.5),
-    bool(np.sum(probs > 0) <= 2)
+    result := top_p_sampling(logits, 0.5),
+    bool(np.sum(result[1] > 0) <= 2)
 )[-1])()`,
         expected: 'True',
         hidden: true,
@@ -620,13 +620,15 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
         id: '1',
         description: 'Output shape is correct',
         input: `(lambda: (
-    d_model, d_k, d_v := 8, 4, 4,
+    d_model := 8,
+    d_k := 4,
+    d_v := 4,
     x := np.random.randn(1, d_model),
     W_Q := np.random.randn(d_model, d_k) * 0.1,
     W_K := np.random.randn(d_model, d_k) * 0.1,
     W_V := np.random.randn(d_model, d_v) * 0.1,
-    out, _, _ := kv_cache_attention(x, W_Q, W_K, W_V),
-    out.shape
+    result := kv_cache_attention(x, W_Q, W_K, W_V),
+    result[0].shape
 )[-1])()`,
         expected: '(1, 4)',
         hidden: false,
@@ -638,10 +640,10 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     d := 4,
     x := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    _, k1, v1 := kv_cache_attention(x, W, W, W),
-    _, k2, v2 := kv_cache_attention(x, W, W, W, k1, v1),
-    _, k3, v3 := kv_cache_attention(x, W, W, W, k2, v2),
-    k3.shape[0]
+    r1 := kv_cache_attention(x, W, W, W),
+    r2 := kv_cache_attention(x, W, W, W, r1[1], r1[2]),
+    r3 := kv_cache_attention(x, W, W, W, r2[1], r2[2]),
+    r3[1].shape[0]
 )[-1])()`,
         expected: '3',
         hidden: false,
@@ -653,8 +655,8 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     d := 4,
     x := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    _, k, v := kv_cache_attention(x, W, W, W),
-    k.shape[0]
+    result := kv_cache_attention(x, W, W, W),
+    result[1].shape[0]
 )[-1])()`,
         expected: '1',
         hidden: false,
@@ -668,9 +670,9 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     x1 := np.random.randn(1, d),
     x2 := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    out1, k1, v1 := kv_cache_attention(x1, W, W, W),
-    out2, k2, v2 := kv_cache_attention(x2, W, W, W, k1, v1),
-    bool(not np.allclose(out1, out2))
+    r1 := kv_cache_attention(x1, W, W, W),
+    r2 := kv_cache_attention(x2, W, W, W, r1[1], r1[2]),
+    bool(not np.allclose(r1[0], r2[0]))
 )[-1])()`,
         expected: 'True',
         hidden: true,
@@ -787,8 +789,8 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
         description: 'Greedy path found with beam_width=1',
         input: `(lambda: (
     log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    seq, score := beam_search(log_probs, 1),
-    seq
+    result := beam_search(log_probs, 1),
+    result[0]
 )[-1])()`,
         expected: '[0, 1, 2]',
         hidden: false,
@@ -798,8 +800,8 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
         description: 'Beam search score is log-probability sum',
         input: `(lambda: (
     log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    seq, score := beam_search(log_probs, 1),
-    round(score, 4)
+    result := beam_search(log_probs, 1),
+    round(result[1], 4)
 )[-1])()`,
         expected: '-1.3783',
         hidden: false,
@@ -809,9 +811,9 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
         description: 'Wider beam can find better path',
         input: `(lambda: (
     log_probs := np.log(np.array([[0.4, 0.35, 0.25], [0.1, 0.1, 0.8], [0.9, 0.05, 0.05]])),
-    _, score1 := beam_search(log_probs, 1),
-    _, score2 := beam_search(log_probs, 3),
-    bool(score2 >= score1 - 1e-10)
+    r1 := beam_search(log_probs, 1),
+    r2 := beam_search(log_probs, 3),
+    bool(r2[1] >= r1[1] - 1e-10)
 )[-1])()`,
         expected: 'True',
         hidden: true,
@@ -821,8 +823,8 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
         description: 'Sequence length matches steps',
         input: `(lambda: (
     log_probs := np.log(np.array([[0.5, 0.5], [0.3, 0.7], [0.8, 0.2], [0.4, 0.6]])),
-    seq, _ := beam_search(log_probs, 2),
-    len(seq)
+    result := beam_search(log_probs, 2),
+    len(result[0])
 )[-1])()`,
         expected: '4',
         hidden: false,
@@ -951,8 +953,8 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
         description: 'All tokens accepted when target_prob >= draft_prob',
         input: `(lambda: (
     np.random.seed(0),
-    tokens, n := speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3]),
-    bool(n == 3)
+    result := speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3]),
+    bool(result[1] == 3)
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -962,8 +964,8 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
         description: 'Accepted tokens are prefix of draft tokens',
         input: `(lambda: (
     np.random.seed(42),
-    tokens, n := speculative_decode([0.5, 0.5, 0.5], [0.6, 0.6, 0.6], [10, 20, 30]),
-    bool(tokens == [10, 20, 30][:n])
+    result := speculative_decode([0.5, 0.5, 0.5], [0.6, 0.6, 0.6], [10, 20, 30]),
+    bool(result[0] == [10, 20, 30][:result[1]])
 )[-1])()`,
         expected: 'True',
         hidden: false,
@@ -973,8 +975,8 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
         description: 'Returns between 0 and K accepted tokens',
         input: `(lambda: (
     np.random.seed(42),
-    _, n := speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3]),
-    bool(0 <= n <= 3)
+    result := speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3]),
+    bool(0 <= result[1] <= 3)
 )[-1])()`,
         expected: 'True',
         hidden: false,
