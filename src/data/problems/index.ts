@@ -14,6 +14,7 @@ import { einsumProblems } from './einsum';
 import { pytorchBasicsProblems } from './pytorch-basics';
 import { e2eImplementationProblems } from './e2e-implementations';
 import { reinforcementLearningProblems } from './reinforcement-learning';
+import { llmGenerationProblems } from './llm-generation';
 
 export const allProblems: Problem[] = [
   ...pythonBasicsProblems,
@@ -31,6 +32,7 @@ export const allProblems: Problem[] = [
   ...pytorchBasicsProblems,
   ...e2eImplementationProblems,
   ...reinforcementLearningProblems,
+  ...llmGenerationProblems,
 ];
 
 export function getProblemById(id: string): Problem | undefined {
@@ -57,4 +59,5 @@ export {
   pytorchBasicsProblems,
   e2eImplementationProblems,
   reinforcementLearningProblems,
+  llmGenerationProblems,
 };

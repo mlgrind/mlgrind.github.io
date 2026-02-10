@@ -492,4 +492,561 @@ def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
     return output
 `,
   },
+  {
+    id: 'iou-bounding-box',
+    title: 'IoU (Intersection over Union)',
+    section: 'cnn',
+    difficulty: 'easy',
+    description: `
+## IoU (Intersection over Union)
+
+Implement Intersection over Union (IoU) for two axis-aligned bounding boxes.
+
+### What is IoU?
+IoU measures the overlap between two bounding boxes. It is the **most fundamental metric** in object detection, used for:
+- Evaluating detection quality (mAP calculation)
+- Matching predictions to ground truth
+- Non-Maximum Suppression (NMS)
+
+### Formula
+\`\`\`
+IoU = Area of Intersection / Area of Union
+    = Intersection / (Area_A + Area_B - Intersection)
+\`\`\`
+
+### Bounding Box Format
+Each box is \`[x1, y1, x2, y2]\` where:
+- \`(x1, y1)\` = top-left corner
+- \`(x2, y2)\` = bottom-right corner
+
+### Computing Intersection
+\`\`\`
+inter_x1 = max(box_a_x1, box_b_x1)
+inter_y1 = max(box_a_y1, box_b_y1)
+inter_x2 = min(box_a_x2, box_b_x2)
+inter_y2 = min(box_a_y2, box_b_y2)
+\`\`\`
+If \`inter_x1 >= inter_x2\` or \`inter_y1 >= inter_y2\`, there is no overlap (IoU = 0).
+
+### Function Signature
+\`\`\`python
+def iou(box_a, box_b):
+    # box_a, box_b: [x1, y1, x2, y2]
+    # Returns: float (IoU score, rounded to 4 decimal places)
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'box_a=[0, 0, 2, 2], box_b=[1, 1, 3, 3]',
+        output: '0.1429',
+        explanation: 'Intersection=1, Union=4+4-1=7, IoU=1/7≈0.1429',
+      },
+      {
+        input: 'box_a=[0, 0, 1, 1], box_b=[2, 2, 3, 3]',
+        output: '0.0',
+        explanation: 'No overlap, IoU=0',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def iou(box_a, box_b):
+    """
+    Calculate Intersection over Union of two bounding boxes.
+
+    Args:
+        box_a: [x1, y1, x2, y2] first bounding box
+        box_b: [x1, y1, x2, y2] second bounding box
+
+    Returns:
+        IoU score as float, rounded to 4 decimal places
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Partial overlap',
+        input: '([0, 0, 2, 2], [1, 1, 3, 3])',
+        expected: '0.1429',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'No overlap',
+        input: '([0, 0, 1, 1], [2, 2, 3, 3])',
+        expected: '0.0',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'One box inside the other',
+        input: '([0, 0, 4, 4], [1, 1, 3, 3])',
+        expected: '0.25',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Find the intersection rectangle using max of top-left corners and min of bottom-right corners',
+      'If the intersection has zero or negative width/height, IoU is 0',
+      'Union = Area_A + Area_B - Intersection',
+    ],
+    solution: `import numpy as np
+
+def iou(box_a, box_b):
+    x1 = max(box_a[0], box_b[0])
+    y1 = max(box_a[1], box_b[1])
+    x2 = min(box_a[2], box_b[2])
+    y2 = min(box_a[3], box_b[3])
+
+    inter_w = max(0, x2 - x1)
+    inter_h = max(0, y2 - y1)
+    intersection = inter_w * inter_h
+
+    area_a = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
+    area_b = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
+    union = area_a + area_b - intersection
+
+    if union == 0:
+        return 0.0
+
+    return round(intersection / union, 4)
+`,
+  },
+  {
+    id: 'nms',
+    title: 'Non-Maximum Suppression (NMS)',
+    section: 'cnn',
+    difficulty: 'medium',
+    description: `
+## Non-Maximum Suppression (NMS)
+
+Implement Non-Maximum Suppression to filter redundant object detections.
+
+### Why NMS?
+Object detectors often produce **multiple overlapping boxes** for the same object. NMS keeps only the best detection per object.
+
+### Algorithm
+1. Sort boxes by confidence score (descending)
+2. Pick the box with the highest score, add to results
+3. Remove all remaining boxes with IoU > threshold against the picked box
+4. Repeat until no boxes remain
+
+### Parameters
+- **boxes**: List of \`[x1, y1, x2, y2]\` bounding boxes
+- **scores**: Confidence score for each box
+- **iou_threshold**: Boxes with IoU above this are suppressed (default: 0.5)
+
+### Function Signature
+\`\`\`python
+def nms(boxes, scores, iou_threshold=0.5):
+    # boxes: list of [x1, y1, x2, y2]
+    # scores: list of confidence scores
+    # Returns: list of kept indices (sorted by decreasing score)
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'boxes=[[0,0,4,4],[1,1,4,4],[6,6,8,8]], scores=[0.9,0.75,0.8], threshold=0.5',
+        output: '[0, 2]',
+        explanation: 'Box 1 (score 0.75) suppressed by box 0 (score 0.9) due to IoU=0.56 > 0.5. Box 2 has no overlap.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def nms(boxes, scores, iou_threshold=0.5):
+    """
+    Apply Non-Maximum Suppression.
+
+    Args:
+        boxes: List of [x1, y1, x2, y2] bounding boxes
+        scores: List of confidence scores for each box
+        iou_threshold: IoU threshold for suppression (default: 0.5)
+
+    Returns:
+        List of indices of kept boxes, sorted by decreasing score
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Overlapping box suppressed',
+        input: '([[0,0,4,4],[1,1,4,4],[6,6,8,8]], [0.9, 0.75, 0.8], 0.5)',
+        expected: '[0, 2]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'No suppression (no overlaps)',
+        input: '([[0,0,1,1],[3,3,4,4],[6,6,7,7]], [0.5, 0.9, 0.7], 0.5)',
+        expected: '[1, 2, 0]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Two overlapping pairs',
+        input: '([[0,0,4,4],[1,1,4,4],[10,10,14,14],[11,11,14,14]], [0.9, 0.85, 0.8, 0.7], 0.5)',
+        expected: '[0, 2]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Sort indices by score in descending order',
+      'Use a while loop: pick the top-scoring box, then filter out boxes with IoU > threshold',
+      'You can reuse an IoU helper function inside NMS',
+    ],
+    solution: `import numpy as np
+
+def nms(boxes, scores, iou_threshold=0.5):
+    def compute_iou(a, b):
+        x1 = max(a[0], b[0])
+        y1 = max(a[1], b[1])
+        x2 = min(a[2], b[2])
+        y2 = min(a[3], b[3])
+        inter = max(0, x2 - x1) * max(0, y2 - y1)
+        area_a = (a[2] - a[0]) * (a[3] - a[1])
+        area_b = (b[2] - b[0]) * (b[3] - b[1])
+        union = area_a + area_b - inter
+        return inter / union if union > 0 else 0.0
+
+    order = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    keep = []
+
+    while order:
+        i = order.pop(0)
+        keep.append(i)
+        order = [j for j in order if compute_iou(boxes[i], boxes[j]) <= iou_threshold]
+
+    return keep
+`,
+  },
+  {
+    id: 'focal-loss',
+    title: 'Focal Loss',
+    section: 'cnn',
+    difficulty: 'medium',
+    description: `
+## Focal Loss
+
+Implement Focal Loss from the RetinaNet paper (Lin et al., 2017).
+
+### Motivation
+In object detection, there is a huge **class imbalance** between background (easy negatives) and foreground (actual objects). Standard cross-entropy gives equal weight to all examples, causing easy negatives to dominate training.
+
+### Formula
+\`\`\`
+FL(p_t) = -alpha_t * (1 - p_t)^gamma * log(p_t)
+\`\`\`
+
+Where:
+- \`p_t = p\` if \`y=1\`, else \`p_t = 1 - p\` (model's estimated probability for the true class)
+- \`alpha\`: Balancing factor (default 0.25)
+- \`gamma\`: Focusing parameter (default 2.0)
+
+### Key Insight
+- When \`p_t\` is high (easy example): \`(1 - p_t)^gamma\` → 0, so loss is **down-weighted**
+- When \`p_t\` is low (hard example): \`(1 - p_t)^gamma\` → 1, so loss is **unchanged**
+- \`gamma=0\` reduces to standard cross-entropy
+
+### Function Signature
+\`\`\`python
+def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
+    # predictions: predicted probabilities (array of floats in [0, 1])
+    # targets: ground truth labels (array of 0s and 1s)
+    # Returns: mean focal loss (float, rounded to 4 decimal places)
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'predictions=[0.9, 0.1], targets=[1, 0], alpha=0.25, gamma=2.0',
+        output: '0.0005',
+        explanation: 'Both are confident correct predictions, so focal loss heavily down-weights them',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
+    """
+    Compute focal loss for binary classification.
+
+    Args:
+        predictions: Predicted probabilities (array of floats in [0, 1])
+        targets: Ground truth labels (array of 0s and 1s)
+        alpha: Balancing factor (default: 0.25)
+        gamma: Focusing parameter (default: 2.0)
+
+    Returns:
+        Mean focal loss, rounded to 4 decimal places
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Confident correct predictions',
+        input: '([0.9, 0.1], [1, 0], 0.25, 2.0)',
+        expected: '0.0005',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Uncertain predictions',
+        input: '([0.6, 0.4], [1, 0], 0.25, 2.0)',
+        expected: '0.0409',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Gamma=0 (standard cross-entropy with alpha)',
+        input: '([0.9, 0.1], [1, 0], 0.25, 0.0)',
+        expected: '0.0527',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'First compute p_t: if target=1 then p_t=p, else p_t=1-p',
+      'Apply alpha_t: if target=1 then alpha_t=alpha, else alpha_t=1-alpha',
+      'Clip predictions to avoid log(0), e.g., np.clip(p, 1e-7, 1-1e-7)',
+      'FL = -alpha_t * (1 - p_t)^gamma * log(p_t), then take the mean',
+    ],
+    solution: `import numpy as np
+
+def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
+    p = np.array(predictions, dtype=float)
+    t = np.array(targets, dtype=float)
+
+    p = np.clip(p, 1e-7, 1 - 1e-7)
+
+    p_t = np.where(t == 1, p, 1 - p)
+    alpha_t = np.where(t == 1, alpha, 1 - alpha)
+
+    loss = -alpha_t * (1 - p_t) ** gamma * np.log(p_t)
+
+    return round(float(np.mean(loss)), 4)
+`,
+  },
+  {
+    id: 'smooth-l1-loss',
+    title: 'Smooth L1 Loss',
+    section: 'cnn',
+    difficulty: 'easy',
+    description: `
+## Smooth L1 Loss (Huber Loss)
+
+Implement Smooth L1 Loss, the standard loss for bounding box regression in object detection.
+
+### Motivation
+- **L2 loss** (MSE): Sensitive to outliers — large errors produce huge gradients
+- **L1 loss** (MAE): Not differentiable at zero
+- **Smooth L1**: Combines the best of both — quadratic for small errors, linear for large errors
+
+### Formula
+\`\`\`
+         ⎧ 0.5 * x² / beta    if |x| < beta
+L(x) =  ⎨
+         ⎩ |x| - 0.5 * beta   if |x| >= beta
+\`\`\`
+
+Where \`x = prediction - target\` and \`beta\` controls the transition point (default: 1.0).
+
+### Properties
+- Differentiable everywhere (unlike L1)
+- Less sensitive to outliers than L2
+- At \`beta=1\`: transitions from quadratic to linear at \`|x|=1\`
+- Used in Faster R-CNN, SSD, and most modern detectors
+
+### Function Signature
+\`\`\`python
+def smooth_l1_loss(predictions, targets, beta=1.0):
+    # predictions: predicted values (array)
+    # targets: target values (array)
+    # Returns: mean smooth L1 loss (float, rounded to 4 decimal places)
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'predictions=[0.5, 1.5], targets=[0.0, 0.0], beta=1.0',
+        output: '0.5625',
+        explanation: '|0.5|<1 → 0.5*0.25/1=0.125; |1.5|>=1 → 1.5-0.5=1.0; mean=(0.125+1.0)/2=0.5625',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def smooth_l1_loss(predictions, targets, beta=1.0):
+    """
+    Compute Smooth L1 (Huber) Loss.
+
+    Args:
+        predictions: Predicted values (array)
+        targets: Target values (array)
+        beta: Threshold for quadratic-to-linear transition (default: 1.0)
+
+    Returns:
+        Mean smooth L1 loss, rounded to 4 decimal places
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Small errors (quadratic region)',
+        input: '([0.2, -0.3], [0.0, 0.0], 1.0)',
+        expected: '0.0325',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Large errors (linear region)',
+        input: '([3.0, -2.0], [0.0, 0.0], 1.0)',
+        expected: '2.0',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Mixed small and large errors',
+        input: '([0.5, 1.5, -2.0], [0.0, 0.0, 0.0], 1.0)',
+        expected: '0.875',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Compute the element-wise difference: x = predictions - targets',
+      'Use np.where to apply different formulas based on |x| < beta',
+      'Small errors: 0.5 * x^2 / beta; Large errors: |x| - 0.5 * beta',
+    ],
+    solution: `import numpy as np
+
+def smooth_l1_loss(predictions, targets, beta=1.0):
+    p = np.array(predictions, dtype=float)
+    t = np.array(targets, dtype=float)
+
+    x = p - t
+    abs_x = np.abs(x)
+
+    loss = np.where(abs_x < beta, 0.5 * x ** 2 / beta, abs_x - 0.5 * beta)
+
+    return round(float(np.mean(loss)), 4)
+`,
+  },
+  {
+    id: 'seg-metrics',
+    title: 'Segmentation Metrics',
+    section: 'cnn',
+    difficulty: 'medium',
+    description: `
+## Segmentation Metrics
+
+Implement three key metrics for evaluating binary image segmentation: **IoU**, **Pixel Accuracy**, and **Dice Coefficient**.
+
+### Metrics
+
+#### 1. IoU (Intersection over Union / Jaccard Index)
+\`\`\`
+IoU = |Prediction ∩ Target| / |Prediction ∪ Target|
+\`\`\`
+
+#### 2. Pixel Accuracy
+\`\`\`
+Pixel Accuracy = Number of correct pixels / Total pixels
+\`\`\`
+
+#### 3. Dice Coefficient (F1 Score for pixels)
+\`\`\`
+Dice = 2 * |Prediction ∩ Target| / (|Prediction| + |Target|)
+\`\`\`
+
+### Relationship Between IoU and Dice
+\`\`\`
+Dice = 2 * IoU / (1 + IoU)
+\`\`\`
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'iou'\`: Intersection over Union (float, rounded to 4 dp)
+- \`'pixel_accuracy'\`: Pixel accuracy (float, rounded to 4 dp)
+- \`'dice'\`: Dice coefficient (float, rounded to 4 dp)
+
+### Function Signature
+\`\`\`python
+def segmentation_metrics(prediction, target):
+    # prediction: binary mask (2D array of 0s and 1s)
+    # target: binary ground truth mask (2D array of 0s and 1s)
+    # Returns: dict with 'iou', 'pixel_accuracy', 'dice'
+\`\`\`
+    `,
+    examples: [
+      {
+        input: 'prediction=[[1,1],[0,0]], target=[[1,0],[0,1]]',
+        output: "{'iou': 0.3333, 'pixel_accuracy': 0.5, 'dice': 0.5}",
+        explanation: 'Intersection=1, Union=3, IoU=1/3; 2 correct out of 4 pixels; Dice=2*1/(2+2)=0.5',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def segmentation_metrics(prediction, target):
+    """
+    Compute segmentation evaluation metrics.
+
+    Args:
+        prediction: Binary predicted mask (2D array of 0s and 1s)
+        target: Binary ground truth mask (2D array of 0s and 1s)
+
+    Returns:
+        Dictionary with 'iou', 'pixel_accuracy', 'dice' (all rounded to 4 dp)
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Partial overlap',
+        input: 'segmentation_metrics(np.array([[1,1],[0,0]]), np.array([[1,0],[0,1]]))',
+        expected: "{'iou': 0.3333, 'pixel_accuracy': 0.5, 'dice': 0.5}",
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Perfect match',
+        input: 'segmentation_metrics(np.array([[1,0],[0,1]]), np.array([[1,0],[0,1]]))',
+        expected: "{'iou': 1.0, 'pixel_accuracy': 1.0, 'dice': 1.0}",
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Dice coefficient check',
+        input: "segmentation_metrics(np.array([[1,1,0],[0,0,0]]), np.array([[0,1,1],[0,0,0]]))['dice']",
+        expected: '0.5',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Intersection: np.sum(prediction * target) (both are binary, so multiplication gives AND)',
+      'Union: np.sum(prediction) + np.sum(target) - intersection (or use np.sum((prediction + target) > 0))',
+      'Pixel accuracy: np.sum(prediction == target) / total_pixels',
+    ],
+    solution: `import numpy as np
+
+def segmentation_metrics(prediction, target):
+    pred = np.array(prediction, dtype=float)
+    targ = np.array(target, dtype=float)
+
+    intersection = np.sum(pred * targ)
+    union = np.sum(pred) + np.sum(targ) - intersection
+
+    iou_val = intersection / union if union > 0 else 0.0
+    pixel_acc = np.sum(pred == targ) / pred.size
+    dice = 2 * intersection / (np.sum(pred) + np.sum(targ)) if (np.sum(pred) + np.sum(targ)) > 0 else 0.0
+
+    return {
+        'iou': round(float(iou_val), 4),
+        'pixel_accuracy': round(float(pixel_acc), 4),
+        'dice': round(float(dice), 4)
+    }
+`,
+  },
 ];

@@ -479,9 +479,20 @@ output = (input - kernel + 2*padding) / stride + 1
 - **VGG**: Very deep, small kernels
 - **ResNet**: Skip connections
 
-Let's implement CNN operations!
+### Object Detection
+- **IoU (Intersection over Union)**: Measures overlap between predicted and ground truth boxes
+- **Non-Maximum Suppression (NMS)**: Filters redundant detections by keeping only the highest-scoring box per object
+- **Focal Loss**: Addresses class imbalance by down-weighting easy examples (RetinaNet)
+- **Smooth L1 Loss**: Bounding box regression loss — less sensitive to outliers than L2
+
+### Image Segmentation
+- **Pixel-level classification**: Assign a label to every pixel
+- **Evaluation metrics**: IoU (Jaccard), Dice Coefficient, Pixel Accuracy
+- **Key architectures**: U-Net, FCN, Mask R-CNN
+
+Let's implement CNN operations and detection/segmentation fundamentals!
     `,
-    problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced'],
+    problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics'],
   },
   {
     id: 'transformers',
@@ -578,6 +589,87 @@ x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
 Let's implement generative models!
     `,
     problems: ['kl-divergence', 'vae-reparameterization', 'vae-loss', 'vqvae-quantization', 'diffusion-noise-schedule', 'diffusion-forward'],
+  },
+
+  {
+    id: 'llm-generation',
+    title: 'LLM Generation & Decoding',
+    description: 'Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.',
+    icon: '💬',
+    introduction: `
+# LLM Generation & Decoding
+
+Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.
+
+## The Autoregressive Pipeline
+
+LLMs generate text one token at a time:
+\`\`\`
+logits = model(input_tokens)        # Raw scores for each vocab token
+probs = softmax(logits / temperature)  # Convert to probabilities
+next_token = sample(probs)          # Pick a token
+\`\`\`
+
+## Key Concepts
+
+### Temperature Scaling
+Controls randomness by scaling logits before softmax:
+\`\`\`
+scaled_logits = logits / T
+\`\`\`
+- T < 1: More deterministic (sharper distribution)
+- T > 1: More random (flatter distribution)
+- T → 0: Greedy decoding (always pick most likely)
+
+### Sampling Strategies
+
+| Strategy | How It Works | When to Use |
+|----------|-------------|-------------|
+| **Top-k** | Keep only the k most likely tokens | Simple, predictable filtering |
+| **Top-p (Nucleus)** | Keep smallest set with cumulative prob ≥ p | Adaptive, works across distributions |
+| **Repetition Penalty** | Reduce probability of already-generated tokens | Prevent loops and repetition |
+
+### KV Cache
+The key optimization for efficient autoregressive generation:
+- Cache Key and Value projections from previous tokens
+- Only compute Q, K, V for the **new** token at each step
+- Reduces per-token cost from O(n²) to O(n)
+
+### Beam Search
+Maintain multiple candidate sequences:
+\`\`\`
+score(sequence) = sum(log P(token_i))
+\`\`\`
+- Explores multiple paths simultaneously
+- Finds higher-probability sequences than greedy decoding
+- Used in translation, summarization, and structured output
+
+### Speculative Decoding
+Use a small "draft" model to propose tokens, verified by the large model:
+1. Draft model generates K tokens quickly
+2. Target model verifies all K in one forward pass
+3. Accept with probability min(1, p_target / p_draft)
+- Mathematically guarantees target model distribution
+- 2-3x speedup in practice
+
+## Interview Essentials
+- Explain temperature scaling and its effect on output diversity
+- Compare top-k vs top-p sampling trade-offs
+- Describe how KV cache reduces inference cost
+- Implement beam search with length normalization
+- Explain why speculative decoding preserves the target distribution
+
+Let's implement these essential LLM techniques!
+    `,
+    problems: [
+      'llm-temperature-scaling',
+      'llm-top-k-sampling',
+      'llm-top-p-sampling',
+      'llm-repetition-penalty',
+      'llm-kv-cache',
+      'llm-beam-search',
+      'llm-speculative-decoding',
+    ],
   },
 
   // ==========================================
