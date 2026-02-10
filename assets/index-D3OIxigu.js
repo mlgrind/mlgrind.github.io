@@ -3539,48 +3539,7 @@ Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
 - GQA/MQA for efficient inference
 
 Let's build transformers from scratch!
-    `,problems:["scaled-dot-product-attention","multi-head-attention","positional-encoding","layer-norm","causal-mask","bpe-tokenization","rope-embeddings","grouped-query-attention","sliding-window-attention"]},{id:"generative-models",title:"Generative Models",description:"Learn VAEs, diffusion models, and generative AI fundamentals.",icon:"🎨",introduction:`
-# Generative Models
-
-Generative models learn to create new data similar to the training distribution.
-
-## Key Concepts
-
-### Variational Autoencoders (VAEs)
-- **Encoder**: Maps input to latent distribution (μ, σ)
-- **Decoder**: Reconstructs input from latent sample
-- **Reparameterization trick**: Enable backprop through sampling
-- **Loss**: Reconstruction + KL divergence
-
-### VAE Loss (ELBO)
-\`\`\`
-L = Reconstruction Loss + KL Divergence
-L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
-\`\`\`
-
-### Diffusion Models
-- **Forward process**: Gradually add noise to data
-- **Reverse process**: Learn to denoise
-- **Noise schedule**: β_t controls noise at each step
-
-### Key Formulas
-\`\`\`
-x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-\`\`\`
-
-### KL Divergence
-- Measures difference between distributions
-- KL(P || Q) ≥ 0, equals 0 iff P = Q
-- Not symmetric
-
-### Interview Topics
-- Explain reparameterization trick
-- VAE loss components
-- Diffusion forward/reverse process
-- Compare GANs vs VAEs vs Diffusion
-
-Let's implement generative models!
-    `,problems:["kl-divergence","vae-reparameterization","vae-loss","vqvae-quantization","diffusion-noise-schedule","diffusion-forward"]},{id:"llm-generation",title:"LLM Generation & Decoding",description:"Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.",icon:"💬",introduction:`
+    `,problems:["scaled-dot-product-attention","multi-head-attention","positional-encoding","layer-norm","causal-mask","bpe-tokenization","rope-embeddings","grouped-query-attention","sliding-window-attention"]},{id:"llm-generation",title:"LLM Generation & Decoding",description:"Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.",icon:"💬",introduction:`
 # LLM Generation & Decoding
 
 Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.
@@ -3644,7 +3603,48 @@ Use a small "draft" model to propose tokens, verified by the large model:
 - Explain why speculative decoding preserves the target distribution
 
 Let's implement these essential LLM techniques!
-    `,problems:["llm-temperature-scaling","llm-top-k-sampling","llm-top-p-sampling","llm-repetition-penalty","llm-kv-cache","llm-beam-search","llm-speculative-decoding"]},{id:"reinforcement-learning",title:"Reinforcement Learning",description:"Master RL fundamentals from Q-learning to policy gradients.",icon:"🎮",introduction:`
+    `,problems:["llm-temperature-scaling","llm-top-k-sampling","llm-top-p-sampling","llm-repetition-penalty","llm-kv-cache","llm-beam-search","llm-speculative-decoding"]},{id:"generative-models",title:"Generative Models",description:"Learn VAEs, diffusion models, and generative AI fundamentals.",icon:"🎨",introduction:`
+# Generative Models
+
+Generative models learn to create new data similar to the training distribution.
+
+## Key Concepts
+
+### Variational Autoencoders (VAEs)
+- **Encoder**: Maps input to latent distribution (μ, σ)
+- **Decoder**: Reconstructs input from latent sample
+- **Reparameterization trick**: Enable backprop through sampling
+- **Loss**: Reconstruction + KL divergence
+
+### VAE Loss (ELBO)
+\`\`\`
+L = Reconstruction Loss + KL Divergence
+L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
+\`\`\`
+
+### Diffusion Models
+- **Forward process**: Gradually add noise to data
+- **Reverse process**: Learn to denoise
+- **Noise schedule**: β_t controls noise at each step
+
+### Key Formulas
+\`\`\`
+x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
+\`\`\`
+
+### KL Divergence
+- Measures difference between distributions
+- KL(P || Q) ≥ 0, equals 0 iff P = Q
+- Not symmetric
+
+### Interview Topics
+- Explain reparameterization trick
+- VAE loss components
+- Diffusion forward/reverse process
+- Compare GANs vs VAEs vs Diffusion
+
+Let's implement generative models!
+    `,problems:["kl-divergence","vae-reparameterization","vae-loss","vqvae-quantization","diffusion-noise-schedule","diffusion-forward"]},{id:"reinforcement-learning",title:"Reinforcement Learning",description:"Master RL fundamentals from Q-learning to policy gradients.",icon:"🎮",introduction:`
 # Reinforcement Learning
 
 Reinforcement learning (RL) trains agents to make decisions by learning from rewards and punishments through trial and error.
