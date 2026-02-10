@@ -442,8 +442,8 @@ Let's build neural networks from scratch!
   },
   {
     id: 'cnn',
-    title: 'Convolutional Neural Networks',
-    description: 'Understand convolutions, pooling, and CNN architectures.',
+    title: 'CNNs & Computer Vision',
+    description: 'Implement convolutions, pooling, object detection, and segmentation.',
     icon: '🖼️',
     introduction: `
 # Convolutional Neural Networks (CNNs)
@@ -496,8 +496,8 @@ Let's implement CNN operations and detection/segmentation fundamentals!
   },
   {
     id: 'transformers',
-    title: 'Attention & Transformers',
-    description: 'Master attention mechanisms and transformer architecture.',
+    title: 'Transformer Architecture',
+    description: 'Master attention, positional encoding, and modern LLM architecture.',
     icon: '🤖',
     introduction: `
 # Attention and Transformers
