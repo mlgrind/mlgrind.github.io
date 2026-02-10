@@ -3445,7 +3445,7 @@ Neural networks are the foundation of deep learning. Understanding the math behi
 - Implement regularization techniques
 
 Let's build neural networks from scratch!
-    `,problems:["cross-entropy-loss","mlp-forward-backward","weight-init","batch-norm","dropout"]},{id:"cnn",title:"Convolutional Neural Networks",description:"Understand convolutions, pooling, and CNN architectures.",icon:"🖼️",introduction:`
+    `,problems:["cross-entropy-loss","mlp-forward-backward","weight-init","batch-norm","dropout"]},{id:"cnn",title:"CNNs & Computer Vision",description:"Implement convolutions, pooling, object detection, and segmentation.",icon:"🖼️",introduction:`
 # Convolutional Neural Networks (CNNs)
 
 CNNs are the backbone of computer vision. They learn hierarchical features from images.
@@ -3491,7 +3491,7 @@ output = (input - kernel + 2*padding) / stride + 1
 - **Key architectures**: U-Net, FCN, Mask R-CNN
 
 Let's implement CNN operations and detection/segmentation fundamentals!
-    `,problems:["conv-output-size","conv2d-forward","max-pool","flatten-layer","conv2d-advanced","iou-bounding-box","nms","focal-loss","smooth-l1-loss","seg-metrics"]},{id:"transformers",title:"Attention & Transformers",description:"Master attention mechanisms and transformer architecture.",icon:"🤖",introduction:`
+    `,problems:["conv-output-size","conv2d-forward","max-pool","flatten-layer","conv2d-advanced","iou-bounding-box","nms","focal-loss","smooth-l1-loss","seg-metrics"]},{id:"transformers",title:"Transformer Architecture",description:"Master attention, positional encoding, and modern LLM architecture.",icon:"🤖",introduction:`
 # Attention and Transformers
 
 Transformers have revolutionized NLP and are now used in vision, speech, and more.
@@ -10024,19 +10024,19 @@ def top_k_sampling(logits, k, temperature=1.0):
     # Your code here
     pass
 `,testCases:[{id:"1",description:"Only k tokens have non-zero probability",input:`(lambda: (
-    _, probs := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.sum(probs > 0) == 3)
+    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
+    bool(np.sum(result[1] > 0) == 3)
 )[-1])()`,expected:"True",hidden:!1},{id:"2",description:"Filtered probs sum to 1",input:`(lambda: (
-    _, probs := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.allclose(np.sum(probs), 1.0))
+    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
+    bool(np.allclose(np.sum(result[1]), 1.0))
 )[-1])()`,expected:"True",hidden:!1},{id:"3",description:"Sampled token is within top-k",input:`(lambda: (
     logits := np.array([5.0, 3.0, 2.0, 1.0, 0.1]),
     top_k_indices := np.argsort(logits)[-3:],
-    token, _ := top_k_sampling(logits, 3),
-    bool(token in top_k_indices)
+    result := top_k_sampling(logits, 3),
+    bool(result[0] in top_k_indices)
 )[-1])()`,expected:"True",hidden:!1},{id:"4",description:"k=1 always picks the top token",input:`(lambda: (
-    token, _ := top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1),
-    bool(token == 1)
+    result := top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1),
+    bool(result[0] == 1)
 )[-1])()`,expected:"True",hidden:!0}],hints:["Apply temperature scaling first: scaled_logits = logits / temperature","Use np.argsort or np.argpartition to find top-k indices","Set non-top-k logits to -inf (or a very large negative number) before softmax","Re-normalize by dividing by the sum of remaining probabilities","Use np.random.choice with the filtered probabilities to sample"],solution:`import numpy as np
 
 def top_k_sampling(logits, k, temperature=1.0):
@@ -10108,19 +10108,19 @@ def top_p_sampling(logits, p, temperature=1.0):
     # Your code here
     pass
 `,testCases:[{id:"1",description:"Filtered probs sum to 1",input:`(lambda: (
-    _, probs := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9),
-    bool(np.allclose(np.sum(probs), 1.0))
+    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9),
+    bool(np.allclose(np.sum(result[1]), 1.0))
 )[-1])()`,expected:"True",hidden:!1},{id:"2",description:"p=1.0 keeps all tokens",input:`(lambda: (
-    _, probs := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0),
-    bool(np.sum(probs > 0) == 5)
+    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0),
+    bool(np.sum(result[1] > 0) == 5)
 )[-1])()`,expected:"True",hidden:!1},{id:"3",description:"Small p keeps fewer tokens",input:`(lambda: (
-    _, probs_small := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5),
-    _, probs_large := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.95),
-    bool(np.sum(probs_small > 0) <= np.sum(probs_large > 0))
+    result_small := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5),
+    result_large := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.95),
+    bool(np.sum(result_small[1] > 0) <= np.sum(result_large[1] > 0))
 )[-1])()`,expected:"True",hidden:!1},{id:"4",description:"Dominant token with very small p",input:`(lambda: (
     logits := np.array([10.0, 1.0, 0.5, 0.1]),
-    _, probs := top_p_sampling(logits, 0.5),
-    bool(np.sum(probs > 0) <= 2)
+    result := top_p_sampling(logits, 0.5),
+    bool(np.sum(result[1] > 0) <= 2)
 )[-1])()`,expected:"True",hidden:!0}],hints:["First compute softmax probabilities (with temperature)","Sort probabilities in descending order, keeping track of original indices","Compute cumulative sum of sorted probabilities","The cutoff is where cumsum first exceeds p — include that token too","Zero out all tokens not in the nucleus set, then re-normalize"],solution:`import numpy as np
 
 def top_p_sampling(logits, p, temperature=1.0):
@@ -10292,36 +10292,38 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     # Your code here
     pass
 `,testCases:[{id:"1",description:"Output shape is correct",input:`(lambda: (
-    d_model, d_k, d_v := 8, 4, 4,
+    d_model := 8,
+    d_k := 4,
+    d_v := 4,
     x := np.random.randn(1, d_model),
     W_Q := np.random.randn(d_model, d_k) * 0.1,
     W_K := np.random.randn(d_model, d_k) * 0.1,
     W_V := np.random.randn(d_model, d_v) * 0.1,
-    out, _, _ := kv_cache_attention(x, W_Q, W_K, W_V),
-    out.shape
+    result := kv_cache_attention(x, W_Q, W_K, W_V),
+    result[0].shape
 )[-1])()`,expected:"(1, 4)",hidden:!1},{id:"2",description:"Cache grows by 1 each step",input:`(lambda: (
     d := 4,
     x := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    _, k1, v1 := kv_cache_attention(x, W, W, W),
-    _, k2, v2 := kv_cache_attention(x, W, W, W, k1, v1),
-    _, k3, v3 := kv_cache_attention(x, W, W, W, k2, v2),
-    k3.shape[0]
+    r1 := kv_cache_attention(x, W, W, W),
+    r2 := kv_cache_attention(x, W, W, W, r1[1], r1[2]),
+    r3 := kv_cache_attention(x, W, W, W, r2[1], r2[2]),
+    r3[1].shape[0]
 )[-1])()`,expected:"3",hidden:!1},{id:"3",description:"First step creates cache of length 1",input:`(lambda: (
     d := 4,
     x := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    _, k, v := kv_cache_attention(x, W, W, W),
-    k.shape[0]
+    result := kv_cache_attention(x, W, W, W),
+    result[1].shape[0]
 )[-1])()`,expected:"1",hidden:!1},{id:"4",description:"Attention output changes with more context",input:`(lambda: (
     np.random.seed(0),
     d := 4,
     x1 := np.random.randn(1, d),
     x2 := np.random.randn(1, d),
     W := np.random.randn(d, d) * 0.1,
-    out1, k1, v1 := kv_cache_attention(x1, W, W, W),
-    out2, k2, v2 := kv_cache_attention(x2, W, W, W, k1, v1),
-    bool(not np.allclose(out1, out2))
+    r1 := kv_cache_attention(x1, W, W, W),
+    r2 := kv_cache_attention(x2, W, W, W, r1[1], r1[2]),
+    bool(not np.allclose(r1[0], r2[0]))
 )[-1])()`,expected:"True",hidden:!0}],hints:["Compute Q, K, V projections for the new token: Q_new = x_new @ W_Q","If cache is None, initialize K_cache and V_cache as the new K, V","Otherwise concatenate: K_cache = np.concatenate([k_cache, K_new], axis=0)","Compute attention: scores = Q_new @ K_cache.T / sqrt(d_k)","Apply softmax to scores, then output = softmax_scores @ V_cache"],solution:`import numpy as np
 
 def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
@@ -10406,21 +10408,21 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
     pass
 `,testCases:[{id:"1",description:"Greedy path found with beam_width=1",input:`(lambda: (
     log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    seq, score := beam_search(log_probs, 1),
-    seq
+    result := beam_search(log_probs, 1),
+    result[0]
 )[-1])()`,expected:"[0, 1, 2]",hidden:!1},{id:"2",description:"Beam search score is log-probability sum",input:`(lambda: (
     log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    seq, score := beam_search(log_probs, 1),
-    round(score, 4)
+    result := beam_search(log_probs, 1),
+    round(result[1], 4)
 )[-1])()`,expected:"-1.3783",hidden:!1},{id:"3",description:"Wider beam can find better path",input:`(lambda: (
     log_probs := np.log(np.array([[0.4, 0.35, 0.25], [0.1, 0.1, 0.8], [0.9, 0.05, 0.05]])),
-    _, score1 := beam_search(log_probs, 1),
-    _, score2 := beam_search(log_probs, 3),
-    bool(score2 >= score1 - 1e-10)
+    r1 := beam_search(log_probs, 1),
+    r2 := beam_search(log_probs, 3),
+    bool(r2[1] >= r1[1] - 1e-10)
 )[-1])()`,expected:"True",hidden:!0},{id:"4",description:"Sequence length matches steps",input:`(lambda: (
     log_probs := np.log(np.array([[0.5, 0.5], [0.3, 0.7], [0.8, 0.2], [0.4, 0.6]])),
-    seq, _ := beam_search(log_probs, 2),
-    len(seq)
+    result := beam_search(log_probs, 2),
+    len(result[0])
 )[-1])()`,expected:"4",hidden:!1}],hints:["Maintain a list of (sequence, score) tuples for each beam","At each step, expand all beams with all possible next tokens","Score = previous score + log_probs[step][token]","Sort all candidates by score and keep top beam_width","After all steps, return the beam with the highest score"],solution:`import numpy as np
 
 def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
@@ -10517,16 +10519,16 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
     pass
 `,testCases:[{id:"1",description:"All tokens accepted when target_prob >= draft_prob",input:`(lambda: (
     np.random.seed(0),
-    tokens, n := speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3]),
-    bool(n == 3)
+    result := speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3]),
+    bool(result[1] == 3)
 )[-1])()`,expected:"True",hidden:!1},{id:"2",description:"Accepted tokens are prefix of draft tokens",input:`(lambda: (
     np.random.seed(42),
-    tokens, n := speculative_decode([0.5, 0.5, 0.5], [0.6, 0.6, 0.6], [10, 20, 30]),
-    bool(tokens == [10, 20, 30][:n])
+    result := speculative_decode([0.5, 0.5, 0.5], [0.6, 0.6, 0.6], [10, 20, 30]),
+    bool(result[0] == [10, 20, 30][:result[1]])
 )[-1])()`,expected:"True",hidden:!1},{id:"3",description:"Returns between 0 and K accepted tokens",input:`(lambda: (
     np.random.seed(42),
-    _, n := speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3]),
-    bool(0 <= n <= 3)
+    result := speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3]),
+    bool(0 <= result[1] <= 3)
 )[-1])()`,expected:"True",hidden:!1},{id:"4",description:"Deterministic acceptance when target prob much higher",input:`(lambda: (
     results := [speculative_decode([0.01], [0.99], [42])[1] for _ in range(10)],
     bool(all(r == 1 for r in results))
