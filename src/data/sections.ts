@@ -531,15 +531,24 @@ Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
 - **Purpose**: Prevent attending to future tokens
 - **Implementation**: Add -inf to upper triangle before softmax
 
+### Modern LLM Architecture
+- **BPE Tokenization**: Subword tokenization used by GPT, LLaMA, and most LLMs
+- **Rotary Positional Embeddings (RoPE)**: Encodes relative positions via rotation, replacing sinusoidal
+- **Grouped Query Attention (GQA)**: Shares KV heads across query head groups for efficient inference
+- **Sliding Window Attention**: Local attention pattern for efficient long-context processing
+
 ### Interview Essentials
 - Implement scaled dot-product attention
 - Explain why we scale by sqrt(d_k)
 - Multi-head attention benefits
 - Positional encoding purpose
+- BPE tokenization algorithm
+- RoPE vs sinusoidal positional encoding
+- GQA/MQA for efficient inference
 
 Let's build transformers from scratch!
     `,
-    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask'],
+    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention'],
   },
   {
     id: 'generative-models',
