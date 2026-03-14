@@ -66,3 +66,38 @@ export interface PyodideInterface {
   loadPackage: (packages: string | string[]) => Promise<void>;
   globals: Map<string, unknown>;
 }
+
+export interface FlashCard {
+  id: string;
+  sectionId: string;
+  question: string;
+  answer: string;
+  tags?: string[];
+}
+
+export interface FlashCardProgress {
+  cardId: string;
+  ease: number;
+  interval: number;
+  nextReview: string;
+  repetitions: number;
+  lastReviewed?: string;
+}
+
+export interface ActivityItem {
+  type: 'completed' | 'started' | 'section_milestone';
+  problemId?: string;
+  sectionId: string;
+  title: string;
+  timestamp: string;
+  detail?: string;
+}
+
+export interface Recommendation {
+  type: 'continue' | 'next' | 'review' | 'weak_area' | 'new_territory';
+  problemId?: string;
+  sectionId: string;
+  title: string;
+  reason: string;
+  priority: number;
+}

@@ -6,6 +6,7 @@ import ProblemPage from './pages/ProblemPage'
 import ScratchpadPage from './pages/ScratchpadPage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
+import FlashCardsPage from './pages/FlashCardsPage'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/section/:sectionId" element={<SectionPage />} />
         <Route path="/problem/:sectionId/:problemId" element={<ProblemPage />} />
         <Route path="/scratchpad" element={<ScratchpadPage />} />
+        <Route path="/flashcards" element={<FlashCardsPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
       </Routes>

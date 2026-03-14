@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
 import { useProgress } from '../context/ProgressContext';
 import SEO from '../components/SEO/SEO';
+import Dashboard from '../components/Dashboard/Dashboard';
 
 export default function HomePage() {
   const { getSectionProgress, getOverallProgress } = useProgress();
@@ -54,6 +55,9 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Dashboard — only renders when user has progress */}
+      <Dashboard />
 
       {/* Curriculum Label */}
       <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 mb-6 font-mono">
