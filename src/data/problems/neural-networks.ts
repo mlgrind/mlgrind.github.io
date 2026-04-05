@@ -279,6 +279,20 @@ def cross_entropy_loss(Y_pred, Y_true):
         expected: '0.2899',
         hidden: false,
       },
+      {
+        id: '3',
+        description: 'Uniform predictions (high loss)',
+        input: 'round(cross_entropy_loss(np.array([[0.5, 0.5]]), np.array([[1, 0]])), 4)',
+        expected: '0.6931',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Three classes',
+        input: 'round(cross_entropy_loss(np.array([[0.1, 0.8, 0.1]]), np.array([[0, 1, 0]])), 4)',
+        expected: '0.2231',
+        hidden: true,
+      },
     ],
     hints: [
       'Use np.log with a small epsilon for numerical stability',
@@ -359,6 +373,20 @@ def initialize_weights(n_in, n_out, method='xavier'):
         input: '(100, 50, "he")',
         expected: '0.1409',
         hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Xavier with large layers',
+        input: '(784, 256, "xavier")',
+        expected: '0.0441',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'He with large layers',
+        input: '(784, 256, "he")',
+        expected: '0.0506',
+        hidden: true,
       },
     ],
     hints: [
@@ -451,6 +479,27 @@ def batch_norm_forward(X, gamma, beta, eps=1e-5):
         expected: '[2.0, 3.0]',
         hidden: true,
       },
+      {
+        id: '3',
+        description: 'Output shape preserved',
+        input: 'batch_norm_forward(np.random.randn(8, 4), np.ones(4), np.zeros(4))[0].shape',
+        expected: '(8, 4)',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Output variance near 1',
+        input: 'bool(np.allclose(np.var(batch_norm_forward(np.random.randn(100, 4), np.ones(4), np.zeros(4))[0], axis=0), 1, atol=0.1))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Cache contains correct elements',
+        input: 'len(batch_norm_forward(np.random.randn(4, 3), np.ones(3), np.zeros(3))[1])',
+        expected: '6',
+        hidden: true,
+      },
     ],
     hints: [
       'Compute mean along axis=0 (batch dimension)',
@@ -539,6 +588,37 @@ def dropout_forward(X, keep_prob=0.5, training=True):
             X := np.ones((1000, 100)),
             out := dropout_forward(X, 0.8, True)[0],
             bool(abs(np.mean(out) - 1.0) < 0.1)
+        )[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '3',
+        description: 'Output shape preserved',
+        input: `(lambda: (
+            np.random.seed(0),
+            dropout_forward(np.random.randn(4, 8), 0.5, True)[0].shape
+        )[-1])()`,
+        expected: '(4, 8)',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Some values are zeroed in training',
+        input: `(lambda: (
+            np.random.seed(42),
+            out := dropout_forward(np.ones((10, 10)), 0.5, True)[0],
+            bool(np.any(out == 0))
+        )[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Mask returned in training',
+        input: `(lambda: (
+            np.random.seed(42),
+            dropout_forward(np.ones((4, 4)), 0.5, True)[1] is not None
         )[-1])()`,
         expected: 'True',
         hidden: true,

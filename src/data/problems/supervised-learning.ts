@@ -70,6 +70,13 @@ def sigmoid(x: np.ndarray) -> np.ndarray:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Symmetry property',
+        input: 'bool(np.allclose(sigmoid(np.array([2.0])) + sigmoid(np.array([-2.0])), [1.0]))',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
       'Use np.exp() for the exponential function.',
@@ -147,6 +154,20 @@ def binary_cross_entropy(y_true, y_pred):
         input: '([1, 0, 1], [0.9, 0.1, 0.8])',
         expected: '0.1446',
         hidden: false,
+      },
+      {
+        id: '3',
+        description: 'All wrong predictions',
+        input: '([1, 1, 0], [0.1, 0.1, 0.9])',
+        expected: '2.3026',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Uniform predictions (0.5)',
+        input: '([1, 0], [0.5, 0.5])',
+        expected: '0.6931',
+        hidden: true,
       },
     ],
     hints: [
@@ -354,6 +375,13 @@ def gini_impurity(labels: np.ndarray) -> float:
         expected: '0.375',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Three classes equally split',
+        input: 'round(gini_impurity(np.array([0, 1, 2])), 4)',
+        expected: '0.6667',
+        hidden: true,
+      },
     ],
     hints: [
       'Count the occurrences of each class.',
@@ -468,6 +496,13 @@ def linear_regression(X: np.ndarray, y: np.ndarray,
         expected: '(3.0, 1.0)',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Negative slope',
+        input: '([1, 2, 3, 4], [8, 6, 4, 2], 0.1, 1000)',
+        expected: '(-2.0, 10.0)',
+        hidden: true,
+      },
     ],
     hints: [
       'First compute predictions: y_pred = w * X + b',
@@ -570,6 +605,33 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
         input: '(lambda r: bool(np.allclose(r[0], [6.0141, 6.0141], atol=1e-3) and np.isclose(r[1], -9.1984, atol=1e-3)))(logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000))',
         expected: 'True',
         hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Weight vector shape',
+        input: 'logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000)[0].shape',
+        expected: '(2,)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Classifies correctly after training',
+        input: `(lambda: (
+    X := np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+    y := np.array([0, 0, 0, 1]),
+    r := logistic_regression(X, y, 0.5, 1000),
+    preds := (1 / (1 + np.exp(-(X @ r[0] + r[1])))) > 0.5,
+    bool(np.array_equal(preds.astype(int), y))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Bias is scalar',
+        input: 'type(logistic_regression(np.array([[1, 0], [0, 1]]), np.array([0, 1]), 0.1, 100)[1]).__name__',
+        expected: 'float',
+        hidden: true,
       },
     ],
     hints: [

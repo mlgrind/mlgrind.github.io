@@ -14,6 +14,7 @@ import SEO from '../components/SEO/SEO';
 import { TestResult, TestCase } from '../types';
 import SuccessBanner from '../components/SuccessBanner/SuccessBanner';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useAIFeedback } from '../hooks/useAIFeedback';
 
 export default function ProblemPage() {
   const { sectionId, problemId } = useParams<{ sectionId: string; problemId: string }>();
@@ -38,6 +39,7 @@ export default function ProblemPage() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [mobileTab, setMobileTab] = useState<'problem' | 'code'>('problem');
   const { isDark } = useDarkMode();
+  const { feedback: aiFeedback, isLoading: aiFeedbackLoading, error: aiFeedbackError, requestFeedback, clearFeedback } = useAIFeedback();
 
   // Load saved code or starter code
   useEffect(() => {
@@ -46,6 +48,9 @@ export default function ProblemPage() {
       setCode(savedProgress.code || problem.starterCode);
       setEditableTestCases(problem.testCases);
       setDescriptionTab('description');
+      clearFeedback();
+      setTestResults([]);
+      clearOutput();
     }
   }, [problem, sectionId, getProblemProgress]);
 
@@ -135,6 +140,16 @@ export default function ProblemPage() {
       setIsRunning(false);
     }
   }, [problem, isReady, sectionId, code, editableTestCases, runTests, updateProblemStatus]);
+
+  const handleRequestAIFeedback = useCallback(() => {
+    if (!problem) return;
+    requestFeedback({
+      code,
+      problemTitle: problem.title,
+      problemDescription: problem.description.slice(0, 2000),
+      testResults,
+    });
+  }, [problem, code, testResults, requestFeedback]);
 
   if (!problem || !section) {
     return (
@@ -371,6 +386,10 @@ export default function ProblemPage() {
                   problemId={problemId}
                   resetKey={resetKey}
                   testResults={testResults}
+                  aiFeedback={aiFeedback}
+                  aiFeedbackLoading={aiFeedbackLoading}
+                  aiFeedbackError={aiFeedbackError}
+                  onRequestAIFeedback={handleRequestAIFeedback}
                 />
               </div>
             </div>
@@ -503,6 +522,10 @@ export default function ProblemPage() {
                   problemId={problemId}
                   resetKey={resetKey}
                   testResults={testResults}
+                  aiFeedback={aiFeedback}
+                  aiFeedbackLoading={aiFeedbackLoading}
+                  aiFeedbackError={aiFeedbackError}
+                  onRequestAIFeedback={handleRequestAIFeedback}
                 />
               </div>
             </Split>

@@ -64,6 +64,41 @@ def reparameterize(mu, log_var):
         expected: '(3, 5)',
         hidden: true,
       },
+      {
+        id: '3',
+        description: 'When log_var is very negative, z ≈ mu (sigma ≈ 0)',
+        input: 'bool(np.allclose(reparameterize(np.array([[3.0, 4.0]]), np.full((1, 2), -100)), np.array([[3.0, 4.0]]), atol=1e-5))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Verify reparameterization formula: z = mu + exp(0.5*log_var)*eps',
+        input: `(lambda: (
+    mu := np.zeros((2, 3)),
+    log_var := np.ones((2, 3)),
+    z := reparameterize(mu, log_var),
+    np.random.seed(42),
+    eps := np.random.randn(2, 3),
+    expected := mu + np.exp(0.5 * log_var) * eps,
+    bool(np.allclose(z, expected))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'When log_var=0, std=1, so z = mu + epsilon',
+        input: `(lambda: (
+    mu := np.array([[5.0, -3.0, 1.0]]),
+    z := reparameterize(mu, np.zeros((1, 3))),
+    np.random.seed(42),
+    eps := np.random.randn(1, 3),
+    bool(np.allclose(z, mu + eps))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
       'std = exp(0.5 * log_var)',
@@ -145,6 +180,30 @@ def vae_loss(x, x_reconstructed, mu, log_var):
         description: 'Non-zero KL',
         input: '(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2)))',
         expected: '(0.3161, 0.0, 0.3161)',
+        hidden: true,
+      },
+      {
+        id: '3',
+        description: 'Non-zero reconstruction loss',
+        input: '(np.ones((1, 4)), np.zeros((1, 4)), np.zeros((1, 2)), np.zeros((1, 2)))',
+        expected: '(1.0, 1.0, 0.0)',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'KL is zero when mu=0, log_var=0 (standard normal)',
+        input: 'vae_loss(np.zeros((2, 4)), np.zeros((2, 4)), np.zeros((2, 3)), np.zeros((2, 3)))[2]',
+        expected: '0.0',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Total loss equals recon + KL',
+        input: `(lambda: (
+    result := vae_loss(np.ones((2, 4)), np.zeros((2, 4)), np.ones((2, 3)), np.ones((2, 3))),
+    bool(abs(result[0] - (result[1] + result[2])) < 1e-4)
+)[-1])()`,
+        expected: 'True',
         hidden: true,
       },
     ],
@@ -233,6 +292,36 @@ def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '3',
+        description: 'First beta equals beta_start',
+        input: 'round(float(linear_noise_schedule(100, 0.0001, 0.02)[0][0]), 4)',
+        expected: '0.0001',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'alphas = 1 - betas relationship holds',
+        input: `(lambda: (
+    betas := linear_noise_schedule(50, 0.001, 0.02)[0],
+    alphas := linear_noise_schedule(50, 0.001, 0.02)[1],
+    bool(np.allclose(alphas, 1 - betas))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Alpha bars equal cumulative product of alphas',
+        input: `(lambda: (
+    result := linear_noise_schedule(40, 0.0001, 0.02),
+    alphas := result[1],
+    alpha_bars := result[2],
+    bool(np.allclose(alpha_bars, np.cumprod(alphas)))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
       'Use np.linspace for linear interpolation',
@@ -315,6 +404,41 @@ def diffusion_forward(x_0, t, alpha_bars):
         description: 'Noise shape matches input',
         input: 'diffusion_forward(np.ones((3, 5)), 10, np.linspace(0.99, 0.01, 100))[1].shape',
         expected: '(3, 5)',
+        hidden: true,
+      },
+      {
+        id: '3',
+        description: 'When alpha_bar=1, x_t should equal x_0 (no noise added)',
+        input: 'bool(np.allclose(diffusion_forward(np.array([[1.0, 2.0, 3.0]]), 0, np.array([1.0, 0.5, 0.1]))[0], np.array([[1.0, 2.0, 3.0]])))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Verify formula: x_t = sqrt(alpha_bar_t)*x_0 + sqrt(1-alpha_bar_t)*noise',
+        input: `(lambda: (
+    x_0 := np.ones((2, 4)),
+    alpha_bars := np.linspace(0.99, 0.01, 100),
+    result := diffusion_forward(x_0, 50, alpha_bars),
+    x_t := result[0],
+    noise := result[1],
+    ab := alpha_bars[50],
+    expected := np.sqrt(ab) * x_0 + np.sqrt(1 - ab) * noise,
+    bool(np.allclose(x_t, expected))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'When alpha_bar≈0, x_t is mostly noise (far from x_0)',
+        input: `(lambda: (
+    x_0 := np.ones((2, 3)) * 10,
+    alpha_bars := np.array([0.001]),
+    x_t := diffusion_forward(x_0, 0, alpha_bars)[0],
+    bool(np.mean(np.abs(x_t - x_0)) > 5)
+)[-1])()`,
+        expected: 'True',
         hidden: true,
       },
     ],
@@ -455,6 +579,34 @@ def vq_loss(z_e, z_q, beta=0.25):
         expected: '2',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Quantized vectors come from codebook (each z_q vector is a codebook entry)',
+        input: `(lambda: (
+    np.random.seed(0),
+    codebook := np.random.randn(8, 4),
+    z_e := np.random.randn(1, 2, 2, 4),
+    z_q := vq_quantize(z_e, codebook)[0],
+    z_q_flat := z_q.reshape(-1, 4),
+    all_in_codebook := all(any(bool(np.allclose(z_q_flat[i], codebook[j])) for j in range(8)) for i in range(4)),
+    bool(all_in_codebook)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Commitment loss equals beta * codebook_loss',
+        input: `(lambda: (
+    np.random.seed(1),
+    z_e := np.random.randn(2, 3, 3, 4),
+    z_q := np.random.randn(2, 3, 3, 4),
+    losses := vq_loss(z_e, z_q, 0.25),
+    bool(abs(losses[1] - 0.25 * losses[0]) < 1e-4)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
       'Reshape z_e to (batch*H*W, D) for easier distance computation',
@@ -577,6 +729,20 @@ def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
         description: 'Different variances',
         input: '(0, 2, 0, 1)',
         expected: '0.8069',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'KL is always non-negative',
+        input: 'bool(kl_divergence_gaussian(3, 2, -1, 5) >= 0)',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Asymmetry: KL(P||Q) != KL(Q||P)',
+        input: 'bool(abs(kl_divergence_gaussian(0, 1, 1, 2) - kl_divergence_gaussian(1, 2, 0, 1)) > 0.01)',
+        expected: 'True',
         hidden: true,
       },
     ],

@@ -127,6 +127,13 @@ def matrix_multiply(A: np.ndarray, B: np.ndarray) -> np.ndarray:
         expected: '[[14]]',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Result shape check for non-square',
+        input: 'matrix_multiply(np.array([[1, 2, 3]]), np.array([[1, 0], [0, 1], [1, 1]])).tolist()',
+        expected: '[[4, 5]]',
+        hidden: true,
+      },
     ],
     hints: [
       'NumPy provides several ways to do matrix multiplication.',
@@ -209,6 +216,13 @@ def broadcast_add(matrix: np.ndarray, vector: np.ndarray) -> np.ndarray:
         description: 'Negative values',
         input: '([[1, 2], [3, 4]], [-1, -2])',
         expected: '[[0, 0], [2, 2]]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Single row matrix',
+        input: '([[5, 10, 15]], [1, 2, 3])',
+        expected: '[[6, 12, 18]]',
         hidden: true,
       },
     ],
