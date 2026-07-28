@@ -41,26 +41,30 @@ export default function ProblemPage() {
   const { isDark } = useDarkMode();
   const { feedback: aiFeedback, isLoading: aiFeedbackLoading, error: aiFeedbackError, requestFeedback, clearFeedback } = useAIFeedback();
 
-  // Load saved code or starter code
+  // `getProblemProgress` is re-created on every progress write. Keep it in a ref so
+  // the loader effect below can read the latest value without listing it as a
+  // dependency -- otherwise saving progress (which happens right after a passing
+  // run) would re-run the effect and wipe the test results the user just earned.
+  const getProblemProgressRef = useRef(getProblemProgress);
+  useEffect(() => {
+    getProblemProgressRef.current = getProblemProgress;
+  }, [getProblemProgress]);
+
+  // Load saved code or starter code. Runs only when navigating to another problem.
   useEffect(() => {
     if (problem && sectionId) {
-      const savedProgress = getProblemProgress(sectionId, problem.id);
+      const savedProgress = getProblemProgressRef.current(sectionId, problem.id);
       setCode(savedProgress.code || problem.starterCode);
       setEditableTestCases(problem.testCases);
       setDescriptionTab('description');
-      clearFeedback();
       setTestResults([]);
       clearOutput();
-    }
-  }, [problem, sectionId, getProblemProgress]);
-
-  // Track if problem was already completed to prevent repeat celebrations
-  useEffect(() => {
-    if (problem && sectionId) {
-      const savedProgress = getProblemProgress(sectionId, problem.id);
+      clearFeedback();
+      // Track prior completion so we only celebrate the first solve.
       wasCompletedRef.current = savedProgress.status === 'completed';
     }
-  }, [problem?.id, sectionId, getProblemProgress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problem?.id, sectionId]);
 
   // Auto-save code
   useEffect(() => {
@@ -239,7 +243,7 @@ export default function ProblemPage() {
   );
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col -m-6">
+    <div className="h-full min-h-0 flex flex-col -m-6">
       <SEO
         title={`${problem.title} - ${section.title}`}
         description={`${problemDescriptionText}... Practice this ${problem.difficulty} ML coding problem with instant feedback.`}
@@ -248,19 +252,22 @@ export default function ProblemPage() {
       />
       <SuccessBanner show={showCelebration} onDismiss={() => setShowCelebration(false)} />
       {/* Problem Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 min-w-0 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <Link
             to={`/section/${sectionId}`}
-            className="text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 transition-colors"
+            className="text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 transition-colors shrink-0"
+            title={section.title}
           >
-            &larr; {section.title}
+            <span aria-hidden="true">&larr;</span>
+            <span className="hidden md:inline"> {section.title}</span>
+            <span className="sr-only"> Back to {section.title}</span>
           </Link>
-          <span className="text-gray-300 dark:text-dark-500">/</span>
-          <span className="text-gray-900 dark:text-dark-100 font-medium">{problem.title}</span>
+          <span className="text-gray-300 dark:text-dark-500 hidden md:inline">/</span>
+          <span className="text-gray-900 dark:text-dark-100 font-medium truncate">{problem.title}</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Problem Navigation */}
           <div className="flex items-center gap-1">
             {prevProblemId ? (
@@ -268,10 +275,15 @@ export default function ProblemPage() {
                 to={`/problem/${sectionId}/${prevProblemId}`}
                 className="px-2 py-1 text-sm text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded transition-colors"
               >
-                &larr; Prev
+                <span aria-hidden="true">&larr;</span>
+                <span className="hidden sm:inline"> Prev</span>
+                <span className="sr-only"> Previous problem</span>
               </Link>
             ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">&larr; Prev</span>
+              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">
+                <span aria-hidden="true">&larr;</span>
+                <span className="hidden sm:inline"> Prev</span>
+              </span>
             )}
             <span className="text-xs text-gray-400 dark:text-dark-300 font-mono">
               ({currentIndex + 1}/{section.problems.length})
@@ -281,25 +293,33 @@ export default function ProblemPage() {
                 to={`/problem/${sectionId}/${nextProblemId}`}
                 className="px-2 py-1 text-sm text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded transition-colors"
               >
-                Next &rarr;
+                <span className="hidden sm:inline">Next </span>
+                <span aria-hidden="true">&rarr;</span>
+                <span className="sr-only">Next problem</span>
               </Link>
             ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">Next &rarr;</span>
+              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">
+                <span className="hidden sm:inline">Next </span>
+                <span aria-hidden="true">&rarr;</span>
+              </span>
             )}
           </div>
 
-          <span className="text-gray-300 dark:text-dark-500">|</span>
+          <span className="text-gray-300 dark:text-dark-500 hidden sm:inline">|</span>
 
           {!isReady && (
-            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              {isLoading ? 'Loading Python...' : 'Python ready'}
+            <span
+              className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2"
+              title={isLoading ? 'Loading Python...' : 'Python ready'}
+            >
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shrink-0" />
+              <span className="hidden sm:inline">{isLoading ? 'Loading Python...' : 'Python ready'}</span>
             </span>
           )}
           {isReady && (
-            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
-              <div className="w-2 h-2 bg-accent-500 rounded-full" />
-              Python ready
+            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2" title="Python ready">
+              <div className="w-2 h-2 bg-accent-500 rounded-full shrink-0" />
+              <span className="hidden sm:inline">Python ready</span>
             </span>
           )}
         </div>

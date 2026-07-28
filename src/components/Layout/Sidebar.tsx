@@ -13,7 +13,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const { user, signInWithGoogle, signOut } = useAuth();
 
   return (
-    <aside className="w-64 bg-white dark:bg-dark-800/50 border-r border-gray-200 dark:border-dark-500 min-h-[calc(100vh-4rem)] p-4 flex flex-col">
+    <aside className="w-64 shrink-0 bg-white dark:bg-dark-800/50 border-r border-gray-200 dark:border-dark-500 min-h-[calc(100vh-4rem)] p-4 flex flex-col">
       <nav className="space-y-1 flex-1">
         <h3 className="text-dark-300 dark:text-dark-300 text-[11px] font-semibold uppercase tracking-widest mb-4 px-3 font-mono">
           Curriculum

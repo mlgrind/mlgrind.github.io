@@ -379,7 +379,7 @@ describe('Console Component', () => {
       expect(screen.getByRole('button', { name: /Output/ })).toBeInTheDocument();
     });
 
-    it('should show Tests tab with count when visible tests exist', () => {
+    it('should count hidden tests in the Tests tab so it agrees with Results (n/total)', () => {
       const testCases = [
         createTestCase('1', 'func([1])', '1', false, 'Visible'),
         createTestCase('2', 'func([2])', '2', true, 'Hidden'),
@@ -393,7 +393,7 @@ describe('Console Component', () => {
         />
       );
 
-      expect(screen.getByRole('button', { name: /Tests \(1\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Tests \(2\)/ })).toBeInTheDocument();
     });
 
     it('should hide Tests tab when no testCases provided', () => {

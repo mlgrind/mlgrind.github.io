@@ -121,7 +121,9 @@ export default function Console({
 
   useEffect(() => {
     if (activeTab === 'output') {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // `block: 'nearest'` keeps this to the output pane's own scroller --
+      // the default would also scroll every ancestor, yanking the page around.
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [output, activeTab]);
 
@@ -151,7 +153,7 @@ export default function Console({
                   : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
               }`}
             >
-              Tests ({visibleTestCount})
+              Tests ({visibleTestCount + hiddenCount})
             </button>
           )}
           <button

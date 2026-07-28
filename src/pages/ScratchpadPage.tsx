@@ -65,7 +65,7 @@ export default function ScratchpadPage() {
   }, [isReady, code, runCode, clearOutput]);
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col -m-6">
+    <div className="h-full min-h-0 flex flex-col -m-6">
       <SEO
         title="Python Scratchpad"
         description="Free Python playground with NumPy pre-loaded. Run Python code directly in your browser - no setup required. Practice machine learning code instantly."
