@@ -130,7 +130,15 @@ export default function SectionPage() {
                   return <code className="text-sm">{children}</code>;
                 },
                 ul: ({ children }) => (
-                  <ul className="list-disc list-inside text-gray-600 dark:text-dark-200 space-y-1 mb-3">{children}</ul>
+                  <ul className="list-disc list-outside pl-5 text-gray-600 dark:text-dark-200 space-y-1 mb-3">{children}</ul>
+                ),
+                ol: ({ children, start }) => (
+                  <ol
+                    start={start}
+                    className="list-decimal list-outside pl-5 text-gray-600 dark:text-dark-200 space-y-1 mb-3"
+                  >
+                    {children}
+                  </ol>
                 ),
                 li: ({ children }) => <li className="text-gray-600 dark:text-dark-200">{children}</li>,
                 strong: ({ children }) => (

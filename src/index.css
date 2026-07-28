@@ -213,6 +213,10 @@ code {
   padding-left: 1.25rem;
   margin-bottom: 0.5rem;
 }
+/* Tailwind's preflight strips list markers; restore them so numbered steps
+   actually read as ordered steps. */
+.flashcard-answer ol { list-style: decimal outside; }
+.flashcard-answer ul { list-style: disc outside; }
 .flashcard-answer li { margin-bottom: 0.2rem; }
 
 /* Hide scrollbar on filter tabs */
