@@ -37,6 +37,9 @@ export default function UserMenu() {
     <div className="relative hidden lg:block" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
+        aria-label={`Account menu for ${user.displayName ?? user.email ?? 'your account'}`}
+        aria-expanded={open}
+        aria-haspopup="menu"
         className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:border-primary-400 transition-colors"
       >
         {user.photoURL ? (

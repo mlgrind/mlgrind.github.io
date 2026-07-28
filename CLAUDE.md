@@ -71,8 +71,8 @@ src/
 │   ├── firestoreSync.ts     # Firestore read/write for progress data
 │   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
-│   ├── sections.ts          # Section definitions with intros (14 sections)
-│   └── problems/            # Problem definitions by section (~55 problems)
+│   ├── sections.ts          # Section definitions with intros (16 sections)
+│   └── problems/            # Problem definitions by section (110 problems)
 │       ├── index.ts         # Exports all problems
 │       ├── numpy-fundamentals.ts   # Part 1: Foundations
 │       ├── python-basics.ts
@@ -106,8 +106,8 @@ src/
 ## Key Files to Understand
 
 ### Data Layer
-- **`src/data/sections.ts`** - Defines the 14 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
-- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (~55 problems total)
+- **`src/data/sections.ts`** - Defines the 16 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
+- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (110 problems total)
 
 ### Authentication & Sync
 - **`src/lib/firebase.ts`** - Initializes Firebase app from `VITE_FIREBASE_*` env vars. Exports `auth`, `db` (Firestore), `googleProvider`, and `isConfigured` boolean. Gracefully no-ops when env vars are missing.
@@ -171,6 +171,7 @@ npm install      # Install dependencies
 npm run dev      # Start dev server (http://localhost:5173)
 npm run build    # Production build
 npm test         # Run tests
+npm run seo      # Regenerate sitemap.xml, llms.txt, llms-full.txt from the data
 npm run deploy   # Build and deploy to GitHub Pages
 ```
 
@@ -525,6 +526,14 @@ Or multi-step validation:
 
 **CRITICAL**: Before adding new problems, you MUST verify solutions work:
 
+**Option 0: Just run the test suite (automatic)**
+
+`src/__tests__/solutions.test.ts` executes every problem's `solution` against its
+own `testCases` using the same semantics as the in-browser runner. `npm test`
+will fail with the exact problem id, expected value and actual value if a
+solution and its tests disagree. This requires a local `python3` with numpy;
+without one the suite skips.
+
 **Option 1: Manual Testing via Browser**
 1. Run the dev server: `npm run dev`
 2. Navigate to the problem
@@ -738,9 +747,12 @@ The `index.html` contains:
 ### Updating SEO Content
 
 When adding new sections or problems:
-1. The sitemap.xml should be updated with new URLs
-2. The llms.txt and llms-full.txt should be updated with new content
-3. Dynamic meta tags are automatic via the SEO component
+1. Run `npm run seo` -- sitemap.xml, llms.txt and llms-full.txt are generated
+   from `src/data/sections.ts` + `src/data/problems/`, so they never drift
+2. Dynamic meta tags are automatic via the SEO component
+
+**Canonical problem URL**: `/problem/{sectionId}/{problemId}`. The bare
+`/problem/{problemId}` form is a legacy alias that redirects; do not publish it.
 
 ## Legal & Copyright
 

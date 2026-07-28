@@ -89,7 +89,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               href={`${import.meta.env.BASE_URL}ml-cheatsheet.html`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:flex px-3 py-1.5 text-primary-400 dark:text-primary-300 text-sm font-medium rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20 hover:bg-primary-100 dark:hover:bg-primary-500/20 hover:border-primary-300 dark:hover:border-primary-500/30 transition-all items-center gap-2"
+              className="hidden lg:flex px-3 py-1.5 text-primary-600 dark:text-primary-300 text-sm font-medium rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20 hover:bg-primary-100 dark:hover:bg-primary-500/20 hover:border-primary-300 dark:hover:border-primary-500/30 transition-all items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

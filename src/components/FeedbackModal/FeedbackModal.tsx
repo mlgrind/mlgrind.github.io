@@ -7,6 +7,7 @@ interface FeedbackModalProps {
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -27,6 +28,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         },
         body: JSON.stringify({
           name,
+          email,
+          // Formspree uses `_replyto` to set the Reply-To header.
+          _replyto: email,
           feedback,
           _subject: `ML Grind Feedback from ${name}`,
         }),
@@ -35,6 +39,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       if (response.ok) {
         setSubmitted(true);
         setName('');
+        setEmail('');
         setFeedback('');
       } else {
         setError('Failed to send feedback. Please try again.');
@@ -102,6 +107,20 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Your name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-gray-400 font-normal">(optional, so we can reply)</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="you@example.com"
               />
             </div>
 

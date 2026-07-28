@@ -127,7 +127,7 @@ export default function HomePage() {
             </div>
             <div className="font-semibold text-sm text-gray-900 dark:text-dark-100 tracking-tight mb-2">Python in Browser</div>
             <div className="text-[13px] text-gray-500 dark:text-dark-300 leading-relaxed">
-              Full Python runtime with NumPy, pandas, and scikit-learn. No install, no config.
+              Real CPython with NumPy, running on WebAssembly. No install, no config.
             </div>
           </div>
           <div className="bg-white dark:bg-dark-800 p-8 text-center hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
