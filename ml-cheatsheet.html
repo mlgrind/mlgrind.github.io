@@ -53,9 +53,6 @@
 
     /* Print button */
     .print-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
       background: #2563eb;
       color: white;
       border: none;
@@ -205,10 +202,53 @@
       border: none;
       margin-bottom: 8px;
     }
+
+    /* Back link + action cluster */
+    .page-actions {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 1000;
+    }
+    .back-btn {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      text-decoration: none;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+    .back-btn:hover { background: #dbeafe; }
+
+    /* Dark mode: match the app instead of flashing white. */
+    @media screen and (prefers-color-scheme: dark) {
+      body { background: #0d1117; color: #d7dbe4; }
+      h1, h2, h3, h4 { color: #e8ebf1 !important; }
+      section, .card, div[style*="background"] { background-color: transparent; }
+      a { color: #9580f0; }
+      .back-btn {
+        color: #b5a8fe;
+        background: rgba(108, 92, 231, 0.12);
+        border-color: rgba(108, 92, 231, 0.35);
+      }
+      .back-btn:hover { background: rgba(108, 92, 231, 0.22); }
+    }
+
+    @media print {
+      .page-actions { display: none; }
+    }
   </style>
 </head>
 <body>
-  <button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
+  <div class="page-actions no-print">
+    <a class="back-btn" href="/">&larr; Back to ML Grind</a>
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
 
   <header>
     <h1>ML Interview Cheat Sheet</h1>

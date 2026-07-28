@@ -15,350 +15,288 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 - Automated test case validation
 - Editable test cases for experimentation
 - Progressive hints and full solutions
-- Progress tracking (localStorage)
+- Progress tracking (localStorage + optional Google sign-in sync)
+- Spaced-repetition flash cards
 - Python scratchpad for freeform coding
 
 ---
 
 ## Complete Curriculum
 
-### Part 1: Foundations
+16 sections, 110 problems.
 
-#### Section: NumPy Fundamentals
+### Section 01: NumPy Fundamentals
+
 **URL**: /section/numpy-fundamentals
-**Topics**: Array creation, indexing, broadcasting, aggregations, shape manipulation
+**Summary**: Master NumPy array operations essential for ML development.
+**Problems** (5):
 
-**Problems**:
-1. **Array Creation** (/problem/numpy-array-creation)
-   - Create arrays using np.zeros, np.ones, np.arange, np.eye
-   - Understand array shapes and dtypes
+1. **Array Creation Methods** (`/problem/numpy-fundamentals/numpy-array-creation`) — easy
+2. **Advanced Indexing** (`/problem/numpy-fundamentals/numpy-indexing`) — medium
+3. **Broadcasting Operations** (`/problem/numpy-fundamentals/numpy-broadcasting`) — medium
+4. **Aggregation Functions** (`/problem/numpy-fundamentals/numpy-aggregations`) — easy
+5. **Reshape and Transpose** (`/problem/numpy-fundamentals/numpy-reshape-transpose`) — medium
 
-2. **Indexing and Slicing** (/problem/numpy-indexing)
-   - Basic indexing: arr[0], arr[1:5]
-   - Advanced indexing: boolean masks, fancy indexing
-   - Multi-dimensional: arr[1, :], arr[:, 2:4]
+---
 
-3. **Broadcasting** (/problem/numpy-broadcasting)
-   - Broadcasting rules and shape compatibility
-   - Operations between different-shaped arrays
-   - Common patterns: (3,4) + (4,), (3,1) * (1,4)
+### Section 02: Python Basics for ML
 
-4. **Aggregations** (/problem/numpy-aggregations)
-   - sum, mean, std, min, max with axis parameter
-   - argmax, argmin for finding indices
-   - Global vs row-wise vs column-wise operations
-
-5. **Reshape and Transpose** (/problem/numpy-reshape-transpose)
-   - reshape(): change dimensions
-   - transpose(), .T: swap axes
-   - flatten(), ravel(): convert to 1D
-
-#### Section: Python Basics for ML
 **URL**: /section/python-basics
-**Topics**: Essential NumPy operations for ML workflows
+**Summary**: Master NumPy arrays and essential Python operations for machine learning.
+**Problems** (3):
 
-**Problems**:
-1. **Array Sum** (/problem/numpy-array-sum) - Implement array summation
-2. **Matrix Multiply** (/problem/numpy-matrix-multiply) - Implement matrix multiplication
-3. **Broadcast Add** (/problem/numpy-broadcast-add) - Add arrays with broadcasting
+1. **Array Sum** (`/problem/python-basics/numpy-array-sum`) — easy
+2. **Matrix Multiplication** (`/problem/python-basics/numpy-matrix-multiply`) — medium
+3. **Broadcasting Addition** (`/problem/python-basics/numpy-broadcast-add`) — medium
 
-#### Section: Einstein Summation (Einsum)
+---
+
+### Section 03: Einstein Summation (Einsum)
+
 **URL**: /section/einsum
-**Topics**: Powerful tensor notation for complex operations
+**Summary**: Master einsum for elegant tensor operations.
+**Problems** (5):
 
-**Key Concepts**:
-- Subscript notation: 'ij->i' means sum over j
-- Letters that disappear are contracted (summed)
-- Essential for attention mechanisms
+1. **Einsum Fundamentals** (`/problem/einsum/einsum-basics`) — easy
+2. **Matrix Operations with Einsum** (`/problem/einsum/einsum-matrix-ops`) — medium
+3. **Batch Operations with Einsum** (`/problem/einsum/einsum-batch-ops`) — medium
+4. **Advanced Einsum Patterns** (`/problem/einsum/einsum-advanced`) — hard
+5. **Einsum vs Traditional Operations** (`/problem/einsum/einsum-vs-matmul`) — easy
 
-**Problems**:
-1. **Einsum Basics** (/problem/einsum-basics)
-   - 'ij->' sum all, 'ij->i' row sums, 'ij->ji' transpose
+---
 
-2. **Matrix Operations** (/problem/einsum-matrix-ops)
-   - 'ik,kj->ij' matrix multiply, 'ij,ij->' Frobenius product
+### Section 04: PyTorch Basics
 
-3. **Batch Operations** (/problem/einsum-batch-ops)
-   - 'bij,bjk->bik' batch matmul, 'bqd,bkd->bqk' attention scores
-
-4. **Advanced (Multi-Head)** (/problem/einsum-advanced)
-   - 'bhqk,bhkd->bhqd' multi-head attention patterns
-
-5. **Einsum vs Matmul** (/problem/einsum-vs-matmul)
-   - Equivalence between einsum and standard operations
-
-#### Section: PyTorch Basics
 **URL**: /section/pytorch-basics
-**Topics**: PyTorch concepts implemented in NumPy
+**Summary**: Learn PyTorch patterns implemented in NumPy.
+**Problems** (21):
 
-**Problems**:
-1. **Tensor Creation** (/problem/tensor-creation)
-2. **Tensor Operations** (/problem/tensor-operations)
-3. **Autograd Concepts** (/problem/autograd-concepts)
-4. **NN Modules** (/problem/nn-modules)
-5. **Loss Functions** (/problem/loss-functions)
+1. **Tensor Creation (NumPy Style)** (`/problem/pytorch-basics/tensor-creation`) — easy
+2. **Tensor Operations** (`/problem/pytorch-basics/tensor-operations`) — easy
+3. **Autograd Concepts (Manual)** (`/problem/pytorch-basics/autograd-concepts`) — medium
+4. **Neural Network Modules** (`/problem/pytorch-basics/nn-modules`) — medium
+5. **Loss Functions** (`/problem/pytorch-basics/loss-functions`) — medium
+6. **GELU Activation** (`/problem/pytorch-basics/gelu-activation`) — easy
+7. **LeakyReLU & Swish** (`/problem/pytorch-basics/leaky-relu-swish`) — easy
+8. **Softmax with Temperature** (`/problem/pytorch-basics/softmax-temperature`) — easy
+9. **RMS Normalization** (`/problem/pytorch-basics/rmsnorm`) — medium
+10. **Group Normalization** (`/problem/pytorch-basics/group-norm`) — medium
+11. **Adam Optimizer** (`/problem/pytorch-basics/adam-optimizer`) — medium
+12. **SGD with Momentum** (`/problem/pytorch-basics/sgd-momentum`) — medium
+13. **Learning Rate Scheduling** (`/problem/pytorch-basics/lr-scheduling`) — medium
+14. **Gradient Accumulation** (`/problem/pytorch-basics/gradient-accumulation`) — medium
+15. **Instance Normalization** (`/problem/pytorch-basics/instance-norm`) — medium
+16. **ViT Patch Embeddings** (`/problem/pytorch-basics/vit-patch-embeddings`) — medium
+17. **Cross-Attention** (`/problem/pytorch-basics/cross-attention`) — hard
+18. **Depthwise Separable Convolution** (`/problem/pytorch-basics/depthwise-separable-conv`) — medium
+19. **Label Smoothing** (`/problem/pytorch-basics/label-smoothing`) — medium
+20. **LoRA Adapter** (`/problem/pytorch-basics/lora-adapter`) — hard
+21. **Gradient Checkpointing** (`/problem/pytorch-basics/gradient-checkpointing`) — hard
 
 ---
 
-### Part 2: Data
+### Section 05: Data Preprocessing
 
-#### Section: Data Preprocessing
 **URL**: /section/data-preprocessing
-**Topics**: Cleaning and transforming real-world data
+**Summary**: Learn essential data cleaning and transformation techniques.
+**Problems** (3):
 
-**Problems**:
-1. **Normalize Features** (/problem/normalize-features)
-   - Min-max normalization to [0,1]
-   - Z-score standardization (zero mean, unit variance)
-
-2. **Handle Missing Data** (/problem/handle-missing-data)
-   - Detection with np.isnan()
-   - Imputation strategies: mean, median, mode
-
-3. **One-Hot Encode** (/problem/one-hot-encode)
-   - Convert categorical variables to binary vectors
+1. **Normalize Features** (`/problem/data-preprocessing/normalize-features`) — easy
+2. **Handle Missing Data** (`/problem/data-preprocessing/handle-missing-data`) — medium
+3. **One-Hot Encoding** (`/problem/data-preprocessing/one-hot-encode`) — medium
 
 ---
 
-### Part 3: Classical Machine Learning
+### Section 06: Supervised Learning
 
-#### Section: Supervised Learning
 **URL**: /section/supervised-learning
-**Topics**: Core supervised algorithms from scratch
+**Summary**: Implement core supervised learning algorithms from scratch.
+**Problems** (7):
 
-**Problems**:
-1. **Linear Regression (GD)** (/problem/linear-regression-gd)
-   - Implement gradient descent for linear regression
-   - Formula: y = wx + b
-   - Loss: Mean Squared Error
+1. **Sigmoid Function** (`/problem/supervised-learning/logistic-regression`) — easy
+2. **Binary Cross-Entropy Loss** (`/problem/supervised-learning/binary-cross-entropy`) — easy
+3. **Hinge Loss** (`/problem/supervised-learning/hinge-loss`) — easy
+4. **Gini Impurity** (`/problem/supervised-learning/decision-tree-split`) — medium
+5. **Linear Regression with Gradient Descent** (`/problem/supervised-learning/linear-regression-gd`) — medium
+6. **Logistic Regression with Gradient Descent** (`/problem/supervised-learning/logistic-regression-full`) — medium
+7. **Linear SVM with Gradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
 
-2. **Logistic Regression** (/problem/logistic-regression)
-   - Sigmoid function: 1/(1+e^-x)
-   - Binary classification
+---
 
-3. **Logistic Regression Full** (/problem/logistic-regression-full)
-   - Complete implementation with training loop
+### Section 07: Unsupervised Learning
 
-4. **Binary Cross-Entropy** (/problem/binary-cross-entropy)
-   - Loss function for binary classification
-   - L = -[y*log(p) + (1-y)*log(1-p)]
-
-5. **Decision Tree Split** (/problem/decision-tree-split)
-   - Gini impurity calculation
-   - Finding optimal split points
-
-#### Section: Unsupervised Learning
 **URL**: /section/unsupervised-learning
-**Topics**: Clustering and dimensionality reduction
+**Summary**: Implement clustering and dimensionality reduction algorithms.
+**Problems** (2):
 
-**Problems**:
-1. **K-Means Clustering** (/problem/kmeans-clustering)
-   - Initialize centroids
-   - Assign points to nearest centroid
-   - Update centroids as cluster means
-   - Iterate until convergence
+1. **K-Means: Assign to Nearest Centroid** (`/problem/unsupervised-learning/kmeans-clustering`) — medium
+2. **PCA: Center Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
 
-2. **PCA Implementation** (/problem/pca-implementation)
-   - Center data (subtract mean)
-   - Compute covariance matrix
-   - Find eigenvectors/eigenvalues
-   - Project onto top components
+---
 
-#### Section: Model Evaluation
+### Section 08: Model Evaluation
+
 **URL**: /section/model-evaluation
-**Topics**: Metrics and validation techniques
+**Summary**: Learn metrics and techniques to evaluate ML models properly.
+**Problems** (3):
 
-**Problems**:
-1. **Precision/Recall/F1** (/problem/precision-recall-f1)
-   - Precision: TP/(TP+FP)
-   - Recall: TP/(TP+FN)
-   - F1: Harmonic mean
-
-2. **Cross-Validation** (/problem/cross-validation)
-   - K-fold implementation
-   - Stratified splitting
-
-3. **Confusion Matrix** (/problem/confusion-matrix)
-   - True positives, negatives, false positives, negatives
+1. **Precision and Recall** (`/problem/model-evaluation/precision-recall-f1`) — medium
+2. **K-Fold Split Indices** (`/problem/model-evaluation/cross-validation`) — medium
+3. **Accuracy Score** (`/problem/model-evaluation/confusion-matrix`) — easy
 
 ---
 
-### Part 4: Deep Learning
+### Section 09: Deep Learning Basics
 
-#### Section: Deep Learning Basics
 **URL**: /section/deep-learning
-**Topics**: Fundamental building blocks
+**Summary**: Activation functions and fundamental building blocks.
+**Problems** (3):
 
-**Problems**:
-1. **Perceptron** (/problem/perceptron)
-   - Single neuron implementation
-   - Activation functions
+1. **ReLU Activation** (`/problem/deep-learning/perceptron`) — easy
+2. **Dense Layer Forward Pass** (`/problem/deep-learning/neural-network-forward`) — medium
+3. **Softmax Function** (`/problem/deep-learning/backpropagation`) — medium
 
-2. **Neural Network Forward** (/problem/neural-network-forward)
-   - Forward pass: output = activation(W @ x + b)
+---
 
-3. **Backpropagation** (/problem/backpropagation)
-   - Chain rule for gradients
-   - Weight updates
+### Section 10: Neural Networks
 
-#### Section: Neural Networks
 **URL**: /section/neural-networks
-**Topics**: MLP implementation and training techniques
+**Summary**: Build neural networks from scratch with forward and backward passes.
+**Problems** (5):
 
-**Problems**:
-1. **Cross-Entropy Loss** (/problem/cross-entropy-loss)
-   - Multi-class classification loss
-   - Softmax + negative log likelihood
+1. **Cross-Entropy Loss** (`/problem/neural-networks/cross-entropy-loss`) — easy
+2. **MLP Forward & Backward Pass** (`/problem/neural-networks/mlp-forward-backward`) — hard
+3. **Xavier/He Weight Initialization** (`/problem/neural-networks/weight-init`) — medium
+4. **Batch Normalization** (`/problem/neural-networks/batch-norm`) — medium
+5. **Dropout** (`/problem/neural-networks/dropout`) — easy
 
-2. **MLP Forward/Backward** (/problem/mlp-forward-backward)
-   - Complete forward and backward pass
+---
 
-3. **Weight Initialization** (/problem/weight-init)
-   - Xavier initialization
-   - He initialization
+### Section 11: CNNs & Computer Vision
 
-4. **Batch Normalization** (/problem/batch-norm)
-   - Normalize activations across batch
-   - Learnable scale (gamma) and shift (beta)
-
-5. **Dropout** (/problem/dropout)
-   - Randomly zero neurons during training
-   - Scale by 1/(1-p) during training
-
-#### Section: Convolutional Neural Networks
 **URL**: /section/cnn
-**Topics**: CNN operations for computer vision
+**Summary**: Implement convolutions, pooling, object detection, and segmentation.
+**Problems** (10):
 
-**Key Formula**: output_size = (input - kernel + 2*padding) / stride + 1
+1. **Convolution Output Size** (`/problem/cnn/conv-output-size`) — easy
+2. **2D Convolution** (`/problem/cnn/conv2d-forward`) — hard
+3. **Max Pooling** (`/problem/cnn/max-pool`) — medium
+4. **Flatten Layer** (`/problem/cnn/flatten-layer`) — easy
+5. **Advanced 2D Convolution** (`/problem/cnn/conv2d-advanced`) — hard
+6. **IoU (Intersection over Union)** (`/problem/cnn/iou-bounding-box`) — easy
+7. **Non-Maximum Suppression (NMS)** (`/problem/cnn/nms`) — medium
+8. **Focal Loss** (`/problem/cnn/focal-loss`) — medium
+9. **Smooth L1 Loss** (`/problem/cnn/smooth-l1-loss`) — easy
+10. **Segmentation Metrics** (`/problem/cnn/seg-metrics`) — medium
 
-**Problems**:
-1. **Conv Output Size** (/problem/conv-output-size)
-   - Calculate output dimensions
+---
 
-2. **Conv2D Forward** (/problem/conv2d-forward)
-   - Implement 2D convolution operation
+### Section 12: Transformer Architecture
 
-3. **Max Pooling** (/problem/max-pool)
-   - Take maximum in each region
-
-4. **Flatten Layer** (/problem/flatten-layer)
-   - Convert 2D feature maps to 1D
-
-5. **Conv2D Advanced** (/problem/conv2d-advanced)
-   - Multiple filters, padding, stride
-
-#### Section: Attention & Transformers
 **URL**: /section/transformers
-**Topics**: The architecture behind modern NLP
+**Summary**: Master attention, positional encoding, and modern LLM architecture.
+**Problems** (9):
 
-**Key Formula**: Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) @ V
+1. **Scaled Dot-Product Attention** (`/problem/transformers/scaled-dot-product-attention`) — medium
+2. **Multi-Head Attention** (`/problem/transformers/multi-head-attention`) — hard
+3. **Sinusoidal Positional Encoding** (`/problem/transformers/positional-encoding`) — medium
+4. **Layer Normalization** (`/problem/transformers/layer-norm`) — easy
+5. **Causal Attention Mask** (`/problem/transformers/causal-mask`) — easy
+6. **BPE Tokenization** (`/problem/transformers/bpe-tokenization`) — medium
+7. **Rotary Positional Embeddings (RoPE)** (`/problem/transformers/rope-embeddings`) — medium
+8. **Grouped Query Attention (GQA)** (`/problem/transformers/grouped-query-attention`) — medium
+9. **Sliding Window Attention** (`/problem/transformers/sliding-window-attention`) — easy
 
-**Problems**:
-1. **Scaled Dot-Product Attention** (/problem/scaled-dot-product-attention)
-   - Q @ K.T / sqrt(d_k)
-   - Softmax over attention scores
-   - Weighted sum of values
+---
 
-2. **Multi-Head Attention** (/problem/multi-head-attention)
-   - Multiple parallel attention heads
-   - Concatenate and project outputs
+### Section 13: LLM Generation & Decoding
 
-3. **Positional Encoding** (/problem/positional-encoding)
-   - Sine/cosine position embeddings
-   - Inject sequence position information
+**URL**: /section/llm-generation
+**Summary**: Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.
+**Problems** (7):
 
-4. **Layer Normalization** (/problem/layer-norm)
-   - Normalize across features (not batch)
-   - Formula: (x - mean) / std * gamma + beta
+1. **Temperature Scaling** (`/problem/llm-generation/llm-temperature-scaling`) — easy
+2. **Top-k Sampling** (`/problem/llm-generation/llm-top-k-sampling`) — easy
+3. **Nucleus (Top-p) Sampling** (`/problem/llm-generation/llm-top-p-sampling`) — medium
+4. **Repetition Penalty** (`/problem/llm-generation/llm-repetition-penalty`) — easy
+5. **KV Cache for Efficient Generation** (`/problem/llm-generation/llm-kv-cache`) — medium
+6. **Beam Search Decoding** (`/problem/llm-generation/llm-beam-search`) — medium
+7. **Speculative Decoding** (`/problem/llm-generation/llm-speculative-decoding`) — hard
 
-5. **Causal Mask** (/problem/causal-mask)
-   - Prevent attending to future tokens
-   - Upper triangular mask with -inf
+---
 
-#### Section: Generative Models
+### Section 14: Generative Models
+
 **URL**: /section/generative-models
-**Topics**: VAEs and diffusion models
+**Summary**: Learn VAEs, diffusion models, and generative AI fundamentals.
+**Problems** (6):
 
-**Problems**:
-1. **KL Divergence** (/problem/kl-divergence)
-   - Measure difference between distributions
-   - KL(P||Q) = sum(P * log(P/Q))
-
-2. **VAE Reparameterization** (/problem/vae-reparameterization)
-   - z = mu + sigma * epsilon
-   - Enable backprop through sampling
-
-3. **VAE Loss** (/problem/vae-loss)
-   - ELBO = Reconstruction + KL divergence
-   - L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
-
-4. **VQ-VAE Quantization** (/problem/vqvae-quantization)
-   - Vector quantization for discrete latents
-
-5. **Diffusion Noise Schedule** (/problem/diffusion-noise-schedule)
-   - Beta schedule (linear, cosine)
-   - Alpha and alpha_bar computation
-
-6. **Diffusion Forward** (/problem/diffusion-forward)
-   - x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * epsilon
+1. **KL Divergence (Gaussians)** (`/problem/generative-models/kl-divergence`) — easy
+2. **VAE Reparameterization Trick** (`/problem/generative-models/vae-reparameterization`) — medium
+3. **VAE Loss Function** (`/problem/generative-models/vae-loss`) — medium
+4. **VQ-VAE Vector Quantization** (`/problem/generative-models/vqvae-quantization`) — hard
+5. **Diffusion Noise Schedule** (`/problem/generative-models/diffusion-noise-schedule`) — easy
+6. **Diffusion Forward Process** (`/problem/generative-models/diffusion-forward`) — medium
 
 ---
 
-### Part 5: Capstone
+### Section 15: Reinforcement Learning
 
-#### Section: End-to-End Implementations
+**URL**: /section/reinforcement-learning
+**Summary**: Master RL fundamentals from Q-learning to policy gradients.
+**Problems** (15):
+
+1. **Discounted Return** (`/problem/reinforcement-learning/rl-discounted-return`) — easy
+2. **Epsilon-Greedy Policy** (`/problem/reinforcement-learning/rl-epsilon-greedy`) — easy
+3. **Bellman Expectation (State Value)** (`/problem/reinforcement-learning/rl-bellman-value`) — easy
+4. **Q-Learning Update** (`/problem/reinforcement-learning/rl-q-learning-update`) — medium
+5. **SARSA Update** (`/problem/reinforcement-learning/rl-sarsa-update`) — medium
+6. **TD(0) Value Prediction** (`/problem/reinforcement-learning/rl-td0-prediction`) — medium
+7. **Value Iteration Step** (`/problem/reinforcement-learning/rl-value-iteration`) — medium
+8. **N-Step Return** (`/problem/reinforcement-learning/rl-n-step-return`) — medium
+9. **REINFORCE Policy Gradient** (`/problem/reinforcement-learning/rl-policy-gradient`) — hard
+10. **Advantage Estimation (GAE)** (`/problem/reinforcement-learning/rl-advantage-estimation`) — hard
+11. **PPO Clipped Objective** (`/problem/reinforcement-learning/rl-ppo-clip`) — hard
+12. **RLHF Reward Model Loss** (`/problem/reinforcement-learning/rl-reward-modeling`) — hard
+13. **Direct Preference Optimization (DPO)** (`/problem/reinforcement-learning/rl-dpo-loss`) — hard
+14. **KL Divergence Penalty (RLHF)** (`/problem/reinforcement-learning/rl-kl-penalty`) — medium
+15. **PPO-RLHF Objective** (`/problem/reinforcement-learning/rl-ppo-llm-objective`) — hard
+
+---
+
+### Section 16: End-to-End Implementations
+
 **URL**: /section/e2e-implementations
-**Topics**: Complete model implementations
+**Summary**: Build complete ML models from scratch.
+**Problems** (6):
 
-**Problems**:
-1. **E2E MLP** (/problem/e2e-mlp)
-   - Full 2-layer MLP with backpropagation
-   - Forward pass, loss, backward pass, weight updates
-
-2. **E2E Transformer Encoder** (/problem/e2e-transformer)
-   - Multi-head attention
-   - Positional encoding
-   - Layer norm and residual connections
-   - Feed-forward network
-
-3. **E2E VAE** (/problem/e2e-vae)
-   - Encoder to latent distribution
-   - Reparameterization trick
-   - Decoder reconstruction
-   - ELBO loss computation
-
-4. **E2E VQ-VAE** (/problem/e2e-vqvae)
-   - Vector quantized variational autoencoder
-
-5. **E2E Diffusion** (/problem/e2e-diffusion)
-   - Noise schedule
-   - Forward diffusion process
-   - Training objective
-
-6. **E2E CNN** (/problem/e2e-cnn)
-   - Conv layers + pooling
-   - Flatten + fully connected
-   - Complete forward pass
+1. **E2E: 2-Layer MLP with Backprop** (`/problem/e2e-implementations/e2e-mlp`) — hard
+2. **E2E: Transformer Encoder** (`/problem/e2e-implementations/e2e-transformer`) — hard
+3. **E2E: Variational Autoencoder** (`/problem/e2e-implementations/e2e-vae`) — hard
+4. **E2E: Vector Quantized VAE** (`/problem/e2e-implementations/e2e-vqvae`) — hard
+5. **E2E: Diffusion Model** (`/problem/e2e-implementations/e2e-diffusion`) — hard
+6. **E2E: Convolutional Neural Network** (`/problem/e2e-implementations/e2e-cnn`) — hard
 
 ---
 
-## Technical Implementation Notes
+## Technical Notes
 
 ### Pyodide Environment
 - Python runs in WebAssembly (client-side)
 - NumPy is pre-loaded and available
+- pandas, scikit-learn, scipy, matplotlib and torch are NOT available
 - No network requests for code execution
 - Memory limited by browser
 
 ### Test Case Format
 Tests can be:
-1. **Expression-based**: `function_name(input).shape` → `'(4, 8)'`
+1. **Expression-based**: `function_name(input).shape` -> `'(4, 8)'`
 2. **Argument-based**: Direct input passed to function
 
 ### Common Testing Patterns
-- Shape check: `function(x).shape` → `'(2, 3)'`
-- Boolean: `bool(np.allclose(a, b))` → `'True'`
-- Rounded float: `round(function(x), 4)` → `'0.1234'`
+- Shape check: `function(x).shape` -> `'(2, 3)'`
+- Boolean: `bool(np.allclose(a, b))` -> `'True'`
+- Rounded float: `round(function(x), 4)` -> `'0.1234'`
 
 ---
 
@@ -379,7 +317,7 @@ Tests can be:
 ### Recommended Learning Path
 1. Start with NumPy Fundamentals
 2. Practice Einsum (crucial for transformers)
-3. Build up through supervised → unsupervised → deep learning
+3. Build up through supervised -> unsupervised -> deep learning
 4. Tackle E2E implementations as capstone
 
 ---
@@ -389,12 +327,15 @@ Tests can be:
 ### Main Routes
 - `GET /` - Home page with section overview
 - `GET /scratchpad` - Python playground
-- `GET /section/:id` - Section intro + problem list
-- `GET /problem/:id` - Coding interface
+- `GET /flashcards` - Spaced-repetition review
+- `GET /section/:sectionId` - Section intro + problem list
+- `GET /problem/:sectionId/:problemId` - Coding interface
+- `GET /ml-cheatsheet.html` - Static formula reference
 
 ### Content Availability
 - All content is client-rendered (React SPA)
 - Static content available via sitemap.xml
+- Deep links are served through a 404.html SPA fallback on GitHub Pages
 - No authentication required
 - No rate limiting
 

@@ -17,49 +17,50 @@
 3. Execute code in-browser (no server required)
 4. Run automated test cases and see pass/fail results
 5. Edit test cases to experiment with different inputs
-6. Track progress across sections (saved locally)
-7. Use a Python scratchpad for experimentation
+6. Track progress across sections (saved locally, synced when signed in)
+7. Review spaced-repetition flash cards
+8. Use a Python scratchpad for experimentation
 
 ## Content Structure
 
-The platform covers 14 learning sections organized in 5 parts:
+The platform covers 16 learning sections with 110 problems:
 
-### Part 1: Foundations
-- **NumPy Fundamentals**: Array creation, indexing, broadcasting, aggregations, reshape/transpose
-- **Python Basics for ML**: Array sum, matrix multiply, broadcast add
-- **Einstein Summation (Einsum)**: Basics, matrix ops, batch ops, multi-head attention patterns
-- **PyTorch Basics**: Tensor creation, operations, autograd concepts, NN modules, loss functions
-
-### Part 2: Data
-- **Data Preprocessing**: Normalize features, handle missing data, one-hot encoding
-
-### Part 3: Classical ML
-- **Supervised Learning**: Linear regression (gradient descent), logistic regression, binary cross-entropy, decision tree split
-- **Unsupervised Learning**: K-means clustering, PCA implementation
-- **Model Evaluation**: Precision/recall/F1, cross-validation, confusion matrix
-
-### Part 4: Deep Learning
-- **Deep Learning Basics**: Perceptron, neural network forward pass, backpropagation
-- **Neural Networks**: Cross-entropy loss, MLP forward/backward, weight initialization, batch norm, dropout
-- **CNNs**: Conv output size calculation, 2D convolution, max pooling, flatten layer
-- **Transformers**: Scaled dot-product attention, multi-head attention, positional encoding, layer norm, causal mask
-- **Generative Models**: KL divergence, VAE reparameterization, VAE loss, diffusion noise schedule, diffusion forward process
-
-### Part 5: Capstone
-- **End-to-End Implementations**: Full MLP with backprop, transformer encoder, VAE, diffusion model, CNN
+- **01 NumPy Fundamentals** (`/section/numpy-fundamentals`) — Master NumPy array operations essential for ML development. _(5 problems)_
+- **02 Python Basics for ML** (`/section/python-basics`) — Master NumPy arrays and essential Python operations for machine learning. _(3 problems)_
+- **03 Einstein Summation (Einsum)** (`/section/einsum`) — Master einsum for elegant tensor operations. _(5 problems)_
+- **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns implemented in NumPy. _(21 problems)_
+- **05 Data Preprocessing** (`/section/data-preprocessing`) — Learn essential data cleaning and transformation techniques. _(3 problems)_
+- **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(7 problems)_
+- **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(2 problems)_
+- **08 Model Evaluation** (`/section/model-evaluation`) — Learn metrics and techniques to evaluate ML models properly. _(3 problems)_
+- **09 Deep Learning Basics** (`/section/deep-learning`) — Activation functions and fundamental building blocks. _(3 problems)_
+- **10 Neural Networks** (`/section/neural-networks`) — Build neural networks from scratch with forward and backward passes. _(5 problems)_
+- **11 CNNs & Computer Vision** (`/section/cnn`) — Implement convolutions, pooling, object detection, and segmentation. _(10 problems)_
+- **12 Transformer Architecture** (`/section/transformers`) — Master attention, positional encoding, and modern LLM architecture. _(9 problems)_
+- **13 LLM Generation & Decoding** (`/section/llm-generation`) — Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding. _(7 problems)_
+- **14 Generative Models** (`/section/generative-models`) — Learn VAEs, diffusion models, and generative AI fundamentals. _(6 problems)_
+- **15 Reinforcement Learning** (`/section/reinforcement-learning`) — Master RL fundamentals from Q-learning to policy gradients. _(15 problems)_
+- **16 End-to-End Implementations** (`/section/e2e-implementations`) — Build complete ML models from scratch. _(6 problems)_
 
 ## Key URLs
 
 - Home: https://mlgrind.github.io/
 - Scratchpad: https://mlgrind.github.io/scratchpad
+- Flash cards: https://mlgrind.github.io/flashcards
+- Cheat sheet: https://mlgrind.github.io/ml-cheatsheet.html
 - Sections: https://mlgrind.github.io/section/{section-id}
-- Problems: https://mlgrind.github.io/problem/{problem-id}
+- Problems: https://mlgrind.github.io/problem/{section-id}/{problem-id}
+
+Note the problem URL shape: it includes **both** the section id and the problem id.
+A URL of the form `/problem/{problem-id}` is not canonical; it redirects.
 
 ## Technical Details
 
 - **In-Browser Python**: Uses Pyodide (Python compiled to WebAssembly)
-- **Pre-loaded Libraries**: NumPy is available; code runs client-side
-- **Progress Storage**: localStorage (no account required)
+- **Pre-loaded Libraries**: NumPy only. pandas, scikit-learn, scipy and torch are
+  NOT available -- problems in the PyTorch section reimplement PyTorch semantics
+  in NumPy on purpose.
+- **Progress Storage**: localStorage, plus Firestore when signed in with Google
 - **Code Editor**: Monaco Editor with Python syntax highlighting
 
 ## For AI Assistants
@@ -75,6 +76,7 @@ When helping users with ML Grind:
    - Gradient descent and backpropagation
    - Attention mechanisms and transformers
    - Generative models (VAE, diffusion)
+   - Decoding strategies and RL fundamentals
 
 4. **Common Questions Users Ask**:
    - "How do I implement X from scratch?"
