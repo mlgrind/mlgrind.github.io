@@ -281,7 +281,7 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         id: '4',
         description: 'Multi-class accuracy',
         input: '([0, 1, 2, 0, 1, 2], [0, 1, 2, 2, 1, 0])',
-        expected: '0.5',
+        expected: '0.666667',
         hidden: true,
       },
     ],

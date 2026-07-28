@@ -171,15 +171,15 @@ def vae_loss(x, x_reconstructed, mu, log_var):
       {
         id: '1',
         description: 'Perfect case',
-        input: '(np.zeros((2, 4)), np.zeros((2, 4)), np.zeros((2, 2)), np.zeros((2, 2)))',
-        expected: '(0.0, 0.0, 0.0)',
+        input: 'bool(np.allclose(vae_loss(np.zeros((2, 4)), np.zeros((2, 4)), np.zeros((2, 2)), np.zeros((2, 2))), (0.0, 0.0, 0.0), atol=1e-6))',
+        expected: 'True',
         hidden: false,
       },
       {
         id: '2',
         description: 'Non-zero KL',
-        input: '(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2)))',
-        expected: '(0.3161, 0.0, 0.3161)',
+        input: 'bool(np.allclose(vae_loss(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2))), (0.5, 0.0, 0.5), atol=1e-4))',
+        expected: 'True',
         hidden: true,
       },
       {

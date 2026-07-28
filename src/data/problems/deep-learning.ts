@@ -203,7 +203,7 @@ def dense_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray) -> np.ndarray:
         id: '6',
         description: 'Bias is correctly added',
         input: 'dense_forward(np.zeros((1, 2)), np.ones((2, 2)), np.array([3, -1])).tolist()',
-        expected: '[[3, 0]]',
+        expected: '[[3.0, 0.0]]',
         hidden: true,
       },
       {

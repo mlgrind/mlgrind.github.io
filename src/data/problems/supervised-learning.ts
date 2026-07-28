@@ -596,7 +596,7 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     # Your code here
     pass
 
-    return np.round(w, 4), round(b, 4)
+    return np.round(w, 4), round(float(b), 4)
 `,
     testCases: [
       {
@@ -629,8 +629,8 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
       {
         id: '4',
         description: 'Bias is scalar',
-        input: 'type(logistic_regression(np.array([[1, 0], [0, 1]]), np.array([0, 1]), 0.1, 100)[1]).__name__',
-        expected: 'float',
+        input: 'bool(np.ndim(logistic_regression(np.array([[1, 0], [0, 1]]), np.array([0, 1]), 0.1, 100)[1]) == 0)',
+        expected: 'True',
         hidden: true,
       },
     ],
@@ -662,7 +662,7 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
         w = w - learning_rate * dw
         b = b - learning_rate * db
 
-    return np.round(w, 4), round(b, 4)
+    return np.round(w, 4), round(float(b), 4)
 `,
   },
   {
@@ -733,7 +733,7 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     # Your gradient descent implementation here
     pass
 
-    return np.round(w, 4), round(b, 4)
+    return np.round(w, 4), round(float(b), 4)
 `,
     testCases: [
       {
@@ -806,7 +806,7 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
         w -= learning_rate * dw
         b -= learning_rate * db
 
-    return np.round(w, 4), round(b, 4)
+    return np.round(w, 4), round(float(b), 4)
 `,
   },
 ];

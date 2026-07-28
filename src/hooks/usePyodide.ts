@@ -19,6 +19,27 @@ declare global {
   }
 }
 
+// Pyodide surfaces the full Python traceback, most of which is its own harness
+// (`_pyodide/_base.py`, `eval_code_async`, `CodeRunner`, the synthetic `<exec>`
+// module). Strip those frames so the learner sees their own error, not ours.
+const INTERNAL_FRAME = /_pyodide[/\\]_base\.py|eval_code_async|CodeRunner\(|runPythonAsync|importlib\._bootstrap|File "<exec>"|File "<test>"|File "<solution>"/;
+
+export function formatPythonError(message: string): string {
+  if (!message) return 'Test execution error';
+
+  const lines = message.split('\n');
+  // The final non-empty line is the actual exception, e.g. "TypeError: ...".
+  const exceptionLine = [...lines].reverse().find(l => l.trim().length > 0)?.trim() ?? message.trim();
+
+  // Keep any traceback frames that point at the learner's own code.
+  const userFrames = lines.filter(
+    l => /^\s*File "/.test(l) && !INTERNAL_FRAME.test(l)
+  );
+
+  if (userFrames.length === 0) return exceptionLine;
+  return [...userFrames.map(l => l.trim()), exceptionLine].join('\n');
+}
+
 interface UsePyodideReturn {
   isLoading: boolean;
   isReady: boolean;
@@ -120,7 +141,7 @@ export function usePyodide(): UsePyodideReturn {
       await pyodideRef.current.runPythonAsync(code);
       return { success: true };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Execution error';
+      const message = formatPythonError(err instanceof Error ? err.message : 'Execution error');
       appendOutput(`[Error] ${message}`);
       return { success: false, error: message };
     }
@@ -189,7 +210,7 @@ elif isinstance(result, tuple):
         elif isinstance(item, np.ndarray):
             converted.append(item.tolist())
         elif isinstance(item, (np.floating, float)):
-            converted.append(round(float(item), 6))
+            converted.append(round(float(item), 6) + 0.0)
         elif isinstance(item, (np.integer, int)):
             converted.append(int(item))
         else:
@@ -198,7 +219,7 @@ elif isinstance(result, tuple):
 elif isinstance(result, (list, dict)):
     result_str = json.dumps(result)
 elif isinstance(result, (np.floating, float)):
-    result_str = str(round(float(result), 6))
+    result_str = str(round(float(result), 6) + 0.0)
 elif isinstance(result, (np.integer, int)):
     result_str = str(int(result))
 else:
@@ -240,7 +261,7 @@ elif isinstance(result, tuple):
         elif isinstance(item, np.ndarray):
             converted.append(item.tolist())
         elif isinstance(item, (np.floating, float)):
-            converted.append(round(float(item), 6))
+            converted.append(round(float(item), 6) + 0.0)
         elif isinstance(item, (np.integer, int)):
             converted.append(int(item))
         else:
@@ -249,7 +270,7 @@ elif isinstance(result, tuple):
 elif isinstance(result, (list, dict)):
     result_str = json.dumps(result)
 elif isinstance(result, (np.floating, float)):
-    result_str = str(round(float(result), 6))
+    result_str = str(round(float(result), 6) + 0.0)
 elif isinstance(result, (np.integer, int)):
     result_str = str(int(result))
 else:
@@ -281,7 +302,7 @@ result_str
             appendOutput(`Test ${testCase.id}: FAILED - Expected ${testCase.expected}, got ${actualStr}`);
           }
         } catch (err) {
-          const errorMsg = err instanceof Error ? err.message : 'Test execution error';
+          const errorMsg = formatPythonError(err instanceof Error ? err.message : 'Test execution error');
           results.push({
             id: testCase.id,
             passed: false,
@@ -295,7 +316,7 @@ result_str
       }
     } catch (err) {
       // Error in user code
-      const errorMsg = err instanceof Error ? err.message : 'Code execution error';
+      const errorMsg = formatPythonError(err instanceof Error ? err.message : 'Code execution error');
       appendOutput(`[Error] ${errorMsg}`);
       return testCases.map(tc => ({
         id: tc.id,
