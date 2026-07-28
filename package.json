@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "deploy": "npm run build && gh-pages -d dist -r git@github.com:mlgrind/mlgrind.github.io.git"
+    "deploy": "npm run build && gh-pages -d dist -r git@github.com:mlgrind/mlgrind.github.io.git",
+    "seo": "vite-node scripts/generate-seo.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
