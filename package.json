@@ -10,7 +10,12 @@
     "preview": "vite preview",
     "test": "vitest",
     "deploy": "npm run build && gh-pages -d dist -r git@github.com:mlgrind/mlgrind.github.io.git",
-    "seo": "vite-node scripts/generate-seo.ts"
+    "seo": "vite-node scripts/generate-seo.ts",
+    "worker:dev": "cd worker && npx wrangler dev",
+    "worker:deploy": "cd worker && npx wrangler deploy",
+    "worker:secret": "cd worker && npx wrangler secret put ANTHROPIC_API_KEY",
+    "worker:secret:rm": "cd worker && npx wrangler secret delete",
+    "worker:secret:ls": "cd worker && npx wrangler secret list"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",

@@ -1,0 +1,10 @@
+name = "mlgrind-ai-feedback"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Secret (never commit): npx wrangler secret put ANTHROPIC_API_KEY
+#
+# Optional model override without a code change:
+# [vars]
+# ANTHROPIC_MODEL = "claude-sonnet-5"
