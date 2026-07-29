@@ -55,6 +55,11 @@ export default function AIFeedback({ feedback, isLoading, error, onRequest, hasT
               ul: ({ children }) => (
                 <ul className="list-disc pl-4 text-dark-200 space-y-1 my-1.5">{children}</ul>
               ),
+              ol: ({ children, start }) => (
+                <ol start={start} className="list-decimal pl-4 text-dark-200 space-y-1 my-1.5">
+                  {children}
+                </ol>
+              ),
               li: ({ children }) => (
                 <li className="text-dark-200">{children}</li>
               ),
