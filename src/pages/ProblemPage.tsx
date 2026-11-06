@@ -14,15 +14,21 @@ import SEO from '../components/SEO/SEO';
 import { TestResult, TestCase } from '../types';
 import SuccessBanner from '../components/SuccessBanner/SuccessBanner';
 import { useDarkMode } from '../hooks/useDarkMode';
+import ShareChallenge from '../components/Share/ShareChallenge';
+import { track, trackOnce } from '../lib/analytics';
+import { functionNameOf } from '../lib/pythonProgram';
+import { readStorage, writeStorage } from '../lib/storage';
 import { useAIFeedback } from '../hooks/useAIFeedback';
 
 export default function ProblemPage() {
   const { sectionId, problemId } = useParams<{ sectionId: string; problemId: string }>();
-  const { getProblemProgress, saveProblemCode, updateProblemStatus } = useProgress();
-  const { isLoading, isReady, output, runTests, clearOutput } = usePyodide();
+  const { getProblemProgress, saveProblemCode, updateProblemStatus, storageError, syncError } = useProgress();
+  const { isLoading, isReady, output, runTests, clearOutput, stop, error, retry } = usePyodide();
 
   const problem = problemId ? getProblemById(problemId) : undefined;
   const section = sections.find(s => s.id === sectionId);
+  const activeProblemRef = useRef(problem?.id);
+  activeProblemRef.current = problem?.id;
 
   const [code, setCode] = useState('');
   const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -31,7 +37,7 @@ export default function ProblemPage() {
   const [editableTestCases, setEditableTestCases] = useState<TestCase[]>([]);
   const [resetKey, setResetKey] = useState(0);
   const [showShortcutHint, setShowShortcutHint] = useState(
-    () => !localStorage.getItem('ml-lab-shortcut-hint-dismissed')
+    () => !readStorage('ml-lab-shortcut-hint-dismissed')
   );
   const [showCelebration, setShowCelebration] = useState(false);
   const wasCompletedRef = useRef(false);
@@ -52,9 +58,12 @@ export default function ProblemPage() {
 
   // Load saved code or starter code. Runs only when navigating to another problem.
   useEffect(() => {
+    stop();
+    setIsRunning(false);
     if (problem && sectionId) {
+      track('exercise_opened', { problem_id: problem.id, section_id: sectionId });
       const savedProgress = getProblemProgressRef.current(sectionId, problem.id);
-      setCode(savedProgress.code || problem.starterCode);
+      setCode(savedProgress.code ?? problem.starterCode);
       setEditableTestCases(problem.testCases);
       setDescriptionTab('description');
       setTestResults([]);
@@ -66,22 +75,12 @@ export default function ProblemPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem?.id, sectionId]);
 
-  // Auto-save code
-  useEffect(() => {
-    if (code && problem && sectionId && code !== problem.starterCode) {
-      const timer = setTimeout(() => {
-        saveProblemCode(sectionId, problem.id, code);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [code, problem, sectionId, saveProblemCode]);
-
   // Auto-dismiss shortcut hint after 10 seconds
   useEffect(() => {
     if (showShortcutHint) {
       const timer = setTimeout(() => {
         setShowShortcutHint(false);
-        localStorage.setItem('ml-lab-shortcut-hint-dismissed', 'true');
+        writeStorage('ml-lab-shortcut-hint-dismissed', 'true');
       }, 10000);
       return () => clearTimeout(timer);
     }
@@ -89,7 +88,7 @@ export default function ProblemPage() {
 
   const dismissShortcutHint = useCallback(() => {
     setShowShortcutHint(false);
-    localStorage.setItem('ml-lab-shortcut-hint-dismissed', 'true');
+    writeStorage('ml-lab-shortcut-hint-dismissed', 'true');
   }, []);
 
   // Detect mobile viewport
@@ -101,39 +100,42 @@ export default function ProblemPage() {
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
-  }, []);
+    if (problem && sectionId) saveProblemCode(sectionId, problem.id, newCode);
+  }, [problem, sectionId, saveProblemCode]);
 
   const handleReset = useCallback(() => {
     if (problem) {
       const hasChanges = code !== problem.starterCode;
       if (!hasChanges || window.confirm('Reset your code? Your changes will be lost.')) {
         setCode(problem.starterCode);
+        if (sectionId) saveProblemCode(sectionId, problem.id, problem.starterCode);
         setTestResults([]);
         setEditableTestCases(problem.testCases);
         setResetKey(k => k + 1);
         clearOutput();
       }
     }
-  }, [problem, code, clearOutput]);
-
-  const extractFunctionName = (starterCode: string): string => {
-    const matches = [...starterCode.matchAll(/def\s+(\w+)\s*\(/g)];
-    return matches.length > 0 ? matches[matches.length - 1][1] : 'solution';
-  };
+  }, [problem, code, clearOutput, sectionId, saveProblemCode]);
 
   const handleRunTests = useCallback(async () => {
-    if (!problem || !isReady || !sectionId) return;
+    if (!problem || !isReady || !sectionId || isRunning) return;
 
+    const analytics = { problem_id: problem.id, section_id: sectionId };
+    track('code_run', analytics);
+    trackOnce('first_run', analytics);
     setIsRunning(true);
     setTestResults([]);
 
     try {
-      const functionName = extractFunctionName(problem.starterCode);
+      const functionName = functionNameOf(problem.starterCode);
       const results = await runTests(code, editableTestCases, functionName);
+      if (activeProblemRef.current !== problem.id) return;
       setTestResults(results);
 
-      const allPassed = results.every(r => r.passed);
+      const allPassed = results.length > 0 && results.every(r => r.passed);
       if (allPassed) {
+        track('exercise_passed', analytics);
+        trackOnce('first_pass', analytics);
         updateProblemStatus(sectionId, problem.id, 'completed');
         if (!wasCompletedRef.current) {
           setShowCelebration(true);
@@ -141,9 +143,9 @@ export default function ProblemPage() {
         }
       }
     } finally {
-      setIsRunning(false);
+      if (activeProblemRef.current === problem.id) setIsRunning(false);
     }
-  }, [problem, isReady, sectionId, code, editableTestCases, runTests, updateProblemStatus]);
+  }, [problem, isReady, sectionId, code, editableTestCases, runTests, updateProblemStatus, isRunning]);
 
   const handleRequestAIFeedback = useCallback(() => {
     if (!problem) return;
@@ -155,7 +157,7 @@ export default function ProblemPage() {
     });
   }, [problem, code, testResults, requestFeedback]);
 
-  if (!problem || !section) {
+  if (!problem || !section || problem.section !== sectionId) {
     return (
       <div className="text-center py-12">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">Problem Not Found</h1>
@@ -251,6 +253,11 @@ export default function ProblemPage() {
         keywords={`${problem.title}, ${section.title}, machine learning, coding practice, ${problem.difficulty}`}
       />
       <SuccessBanner show={showCelebration} onDismiss={() => setShowCelebration(false)} />
+      {syncError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Cloud progress could not load. Cloud writes are paused to protect your saved work. Your edits remain on this device; refresh to retry.</p>}
+      {storageError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your browser could not save your code. Keep a copy before leaving this page.</p>}
+      {error && <div role="alert" className="p-3 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
+      {isRunning && <div className="p-2 bg-gray-100 dark:bg-dark-800"><button onClick={() => stop()} className="px-4 py-2 rounded bg-red-600 text-white">Stop execution</button><span className="ml-3 text-sm text-gray-600 dark:text-dark-200">30-second time limit</span></div>}
+      <div className="px-4 py-2 bg-white dark:bg-dark-800"><ShareChallenge title={problem.title} path={`/problem/${sectionId}/${problem.id}`} completed={testResults.length > 0 && testResults.every(result => result.passed)} /></div>
       {/* Problem Header */}
       <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 min-w-0 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -310,10 +317,10 @@ export default function ProblemPage() {
           {!isReady && (
             <span
               className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2"
-              title={isLoading ? 'Loading Python...' : 'Python ready'}
+              title={isLoading ? 'Loading Python...' : 'Python unavailable'}
             >
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shrink-0" />
-              <span className="hidden sm:inline">{isLoading ? 'Loading Python...' : 'Python ready'}</span>
+              <span className="hidden sm:inline">{isLoading ? 'Loading Python...' : 'Python unavailable'}</span>
             </span>
           )}
           {isReady && (

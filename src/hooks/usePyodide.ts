@@ -1,335 +1,184 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { TestCase, TestResult } from '../types';
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { TestCase, TestResult } from "../types";
+import { testProgram } from "../lib/pythonProgram";
+import { formatPythonError } from "../lib/pythonError";
+export { formatPythonError } from "../lib/pythonError";
 
-interface PyodideInstance {
-  runPythonAsync: (code: string) => Promise<unknown>;
-  loadPackage: (packages: string | string[]) => Promise<void>;
-  globals: {
-    get: (name: string) => unknown;
-    set: (name: string, value: unknown) => void;
-  };
-  runPython: (code: string) => unknown;
-  setStdout: (options: { batched: (text: string) => void }) => void;
-  setStderr: (options: { batched: (text: string) => void }) => void;
-}
+export const EXECUTION_TIMEOUT_MS = 30_000;
+const INITIALIZATION_TIMEOUT_MS = 90_000;
+const OUTPUT_LIMIT = 500;
 
-declare global {
-  interface Window {
-    loadPyodide: (config?: { indexURL?: string }) => Promise<PyodideInstance>;
-  }
-}
+type Pending = {
+  resolve: (value: string) => void;
+  reject: (error: Error) => void;
+  timer: ReturnType<typeof setTimeout>;
+};
 
-// Pyodide surfaces the full Python traceback, most of which is its own harness
-// (`_pyodide/_base.py`, `eval_code_async`, `CodeRunner`, the synthetic `<exec>`
-// module). Strip those frames so the learner sees their own error, not ours.
-const INTERNAL_FRAME = /_pyodide[/\\]_base\.py|eval_code_async|CodeRunner\(|runPythonAsync|importlib\._bootstrap|File "<exec>"|File "<test>"|File "<solution>"/;
-
-export function formatPythonError(message: string): string {
-  if (!message) return 'Test execution error';
-
-  const lines = message.split('\n');
-  // The final non-empty line is the actual exception, e.g. "TypeError: ...".
-  const exceptionLine = [...lines].reverse().find(l => l.trim().length > 0)?.trim() ?? message.trim();
-
-  // Keep any traceback frames that point at the learner's own code.
-  const userFrames = lines.filter(
-    l => /^\s*File "/.test(l) && !INTERNAL_FRAME.test(l)
-  );
-
-  if (userFrames.length === 0) return exceptionLine;
-  return [...userFrames.map(l => l.trim()), exceptionLine].join('\n');
-}
-
-interface UsePyodideReturn {
-  isLoading: boolean;
-  isReady: boolean;
-  error: string | null;
-  output: string[];
-  runCode: (code: string) => Promise<{ success: boolean; error?: string }>;
-  runTests: (code: string, testCases: TestCase[], functionName: string) => Promise<TestResult[]>;
-  clearOutput: () => void;
-}
-
-export function usePyodide(): UsePyodideReturn {
-  const [isLoading, setIsLoading] = useState(false);
+export function usePyodide() {
+  const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<string[]>([]);
-  const pyodideRef = useRef<PyodideInstance | null>(null);
-  const initializingRef = useRef(false);
-
+  const worker = useRef<Worker | null>(null);
+  const pending = useRef<Pending | null>(null);
+  const nextId = useRef(0);
+  const initializationTimer = useRef<ReturnType<typeof setTimeout>>();
   const appendOutput = useCallback((text: string) => {
-    setOutput(prev => [...prev, text]);
+    setOutput((previous) => [
+      ...previous.slice(-(OUTPUT_LIMIT - 1)),
+      text.slice(0, 4000),
+    ]);
   }, []);
+  const clearOutput = useCallback(() => setOutput([]), []);
 
-  const clearOutput = useCallback(() => {
-    setOutput([]);
-  }, []);
-
-  const loadPyodide = useCallback(async () => {
-    if (pyodideRef.current || initializingRef.current) return;
-
-    initializingRef.current = true;
+  const start = useCallback(() => {
+    worker.current?.terminate();
+    clearTimeout(initializationTimer.current);
+    setIsReady(false);
     setIsLoading(true);
     setError(null);
-
-    try {
-      // Load Pyodide script if not already loaded
-      if (!window.loadPyodide) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
-          script.async = true;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Failed to load Pyodide'));
-          document.head.appendChild(script);
-        });
-      }
-
-      const pyodide = await window.loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/',
-      });
-
-      // Set up stdout/stderr capture
-      pyodide.setStdout({
-        batched: (text: string) => {
-          // Split batched output by newlines to show each line separately
-          const lines = text.split('\n');
-          lines.forEach(line => {
-            if (line.trim()) appendOutput(line);
-          });
-        },
-      });
-
-      pyodide.setStderr({
-        batched: (text: string) => {
-          // Split batched output by newlines to show each line separately
-          const lines = text.split('\n');
-          lines.forEach(line => {
-            if (line.trim()) appendOutput(`[Error] ${line}`);
-          });
-        },
-      });
-
-      // Load numpy - it's commonly needed
-      await pyodide.loadPackage(['numpy']);
-
-      pyodideRef.current = pyodide;
-      setIsReady(true);
-      appendOutput('Python environment ready with NumPy loaded.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to initialize Python';
-      setError(message);
-      appendOutput(`[Error] ${message}`);
-    } finally {
+    const instance = new Worker(`${import.meta.env.BASE_URL}python-worker.js`);
+    worker.current = instance;
+    const loadingTimer = setTimeout(() => {
+      instance.terminate();
       setIsLoading(false);
-      initializingRef.current = false;
-    }
+      setError(
+        "Python took too long to load. Check your connection and retry.",
+      );
+    }, INITIALIZATION_TIMEOUT_MS);
+    initializationTimer.current = loadingTimer;
+    const fail = (message: string) => {
+      if (worker.current !== instance) return;
+      clearTimeout(loadingTimer);
+      setIsLoading(false);
+      setIsReady(false);
+      setError(message);
+      const current = pending.current;
+      pending.current = null;
+      if (current) {
+        clearTimeout(current.timer);
+        current.reject(new Error(message));
+      }
+    };
+    instance.onerror = () =>
+      fail("Could not load Python. Check your connection and retry.");
+    instance.onmessage = ({ data }) => {
+      if (worker.current !== instance) return;
+      if (data.type === "ready") {
+        clearTimeout(loadingTimer);
+        setIsLoading(false);
+        setIsReady(true);
+        appendOutput(
+          "Python ready with NumPy. Runs stop automatically after 30 seconds.",
+        );
+      } else if (data.type === "output") {
+        appendOutput(data.text);
+      } else if (data.id && data.id === nextId.current) {
+        const current = pending.current;
+        pending.current = null;
+        if (!current) return;
+        clearTimeout(current.timer);
+        if (data.type === "error")
+          current.reject(new Error(formatPythonError(data.error)));
+        else current.resolve(data.result ?? "");
+      } else if (data.type === "error") fail(formatPythonError(data.error));
+    };
+    return () => clearTimeout(loadingTimer);
   }, [appendOutput]);
 
   useEffect(() => {
-    loadPyodide();
-  }, [loadPyodide]);
-
-  const runCode = useCallback(async (code: string): Promise<{ success: boolean; error?: string }> => {
-    if (!pyodideRef.current) {
-      return { success: false, error: 'Python environment not ready' };
-    }
-
-    try {
-      clearOutput();
-      await pyodideRef.current.runPythonAsync(code);
-      return { success: true };
-    } catch (err) {
-      const message = formatPythonError(err instanceof Error ? err.message : 'Execution error');
-      appendOutput(`[Error] ${message}`);
-      return { success: false, error: message };
-    }
-  }, [appendOutput, clearOutput]);
-
-  const runTests = useCallback(async (
-    code: string,
-    testCases: TestCase[],
-    functionName: string
-  ): Promise<TestResult[]> => {
-    if (!pyodideRef.current) {
-      return testCases.map(tc => ({
-        id: tc.id,
-        passed: false,
-        description: tc.description,
-        expected: tc.expected,
-        actual: 'Python environment not ready',
-        hidden: tc.hidden,
-      }));
-    }
-
-    const results: TestResult[] = [];
-    clearOutput();
-
-    try {
-      // First, run the user's code to define the function
-      await pyodideRef.current.runPythonAsync(code);
-
-      // Run each test case
-      for (const testCase of testCases) {
-        try {
-          // Check if input is an expression (starts with function name or contains method calls)
-          const isExpression = testCase.input.includes(functionName) ||
-                               testCase.input.includes('.') ||
-                               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(testCase.input.trim());
-
-          // Lambda expressions start with '(lambda' and should be treated as expressions
-          const isLambdaExpression = testCase.input.trim().startsWith('(lambda');
-
-          let testCode: string;
-
-          if (isExpression && !testCase.input.startsWith('[') && (!testCase.input.startsWith('(') || isLambdaExpression)) {
-            // Expression-based test: evaluate the expression directly
-            testCode = `
-import numpy as np
-import json
-
-# Evaluate expression directly
-result = ${testCase.input}
-
-# Convert result to string for comparison
-if isinstance(result, bool):
-    result_str = str(result)
-elif isinstance(result, (np.bool_, )):
-    result_str = str(bool(result))
-elif isinstance(result, np.ndarray):
-    result_str = str(result.tolist())
-elif isinstance(result, tuple):
-    # Convert tuple elements
-    converted = []
-    for item in result:
-        if isinstance(item, bool):
-            converted.append(item)
-        elif isinstance(item, (np.bool_, )):
-            converted.append(bool(item))
-        elif isinstance(item, np.ndarray):
-            converted.append(item.tolist())
-        elif isinstance(item, (np.floating, float)):
-            converted.append(round(float(item), 6) + 0.0)
-        elif isinstance(item, (np.integer, int)):
-            converted.append(int(item))
-        else:
-            converted.append(item)
-    result_str = str(tuple(converted))
-elif isinstance(result, (list, dict)):
-    result_str = json.dumps(result)
-elif isinstance(result, (np.floating, float)):
-    result_str = str(round(float(result), 6) + 0.0)
-elif isinstance(result, (np.integer, int)):
-    result_str = str(int(result))
-else:
-    result_str = str(result)
-result_str
-`;
-          } else {
-            // Standard test: pass input as function arguments
-            testCode = `
-import numpy as np
-import json
-
-# Parse input
-test_input = ${testCase.input}
-
-# Call the function
-if isinstance(test_input, list):
-    result = ${functionName}(np.array(test_input))
-elif isinstance(test_input, tuple):
-    result = ${functionName}(*[np.array(x) if isinstance(x, list) else x for x in test_input])
-else:
-    result = ${functionName}(test_input)
-
-# Convert result to string for comparison
-if isinstance(result, bool):
-    result_str = str(result)
-elif isinstance(result, (np.bool_, )):
-    result_str = str(bool(result))
-elif isinstance(result, np.ndarray):
-    result_str = str(result.tolist())
-elif isinstance(result, tuple):
-    # Convert tuple elements
-    converted = []
-    for item in result:
-        if isinstance(item, bool):
-            converted.append(item)
-        elif isinstance(item, (np.bool_, )):
-            converted.append(bool(item))
-        elif isinstance(item, np.ndarray):
-            converted.append(item.tolist())
-        elif isinstance(item, (np.floating, float)):
-            converted.append(round(float(item), 6) + 0.0)
-        elif isinstance(item, (np.integer, int)):
-            converted.append(int(item))
-        else:
-            converted.append(item)
-    result_str = str(tuple(converted))
-elif isinstance(result, (list, dict)):
-    result_str = json.dumps(result)
-elif isinstance(result, (np.floating, float)):
-    result_str = str(round(float(result), 6) + 0.0)
-elif isinstance(result, (np.integer, int)):
-    result_str = str(int(result))
-else:
-    result_str = str(result)
-result_str
-`;
-          }
-          const result = await pyodideRef.current.runPythonAsync(testCode);
-          const actualStr = String(result);
-
-          // Normalize for comparison
-          const normalizedExpected = testCase.expected.replace(/\s/g, '');
-          const normalizedActual = actualStr.replace(/\s/g, '');
-
-          const passed = normalizedExpected === normalizedActual;
-
-          results.push({
-            id: testCase.id,
-            passed,
-            description: testCase.description,
-            expected: testCase.expected,
-            actual: actualStr,
-            hidden: testCase.hidden,
-          });
-
-          if (passed) {
-            appendOutput(`Test ${testCase.id}: PASSED`);
-          } else {
-            appendOutput(`Test ${testCase.id}: FAILED - Expected ${testCase.expected}, got ${actualStr}`);
-          }
-        } catch (err) {
-          const errorMsg = formatPythonError(err instanceof Error ? err.message : 'Test execution error');
-          results.push({
-            id: testCase.id,
-            passed: false,
-            description: testCase.description,
-            expected: testCase.expected,
-            actual: errorMsg,
-            hidden: testCase.hidden,
-          });
-          appendOutput(`Test ${testCase.id}: ERROR - ${errorMsg}`);
-        }
+    const cleanup = start();
+    return () => {
+      cleanup();
+      clearTimeout(initializationTimer.current);
+      worker.current?.terminate();
+      if (pending.current) {
+        clearTimeout(pending.current.timer);
+        pending.current.reject(new Error("Execution stopped."));
+        pending.current = null;
       }
-    } catch (err) {
-      // Error in user code
-      const errorMsg = formatPythonError(err instanceof Error ? err.message : 'Code execution error');
-      appendOutput(`[Error] ${errorMsg}`);
-      return testCases.map(tc => ({
-        id: tc.id,
-        passed: false,
-        description: tc.description,
-        expected: tc.expected,
-        actual: errorMsg,
-        hidden: tc.hidden,
-      }));
-    }
+    };
+  }, [start]);
 
-    return results;
-  }, [appendOutput, clearOutput]);
+  const stop = useCallback(
+    (message = "Execution stopped.") => {
+      const current = pending.current;
+      if (!current) return;
+      pending.current = null;
+      if (current) {
+        clearTimeout(current.timer);
+        current.reject(new Error(message));
+      }
+      appendOutput(message);
+      start();
+    },
+    [appendOutput, start],
+  );
+
+  const execute = useCallback(
+    (program: string, tests = false): Promise<string> => {
+      if (!worker.current || !isReady)
+        return Promise.reject(new Error("Python is not ready."));
+      if (pending.current)
+        return Promise.reject(new Error("Another run is already in progress."));
+      clearOutput();
+      return new Promise((resolve, reject) => {
+        const id = ++nextId.current;
+        const timer = setTimeout(
+          () => stop("Execution timed out after 30 seconds."),
+          EXECUTION_TIMEOUT_MS,
+        );
+        pending.current = { resolve, reject, timer };
+        worker.current!.postMessage({ id, program, tests });
+      });
+    },
+    [isReady, clearOutput, stop],
+  );
+
+  const runCode = useCallback(
+    async (code: string) => {
+      try {
+        await execute(code);
+        return { success: true };
+      } catch (reason) {
+        const message =
+          reason instanceof Error ? reason.message : "Execution failed";
+        appendOutput(`[Error] ${message}`);
+        return { success: false, error: message };
+      }
+    },
+    [execute, appendOutput],
+  );
+
+  const runTests = useCallback(
+    async (
+      code: string,
+      tests: TestCase[],
+      functionName: string,
+    ): Promise<TestResult[]> => {
+      try {
+        const results: TestResult[] = JSON.parse(
+          await execute(testProgram(code, tests, functionName), true),
+        );
+        results.forEach((result) =>
+          appendOutput(
+            `Test ${result.id}: ${result.passed ? "PASSED" : "FAILED"}`,
+          ),
+        );
+        return results;
+      } catch (reason) {
+        const message =
+          reason instanceof Error ? reason.message : "Execution failed";
+        appendOutput(`[Error] ${message}`);
+        return tests.map((test) => ({
+          ...test,
+          passed: false,
+          actual: message,
+        }));
+      }
+    },
+    [execute, appendOutput],
+  );
 
   return {
     isLoading,
@@ -339,5 +188,7 @@ result_str
     runCode,
     runTests,
     clearOutput,
+    stop,
+    retry: start,
   };
 }

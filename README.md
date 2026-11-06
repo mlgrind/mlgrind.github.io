@@ -1,106 +1,52 @@
-# ML Interview Prep
+# ML Grind
 
-A LeetCode-style web application for machine learning interview preparation with browser-based Python execution.
+Practice machine learning by implementing algorithms in real Python, directly in your browser. No installation or account required.
 
-**Live Demo:** https://mlgrind.github.io/
+**[Solve your first problem](https://mlgrind.github.io/problem/python-basics/numpy-array-sum)** · **[Seven-day challenge](https://mlgrind.github.io/challenge)** · **[Live curriculum](https://mlgrind.github.io/)**
 
-![ML Interview Prep](https://img.shields.io/badge/Python-In_Browser-blue) ![React](https://img.shields.io/badge/React-18-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)
+![ML Grind: real Python, instant feedback, no setup](https://mlgrind.github.io/og-image.png)
 
-## Features
+The curriculum contains **110 exercises across 16 sections**, covering NumPy, einsum, classical ML, neural networks, computer vision, transformers, LLM decoding, generative models, reinforcement learning, and end-to-end implementations. PyTorch exercises teach PyTorch concepts through NumPy implementations; this browser runtime does not include PyTorch.
 
-- **Browser-Based Python Execution** - Run Python code with NumPy directly in your browser using Pyodide (WebAssembly). No backend or setup required.
+- Real CPython and NumPy via Pyodide, isolated in a Web Worker with Stop and a 30-second execution limit.
+- Monaco editor, progressive hints, reference solutions, and numerical test feedback.
+- Progress and code saved locally; optional Google sign-in syncs progress through Firebase.
+- Curated [NumPy](https://mlgrind.github.io/learn/numpy-foundations), [interview](https://mlgrind.github.io/learn/ml-interview-prep), and [transformer](https://mlgrind.github.io/learn/build-a-transformer) paths.
+- Shareable exercise links and downloadable completion cards.
+- Static descriptions and examples for every exercise, accessible without JavaScript; execution requires JavaScript and an initial runtime download.
 
-- **Interactive Code Editor** - Monaco Editor (VS Code's editor) with Python syntax highlighting, auto-completion, and dark theme.
+## Develop
 
-- **6 Learning Sections** covering ML fundamentals:
-  1. Python Basics for ML (NumPy operations)
-  2. Data Preprocessing (normalization, encoding, missing data)
-  3. Supervised Learning (linear regression, logistic regression, decision trees)
-  4. Unsupervised Learning (K-means, PCA)
-  5. Deep Learning Basics (perceptron, neural networks, backpropagation)
-  6. Model Evaluation (metrics, cross-validation)
-
-- **15+ Hands-On Problems** with:
-  - Detailed problem descriptions
-  - Interactive examples
-  - Progressive hint system
-  - Hidden test cases to prevent hardcoding
-  - Full solutions (revealed after hints)
-
-- **Progress Tracking** - Your progress is saved locally. Pick up where you left off.
-
-- **Instant Feedback** - Run tests and see results immediately with pass/fail indicators.
-
-## Getting Started
-
-### Online
-
-Visit https://mlgrind.github.io/ - no installation needed!
-
-### Local Development
+Use Node.js 22.12+ (or a supported newer release).
 
 ```bash
-# Clone the repository
-git clone https://github.com/mlgrind/mlgrind.github.io.git
-cd ml-coding-lab
-
-# Install dependencies
-npm install
-
-# Start development server
+npm ci
 npm run dev
-
-# Open http://localhost:5173
 ```
 
-## Tech Stack
+Optional Firebase configuration is read from `VITE_FIREBASE_*` variables documented in `src/lib/firebase.ts`. Without configuration, local learning works without authentication. See [worker/README.md](worker/README.md) for the optional AI-feedback service; its credentials stay on the server.
 
-- **Frontend:** React 18 + TypeScript + Vite
-- **Styling:** Tailwind CSS
-- **Code Editor:** Monaco Editor
-- **Python Runtime:** Pyodide (CPython compiled to WebAssembly)
-- **Testing:** Vitest + React Testing Library
+| Command | Purpose |
+| --- | --- |
+| `npm run check` | Lint, unit/reference tests, and production build |
+| `npm run test:run` | Run tests once |
+| `npm run test:runtime` | Run reference solutions using real Pyodide and NumPy; requires network on first run |
+| `npm run build` | Generate discovery files, compile, and generate static routes/PNG cards |
+| `npm run verify:static` | Verify built route files, canonical URLs, content, and sitemap coverage |
+| `npm run preview` | Preview the production build |
+| `npm run deploy` | Build and publish to ML Grind’s GitHub Pages repository; requires write access |
 
-## Commands
+The main app lives in `src/`. Problems and paths live in `src/data/`. `scripts/generate-seo.ts` generates LLM discovery files; `scripts/prerender.tsx` generates HTML for known routes, the deployed sitemap/robots file, and social images. New curriculum entries automatically receive static pages. Unknown routes retain the GitHub Pages 404 fallback and are marked noindex.
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm test` | Run tests |
-| `npm run deploy` | Deploy to GitHub Pages |
+## Contribute
 
-## Project Structure
+1. Add or improve a problem under `src/data/problems/` and register it in its section.
+2. Include examples, prerequisites in the description when useful, progressive hints, a reference solution, and visible/hidden tests. Hidden means hidden from the normal UI; client-side tests are not secret or suitable for proctored assessment.
+3. Run `npm run check`, `npm run test:runtime`, and `npm run verify:static`. Exercise the editor in a browser for execution changes.
+4. Open a pull request with the learning objective, behavior changed, and validation.
 
-```
-src/
-├── components/        # Reusable UI components
-│   ├── Layout/       # Header, Sidebar, Layout
-│   ├── CodeEditor/   # Monaco editor wrapper
-│   ├── Console/      # Output display
-│   ├── ProblemView/  # Problem description, examples, hints
-│   └── TestRunner/   # Test results display
-├── context/          # React Context for state management
-├── data/             # Section and problem definitions
-├── hooks/            # Custom hooks (usePyodide, useProgress)
-├── pages/            # Page components
-└── types/            # TypeScript interfaces
-```
-
-## Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. **Add new problems** - Create problems in `src/data/problems/`
-2. **Add new sections** - Extend the curriculum in `src/data/sections.ts`
-3. **Improve UI/UX** - Enhance the interface in `src/components/`
-4. **Fix bugs** - Check issues and submit PRs
+Report incorrect answers, unclear explanations, and bugs through [GitHub issues](https://github.com/mlgrind/mlgrind.github.io/issues). See [the outreach kit](docs/outreach.md) and [instructor guide](docs/instructors.md) for sharing and teaching.
 
 ## License
 
-MIT License - feel free to use this for your own learning or projects!
-
----
-
-Built with React, TypeScript, and Pyodide. Practice ML coding directly in your browser!
+Application source code is MIT licensed. Educational content is copyrighted separately; see [LICENSE](LICENSE). Link to exercises when sharing or teaching; contact the maintainer before redistributing educational content.

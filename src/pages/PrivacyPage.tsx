@@ -1,3 +1,4 @@
+import AnalyticsPreference from '../components/SEO/AnalyticsPreference';
 import SEO from '../components/SEO/SEO';
 
 export default function PrivacyPage() {
@@ -14,7 +15,7 @@ export default function PrivacyPage() {
 
         <div className="prose prose-gray max-w-none">
           <p className="text-gray-600 mb-6">
-            <strong>Last updated:</strong> February 8, 2026
+            <strong>Last updated:</strong> November 5, 2026
           </p>
 
           <section className="mb-8">
@@ -24,8 +25,9 @@ export default function PrivacyPage() {
               how we collect, use, and protect information when you use our Service.
             </p>
             <p className="text-gray-600 mb-4">
-              <strong>The short version:</strong> We collect minimal data. Your code stays in your
-              browser. We don't track you or sell your data.
+              <strong>The short version:</strong> Python execution happens in your browser. Optional
+              sign-in syncs your progress, optional AI feedback sends the code you submit for review,
+              and usage analytics can be disabled below. We do not sell your data.
             </p>
           </section>
 
@@ -34,7 +36,7 @@ export default function PrivacyPage() {
 
             <h3 className="text-lg font-medium text-gray-700 mb-3">Data Stored Locally (Your Browser)</h3>
             <p className="text-gray-600 mb-4">
-              The following data is stored only in your browser's localStorage and never sent to our servers:
+              By default, the following data is saved in your browser's localStorage:
             </p>
             <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
               <li><strong>Progress data:</strong> Which problems you've completed</li>
@@ -42,7 +44,7 @@ export default function PrivacyPage() {
               <li><strong>Scratchpad code:</strong> Code you've written in the Python scratchpad</li>
             </ul>
             <p className="text-gray-600 mb-4">
-              This data never leaves your device unless you explicitly export it.
+              Saved progress and solutions are synced to Firestore if you sign in. Requesting AI feedback sends the current submission for review. Without those actions, your saved code stays in your browser.
             </p>
 
             <h3 className="text-lg font-medium text-gray-700 mb-3">Feedback Submissions</h3>
@@ -74,10 +76,12 @@ export default function PrivacyPage() {
             </p>
 
             <h3 className="text-lg font-medium text-gray-700 mb-3">Analytics and Hosting</h3>
+            <AnalyticsPreference />
+            <p className="text-gray-600 mb-4">Usage events include opening exercises and learning paths, running code, passing tests, first runs and passes, and returning on another day. These events contain exercise identifiers, not your code, test inputs, or results. Browser storage remembers first-use milestones and the last visit date. Google Analytics may use cookies and referral information for usage measurement. Signed-in analytics may be associated with a pseudonymous account identifier.</p>
             <p className="text-gray-600 mb-4">
-              We use Firebase Analytics (Google Analytics 4) to understand how the Service is used
-              and to improve the user experience. Firebase Analytics automatically collects
-              anonymous usage data including approximate geographic location, browser type, device
+              We use Google Analytics 4 to understand how the Service is used
+              and to improve the user experience. Google Analytics collects
+              usage data including approximate geographic location, browser type, device
               type, and page views. This data is processed by Google under their data processing
               terms. No personally identifiable information is shared with analytics beyond what
               Google automatically collects from standard web interactions.
@@ -105,13 +109,17 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Information We Do NOT Collect</h2>
             <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
               <li>We do not require account registration</li>
-              <li>We do not use cookies for tracking</li>
-              <li>We use Firebase Analytics only for aggregate usage insights (see above)</li>
+              <li>Google Analytics may use cookies for usage measurement; you can disable it above</li>
+              <li>We use Google Analytics for usage insights (see above)</li>
               <li>We do not collect personal information beyond what you voluntarily provide</li>
               <li>We do not sell or share your data with third parties</li>
             </ul>
           </section>
 
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">AI Feedback (Optional)</h2>
+            <p className="text-gray-600 mb-4">When you request AI feedback, your current code, the exercise title and description, and test-result summaries are sent to our Cloudflare Worker and Anthropic to generate a response. This is separate from running Python locally. Data processing by those services is subject to their respective policies. Code is not included in our usage analytics.</p>
+          </section>
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Code Execution</h2>
             <p className="text-gray-600 mb-4">
@@ -119,8 +127,8 @@ export default function PrivacyPage() {
               Your code is never sent to any external server for execution. This means:
             </p>
             <ul className="list-disc list-inside text-gray-600 mb-4 space-y-2">
-              <li>Your code remains private on your device</li>
-              <li>We cannot see or access the code you write</li>
+              <li>Running Python and tests does not send your code to a server for execution</li>
+              <li>Optional cloud sync and AI feedback transmit the data described in this policy</li>
               <li>Execution results stay in your browser</li>
             </ul>
           </section>

@@ -14,6 +14,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { sections } from '../src/data/sections';
 import { allProblems } from '../src/data/problems';
+import { allPaths } from '../src/data/learningPaths';
 
 const ORIGIN = 'https://mlgrind.github.io';
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,10 @@ const entries: Entry[] = [
   { loc: '/terms', changefreq: 'yearly', priority: '0.3' },
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
 ];
+
+for (const path of allPaths) {
+  entries.push({ loc: path.id === 'seven-day-challenge' ? '/challenge' : `/learn/${path.id}`, changefreq: 'monthly', priority: '0.8' });
+}
 
 for (const section of sections) {
   entries.push({ loc: `/section/${section.id}`, changefreq: 'monthly', priority: '0.8' });
@@ -109,6 +114,10 @@ const llms = `# ML Grind - LLM Agent Information
 The platform covers ${sections.length} learning sections with ${problemCount} problems:
 
 ${sectionOutline}
+
+## Learning Paths
+
+${allPaths.map(path => `- [${path.title}](${ORIGIN}${path.id === 'seven-day-challenge' ? '/challenge' : `/learn/${path.id}`}): ${path.description} Prerequisites: ${path.prerequisites}.`).join('\n')}
 
 ## Key URLs
 

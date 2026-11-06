@@ -1,5 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { trackVisit } from '../../lib/analytics';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -11,6 +12,11 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { pathname } = useLocation();
+  useEffect(() => {
+    trackVisit();
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+    window.gtag?.('event', 'page_view', { page_location: `https://mlgrind.github.io${pathname}`, page_path: pathname });
+  }, [pathname]);
 
   // The editor routes are IDE-style: they own the viewport and scroll inside their
   // own panes. Letting the document scroll there pushes the console out of view

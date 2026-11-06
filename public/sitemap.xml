@@ -31,6 +31,26 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://mlgrind.github.io/learn/numpy-foundations</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/learn/ml-interview-prep</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/learn/build-a-transformer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/challenge</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://mlgrind.github.io/section/numpy-fundamentals</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

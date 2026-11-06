@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Progress, ProblemStatus } from '../types';
 import { useAuth } from './AuthContext';
 import { loadProgressFromFirestore, saveProgressToFirestore } from '../lib/firestoreSync';
+import { readProgress, writeStorage } from '../lib/storage';
 import { mergeProgress } from '../lib/mergeProgress';
 
 const STORAGE_KEY = 'ml-interview-progress';
@@ -10,6 +11,8 @@ const DEBOUNCE_MS = 2000;
 interface ProgressContextType {
   progress: Progress;
   isSyncing: boolean;
+  storageError: boolean;
+  syncError: boolean;
   updateProblemStatus: (sectionId: string, problemId: string, status: ProblemStatus) => void;
   saveProblemCode: (sectionId: string, problemId: string, code: string) => void;
   getProblemProgress: (sectionId: string, problemId: string) => { status: ProblemStatus; code?: string };
@@ -22,51 +25,45 @@ const ProgressContext = createContext<ProgressContextType | null>(null);
 
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [progress, setProgress] = useState<Progress>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [progress, setProgress] = useState<Progress>(readProgress);
+  const [storageError, setStorageError] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
-  const prevUid = useRef<string | null>(null);
+  const [loadedUid, setLoadedUid] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState(false);
 
   // Persist to localStorage on every change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    setStorageError(!writeStorage(STORAGE_KEY, JSON.stringify(progress)));
   }, [progress]);
 
-  // On login: merge local + cloud, save merged to both
+  // Read and merge before enabling writes. A slow/failed read must never let
+  // the debounce upload an empty or stale local snapshot over cloud progress.
   useEffect(() => {
-    const uid = user?.uid ?? null;
-
-    if (uid && uid !== prevUid.current) {
-      setIsSyncing(true);
-      loadProgressFromFirestore(uid)
-        .then((cloud) => {
-          setProgress((local) => {
-            const merged = cloud ? mergeProgress(local, cloud) : local;
-
-            // Save merged back to Firestore
-            saveProgressToFirestore(uid, merged, {
-              displayName: user!.displayName,
-              email: user!.email,
-              photoURL: user!.photoURL,
-            }).catch(console.error);
-
-            return merged;
-          });
-        })
-        .catch(console.error)
-        .finally(() => setIsSyncing(false));
+    let cancelled = false;
+    setLoadedUid(null);
+    setSyncError(false);
+    if (!user) {
+      setIsSyncing(false);
+      return;
     }
-
-    prevUid.current = uid;
+    const uid = user.uid;
+    setIsSyncing(true);
+    loadProgressFromFirestore(uid)
+      .then(cloud => {
+        if (cancelled) return;
+        setProgress(local => cloud ? mergeProgress(local, cloud) : local);
+        setLoadedUid(uid);
+      })
+      .catch(() => { if (!cancelled) setSyncError(true); })
+      .finally(() => { if (!cancelled) setIsSyncing(false); });
+    return () => { cancelled = true; };
   }, [user]);
 
   // Debounced Firestore write when progress changes while logged in
   useEffect(() => {
-    if (!user) return;
+    if (!user || loadedUid !== user.uid) return;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
@@ -81,7 +78,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [progress, user]);
+  }, [progress, user, loadedUid]);
 
   const updateProblemStatus = useCallback((sectionId: string, problemId: string, status: ProblemStatus) => {
     setProgress(prev => ({
@@ -150,7 +147,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   const resetProgress = useCallback(() => {
     setProgress({});
-    localStorage.removeItem(STORAGE_KEY);
+    writeStorage(STORAGE_KEY, '{}');
 
     if (user) {
       saveProgressToFirestore(user.uid, {}, {
@@ -166,6 +163,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       value={{
         progress,
         isSyncing,
+        storageError,
+        syncError,
         updateProblemStatus,
         saveProblemCode,
         getProblemProgress,

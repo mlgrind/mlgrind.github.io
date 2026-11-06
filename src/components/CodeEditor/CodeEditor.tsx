@@ -1,5 +1,5 @@
 import Editor, { OnMount } from '@monaco-editor/react';
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import type { editor } from 'monaco-editor';
 
 interface CodeEditorProps {
@@ -11,6 +11,14 @@ interface CodeEditorProps {
 }
 
 export default function CodeEditor({ value, onChange, height = '400px', onRun, darkMode }: CodeEditorProps) {
+  const [editorReady, setEditorReady] = useState(false);
+  const [editorError, setEditorError] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    import('../../lib/monaco').then(() => { if (!cancelled) setEditorReady(true); })
+      .catch(() => { if (!cancelled) setEditorError(true); });
+    return () => { cancelled = true; };
+  }, []);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const onRunRef = useRef(onRun);
 
@@ -39,6 +47,8 @@ export default function CodeEditor({ value, onChange, height = '400px', onRun, d
 
   const theme = darkMode ? 'vs-dark' : 'light';
 
+  if (!editorReady) return <div role="status" className="p-4 text-gray-500 dark:text-dark-200">{editorError ? 'The editor could not load. Refresh to retry; your saved code is preserved.' : 'Loading editor…'}</div>;
+
   return (
     <div className="h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
       <Editor
@@ -49,6 +59,7 @@ export default function CodeEditor({ value, onChange, height = '400px', onRun, d
         onChange={handleChange}
         onMount={handleEditorMount}
         options={{
+          editContext: false,
           minimap: { enabled: false },
           fontSize: 14,
           lineNumbers: 'on',

@@ -6,7 +6,7 @@ export default function NotFoundPage() {
 
   return (
     <>
-      <SEO
+      <SEO noindex
         title="Page Not Found"
         description="The page you are looking for does not exist on ML Grind."
         canonical={pathname}

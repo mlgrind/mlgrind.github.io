@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
+import LearningPathPage from './pages/LearningPathPage'
 import HomePage from './pages/HomePage'
 import SectionPage from './pages/SectionPage'
 import ProblemPage from './pages/ProblemPage'
@@ -28,6 +29,8 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/learn/:pathId" element={<LearningPathPage />} />
+        <Route path="/challenge" element={<LearningPathPage challenge />} />
         <Route path="/section/:sectionId" element={<SectionPage />} />
         <Route path="/problem/:sectionId/:problemId" element={<ProblemPage />} />
         <Route path="/problem/:problemId" element={<LegacyProblemRedirect />} />

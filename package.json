@@ -5,37 +5,45 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run seo && tsc -b && vite build && tsx scripts/prerender.tsx",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "deploy": "npm run build && gh-pages -d dist -r git@github.com:mlgrind/mlgrind.github.io.git",
-    "seo": "vite-node scripts/generate-seo.ts",
+    "deploy": "npm run check:deployment && npm run build && gh-pages -d dist -r git@github.com:mlgrind/mlgrind.github.io.git",
+    "seo": "tsx scripts/generate-seo.ts",
     "worker:dev": "cd worker && npx wrangler dev",
     "worker:deploy": "cd worker && npx wrangler deploy",
     "worker:secret": "cd worker && npx wrangler secret put ANTHROPIC_API_KEY",
     "worker:secret:rm": "cd worker && npx wrangler secret delete",
-    "worker:secret:ls": "cd worker && npx wrangler secret list"
+    "worker:secret:ls": "cd worker && npx wrangler secret list",
+    "test:run": "vitest run",
+    "check": "npm run lint && npm run test:run && npm run build",
+    "verify:static": "tsx scripts/verify-static.ts",
+    "test:runtime": "vitest run --config vitest.runtime.config.ts",
+    "check:deployment": "tsx scripts/check-deployment.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
-    "firebase": "^12.9.0",
+    "dompurify": "^3.4.17",
+    "firebase": "^13.2.0",
+    "monaco-editor": "^0.57.0",
     "pyodide": "^0.26.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^2.0.5",
     "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.28.0",
+    "react-router-dom": "^7.18.5",
     "react-split": "^2.0.14",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.0.1",
+    "@types/node": "^25.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
+    "@vitejs/plugin-react": "^6.2.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.13.0",
     "eslint-plugin-react-hooks": "^5.0.0",
@@ -44,10 +52,20 @@
     "globals": "^15.11.0",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.21.0",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.11.0",
-    "vite": "^5.4.10",
-    "vitest": "^2.1.5"
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.17",
+    "@grpc/grpc-js": "^1.14.7",
+    "minimatch": "^11.0.5"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

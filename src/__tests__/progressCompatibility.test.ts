@@ -1,0 +1,25 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { allProblems } from '../data/problems';
+import { readProgress } from '../lib/storage';
+import type { Progress } from '../types';
+beforeEach(() => localStorage.clear());
+describe('existing deployment compatibility', () => {
+  it('preserves the old persisted schema for every existing exercise and takes a raw backup', () => {
+    const old: Progress = {};
+    allProblems.forEach((problem, index) => {
+      old[problem.section] ??= {};
+      old[problem.section][problem.id] = { status: index % 2 ? 'completed' : 'in_progress', code: index % 3 ? problem.solution : '', lastAttempt: '2026-02-08T12:00:00Z' };
+    });
+    const raw = JSON.stringify(old);
+    localStorage.setItem('ml-interview-progress', raw);
+    expect(readProgress()).toEqual(old);
+    expect(localStorage.getItem('ml-interview-progress-backup-v1')).toBe(raw);
+    localStorage.setItem('ml-interview-progress', '{}'); readProgress();
+    expect(localStorage.getItem('ml-interview-progress-backup-v1')).toBe(raw);
+  });
+  it('backs up malformed historical data before recovery', () => {
+    localStorage.setItem('ml-interview-progress', '{damaged');
+    expect(readProgress()).toEqual({});
+    expect(localStorage.getItem('ml-interview-progress-backup-v1')).toBe('{damaged');
+  });
+});

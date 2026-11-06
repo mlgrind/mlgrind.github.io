@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { readStorage, writeStorage } from '../lib/storage';
 
 export function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('ml-lab-dark-mode');
+    const saved = readStorage('ml-lab-dark-mode');
     if (saved !== null) return saved === 'true';
     return true;
   });
@@ -14,7 +15,7 @@ export function useDarkMode() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('ml-lab-dark-mode', String(isDark));
+    writeStorage('ml-lab-dark-mode', String(isDark));
   }, [isDark]);
 
   const toggle = () => setIsDark(prev => !prev);

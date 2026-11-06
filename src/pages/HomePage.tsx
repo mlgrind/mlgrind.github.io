@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
 import { useProgress } from '../context/ProgressContext';
 import SEO from '../components/SEO/SEO';
+import { learningPaths, problemHref } from '../data/learningPaths';
+import { getProblemById } from '../data/problems';
 import Dashboard from '../components/Dashboard/Dashboard';
 
 export default function HomePage() {
-  const { getSectionProgress, getOverallProgress } = useProgress();
+  const { progress, getSectionProgress, getOverallProgress } = useProgress();
 
   const sectionInfo = sections.map(s => ({
     id: s.id,
@@ -19,6 +21,11 @@ export default function HomePage() {
     sections.reduce((sum, s) => sum + s.problems.length, 0),
     []
   );
+
+  const recent = Object.entries(progress).flatMap(([section, entries]) =>
+    Object.entries(entries).map(([id, entry]) => ({ section, id, ...entry }))
+  ).filter(entry => entry.status === 'in_progress' && getProblemById(entry.id)?.section === entry.section)
+    .sort((a, b) => (b.lastAttempt ?? '').localeCompare(a.lastAttempt ?? ''))[0];
 
   return (
     <div className="max-w-[1200px] mx-auto">
@@ -40,6 +47,12 @@ export default function HomePage() {
           diffusion models. Write real Python with instant feedback, directly in your browser.
         </p>
 
+        <div className="flex flex-wrap justify-center gap-3 mb-5">
+          <Link to={problemHref('numpy-array-sum')} className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl">Solve your first problem →</Link>
+          <Link to="/challenge" className="px-6 py-3 rounded-xl border border-gray-300 dark:border-dark-500 text-gray-800 dark:text-dark-100">Try the seven-day challenge</Link>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-dark-200 mb-8">Start with array sum · About 5 minutes · Basic Python · No signup</p>
+        {recent && <Link className="block mb-8 text-primary-500" to={problemHref(recent.id)}>Continue: {getProblemById(recent.id)!.title} →</Link>}
         <div className="flex justify-center gap-12 animate-fade-up [animation-delay:0.3s]">
           <div className="text-center">
             <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-100">{totalProblems}+</div>
@@ -59,6 +72,14 @@ export default function HomePage() {
       {/* Dashboard — only renders when user has progress */}
       <Dashboard />
 
+      <section className="mb-12" aria-labelledby="paths-heading">
+        <h2 id="paths-heading" className="text-2xl font-display mb-5 text-gray-900 dark:text-dark-100">Choose your learning path</h2>
+        <div className="grid md:grid-cols-3 gap-4">{learningPaths.map(path => <Link key={path.id} to={`/learn/${path.id}`} className="p-5 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-500 hover:border-primary-400">
+          <h3 className="font-semibold text-gray-900 dark:text-dark-100">{path.title} →</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-dark-200">{path.description}</p>
+          <p className="mt-3 text-xs text-primary-500">{path.minutes} min · {path.prerequisites}</p>
+        </Link>)}</div>
+      </section>
       {/* Curriculum Label */}
       <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 mb-6 font-mono">
         Curriculum

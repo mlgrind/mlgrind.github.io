@@ -15,7 +15,7 @@ vi.mock('firebase/firestore', () => ({
 import { gtagEvent, gtagSetUserId } from '../lib/firebase';
 
 describe('gtagEvent', () => {
-  let mockGtag: ReturnType<typeof vi.fn>;
+  let mockGtag: ReturnType<typeof vi.fn<(...args: unknown[]) => void>>;
 
   beforeEach(() => {
     mockGtag = vi.fn();
@@ -43,7 +43,7 @@ describe('gtagEvent', () => {
 });
 
 describe('gtagSetUserId', () => {
-  let mockGtag: ReturnType<typeof vi.fn>;
+  let mockGtag: ReturnType<typeof vi.fn<(...args: unknown[]) => void>>;
 
   beforeEach(() => {
     mockGtag = vi.fn();

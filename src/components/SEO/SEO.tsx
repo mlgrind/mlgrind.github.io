@@ -1,4 +1,5 @@
-import { Helmet } from 'react-helmet-async';
+import * as helmetAsync from 'react-helmet-async';
+const { Helmet } = (Reflect.get(helmetAsync, 'default') ?? helmetAsync) as typeof helmetAsync;
 
 interface SEOProps {
   title?: string;
@@ -6,6 +7,7 @@ interface SEOProps {
   keywords?: string;
   canonical?: string;
   type?: 'website' | 'article';
+  noindex?: boolean;
 }
 
 const BASE_URL = 'https://mlgrind.github.io';
@@ -19,12 +21,14 @@ export default function SEO({
   keywords = DEFAULT_KEYWORDS,
   canonical,
   type = 'website',
+  noindex = false,
 }: SEOProps) {
   const fullTitle = title ? `${title} | ML Grind` : DEFAULT_TITLE;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
 
   return (
     <Helmet>
+      <meta name="robots" content={noindex ? "noindex, follow" : "index, follow"} />
       {/* Primary Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="title" content={fullTitle} />

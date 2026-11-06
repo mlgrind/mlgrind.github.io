@@ -42,6 +42,13 @@ The platform covers 16 learning sections with 110 problems:
 - **15 Reinforcement Learning** (`/section/reinforcement-learning`) — Master RL fundamentals from Q-learning to policy gradients. _(15 problems)_
 - **16 End-to-End Implementations** (`/section/e2e-implementations`) — Build complete ML models from scratch. _(6 problems)_
 
+## Learning Paths
+
+- [NumPy foundations](https://mlgrind.github.io/learn/numpy-foundations): Get comfortable with arrays, shapes, broadcasting, and matrix operations. Prerequisites: Basic Python.
+- [ML interview prep](https://mlgrind.github.io/learn/ml-interview-prep): Practice core building blocks and explain how they work. Prerequisites: Python and basic linear algebra.
+- [Build a transformer](https://mlgrind.github.io/learn/build-a-transformer): Work through attention and the components behind modern language models. Prerequisites: NumPy, matrix multiplication, and neural networks.
+- [Seven days of ML coding](https://mlgrind.github.io/challenge): One focused exercise per day. Start any time, follow at your own pace, and build a habit. Prerequisites: Basic Python; NumPy helps.
+
 ## Key URLs
 
 - Home: https://mlgrind.github.io/

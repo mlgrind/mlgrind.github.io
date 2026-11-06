@@ -26,7 +26,7 @@
     <meta property="og:url" content="https://mlgrind.github.io/" />
     <meta property="og:title" content="ML Grind - Learn Machine Learning by Building" />
     <meta property="og:description" content="Practice hands-on machine learning coding problems. Implement NumPy, neural networks, CNNs, transformers, and more. Run Python in your browser." />
-    <meta property="og:image" content="https://mlgrind.github.io/og-image.svg" />
+    <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
     <meta property="og:site_name" content="ML Grind" />
 
     <!-- Twitter -->
@@ -34,7 +34,7 @@
     <meta property="twitter:url" content="https://mlgrind.github.io/" />
     <meta property="twitter:title" content="ML Grind - Learn Machine Learning by Building" />
     <meta property="twitter:description" content="Practice hands-on machine learning coding problems. Implement NumPy, neural networks, CNNs, transformers, and more. Run Python in your browser." />
-    <meta property="twitter:image" content="https://mlgrind.github.io/og-image.svg" />
+    <meta property="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 
     <!-- Structured Data - Course/Learning Platform -->
     <script type="application/ld+json">
@@ -96,12 +96,28 @@
     </script>
 
     <!-- Google Analytics (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-08K80C8WQX');
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
     </script>
 
     <!-- Single Page Apps for GitHub Pages -->
@@ -123,7 +139,8 @@
     <script>
       // Apply theme before React loads to prevent flash
       (function() {
-        var saved = localStorage.getItem('ml-lab-dark-mode');
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
         if (saved === 'false') {
           document.documentElement.classList.remove('dark');
         }

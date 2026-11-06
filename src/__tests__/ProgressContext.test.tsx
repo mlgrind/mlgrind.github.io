@@ -113,3 +113,28 @@ describe('ProgressContext', () => {
     expect(result.current.progress).toEqual({});
   });
 });
+
+describe('stored progress recovery', () => {
+  beforeEach(() => { localStorageMock.clear(); vi.clearAllMocks(); });
+  it('recovers from malformed JSON without crashing', () => {
+    localStorageMock.setItem('ml-interview-progress', '{broken');
+    const { result } = renderHook(() => useProgress(), { wrapper });
+    expect(result.current.progress).toEqual({});
+  });
+  it('preserves empty code while rejecting malformed entries', () => {
+    localStorageMock.setItem('ml-interview-progress', JSON.stringify({ section: { valid: { status: 'in_progress', code: '' }, broken: { status: 'unknown' } }, invalid: null }));
+    const { result } = renderHook(() => useProgress(), { wrapper });
+    expect(result.current.getProblemProgress('section', 'valid').code).toBe('');
+    expect(result.current.progress.section.broken).toBeUndefined();
+  });
+  it('persists resetting code and an intentionally empty editor', () => {
+    const { result, unmount } = renderHook(() => useProgress(), { wrapper });
+    act(() => result.current.saveProblemCode('python-basics', 'numpy-array-sum', 'old solution'));
+    act(() => result.current.saveProblemCode('python-basics', 'numpy-array-sum', 'starter code'));
+    unmount();
+    const next = renderHook(() => useProgress(), { wrapper });
+    expect(next.result.current.getProblemProgress('python-basics', 'numpy-array-sum').code).toBe('starter code');
+    act(() => next.result.current.saveProblemCode('python-basics', 'numpy-array-sum', ''));
+    expect(next.result.current.getProblemProgress('python-basics', 'numpy-array-sum').code).toBe('');
+  });
+});

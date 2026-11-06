@@ -5,6 +5,7 @@ import { usePyodide } from '../hooks/usePyodide';
 import { useDarkMode } from '../hooks/useDarkMode';
 import CodeEditor from '../components/CodeEditor/CodeEditor';
 import Console from '../components/Console/Console';
+import { readStorage, writeStorage } from '../lib/storage';
 import SEO from '../components/SEO/SEO';
 
 const STORAGE_KEY = 'ml-interview-scratchpad';
@@ -21,38 +22,30 @@ print(f"Mean: {np.mean(arr)}")
 `;
 
 export default function ScratchpadPage() {
-  const { isLoading, isReady, output, runCode, clearOutput } = usePyodide();
+  const { isLoading, isReady, output, runCode, clearOutput, stop, error, retry } = usePyodide();
   const { isDark } = useDarkMode();
   const [code, setCode] = useState('');
   const [isRunning, setIsRunning] = useState(false);
 
   // Load saved code or default
   useEffect(() => {
-    const savedCode = localStorage.getItem(STORAGE_KEY);
-    setCode(savedCode || DEFAULT_CODE);
+    const savedCode = readStorage(STORAGE_KEY);
+    setCode(savedCode ?? DEFAULT_CODE);
   }, []);
-
-  // Auto-save code
-  useEffect(() => {
-    if (code) {
-      const timer = setTimeout(() => {
-        localStorage.setItem(STORAGE_KEY, code);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [code]);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
+    writeStorage(STORAGE_KEY, newCode);
   }, []);
 
   const handleReset = useCallback(() => {
     setCode(DEFAULT_CODE);
+    writeStorage(STORAGE_KEY, DEFAULT_CODE);
     clearOutput();
   }, [clearOutput]);
 
   const handleRunCode = useCallback(async () => {
-    if (!isReady) return;
+    if (!isReady || isRunning) return;
 
     setIsRunning(true);
     clearOutput();
@@ -62,7 +55,7 @@ export default function ScratchpadPage() {
     } finally {
       setIsRunning(false);
     }
-  }, [isReady, code, runCode, clearOutput]);
+  }, [isReady, code, runCode, clearOutput, isRunning]);
 
   return (
     <div className="h-full min-h-0 flex flex-col -m-6">
@@ -72,6 +65,8 @@ export default function ScratchpadPage() {
         canonical="/scratchpad"
         keywords="Python playground, online Python, NumPy, code sandbox, ML practice, browser Python"
       />
+      {error && <div role="alert" className="p-3 text-red-600">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
+      {isRunning && <button onClick={() => stop()} className="p-3 bg-red-600 text-white">Stop execution (30-second limit)</button>}
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
         <div className="flex items-center gap-3">
@@ -89,7 +84,7 @@ export default function ScratchpadPage() {
           {!isReady && (
             <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              {isLoading ? 'Loading Python...' : 'Python ready'}
+              {isLoading ? 'Loading Python...' : 'Python unavailable'}
             </span>
           )}
           {isReady && (
