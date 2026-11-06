@@ -229,6 +229,7 @@ export function StaticContent({ path }: { path: string }) {
         </noscript>
       </main>
       <footer className="p-6 text-sm">
+        <a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> ·{" "}
         <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> ·{" "}
         <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a>
       </footer>
