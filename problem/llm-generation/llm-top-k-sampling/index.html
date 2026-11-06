@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Top-k Sampling - LLM Generation &amp; Decoding | ML Grind</title>
+<meta name="description" content="Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling" data-rh="true" />
+<meta property="og:title" content="Top-k Sampling - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Top-k Sampling - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Top-k Sampling - LLM Generation & Decoding","description":"Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Top-k Sampling - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Top-k Sampling</h2>
+<p>Implement top-k sampling, which restricts token selection to the k most likely tokens.</p>
+<h3>Algorithm</h3>
+<ol>
+<li>Compute probabilities from logits (via softmax)</li>
+<li>Find the top-k tokens by probability</li>
+<li>Zero out all other tokens</li>
+<li>Re-normalize the remaining probabilities</li>
+<li>Sample from the filtered distribution</li>
+</ol>
+<h3>Why Top-k?</h3>
+<ul>
+<li>Prevents sampling extremely unlikely tokens</li>
+<li>Reduces incoherent or nonsensical outputs</li>
+<li>Simple to implement and widely used (GPT-2 used k=40)</li>
+</ul>
+<h3>Limitation</h3>
+<p>Fixed k doesn&#x27;t adapt to the shape of the distribution:</p>
+<ul>
+<li>For a confident prediction (one token has 90% probability), k=50 still allows 49 unlikely tokens</li>
+<li>For a flat distribution, k=50 might cut off reasonable options</li>
+</ul>
+<p>This motivates <strong>nucleus (top-p) sampling</strong>.</p>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def top_k_sampling(logits, k, temperature=1.0):
+    # Returns: sampled_token_index, filtered_probs
+</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits = [5.0, 3.0, 2.0, 1.0, 0.1], k = 3
+Output: Only top 3 tokens have non-zero probability</pre><p>Tokens at indices 0, 1, 2 are kept; indices 3, 4 are zeroed</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def top_k_sampling(logits, k, temperature=1.0):
+    &quot;&quot;&quot;
+    Sample from the top-k most likely tokens.
+
+    Args:
+        logits: Raw logits (vocab_size,)
+        k: Number of top tokens to keep
+        temperature: Temperature for scaling (applied before filtering)
+
+    Returns:
+        token: Sampled token index (int)
+        filtered_probs: Probability distribution after filtering (vocab_size,)
+    &quot;&quot;&quot;
+    np.random.seed(42)
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

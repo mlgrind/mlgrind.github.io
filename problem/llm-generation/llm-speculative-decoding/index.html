@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Speculative Decoding - LLM Generation &amp; Decoding | ML Grind</title>
+<meta name="description" content="Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding" data-rh="true" />
+<meta property="og:title" content="Speculative Decoding - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Speculative Decoding - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Speculative Decoding - LLM Generation & Decoding","description":"Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Speculative Decoding - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Speculative Decoding</h2>
+<p>Implement the core verification step of speculative decoding, a technique that speeds up LLM inference by using a small &quot;draft&quot; model to propose tokens and a large &quot;target&quot; model to verify them.</p>
+<h3>Overview</h3>
+<ol>
+<li><strong>Draft model</strong> (small, fast): Generates K candidate tokens quickly</li>
+<li><strong>Target model</strong> (large, slow): Verifies all K tokens in <strong>one forward pass</strong></li>
+<li><strong>Accept/Reject</strong>: Each draft token is accepted with probability min(1, p_target/p_draft)</li>
+</ol>
+<h3>Verification Algorithm</h3>
+<p>For each draft token i = 0, 1, ..., K-1:</p>
+<pre><code>r = uniform(0, 1)
+if r &lt; min(1, p_target[i] / p_draft[i]):
+    accept token i
+else:
+    reject token i and all subsequent tokens
+    resample from adjusted distribution: max(0, p_target - p_draft)
+    break
+</code></pre>
+<p>If all K tokens accepted, sample one more token from the target model&#x27;s distribution for position K.</p>
+<h3>Why It Works</h3>
+<ul>
+<li>Draft model generates tokens cheaply (e.g., 10x faster)</li>
+<li>Target model verifies K tokens at once (parallel, not sequential)</li>
+<li>Accepted tokens are <strong>exactly</strong> distributed as if sampled from the target model</li>
+<li>Expected speedup: ~2-3x for well-matched draft/target pairs</li>
+</ul>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def speculative_decode(draft_probs, target_probs, draft_tokens):
+    # Returns: accepted_tokens, num_accepted
+</code></pre>
+<h3>Important</h3>
+<p>The output distribution is mathematically guaranteed to match the target model exactly. This is not an approximation.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: draft_probs=[0.8, 0.7], target_probs=[0.9, 0.3], draft_tokens=[5, 12]
+Output: Token 5 likely accepted (0.9/0.8&gt;1), Token 12 may be rejected (0.3/0.7&lt;1)</pre><p>Higher target prob → more likely to accept</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
+    &quot;&quot;&quot;
+    Verify draft tokens using speculative decoding.
+
+    Args:
+        draft_probs: Probability the draft model assigned to each drafted token.
+                     List of K floats.
+        target_probs: Probability the target model assigns to each drafted token.
+                      List of K floats.
+        draft_tokens: The K token IDs proposed by the draft model.
+                      List of K ints.
+        target_dist_next: Full target distribution for position after last draft token.
+                          Array of shape (vocab_size,) or None.
+
+    Returns:
+        accepted_tokens: List of accepted token IDs
+        num_accepted: Number of accepted tokens (0 to K)
+    &quot;&quot;&quot;
+    np.random.seed(42)
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

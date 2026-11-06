@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Beam Search Decoding - LLM Generation &amp; Decoding | ML Grind</title>
+<meta name="description" content="Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-beam-search" data-rh="true" />
+<meta property="og:title" content="Beam Search Decoding - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/llm-generation/llm-beam-search" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Beam Search Decoding - LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Beam Search Decoding - LLM Generation & Decoding","description":"Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-beam-search","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Beam Search Decoding - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Beam Search Decoding</h2>
+<p>Implement beam search, which maintains multiple candidate sequences to find higher-probability outputs.</p>
+<h3>Algorithm</h3>
+<ol>
+<li>Start with <code>beam_width</code> copies of the initial sequence</li>
+<li>At each step, for each beam:
+<ul>
+<li>Get log-probabilities for next token</li>
+<li>Consider top-k expansions</li>
+</ul>
+</li>
+<li>Keep only the <code>beam_width</code> sequences with highest total log-probability</li>
+<li>Stop when all beams have generated the EOS token or hit max length</li>
+</ol>
+<h3>Scoring</h3>
+<p>Use <strong>log probabilities</strong> (not raw probabilities) to avoid underflow:</p>
+<pre><code>score(sequence) = sum of log P(token_i | tokens_&lt;i)
+</code></pre>
+<h3>Length Normalization</h3>
+<p>Beam search favors shorter sequences. Normalize by length:</p>
+<pre><code>normalized_score = score / length^alpha
+</code></pre>
+<p>where alpha is typically 0.6-0.7.</p>
+<h3>Simplified Version</h3>
+<p>For this problem, implement a simplified beam search using a pre-computed log-probability matrix (no actual model). At each step, expand each beam with all possible next tokens, score them, and keep the top <code>beam_width</code>.</p>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def beam_search(log_probs, beam_width, max_length, eos_token=None):
+    # log_probs: (max_length, vocab_size) - pre-computed log probs per step
+    # Returns: best_sequence, best_score
+</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: log_probs (3 steps, 4 tokens), beam_width=2
+Output: best sequence of length 3 with highest total log-prob</pre><p>Explores 2 paths at each step, returns the best one</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
+    &quot;&quot;&quot;
+    Beam search decoding over pre-computed log probabilities.
+
+    Args:
+        log_probs: Log probability matrix (num_steps, vocab_size).
+                   log_probs[t] gives log probs for step t.
+        beam_width: Number of beams to maintain
+        max_length: Maximum sequence length (defaults to num_steps)
+        eos_token: End-of-sequence token ID (optional)
+
+    Returns:
+        best_sequence: List of token indices for the best beam
+        best_score: Total log-probability of the best sequence
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

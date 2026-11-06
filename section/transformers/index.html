@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Transformer Architecture | ML Grind</title>
+<meta name="description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/section/transformers" data-rh="true" />
+<meta property="og:title" content="Transformer Architecture | ML Grind" data-rh="true" />
+<meta property="og:description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/section/transformers" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Transformer Architecture | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Transformer Architecture","description":"Master attention, positional encoding, and modern LLM architecture.","url":"https://mlgrind.github.io/section/transformers","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master attention, positional encoding, and modern LLM architecture.</p><div class="prose dark:prose-invert max-w-none"><h2>Attention and Transformers</h2>
+<p>Transformers have revolutionized NLP and are now used in vision, speech, and more.</p>
+<h2>Key Concepts</h2>
+<h3>Self-Attention</h3>
+<ul>
+<li><strong>Query, Key, Value</strong>: Three projections of input</li>
+<li><strong>Attention scores</strong>: Q @ K.T / sqrt(d_k)</li>
+<li><strong>Output</strong>: Weighted sum of values</li>
+</ul>
+<h3>Scaled Dot-Product Attention</h3>
+<pre><code>Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
+</code></pre>
+<h3>Multi-Head Attention</h3>
+<ul>
+<li><strong>Multiple heads</strong>: Parallel attention with different projections</li>
+<li><strong>Concatenate</strong>: Combine all head outputs</li>
+<li><strong>Project</strong>: Linear transformation back to model dimension</li>
+</ul>
+<h3>Transformer Components</h3>
+<ul>
+<li><strong>Positional Encoding</strong>: Inject position information</li>
+<li><strong>Layer Normalization</strong>: Normalize across features</li>
+<li><strong>Feed-Forward Network</strong>: MLP after attention</li>
+<li><strong>Residual Connections</strong>: Add input to output</li>
+</ul>
+<h3>Causal Masking</h3>
+<ul>
+<li><strong>Purpose</strong>: Prevent attending to future tokens</li>
+<li><strong>Implementation</strong>: Add -inf to upper triangle before softmax</li>
+</ul>
+<h3>Modern LLM Architecture</h3>
+<ul>
+<li><strong>BPE Tokenization</strong>: Subword tokenization used by GPT, LLaMA, and most LLMs</li>
+<li><strong>Rotary Positional Embeddings (RoPE)</strong>: Encodes relative positions via rotation, replacing sinusoidal</li>
+<li><strong>Grouped Query Attention (GQA)</strong>: Shares KV heads across query head groups for efficient inference</li>
+<li><strong>Sliding Window Attention</strong>: Local attention pattern for efficient long-context processing</li>
+</ul>
+<h3>Interview Essentials</h3>
+<ul>
+<li>Implement scaled dot-product attention</li>
+<li>Explain why we scale by sqrt(d_k)</li>
+<li>Multi-head attention benefits</li>
+<li>Positional encoding purpose</li>
+<li>BPE tokenization algorithm</li>
+<li>RoPE vs sinusoidal positional encoding</li>
+<li>GQA/MQA for efficient inference</li>
+</ul>
+<p>Let&#x27;s build transformers from scratch!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/transformers/scaled-dot-product-attention">Scaled Dot-Product Attention →</a></li><li><a href="/problem/transformers/multi-head-attention">Multi-Head Attention →</a></li><li><a href="/problem/transformers/positional-encoding">Sinusoidal Positional Encoding →</a></li><li><a href="/problem/transformers/layer-norm">Layer Normalization →</a></li><li><a href="/problem/transformers/causal-mask">Causal Attention Mask →</a></li><li><a href="/problem/transformers/bpe-tokenization">BPE Tokenization →</a></li><li><a href="/problem/transformers/rope-embeddings">Rotary Positional Embeddings (RoPE) →</a></li><li><a href="/problem/transformers/grouped-query-attention">Grouped Query Attention (GQA) →</a></li><li><a href="/problem/transformers/sliding-window-attention">Sliding Window Attention →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

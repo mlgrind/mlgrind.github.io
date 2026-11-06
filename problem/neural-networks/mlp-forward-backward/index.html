@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>MLP Forward &amp; Backward Pass - Neural Networks | ML Grind</title>
+<meta name="description" content="Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward" data-rh="true" />
+<meta property="og:title" content="MLP Forward &amp; Backward Pass - Neural Networks | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="MLP Forward &amp; Backward Pass - Neural Networks | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"MLP Forward & Backward Pass - Neural Networks","description":"Implement MLP Forward & Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">MLP Forward &amp; Backward Pass - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>MLP Forward &amp; Backward Pass</h2>
+<p>Implement both forward and backward passes for a 2-layer MLP (Multi-Layer Perceptron).</p>
+<h3>Architecture</h3>
+<pre><code>Input (n_features) → Hidden (n_hidden) → Output (n_classes)
+</code></pre>
+<h3>Forward Pass</h3>
+<pre><code>Z1 = X @ W1 + b1
+A1 = ReLU(Z1)
+Z2 = A1 @ W2 + b2
+output = softmax(Z2)
+</code></pre>
+<p>Return: <code>(output, cache)</code> where cache = <code>(X, Z1, A1, Z2, W1, W2)</code></p>
+<h3>Backward Pass (Backpropagation)</h3>
+<p>Using the chain rule, gradients flow backwards:</p>
+<pre><code>Loss → dZ2 → dW2, db2 → dA1 → dZ1 (ReLU) → dW1, db1
+</code></pre>
+<p><strong>Key Formulas:</strong></p>
+<ul>
+<li><code>dZ2 = output - Y_onehot</code> (softmax + cross-entropy derivative)</li>
+<li><code>dW2 = (1/m) * A1.T @ dZ2</code></li>
+<li><code>db2 = (1/m) * sum(dZ2, axis=0)</code></li>
+<li><code>dZ1 = (dZ2 @ W2.T) * (Z1 &gt; 0)</code> (ReLU derivative)</li>
+<li><code>dW1 = (1/m) * X.T @ dZ1</code></li>
+<li><code>db1 = (1/m) * sum(dZ1, axis=0)</code></li>
+</ul>
+<p>Return: <code>{&#x27;dW1&#x27;: ..., &#x27;db1&#x27;: ..., &#x27;dW2&#x27;: ..., &#x27;db2&#x27;: ...}</code></p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X shape (2, 3), hidden_size=4, output_size=2
+Output: Forward: probabilities (2, 2), rows sum to 1. Backward: gradients for all weights/biases</pre><p>Forward computes predictions; backward computes gradients for training</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def relu(x):
+    return np.maximum(0, x)
+
+def softmax(x):
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+def mlp_forward(X, W1, b1, W2, b2):
+    &quot;&quot;&quot;
+    Forward pass for a 2-layer MLP.
+
+    Args:
+        X: Input data (batch_size, n_features)
+        W1: First layer weights (n_features, n_hidden)
+        b1: First layer bias (n_hidden,)
+        W2: Second layer weights (n_hidden, n_classes)
+        b2: Second layer bias (n_classes,)
+
+    Returns:
+        output: Class probabilities (batch_size, n_classes)
+        cache: Tuple (X, Z1, A1, Z2, W1, W2) for backprop
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+def mlp_backward(Y, output, cache):
+    &quot;&quot;&quot;
+    Backward pass (backpropagation) for 2-layer MLP.
+
+    Args:
+        Y: One-hot encoded labels (batch_size, n_classes)
+        output: Predicted probabilities from forward pass
+        cache: Cached values from forward pass (X, Z1, A1, Z2, W1, W2)
+
+    Returns:
+        grads: Dictionary with dW1, db1, dW2, db2
+    &quot;&quot;&quot;
+    X, Z1, A1, Z2, W1, W2 = cache
+    m = X.shape[0]  # batch size
+
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

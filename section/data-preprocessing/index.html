@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Data Preprocessing | ML Grind</title>
+<meta name="description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/section/data-preprocessing" data-rh="true" />
+<meta property="og:title" content="Data Preprocessing | ML Grind" data-rh="true" />
+<meta property="og:description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/section/data-preprocessing" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Data Preprocessing | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Data Preprocessing","description":"Learn essential data cleaning and transformation techniques.","url":"https://mlgrind.github.io/section/data-preprocessing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Learn essential data cleaning and transformation techniques.</p><div class="prose dark:prose-invert max-w-none"><h2>Data Preprocessing</h2>
+<p>Real-world data is messy. Before training any model, you need to clean and transform your data.</p>
+<h2>Key Concepts</h2>
+<h3>Handling Missing Data</h3>
+<ul>
+<li><strong>Detection</strong>: <code>np.isnan()</code>, <code>pd.isnull()</code></li>
+<li><strong>Strategies</strong>: Remove, fill with mean/median/mode, interpolate</li>
+</ul>
+<h3>Feature Scaling</h3>
+<ul>
+<li><strong>Normalization</strong>: Scale to [0, 1] range using min-max scaling</li>
+<li><strong>Standardization</strong>: Transform to zero mean, unit variance (z-score)</li>
+<li><strong>When to use</strong>: Most algorithms need scaled features</li>
+</ul>
+<h3>Encoding Categorical Data</h3>
+<ul>
+<li><strong>One-Hot Encoding</strong>: Convert categories to binary vectors</li>
+<li><strong>Label Encoding</strong>: Map categories to integers</li>
+<li><strong>When to use</strong>: Tree-based models handle label encoding; others need one-hot</li>
+</ul>
+<h3>Why It Matters</h3>
+<p>Garbage in, garbage out. Proper preprocessing can:</p>
+<ul>
+<li>Improve model accuracy by 10-30%</li>
+<li>Prevent training failures</li>
+<li>Reduce overfitting</li>
+</ul>
+<p>Let&#x27;s practice these essential skills!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/data-preprocessing/normalize-features">Normalize Features →</a></li><li><a href="/problem/data-preprocessing/handle-missing-data">Handle Missing Data →</a></li><li><a href="/problem/data-preprocessing/one-hot-encode">One-Hot Encoding →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

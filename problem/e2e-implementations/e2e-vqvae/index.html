@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>E2E: Vector Quantized VAE - End-to-End Implementations | ML Grind</title>
+<meta name="description" content="Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae" data-rh="true" />
+<meta property="og:title" content="E2E: Vector Quantized VAE - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="E2E: Vector Quantized VAE - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Vector Quantized VAE - End-to-End Implementations","description":"Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Vector Quantized VAE - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End VQ-VAE</h2>
+<p>Implement a complete VQ-VAE (Vector Quantized Variational Autoencoder) with encoder, vector quantization, and decoder.</p>
+<h3>Architecture</h3>
+<pre><code>Encoder: x → z_e (continuous latents)
+           ↓
+Vector Quantization: z_e → z_q (discrete latents from codebook)
+           ↓
+Decoder: z_q → x_reconstructed
+</code></pre>
+<h3>Key Difference from VAE</h3>
+<ul>
+<li>VAE: Continuous latent space with KL regularization</li>
+<li>VQ-VAE: Discrete latent space using learned codebook</li>
+</ul>
+<h3>Vector Quantization</h3>
+<ol>
+<li>Encoder outputs continuous vectors z_e</li>
+<li>Find nearest codebook entry for each spatial position</li>
+<li>Replace z_e with quantized z_q from codebook</li>
+<li>Use straight-through estimator for gradients</li>
+</ol>
+<h3>Loss Function</h3>
+<pre><code>L = L_reconstruction + L_codebook + β * L_commitment
+
+L_reconstruction = ||x - x_hat||²
+L_codebook = ||sg[z_e] - e||²  (moves codebook toward encoder output)
+L_commitment = ||z_e - sg[e]||²  (commits encoder to codebook)
+</code></pre>
+<p>Where sg[] is stop-gradient.</p>
+<h3>Codebook EMA Update (Alternative)</h3>
+<p>Instead of gradient updates, codebook can be updated with exponential moving average:</p>
+<pre><code>N_i = γ * N_i + (1 - γ) * n_i     (count of assignments)
+m_i = γ * m_i + (1 - γ) * sum(z_e assigned to i)
+e_i = m_i / N_i
+</code></pre>
+<h3>Task</h3>
+<p>Implement encoder, vector quantization layer, decoder, and all loss components.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: VQVAE(input_dim=784, num_embeddings=512, embedding_dim=64)
+Output: Reconstructed images + discrete codes</pre><p>Full VQ-VAE forward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+class VectorQuantizer:
+    def __init__(self, num_embeddings: int, embedding_dim: int):
+        &quot;&quot;&quot;
+        Vector Quantization layer.
+
+        Args:
+            num_embeddings: Size of codebook (K)
+            embedding_dim: Dimension of each embedding
+        &quot;&quot;&quot;
+        np.random.seed(42)
+        # Initialize codebook with small random values
+        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
+        self.num_embeddings = num_embeddings
+        self.embedding_dim = embedding_dim
+
+    def quantize(self, z_e: np.ndarray) -&gt; tuple:
+        &quot;&quot;&quot;
+        Quantize encoder output to nearest codebook entries.
+
+        Args:
+            z_e: Encoder output (batch, height, width, embedding_dim)
+
+        Returns:
+            z_q: Quantized vectors (same shape as z_e)
+            indices: Codebook indices (batch, height, width)
+            distances: Distances to nearest embeddings
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -&gt; dict:
+        &quot;&quot;&quot;
+        Compute VQ losses.
+
+        Args:
+            z_e: Encoder output
+            z_q: Quantized vectors
+            beta: Commitment loss weight
+
+        Returns:
+            Dictionary with codebook_loss and commitment_loss
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+
+
+class VQVAE:
+    def __init__(self, input_channels: int, hidden_dim: int,
+                 num_embeddings: int, embedding_dim: int):
+        &quot;&quot;&quot;
+        Initialize VQ-VAE.
+
+        Args:
+            input_channels: Number of input channels
+            hidden_dim: Hidden layer dimension
+            num_embeddings: Codebook size
+            embedding_dim: Embedding dimension
+        &quot;&quot;&quot;
+        np.random.seed(42)
+
+        # Encoder: conv layers to get spatial feature maps
+        self.enc_conv1_w = np.random.randn(hidden_dim, input_channels, 4, 4) * 0.1
+        self.enc_conv1_b = np.zeros(hidden_dim)
+        self.enc_conv2_w = np.random.randn(embedding_dim, hidden_dim, 4, 4) * 0.1
+        self.enc_conv2_b = np.zeros(embedding_dim)
+
+        # Vector Quantizer
+        self.vq = VectorQuantizer(num_embeddings, embedding_dim)
+
+        # Decoder: transposed conv to reconstruct
+        self.dec_conv1_w = np.random.randn(hidden_dim, embedding_dim, 4, 4) * 0.1
+        self.dec_conv1_b = np.zeros(hidden_dim)
+        self.dec_conv2_w = np.random.randn(input_channels, hidden_dim, 4, 4) * 0.1
+        self.dec_conv2_b = np.zeros(input_channels)
+
+        self.embedding_dim = embedding_dim
+
+    def encode(self, x: np.ndarray) -&gt; np.ndarray:
+        &quot;&quot;&quot;
+        Encode input to continuous latent representation.
+
+        Args:
+            x: Input (batch, channels, height, width)
+
+        Returns:
+            z_e: Encoder output (batch, height&#x27;, width&#x27;, embedding_dim)
+        &quot;&quot;&quot;
+        # Your code here (simplified: use strided conv or just reshape for demo)
+        pass
+
+    def decode(self, z_q: np.ndarray) -&gt; np.ndarray:
+        &quot;&quot;&quot;
+        Decode quantized latents to reconstruction.
+
+        Args:
+            z_q: Quantized vectors (batch, height, width, embedding_dim)
+
+        Returns:
+            x_recon: Reconstructed input
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def forward(self, x: np.ndarray) -&gt; dict:
+        &quot;&quot;&quot;
+        Full forward pass.
+
+        Returns:
+            Dictionary with z_e, z_q, indices, x_recon
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
+                     z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -&gt; dict:
+        &quot;&quot;&quot;
+        Compute total VQ-VAE loss.
+
+        Returns:
+            Dictionary with total_loss, recon_loss, vq_loss, commitment_loss
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def get_codebook_usage(self, indices: np.ndarray) -&gt; np.ndarray:
+        &quot;&quot;&quot;
+        Compute codebook usage statistics.
+
+        Returns:
+            usage: Count of each codebook entry used
+        &quot;&quot;&quot;
+        # Your code here
+        pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Direct Preference Optimization (DPO) - Reinforcement Learning | ML Grind</title>
+<meta name="description" content="Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss" data-rh="true" />
+<meta property="og:title" content="Direct Preference Optimization (DPO) - Reinforcement Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Direct Preference Optimization (DPO) - Reinforcement Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Direct Preference Optimization (DPO) - Reinforcement Learning","description":"Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Direct Preference Optimization (DPO) - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Direct Preference Optimization (DPO) Loss</h2>
+<p>Implement the DPO loss function, a simpler alternative to RLHF that doesn&#x27;t require a separate reward model.</p>
+<h3>Background</h3>
+<p>DPO directly optimizes the LLM policy using preference data, bypassing the reward modeling step.</p>
+<h3>DPO Loss</h3>
+<pre><code>L_DPO = -E[log σ(β * (log π_θ(y_w|x) - log π_ref(y_w|x)
+                    - log π_θ(y_l|x) + log π_ref(y_l|x)))]
+</code></pre>
+<p>Simplified:</p>
+<pre><code>L_DPO = -E[log σ(β * (Δ_w - Δ_l))]
+</code></pre>
+<p>Where Δ = log π_θ(y|x) - log π_ref(y|x) (log-ratio of policy to reference)</p>
+<h3>Parameters</h3>
+<ul>
+<li>β: Temperature parameter (typically 0.1 to 0.5)</li>
+<li>π_θ: Policy being trained</li>
+<li>π_ref: Reference policy (frozen)</li>
+<li>y_w: Preferred (winner) response</li>
+<li>y_l: Rejected (loser) response</li>
+</ul>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
+             ref_logp_chosen: np.ndarray, ref_logp_rejected: np.ndarray,
+             beta: float) -&gt; float:
+</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logp_chosen=[-1], logp_rejected=[-2], ref_logp_chosen=[-1.5], ref_logp_rejected=[-1.5], beta=0.1
+Output: 0.643</pre><p>Policy prefers chosen over reference</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
+             ref_logp_chosen: np.ndarray, ref_logp_rejected: np.ndarray,
+             beta: float) -&gt; float:
+    &quot;&quot;&quot;
+    Compute Direct Preference Optimization (DPO) loss.
+
+    Args:
+        logp_chosen: Log prob of chosen response under policy π_θ
+        logp_rejected: Log prob of rejected response under policy π_θ
+        ref_logp_chosen: Log prob of chosen under reference π_ref
+        ref_logp_rejected: Log prob of rejected under reference π_ref
+        beta: Temperature parameter
+
+    Returns:
+        DPO loss
+    &quot;&quot;&quot;
+    logp_chosen = np.array(logp_chosen, dtype=float)
+    logp_rejected = np.array(logp_rejected, dtype=float)
+    ref_logp_chosen = np.array(ref_logp_chosen, dtype=float)
+    ref_logp_rejected = np.array(ref_logp_rejected, dtype=float)
+
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

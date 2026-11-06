@@ -1,663 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://mlgrind.github.io/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/scratchpad</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/flashcards</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/ml-cheatsheet.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/terms</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/privacy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/numpy-fundamentals</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/python-basics</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/einsum</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/pytorch-basics</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/data-preprocessing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/supervised-learning</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/unsupervised-learning</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/model-evaluation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/deep-learning</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/neural-networks</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/cnn</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/transformers</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/llm-generation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/generative-models</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/reinforcement-learning</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/section/e2e-implementations</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-array-creation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-broadcasting</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-aggregations</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-reshape-transpose</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/python-basics/numpy-array-sum</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/python-basics/numpy-matrix-multiply</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/python-basics/numpy-broadcast-add</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/einsum/einsum-basics</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/einsum/einsum-matrix-ops</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/einsum/einsum-batch-ops</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/einsum/einsum-advanced</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/einsum/einsum-vs-matmul</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/tensor-creation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/tensor-operations</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/nn-modules</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/loss-functions</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/gelu-activation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/leaky-relu-swish</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/softmax-temperature</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/rmsnorm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/group-norm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/adam-optimizer</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/sgd-momentum</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/lr-scheduling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/gradient-accumulation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/instance-norm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/vit-patch-embeddings</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/cross-attention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/depthwise-separable-conv</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/label-smoothing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/lora-adapter</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/pytorch-basics/gradient-checkpointing</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/data-preprocessing/normalize-features</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/data-preprocessing/one-hot-encode</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/logistic-regression</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/binary-cross-entropy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/hinge-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/decision-tree-split</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/linear-regression-gd</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/logistic-regression-full</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/supervised-learning/linear-svm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/unsupervised-learning/kmeans-clustering</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/model-evaluation/precision-recall-f1</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/model-evaluation/cross-validation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/model-evaluation/confusion-matrix</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/deep-learning/perceptron</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/deep-learning/neural-network-forward</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/deep-learning/backpropagation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/neural-networks/cross-entropy-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/neural-networks/weight-init</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/neural-networks/batch-norm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/neural-networks/dropout</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/conv-output-size</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/conv2d-forward</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/max-pool</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/flatten-layer</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/conv2d-advanced</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/iou-bounding-box</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/nms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/focal-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/smooth-l1-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/cnn/seg-metrics</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/scaled-dot-product-attention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/multi-head-attention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/positional-encoding</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/layer-norm</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/causal-mask</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/bpe-tokenization</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/rope-embeddings</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/grouped-query-attention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/transformers/sliding-window-attention</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-temperature-scaling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-top-p-sampling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-repetition-penalty</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-kv-cache</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-beam-search</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/kl-divergence</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/vae-reparameterization</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/vae-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/vqvae-quantization</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/diffusion-noise-schedule</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/generative-models/diffusion-forward</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-discounted-return</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-epsilon-greedy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-bellman-value</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-q-learning-update</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-sarsa-update</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-td0-prediction</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-value-iteration</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-n-step-return</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-policy-gradient</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-advantage-estimation</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-reward-modeling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-kl-penalty</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-llm-objective</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-mlp</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-transformer</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-vae</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-diffusion</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-cnn</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-</urlset>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://mlgrind.github.io/</loc></url>
+<url><loc>https://mlgrind.github.io/scratchpad</loc></url>
+<url><loc>https://mlgrind.github.io/flashcards</loc></url>
+<url><loc>https://mlgrind.github.io/terms</loc></url>
+<url><loc>https://mlgrind.github.io/privacy</loc></url>
+<url><loc>https://mlgrind.github.io/challenge</loc></url>
+<url><loc>https://mlgrind.github.io/learn/numpy-foundations</loc></url>
+<url><loc>https://mlgrind.github.io/learn/ml-interview-prep</loc></url>
+<url><loc>https://mlgrind.github.io/learn/build-a-transformer</loc></url>
+<url><loc>https://mlgrind.github.io/section/numpy-fundamentals</loc></url>
+<url><loc>https://mlgrind.github.io/section/python-basics</loc></url>
+<url><loc>https://mlgrind.github.io/section/einsum</loc></url>
+<url><loc>https://mlgrind.github.io/section/pytorch-basics</loc></url>
+<url><loc>https://mlgrind.github.io/section/data-preprocessing</loc></url>
+<url><loc>https://mlgrind.github.io/section/supervised-learning</loc></url>
+<url><loc>https://mlgrind.github.io/section/unsupervised-learning</loc></url>
+<url><loc>https://mlgrind.github.io/section/model-evaluation</loc></url>
+<url><loc>https://mlgrind.github.io/section/deep-learning</loc></url>
+<url><loc>https://mlgrind.github.io/section/neural-networks</loc></url>
+<url><loc>https://mlgrind.github.io/section/cnn</loc></url>
+<url><loc>https://mlgrind.github.io/section/transformers</loc></url>
+<url><loc>https://mlgrind.github.io/section/llm-generation</loc></url>
+<url><loc>https://mlgrind.github.io/section/generative-models</loc></url>
+<url><loc>https://mlgrind.github.io/section/reinforcement-learning</loc></url>
+<url><loc>https://mlgrind.github.io/section/e2e-implementations</loc></url>
+<url><loc>https://mlgrind.github.io/problem/python-basics/numpy-array-sum</loc></url>
+<url><loc>https://mlgrind.github.io/problem/python-basics/numpy-matrix-multiply</loc></url>
+<url><loc>https://mlgrind.github.io/problem/python-basics/numpy-broadcast-add</loc></url>
+<url><loc>https://mlgrind.github.io/problem/data-preprocessing/normalize-features</loc></url>
+<url><loc>https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data</loc></url>
+<url><loc>https://mlgrind.github.io/problem/data-preprocessing/one-hot-encode</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/logistic-regression</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/binary-cross-entropy</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/hinge-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/decision-tree-split</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/linear-regression-gd</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/logistic-regression-full</loc></url>
+<url><loc>https://mlgrind.github.io/problem/supervised-learning/linear-svm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/unsupervised-learning/kmeans-clustering</loc></url>
+<url><loc>https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/deep-learning/perceptron</loc></url>
+<url><loc>https://mlgrind.github.io/problem/deep-learning/neural-network-forward</loc></url>
+<url><loc>https://mlgrind.github.io/problem/deep-learning/backpropagation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/model-evaluation/precision-recall-f1</loc></url>
+<url><loc>https://mlgrind.github.io/problem/model-evaluation/cross-validation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/model-evaluation/confusion-matrix</loc></url>
+<url><loc>https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward</loc></url>
+<url><loc>https://mlgrind.github.io/problem/neural-networks/cross-entropy-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/neural-networks/weight-init</loc></url>
+<url><loc>https://mlgrind.github.io/problem/neural-networks/batch-norm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/neural-networks/dropout</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/conv2d-forward</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/max-pool</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/flatten-layer</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/conv-output-size</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/conv2d-advanced</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/iou-bounding-box</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/nms</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/focal-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/smooth-l1-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/cnn/seg-metrics</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/scaled-dot-product-attention</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/multi-head-attention</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/positional-encoding</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/layer-norm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/causal-mask</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/bpe-tokenization</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/rope-embeddings</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/grouped-query-attention</loc></url>
+<url><loc>https://mlgrind.github.io/problem/transformers/sliding-window-attention</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/vae-reparameterization</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/vae-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/diffusion-noise-schedule</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/diffusion-forward</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/vqvae-quantization</loc></url>
+<url><loc>https://mlgrind.github.io/problem/generative-models/kl-divergence</loc></url>
+<url><loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-array-creation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing</loc></url>
+<url><loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-broadcasting</loc></url>
+<url><loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-aggregations</loc></url>
+<url><loc>https://mlgrind.github.io/problem/numpy-fundamentals/numpy-reshape-transpose</loc></url>
+<url><loc>https://mlgrind.github.io/problem/einsum/einsum-basics</loc></url>
+<url><loc>https://mlgrind.github.io/problem/einsum/einsum-matrix-ops</loc></url>
+<url><loc>https://mlgrind.github.io/problem/einsum/einsum-batch-ops</loc></url>
+<url><loc>https://mlgrind.github.io/problem/einsum/einsum-advanced</loc></url>
+<url><loc>https://mlgrind.github.io/problem/einsum/einsum-vs-matmul</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/tensor-creation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/tensor-operations</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/nn-modules</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/loss-functions</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/gelu-activation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/leaky-relu-swish</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/softmax-temperature</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/rmsnorm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/group-norm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/adam-optimizer</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/sgd-momentum</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/lr-scheduling</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/gradient-accumulation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/instance-norm</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/vit-patch-embeddings</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/cross-attention</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/depthwise-separable-conv</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/label-smoothing</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/lora-adapter</loc></url>
+<url><loc>https://mlgrind.github.io/problem/pytorch-basics/gradient-checkpointing</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-mlp</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-transformer</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-vae</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-diffusion</loc></url>
+<url><loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-cnn</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-discounted-return</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-epsilon-greedy</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-bellman-value</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-q-learning-update</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-sarsa-update</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-td0-prediction</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-value-iteration</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-policy-gradient</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-advantage-estimation</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-n-step-return</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-reward-modeling</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-kl-penalty</loc></url>
+<url><loc>https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-llm-objective</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-temperature-scaling</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-top-p-sampling</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-repetition-penalty</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-kv-cache</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-beam-search</loc></url>
+<url><loc>https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding</loc></url>
+<url><loc>https://mlgrind.github.io/ml-cheatsheet.html</loc></url></urlset>

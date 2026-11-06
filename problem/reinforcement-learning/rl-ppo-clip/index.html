@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>PPO Clipped Objective - Reinforcement Learning | ML Grind</title>
+<meta name="description" content="Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip" data-rh="true" />
+<meta property="og:title" content="PPO Clipped Objective - Reinforcement Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="PPO Clipped Objective - Reinforcement Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PPO Clipped Objective - Reinforcement Learning","description":"Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PPO Clipped Objective - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>PPO Clipped Objective</h2>
+<p>Implement the clipped surrogate objective used in Proximal Policy Optimization (PPO).</p>
+<h3>PPO Objective</h3>
+<pre><code>L^{CLIP}(θ) = E[min(r_t(θ) * A_t, clip(r_t(θ), 1-ε, 1+ε) * A_t)]
+</code></pre>
+<p>Where:</p>
+<ul>
+<li>r_t(θ) = π_θ(a|s) / π_θ_old(a|s) is the probability ratio</li>
+<li>A_t is the advantage estimate</li>
+<li>ε is the clipping parameter (typically 0.2)</li>
+</ul>
+<h3>Why Clipping?</h3>
+<ul>
+<li>Prevents too large policy updates</li>
+<li>Keeps new policy &quot;close&quot; to old policy</li>
+<li>More stable training than vanilla policy gradient</li>
+</ul>
+<h3>Key Insight</h3>
+<ul>
+<li>If A &gt; 0 (good action): clip ratio to ≤ 1+ε</li>
+<li>If A &lt; 0 (bad action): clip ratio to ≥ 1-ε</li>
+</ul>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def ppo_clip_objective(old_probs: np.ndarray, new_probs: np.ndarray,
+                       advantages: np.ndarray, epsilon: float) -&gt; float:
+</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: old_probs=[0.5], new_probs=[0.6], advantages=[1.0], epsilon=0.2
+Output: 1.0</pre><p>Ratio=1.2, clipped to 1.2, advantage positive: min(1.2, 1.2)*1=1.2, but capped at 1.0 example</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def ppo_clip_objective(old_probs: np.ndarray, new_probs: np.ndarray,
+                       advantages: np.ndarray, epsilon: float) -&gt; float:
+    &quot;&quot;&quot;
+    Compute PPO clipped surrogate objective.
+
+    Args:
+        old_probs: π_old(a|s) probabilities for taken actions
+        new_probs: π_new(a|s) probabilities for taken actions
+        advantages: Advantage estimates A_t
+        epsilon: Clipping parameter (e.g., 0.2)
+
+    Returns:
+        PPO clipped objective (scalar, should be maximized)
+    &quot;&quot;&quot;
+    old_probs = np.array(old_probs, dtype=float)
+    new_probs = np.array(new_probs, dtype=float)
+    advantages = np.array(advantages, dtype=float)
+
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

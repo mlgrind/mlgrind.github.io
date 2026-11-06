@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-DLU2mVVk.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CLxr9aAx.css">
+  <title>Advanced 2D Convolution - CNNs &amp; Computer Vision | ML Grind</title>
+<meta name="description" content="Implement Advanced 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/cnn/conv2d-advanced" data-rh="true" />
+<meta property="og:title" content="Advanced 2D Convolution - CNNs &amp; Computer Vision | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Advanced 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/cnn/conv2d-advanced" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Advanced 2D Convolution - CNNs &amp; Computer Vision | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Advanced 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Advanced 2D Convolution - CNNs & Computer Vision","description":"Implement Advanced 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/conv2d-advanced","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Advanced 2D Convolution - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Advanced 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Advanced 2D Convolution</h2>
+<p>Implement a full-featured 2D convolution with <strong>padding</strong>, <strong>stride</strong>, and <strong>groups</strong> support.</p>
+<h3>Parameters</h3>
+<ul>
+<li><strong>padding</strong>: Zero-padding added to input borders</li>
+<li><strong>stride</strong>: Step size when sliding the kernel</li>
+<li><strong>groups</strong>: Split input/output channels into groups (used in depthwise separable convolutions)</li>
+</ul>
+<h3>Group Convolution</h3>
+<p>When <code>groups &gt; 1</code>:</p>
+<ul>
+<li>Input channels are split into <code>groups</code> chunks</li>
+<li>Output channels are split into <code>groups</code> chunks</li>
+<li>Each group&#x27;s input is convolved only with its corresponding kernel group</li>
+<li><code>in_channels</code> and <code>out_channels</code> must be divisible by <code>groups</code></li>
+</ul>
+<h3>Special Cases</h3>
+<ul>
+<li><code>groups=1</code>: Standard convolution</li>
+<li><code>groups=in_channels=out_channels</code>: Depthwise convolution (MobileNet)</li>
+</ul>
+<h3>Output Size Formula</h3>
+<pre><code>H_out = (H_in + 2*padding - kernel_height) // stride + 1
+W_out = (W_in + 2*padding - kernel_width) // stride + 1
+</code></pre>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
+    # input: (batch, in_channels, H, W)
+    # kernel: (out_channels, in_channels//groups, kH, kW)
+    # output: (batch, out_channels, H_out, W_out)
+</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: input (1, 4, 5, 5), kernel (8, 2, 3, 3), groups=2
+Output: output (1, 8, 3, 3)</pre><p>Groups=2: channels 0-1 use kernels 0-3, channels 2-3 use kernels 4-7</p></div><div><pre class="overflow-auto">Input: input (1, 1, 5, 5), kernel (1, 1, 3, 3), padding=1, stride=2
+Output: output (1, 1, 3, 3)</pre><p>(5+2*1-3)//2+1 = 3</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
+    &quot;&quot;&quot;
+    Advanced 2D convolution with padding, stride, and groups.
+
+    Args:
+        input: Input tensor (batch, in_channels, H, W)
+        kernel: Convolution kernels (out_channels, in_channels//groups, kH, kW)
+        padding: Zero-padding added to input (default: 0)
+        stride: Stride of the convolution (default: 1)
+        groups: Number of groups for grouped convolution (default: 1)
+
+    Returns:
+        output: Convolved tensor (batch, out_channels, H_out, W_out)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>
