@@ -7,7 +7,7 @@ import { LanguageVariant } from '../../../types';
  */
 export const pythonBasicsPyTorch: Record<string, LanguageVariant> = {
   'numpy-array-sum': {
-    note: 'Use torch.sum or the .sum() method. A 0-d tensor result is fine (tests call .item() for you).',
+    note: 'Use torch.sum or the .sum() method, not a Python loop. Returning the 0-d tensor is fine: the tests read its value.',
     starterCode: `import torch
 
 def array_sum(arr: torch.Tensor) -> float:
@@ -15,10 +15,10 @@ def array_sum(arr: torch.Tensor) -> float:
     Calculate the sum of all elements in a tensor.
 
     Args:
-        arr: A tensor of numbers
+        arr: tensor of numbers (any shape, at least one element)
 
     Returns:
-        The sum of all elements
+        The sum of all elements (a 0-d tensor is fine)
     """
     # Your code here
     pass
@@ -27,8 +27,10 @@ def array_sum(arr: torch.Tensor) -> float:
 
 def array_sum(arr: torch.Tensor) -> float:
     """
-    Calculate the sum of all elements in a tensor.
+    Returns:
+        The sum of all elements, as a 0-d tensor.
     """
+    # No dim: reduce over every element, whatever the shape
     return torch.sum(arr)
 `,
     testCases: [
@@ -37,15 +39,18 @@ def array_sum(arr: torch.Tensor) -> float:
       { id: '3', description: 'Single element', input: 'array_sum(torch.tensor([42]))', expected: '42', hidden: false },
       { id: '4', description: 'Larger array', input: 'array_sum(torch.arange(1, 11))', expected: '55', hidden: true },
       { id: '5', description: 'Float values', input: 'array_sum(torch.tensor([0.5, 1.5, -1.0]))', expected: '1.0', hidden: true },
+      { id: '6', description: 'Sums every element of a 2D tensor', input: 'array_sum(torch.tensor([[1, 2], [3, 4]]))', expected: '10', hidden: true },
     ],
     hints: [
-      'Tensors have built-in reductions, just like NumPy arrays.',
-      'Try torch.sum(arr) or arr.sum().',
+      'This is a reduction: many values collapse into one. Tensors have a built-in for exactly that.',
+      'Hand the whole tensor to a single torch call instead of visiting elements one at a time.',
+      'torch.sum(arr) or arr.sum(); with no dim argument both add up every element and return a 0-d tensor.',
+      "Pitfall: Python's built-in sum(arr) iterates over the first dim only, so on a 2D tensor it returns a 1D tensor of column sums, not a number.",
     ],
   },
 
   'numpy-matrix-multiply': {
-    note: 'Use torch.matmul, torch.mm or the @ operator, not Python loops.',
+    note: 'Use the @ operator, torch.matmul or torch.mm, not Python loops. A * B is elementwise, not a matrix product.',
     starterCode: `import torch
 
 def matrix_multiply(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
@@ -57,7 +62,7 @@ def matrix_multiply(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
         B: Second matrix of shape (n, p)
 
     Returns:
-        Result matrix of shape (m, p)
+        Matrix product A @ B of shape (m, p)
     """
     # Your code here
     pass
@@ -66,10 +71,11 @@ def matrix_multiply(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
 
 def matrix_multiply(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     """
-    Multiply two matrices A and B.
+    Returns:
+        A @ B, shape (m, p).
     """
+    # C[i, j] = sum_k A[i, k] * B[k, j]; same as torch.matmul(A, B) or torch.mm(A, B)
     return A @ B
-    # Alternatives: torch.matmul(A, B), torch.mm(A, B)
 `,
     testCases: [
       {
@@ -102,13 +108,15 @@ def matrix_multiply(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'PyTorch provides several ways to do matrix multiplication.',
-      'Try torch.matmul(), torch.mm(), or the @ operator.',
+      'Check the shapes first: (m, n) times (n, p). Which dimension disappears, and what shape is left?',
+      'Each output entry is a row of A dotted with a column of B; torch computes all of them in one call.',
+      'A @ B, torch.matmul(A, B) or torch.mm(A, B) (mm is 2D-only; matmul also handles batches).',
+      'Pitfall: A * B multiplies elementwise. Also, torch refuses to multiply mixed dtypes (an int tensor @ a float tensor raises an error): cast with .float() first.',
     ],
   },
 
   'numpy-broadcast-add': {
-    note: 'Tensors broadcast with the same rules as NumPy arrays.',
+    note: 'Tensors broadcast with the same rules as NumPy arrays: one + is enough. Don\'t use .expand, .repeat or loops.',
     starterCode: `import torch
 
 def broadcast_add(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
@@ -120,7 +128,7 @@ def broadcast_add(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
         vector: 1D tensor of shape (n,)
 
     Returns:
-        Result matrix of shape (m, n)
+        Tensor of shape (m, n) with result[i, j] = matrix[i, j] + vector[j]
     """
     # Your code here
     pass
@@ -129,8 +137,10 @@ def broadcast_add(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
 
 def broadcast_add(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
     """
-    Add a vector to each row of a matrix using broadcasting.
+    Returns:
+        matrix + vector, shape (m, n).
     """
+    # (m, n) + (n,): the vector is treated as (1, n) and stretched over the rows
     return matrix + vector
 `,
     testCases: [
@@ -164,8 +174,10 @@ def broadcast_add(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'PyTorch automatically broadcasts the vector across rows.',
-      'Simply use the + operator.',
+      'You want the same vector added to every row. Does torch need you to copy it m times?',
+      'Line the shapes up from the right: (m, n) and (n,). They are compatible, so one arithmetic operator is enough.',
+      'matrix + vector. torch treats the (n,) vector as (1, n) and stretches it over the m rows, exactly like NumPy.',
+      'Pitfall: a vector of shape (m,) would line up with the columns, not the rows. Use vector.unsqueeze(1) (shape (m, 1)) if you ever need per-row values.',
     ],
   },
 };
