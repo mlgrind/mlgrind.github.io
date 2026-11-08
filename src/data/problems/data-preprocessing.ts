@@ -434,4 +434,165 @@ def stratified_split(y, val_frac=0.15, test_frac=0.15, seed=0):
     return {'train': merge(train), 'val': merge(val), 'test': merge(test)}
 `,
   },
+  {
+    id: 'leakage-safe-imputation',
+    title: 'Leakage-Safe Imputation and Scaling',
+    section: 'data-preprocessing',
+    difficulty: 'medium',
+    description: `
+## Leakage-Safe Imputation and Scaling
+
+A classic preprocessing bug is to compute imputation values or scaling statistics on the **whole dataset** before splitting. The test set then leaks into training: its values shift the medians, means and standard deviations the model is trained with, and the offline score becomes optimistic.
+
+Implement the leakage-safe version: **fit every statistic on the training split only**, then apply the same transformation to both splits (what \`SimpleImputer\` followed by \`StandardScaler\` does in a scikit-learn \`Pipeline\`).
+
+### Steps
+1. **Fit imputation on train**: for each column, \`fill[j]\` = the median (\`strategy='median'\`) or mean (\`strategy='mean'\`) of the **observed** (non-NaN) training values. Median uses NumPy's convention: the average of the two middle values for an even count. If a column has no observed training values, \`fill[j] = 0.0\`.
+2. **Impute both splits** with the same \`fill\` values.
+3. **Fit scaling on the imputed train split**: \`mean[j]\` and \`std[j]\` (population std, \`ddof=0\`).
+4. **Standardise both splits**: \`(X - mean) / std\`. A column with \`std[j] == 0\` is divided by 1 instead (it becomes 0 on train), like scikit-learn's \`StandardScaler\`.
+
+Don't modify the input arrays.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- **Transformed data**: \`'X_train'\`, \`'X_test'\`, float arrays with the input shapes and no NaNs
+- **Fitted statistics** (all computed from the training split, shape \`(n_features,)\`): \`'fill'\` (imputation values), \`'mean'\` and \`'std'\` (of the imputed training data; \`std\` is the raw value, 0 included)
+`,
+    examples: [
+      {
+        input: 'fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]]))',
+        output: "{'fill': [2., 30.], 'mean': [2., 27.5], 'std': [0.7071, 10.8972], 'X_test': [[138.5929, 0.2294], [0., -2.5236]], ...}",
+        explanation: 'The test row with 100 does not move the median of column 0: fill, mean and std come from the four training rows only (values rounded).',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def fit_transform_train_test(X_train, X_test, strategy='median'):
+    """
+    Impute missing values and standardise, fitting statistics on the training split only.
+
+    Args:
+        X_train: Training features with NaNs, array (n_train, n_features)
+        X_test: Test features with NaNs, array (n_test, n_features)
+        strategy: 'median' or 'mean' imputation
+
+    Returns:
+        dict with 'X_train', 'X_test' (transformed arrays) and the fitted
+        statistics 'fill', 'mean', 'std' (each shape (n_features,))
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Median fill values come from train only',
+        input: 'fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]]))["fill"].tolist()',
+        expected: '[2.0, 30.0]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Transformed test split',
+        input: 'np.round(fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]]))["X_test"], 4).tolist()',
+        expected: '[[138.5929, 0.2294], [0.0, -2.5236]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Transformed train split',
+        input: 'np.round(fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]]))["X_train"], 4).tolist()',
+        expected: '[[-1.4142, -1.6059], [0.0, 0.2294], [1.4142, 0.2294], [0.0, 1.1471]]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Mean strategy: fill, mean and std',
+        input: '(lambda: (r := fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]]), strategy="mean"), [np.round(r[k], 4).tolist() for k in ("fill", "mean", "std")])[-1])()',
+        expected: '[[2.0, 26.6667], [2.0, 26.6667], [0.7071, 10.8012]]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Changing the test split does not change anything fitted (no leakage)',
+        input: '(lambda: (a := fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[100.0, np.nan], [np.nan, 0.0]])), b := fit_transform_train_test(np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), np.array([[1e6, -1e6], [np.nan, np.nan], [5.0, 5.0]])), bool(all(np.allclose(a[k], b[k]) for k in ("fill", "mean", "std", "X_train"))))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Even count: median averages the two middle values',
+        input: 'fit_transform_train_test(np.array([[1.0], [2.0], [4.0], [10.0], [np.nan]]), np.array([[np.nan]]))["fill"].tolist()',
+        expected: '[3.0]',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Zero-variance column is divided by 1',
+        input: '(lambda: (r := fit_transform_train_test(np.array([[5.0, 1.0], [5.0, 2.0], [np.nan, 3.0]]), np.array([[7.0, 2.0]])), (r["std"][0], r["X_train"][:, 0].tolist(), r["X_test"][0, 0]))[-1])()',
+        expected: '(0.0, [0.0, 0.0, 0.0], 2.0)',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'All-NaN training column is filled with 0',
+        input: '(lambda: (r := fit_transform_train_test(np.array([[np.nan, 1.0], [np.nan, 3.0]]), np.array([[4.0, np.nan]])), (r["fill"].tolist(), r["X_test"].tolist()))[-1])()',
+        expected: '([0.0, 2.0], [[4.0, 0.0]])',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Inputs are not modified',
+        input: '(lambda: (A := np.array([[1.0, 10.0], [2.0, np.nan], [3.0, 30.0], [np.nan, 40.0]]), B := np.array([[100.0, np.nan], [np.nan, 0.0]]), _ := fit_transform_train_test(A, B)["fill"], (int(np.isnan(A).sum()), int(np.isnan(B).sum())))[-1])()',
+        expected: '(2, 2)',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'Random data with missing values',
+        input: '(lambda: (A := np.random.randn(20, 3) * [1.0, 5.0, 0.1] + [0.0, 10.0, -3.0], A := np.where(np.random.rand(20, 3) < 0.2, np.nan, A), B := np.random.randn(6, 3) * 10, B := np.where(np.random.rand(6, 3) < 0.3, np.nan, B), r := fit_transform_train_test(A, B), (np.round(r["fill"], 4).tolist(), np.round(r["X_test"][0], 4).tolist()))[-1])()',
+        expected: '([0.3234, 10.6084, -3.0375], [-8.6427, 1.8623, -0.0885])',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Compute everything from X_train first (fill, then mean and std of the imputed train), and only then touch X_test.',
+      '`np.where(np.isnan(X), fill, X)` broadcasts the per-column fill values over the rows.',
+      'Guard the division: `scale = np.where(std > 0, std, 1.0)`.',
+      "Use `np.array(X, dtype=float)` (a copy) rather than filling NaNs in place, so the caller's arrays stay unchanged.",
+    ],
+    solution: `import numpy as np
+
+def fit_transform_train_test(X_train, X_test, strategy='median'):
+    X_train = np.array(X_train, dtype=float)  # copies: the inputs stay untouched
+    X_test = np.array(X_test, dtype=float)
+    n_features = X_train.shape[1]
+
+    # 1. Imputation values from the observed training values only
+    fill = np.zeros(n_features)
+    for j in range(n_features):
+        observed = X_train[~np.isnan(X_train[:, j]), j]
+        if observed.size:
+            fill[j] = np.median(observed) if strategy == 'median' else observed.mean()
+
+    # 2. Impute both splits with the same values
+    train = np.where(np.isnan(X_train), fill, X_train)
+    test = np.where(np.isnan(X_test), fill, X_test)
+
+    # 3. Scaling statistics from the imputed training split
+    mean = train.mean(axis=0)
+    std = train.std(axis=0)
+    scale = np.where(std > 0, std, 1.0)
+
+    # 4. Apply to both splits
+    return {
+        'X_train': (train - mean) / scale,
+        'X_test': (test - mean) / scale,
+        'fill': fill,
+        'mean': mean,
+        'std': std,
+    }
+`,
+  },
 ];

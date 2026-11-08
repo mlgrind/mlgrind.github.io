@@ -238,7 +238,7 @@ Garbage in, garbage out. Proper preprocessing can:
 
 Let's practice these essential skills!
     `,
-    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split'],
+    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split', 'leakage-safe-imputation'],
   },
 
   // ==========================================
