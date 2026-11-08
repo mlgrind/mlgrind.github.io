@@ -5,6 +5,7 @@ import { deepLearningPyTorch } from './deep-learning';
 import { e2eImplementationsPyTorch } from './e2e-implementations';
 import { einsumPyTorch } from './einsum';
 import { generativeModelsPyTorch } from './generative-models';
+import { llmGenerationPyTorch } from './llm-generation';
 import { llmInternalsPyTorch } from './llm-internals';
 import { modelEvaluationPyTorch } from './model-evaluation';
 import { neuralNetworksPyTorch } from './neural-networks';
@@ -28,6 +29,7 @@ export const pytorchVariants: Record<string, LanguageVariant> = {
   ...e2eImplementationsPyTorch,
   ...einsumPyTorch,
   ...generativeModelsPyTorch,
+  ...llmGenerationPyTorch,
   ...llmInternalsPyTorch,
   ...modelEvaluationPyTorch,
   ...neuralNetworksPyTorch,

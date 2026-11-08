@@ -391,4 +391,395 @@ def create_causal_mask(seq_len):
       'Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float("-inf"))',
     ],
   },
+  // Tracks for existing problems that had no PyTorch track yet.
+  'bpe-tokenization': {
+    note: 'Tokenizer training is string processing: no tensors are involved, so this track is plain Python.',
+    starterCode: `from collections import Counter
+
+def bpe_train(word_freqs, num_merges):
+    """
+    Train BPE tokenizer by learning merge rules.
+
+    Args:
+        word_freqs: Dict mapping space-separated token sequences to frequency
+                    e.g., {"h u g </w>": 10, "p u g </w>": 5}
+        num_merges: Number of merge operations to perform
+
+    Returns:
+        merges: List of (token_a, token_b) tuples merged, in order
+    """
+    # Your code here
+    pass
+`,
+    solution: `from collections import Counter
+
+def bpe_train(word_freqs, num_merges):
+    # Split each word into tokens
+    splits = {word: word.split() for word in word_freqs}
+    merges = []
+
+    for _ in range(num_merges):
+        # Count adjacent pairs, weighted by word frequency
+        pair_freqs = Counter()
+        for word, freq in word_freqs.items():
+            tokens = splits[word]
+            for a, b in zip(tokens, tokens[1:]):
+                pair_freqs[(a, b)] += freq
+
+        if not pair_freqs:
+            break
+
+        best_pair = max(pair_freqs, key=pair_freqs.get)
+        merges.append(best_pair)
+
+        # Merge the pair everywhere, scanning left to right
+        for word, tokens in splits.items():
+            new_tokens = []
+            i = 0
+            while i < len(tokens):
+                if i < len(tokens) - 1 and (tokens[i], tokens[i + 1]) == best_pair:
+                    new_tokens.append(tokens[i] + tokens[i + 1])
+                    i += 2
+                else:
+                    new_tokens.append(tokens[i])
+                    i += 1
+            splits[word] = new_tokens
+
+    return merges
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'First merge is the most frequent pair',
+        input: 'bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[0]',
+        expected: "('u', 'g')",
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Number of merges',
+        input: 'len(bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3))',
+        expected: '3',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Second merge uses the merged token',
+        input: 'bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[1]',
+        expected: "('ug', '</w>')",
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Different corpus',
+        input: 'bpe_train({"a b c </w>": 10, "a b </w>": 7, "b c </w>": 3}, 2)[0]',
+        expected: "('a', 'b')",
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Full merge list, stopping when no pairs are left',
+        input: 'bpe_train({"l o w </w>": 5, "l o w e r </w>": 2, "n e w </w>": 6}, 20)',
+        expected: "[('w', '</w>'), ('l', 'o'), ('n', 'e'), ('ne', 'w</w>'), ('lo', 'w</w>'), ('lo', 'w'), ('low', 'e'), ('lowe', 'r'), ('lower', '</w>')]",
+        hidden: true,
+      },
+    ],
+  },
+
+  'rope-embeddings': {
+    note: "Implement the rotation with tensor ops (slicing, torch.stack). Complex-number tricks such as torch.view_as_complex aren't supported in the browser.",
+    starterCode: `import torch
+
+def apply_rope(Q, K):
+    """
+    Apply Rotary Positional Embeddings to Q and K.
+
+    Args:
+        Q: Queries, tensor (seq_len, d_model) where d_model is even
+        K: Keys, tensor (seq_len, d_model)
+
+    Returns:
+        Q_rot: Rotated queries (seq_len, d_model)
+        K_rot: Rotated keys (seq_len, d_model)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def apply_rope(Q, K):
+    seq_len, d = Q.shape
+
+    # Angles pos * theta_i, with theta_i = 1 / 10000^(2i / d)
+    positions = torch.arange(seq_len).float().unsqueeze(1)  # (seq_len, 1)
+    theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d)  # (d/2,)
+    angles = positions * theta  # (seq_len, d/2)
+    cos, sin = torch.cos(angles), torch.sin(angles)
+
+    def rotate(x):
+        x_even, x_odd = x[:, 0::2], x[:, 1::2]
+        # Rotate each (even, odd) pair, then interleave the pairs back
+        rotated = torch.stack([x_even * cos - x_odd * sin,
+                               x_even * sin + x_odd * cos], dim=-1)
+        return rotated.flatten(1)
+
+    return rotate(Q), rotate(K)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Output shape',
+        input: 'tuple(apply_rope(torch.ones(4, 8), torch.ones(4, 8))[0].shape)',
+        expected: '(4, 8)',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Position 0 is not rotated',
+        input: 'apply_rope(torch.tensor([[1.0, 2.0, 3.0, 4.0]]), torch.ones(1, 4))[0].tolist()',
+        expected: '[[1.0, 2.0, 3.0, 4.0]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Rotation preserves vector norms',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(6, 8)).float(),
+    Q_rot := apply_rope(Q, Q)[0],
+    bool(torch.allclose(Q_rot.norm(dim=-1), Q.norm(dim=-1), atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Hand-computed rotation at position 1 (d=2, theta=1)',
+        input: '[round(v, 4) for v in apply_rope(torch.ones(2, 2), torch.ones(2, 2))[0][1].tolist()]',
+        expected: '[-0.3012, 1.3818]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Per-pair frequencies at position 3 (d=4)',
+        input: '[round(v, 4) for v in apply_rope(torch.ones(4, 4), torch.zeros(4, 4))[0][3].tolist()]',
+        expected: '[-1.1311, -0.8489, 0.9696, 1.0295]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'K gets the same rotation as Q',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(5, 6)).float(),
+    K := torch.from_numpy(np.random.randn(5, 6)).float(),
+    out := apply_rope(Q, K),
+    bool(torch.allclose(out[1], apply_rope(K, Q)[0], atol=1e-6) and not torch.allclose(out[1][1:], K[1:]))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'q.k depends only on the relative position',
+        input: `(lambda: (
+    q := torch.from_numpy(np.random.randn(1, 8)).float().repeat(6, 1),
+    k := torch.from_numpy(np.random.randn(1, 8)).float().repeat(6, 1),
+    out := apply_rope(q, k),
+    bool(torch.allclose((out[0][4] * out[1][1]).sum(), (out[0][5] * out[1][2]).sum(), atol=1e-4))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d); angles = positions[:, None] * theta',
+      'Split the pairs with x[:, 0::2] and x[:, 1::2]',
+      'Rotate: (even*cos - odd*sin, even*sin + odd*cos), then torch.stack(..., dim=-1).flatten(1) to interleave',
+    ],
+  },
+
+  'grouped-query-attention': {
+    note: "Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention (or its enable_gqa flag) or nn.MultiheadAttention.",
+    starterCode: `import math
+import torch
+import torch.nn.functional as F
+
+def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
+    """
+    Grouped Query Attention.
+
+    Args:
+        Q: Queries, tensor (seq_len, num_q_heads * d_head)
+        K: Keys, tensor (seq_len, num_kv_heads * d_head)
+        V: Values, tensor (seq_len, num_kv_heads * d_head)
+        num_q_heads: Number of query heads
+        num_kv_heads: Number of key/value heads (divides num_q_heads)
+
+    Returns:
+        output: tensor (seq_len, num_q_heads * d_head)
+    """
+    seq_len = Q.shape[0]
+    d_head = Q.shape[1] // num_q_heads
+    group_size = num_q_heads // num_kv_heads
+
+    # Your code here
+    pass
+`,
+    solution: `import math
+import torch
+import torch.nn.functional as F
+
+def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
+    seq_len = Q.shape[0]
+    d_head = Q.shape[1] // num_q_heads
+    group_size = num_q_heads // num_kv_heads
+
+    # Per-head layout: (num_heads, seq_len, d_head)
+    q = Q.reshape(seq_len, num_q_heads, d_head).transpose(0, 1)
+    k = K.reshape(seq_len, num_kv_heads, d_head).transpose(0, 1)
+    v = V.reshape(seq_len, num_kv_heads, d_head).transpose(0, 1)
+
+    # Each KV head serves group_size consecutive query heads
+    k = k.repeat_interleave(group_size, dim=0)
+    v = v.repeat_interleave(group_size, dim=0)
+
+    # Scaled dot-product attention per head
+    scores = q @ k.transpose(-2, -1) / math.sqrt(d_head)
+    heads = F.softmax(scores, dim=-1) @ v  # (num_q_heads, seq_len, d_head)
+
+    # Concatenate heads
+    return heads.transpose(0, 1).reshape(seq_len, -1)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'GQA output shape (8 query heads, 2 KV heads)',
+        input: 'tuple(grouped_query_attention(torch.from_numpy(np.random.randn(4, 64)).float(), torch.from_numpy(np.random.randn(4, 16)).float(), torch.from_numpy(np.random.randn(4, 16)).float(), 8, 2).shape)',
+        expected: '(4, 64)',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'MQA output shape (1 KV head)',
+        input: 'tuple(grouped_query_attention(torch.from_numpy(np.random.randn(4, 32)).float(), torch.from_numpy(np.random.randn(4, 4)).float(), torch.from_numpy(np.random.randn(4, 4)).float(), 8, 1).shape)',
+        expected: '(4, 32)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Single token: each query head returns its group\'s value head',
+        input: 'grouped_query_attention(torch.from_numpy(np.random.randn(1, 8)).float(), torch.from_numpy(np.random.randn(1, 4)).float(), torch.tensor([[1.0, 2.0, 3.0, 4.0]]), 4, 2).tolist()',
+        expected: '[[1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 3.0, 4.0]]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Matches reference attention with repeated KV heads',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(5, 24)).float(),
+    K := torch.from_numpy(np.random.randn(5, 8)).float(),
+    V := torch.from_numpy(np.random.randn(5, 8)).float(),
+    q := Q.reshape(5, 6, 4).transpose(0, 1),
+    k := K.reshape(5, 2, 4).transpose(0, 1).repeat_interleave(3, dim=0),
+    v := V.reshape(5, 2, 4).transpose(0, 1).repeat_interleave(3, dim=0),
+    ref := torch.nn.functional.scaled_dot_product_attention(q, k, v).transpose(0, 1).reshape(5, 24),
+    bool(torch.allclose(grouped_query_attention(Q, K, V, 6, 2), ref, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'MHA case (num_kv_heads == num_q_heads) values',
+        input: '[round(v, 4) for v in grouped_query_attention(torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0]]), 2, 2).flatten().tolist()]',
+        expected: '[1.5379, 3.0, 2.0, 3.4621]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Reshape Q to (seq_len, num_q_heads, d_head) and .transpose(0, 1) to put heads first; same for K, V with num_kv_heads',
+      'k.repeat_interleave(group_size, dim=0) gives query head h the KV head h // group_size',
+      'F.softmax(q @ k.transpose(-2, -1) / math.sqrt(d_head), dim=-1) @ v',
+      'Transpose back and reshape to (seq_len, num_q_heads * d_head)',
+    ],
+  },
+
+  'sliding-window-attention': {
+    starterCode: `import torch
+
+def sliding_window_mask(seq_len, window_size):
+    """
+    Create a sliding window causal attention mask.
+
+    Args:
+        seq_len: Sequence length
+        window_size: Number of tokens each position can attend to
+                     (including itself)
+
+    Returns:
+        mask: float tensor (seq_len, seq_len) with 0 for allowed, -inf for masked
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def sliding_window_mask(seq_len, window_size):
+    rows = torch.arange(seq_len).unsqueeze(1)  # (seq_len, 1)
+    cols = torch.arange(seq_len).unsqueeze(0)  # (1, seq_len)
+
+    # Causal (no future tokens) and within the window
+    allowed = (cols <= rows) & (rows - cols < window_size)
+
+    return torch.zeros(seq_len, seq_len).masked_fill(~allowed, float('-inf'))
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Output shape',
+        input: 'tuple(sliding_window_mask(6, 3).shape)',
+        expected: '(6, 6)',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Outside the window is masked',
+        input: 'bool(sliding_window_mask(4, 2)[2, 0] == float("-inf"))',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Inside the window is allowed',
+        input: 'bool(sliding_window_mask(4, 2)[2, 1] == 0.0)',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Window larger than the sequence is a plain causal mask',
+        input: 'bool(torch.equal(sliding_window_mask(4, 10), torch.zeros(4, 4).masked_fill(torch.triu(torch.ones(4, 4), diagonal=1).bool(), float("-inf"))))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Window 1 allows only the diagonal',
+        input: '(sliding_window_mask(4, 1) == 0).int().tolist()',
+        expected: '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Full pattern for seq_len=5, window=3',
+        input: '(sliding_window_mask(5, 3) == 0).int().tolist()',
+        expected: '[[1, 0, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1]]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'rows = torch.arange(seq_len).unsqueeze(1), cols = torch.arange(seq_len).unsqueeze(0)',
+      'allowed = (cols <= rows) & (rows - cols < window_size)',
+      'torch.zeros(seq_len, seq_len).masked_fill(~allowed, float("-inf"))',
+    ],
+  },
 };
