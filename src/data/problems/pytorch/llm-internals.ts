@@ -1,6 +1,12 @@
-// PyTorch tracks staged from the ML Coding Lab fork (src/data/problems/pytorch/llm-internals.ts),
-// copied verbatim and keyed by problem id. Not imported anywhere yet: see README.md.
-export const llmInternalsPyTorchPending: Record<string, unknown> = {
+import { LanguageVariant } from '../../../types';
+
+/**
+ * PyTorch tracks for the problems in ../llm-internals.ts, keyed by problem id.
+ * Code runs against the NumPy-backed torch shim (public/py/torch_shim.py).
+ * Rules: docs/TORCH_TRACK.md.
+ */
+export const llmInternalsPyTorch: Record<string, LanguageVariant> = {
+  // Ported with the new problems from the ML Coding Lab fork.
   'rmsnorm-swiglu': {
     note: 'Implement RMSNorm and the gated MLP with tensor ops. Don\'t use nn.RMSNorm or F.rms_norm; F.silu (or x * torch.sigmoid(x)) is fine. A hidden test compares against nn.RMSNorm.',
     starterCode: `import torch

@@ -1,6 +1,12 @@
-// PyTorch tracks staged from the ML Coding Lab fork (src/data/problems/pytorch/sequence-models.ts),
-// copied verbatim and keyed by problem id. Not imported anywhere yet: see README.md.
-export const sequenceModelsPyTorchPending: Record<string, unknown> = {
+import { LanguageVariant } from '../../../types';
+
+/**
+ * PyTorch tracks for the problems in ../sequence-models.ts, keyed by problem id.
+ * Code runs against the NumPy-backed torch shim (public/py/torch_shim.py).
+ * Rules: docs/TORCH_TRACK.md.
+ */
+export const sequenceModelsPyTorch: Record<string, LanguageVariant> = {
+  // Ported with the new problems from the ML Coding Lab fork.
   'rnn-forward': {
     note: "Implement both functions from scratch with tensor ops; nn.RNN isn't allowed (and isn't in the browser shim). Write rnn_backward by hand: a hidden test checks it against autograd.",
     starterCode: `import torch

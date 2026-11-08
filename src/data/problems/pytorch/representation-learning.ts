@@ -1,6 +1,12 @@
-// PyTorch tracks staged from the ML Coding Lab fork (src/data/problems/pytorch/representation-learning.ts),
-// copied verbatim and keyed by problem id. Not imported anywhere yet: see README.md.
-export const representationLearningPyTorchPending: Record<string, unknown> = {
+import { LanguageVariant } from '../../../types';
+
+/**
+ * PyTorch tracks for the problems in ../representation-learning.ts, keyed by problem id.
+ * Code runs against the NumPy-backed torch shim (public/py/torch_shim.py).
+ * Rules: docs/TORCH_TRACK.md.
+ */
+export const representationLearningPyTorch: Record<string, LanguageVariant> = {
+  // Ported with the new problems from the ML Coding Lab fork.
   'infonce-loss': {
     note: 'F.normalize and F.cross_entropy are allowed: the point is the similarity matrix, the diagonal labels and the symmetric average. Return Python floats for the losses.',
     starterCode: `import torch

@@ -1,6 +1,12 @@
-// PyTorch tracks staged from the ML Coding Lab fork (src/data/problems/pytorch/post-training.ts),
-// copied verbatim and keyed by problem id. Not imported anywhere yet: see README.md.
-export const postTrainingPyTorchPending: Record<string, unknown> = {
+import { LanguageVariant } from '../../../types';
+
+/**
+ * PyTorch tracks for the problems in ../post-training.ts, keyed by problem id.
+ * Code runs against the NumPy-backed torch shim (public/py/torch_shim.py).
+ * Rules: docs/TORCH_TRACK.md.
+ */
+export const postTrainingPyTorch: Record<string, LanguageVariant> = {
+  // Ported with the new problems from the ML Coding Lab fork.
   'grpo-advantages': {
     note: "Pure tensor ops. Use the population std (r.std(dim=1, unbiased=False, keepdim=True)); torch's default std is unbiased and gives different advantages. Return Python floats for the scalars.",
     starterCode: `import torch

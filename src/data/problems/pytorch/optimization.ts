@@ -1,6 +1,12 @@
-// PyTorch tracks staged from the ML Coding Lab fork (src/data/problems/pytorch/optimization.ts),
-// copied verbatim and keyed by problem id. Not imported anywhere yet: see README.md.
-export const optimizationPyTorchPending: Record<string, unknown> = {
+import { LanguageVariant } from '../../../types';
+
+/**
+ * PyTorch tracks for the problems in ../optimization.ts, keyed by problem id.
+ * Code runs against the NumPy-backed torch shim (public/py/torch_shim.py).
+ * Rules: docs/TORCH_TRACK.md.
+ */
+export const optimizationPyTorch: Record<string, LanguageVariant> = {
+  // Ported with the new problems from the ML Coding Lab fork.
   'gradient-clipping': {
     note: "Implement it with tensor ops (torch.stack, .norm(), *); don't call torch.nn.utils.clip_grad_norm_. The hidden tests compare your result with it.",
     starterCode: `import torch
