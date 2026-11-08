@@ -11,6 +11,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { ProgressProvider } from "../context/ProgressContext";
 import { getProblemById } from "../data/problems";
 import ProblemPage from "../pages/ProblemPage";
+const pyodide = vi.hoisted(() => ({
+  runTests: vi.fn<(...args: unknown[]) => Promise<unknown[]>>(async () => []),
+}));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 vi.mock("../lib/firestoreSync", () => ({
   loadProgressFromFirestore: vi.fn(),
@@ -21,7 +24,7 @@ vi.mock("../hooks/usePyodide", () => ({
     isLoading: false,
     isReady: true,
     output: [],
-    runTests: vi.fn(async () => []),
+    runTests: pyodide.runTests,
     clearOutput: vi.fn(),
     stop: vi.fn(),
     retry: vi.fn(),
@@ -52,10 +55,10 @@ vi.mock("react-split", () => ({
   ),
 }));
 
-function mount() {
+function mount(path = "/problem/python-basics/numpy-array-sum") {
   return render(
     <HelmetProvider>
-      <MemoryRouter initialEntries={["/problem/python-basics/numpy-array-sum"]}>
+      <MemoryRouter initialEntries={[path]}>
         <ProgressProvider>
           <Routes>
             <Route
@@ -70,6 +73,8 @@ function mount() {
 }
 beforeEach(() => {
   localStorage.clear();
+  pyodide.runTests.mockReset();
+  pyodide.runTests.mockImplementation(async () => []);
   vi.spyOn(window, "confirm").mockReturnValue(true);
 });
 afterEach(() => {
@@ -108,5 +113,71 @@ describe("problem editor persistence", () => {
     expect(stored["python-basics"]["numpy-array-sum"].status).not.toBe(
       "completed",
     );
+  });
+});
+
+describe("NumPy | PyTorch track toggle", () => {
+  const problem = getProblemById("numpy-array-sum")!;
+  const editor = () => screen.getByLabelText("Python code");
+  const choose = (name: "NumPy" | "PyTorch") =>
+    fireEvent.click(screen.getByRole("button", { name }));
+
+  it("swaps starter code and tests, keeps code per language and remembers the choice", () => {
+    const view = mount();
+    expect(screen.getByRole("group", { name: "Solution language" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "NumPy" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText(/NumPy-backed subset/)).not.toBeInTheDocument();
+    fireEvent.change(editor(), { target: { value: "numpy draft" } });
+
+    choose("PyTorch");
+    expect(screen.getByRole("button", { name: "PyTorch" })).toHaveAttribute("aria-pressed", "true");
+    expect(editor()).toHaveValue(problem.pytorch!.starterCode);
+    expect(screen.getByText(/NumPy-backed subset/)).toBeInTheDocument();
+    expect(localStorage.getItem("ml-lab-language")).toBe("pytorch");
+    fireEvent.change(editor(), { target: { value: "torch draft" } });
+
+    choose("NumPy");
+    expect(editor()).toHaveValue("numpy draft");
+    const stored = JSON.parse(localStorage.getItem("ml-interview-progress")!);
+    expect(stored["python-basics"]["numpy-array-sum"]).toMatchObject({
+      code: "numpy draft",
+      codes: { pytorch: "torch draft" },
+    });
+
+    choose("PyTorch");
+    view.unmount();
+    mount();
+    expect(screen.getByRole("button", { name: "PyTorch" })).toHaveAttribute("aria-pressed", "true");
+    expect(editor()).toHaveValue("torch draft");
+  });
+
+  it("runs the PyTorch tests with the PyTorch harness and records the solve", async () => {
+    localStorage.setItem("ml-lab-language", "pytorch");
+    pyodide.runTests.mockImplementation(async (...args: unknown[]) =>
+      (args[1] as { id: string }[]).map((t) => ({ ...t, passed: true, actual: "" })),
+    );
+    mount();
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Run Tests" })),
+    );
+    expect(pyodide.runTests).toHaveBeenCalledWith(
+      problem.pytorch!.starterCode,
+      problem.pytorch!.testCases,
+      "array_sum",
+      "pytorch",
+    );
+    const stored = JSON.parse(localStorage.getItem("ml-interview-progress")!);
+    expect(stored["python-basics"]["numpy-array-sum"]).toMatchObject({
+      status: "completed",
+      solvedIn: ["pytorch"],
+    });
+  });
+
+  it("hides the toggle and uses NumPy for problems without a PyTorch track", () => {
+    localStorage.setItem("ml-lab-language", "pytorch");
+    mount("/problem/deep-learning/perceptron");
+    expect(getProblemById("perceptron")!.pytorch).toBeUndefined();
+    expect(screen.queryByRole("group", { name: "Solution language" })).not.toBeInTheDocument();
+    expect(editor()).toHaveValue(getProblemById("perceptron")!.starterCode);
   });
 });

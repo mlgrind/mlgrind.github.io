@@ -1,6 +1,7 @@
 // Funnel events deliberately exclude editor contents, test data, identity and
 // arbitrary query strings. Existing GA4 performs aggregation and attribution.
 import { readStorage, writeStorage } from "./storage";
+import type { Language } from "../types";
 type Event =
   | "exercise_opened"
   | "code_run"
@@ -17,6 +18,7 @@ export function track(
     section_id?: string;
     path_id?: string;
     source?: string;
+    language?: Language;
   } = {},
 ) {
   if (import.meta.env.DEV || typeof window === "undefined") return;

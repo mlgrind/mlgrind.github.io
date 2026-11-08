@@ -220,6 +220,18 @@ export default function SectionPage() {
                     <span className="text-gray-400 dark:text-dark-300 text-xs font-mono">
                       {problem.testCases.length} tests
                     </span>
+                    {problem.pytorch && (
+                      problemProgress.solvedIn.includes('pytorch') ? (
+                        <span className="text-green-600 dark:text-green-400 text-xs font-mono">
+                          <span aria-hidden="true">✓ </span>PyTorch
+                          <span className="sr-only"> track solved</span>
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 dark:text-dark-300 text-xs font-mono">
+                          PyTorch<span className="sr-only"> track available</span>
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
 
