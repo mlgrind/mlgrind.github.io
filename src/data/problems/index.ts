@@ -16,6 +16,11 @@ import { pytorchBasicsProblems } from './pytorch-basics';
 import { e2eImplementationProblems } from './e2e-implementations';
 import { reinforcementLearningProblems } from './reinforcement-learning';
 import { llmGenerationProblems } from './llm-generation';
+import { optimizationProblems } from './optimization';
+import { sequenceModelsProblems } from './sequence-models';
+import { llmInternalsProblems } from './llm-internals';
+import { representationLearningProblems } from './representation-learning';
+import { postTrainingProblems } from './post-training';
 
 const baseProblems: Problem[] = [
   ...pythonBasicsProblems,
@@ -34,6 +39,11 @@ const baseProblems: Problem[] = [
   ...e2eImplementationProblems,
   ...reinforcementLearningProblems,
   ...llmGenerationProblems,
+  ...optimizationProblems,
+  ...sequenceModelsProblems,
+  ...llmInternalsProblems,
+  ...representationLearningProblems,
+  ...postTrainingProblems,
 ];
 
 // PyTorch tracks live in ./pytorch, keyed by problem id, and are attached here.
@@ -66,4 +76,9 @@ export {
   e2eImplementationProblems,
   reinforcementLearningProblems,
   llmGenerationProblems,
+  optimizationProblems,
+  sequenceModelsProblems,
+  llmInternalsProblems,
+  representationLearningProblems,
+  postTrainingProblems,
 };

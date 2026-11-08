@@ -2366,4 +2366,278 @@ def checkpoint_recompute(layers, saved_activations, checkpoint_indices, layer_id
     return activation
 `,
   },
+  {
+    id: 'training-loop',
+    title: 'The Training Loop',
+    section: 'pytorch-basics',
+    difficulty: 'easy',
+    description: `
+## The Training Loop
+
+Every PyTorch model, from linear regression to an LLM, is trained by the same five-line loop:
+
+\`\`\`python
+for epoch in range(epochs):
+    optimizer.zero_grad()          # 1. clear the gradients from the last step
+    pred = model(X)                # 2. forward pass
+    loss = loss_fn(pred, y)        # 3. compute the loss
+    loss.backward()                # 4. backprop: fill p.grad for every parameter
+    optimizer.step()               # 5. update the parameters
+\`\`\`
+
+Forgetting \`zero_grad()\` is the classic bug: \`.grad\` **accumulates**, so every step would use the sum of all past gradients.
+
+### Task
+Fit a linear model \`y_hat = X @ w + b\` with **full-batch gradient descent** on the mean squared error, and record the loss at every epoch.
+
+\`\`\`
+L     = mean((X @ w + b - y) ** 2)
+dL/dw = (2 / N) * X.T @ (X @ w + b - y)
+dL/db = (2 / N) * sum(X @ w + b - y)
+w     = w - lr * dL/dw
+b     = b - lr * dL/db
+\`\`\`
+
+- Start from **zeros**: \`w = 0\` (shape \`(d,)\`), \`b = 0\`.
+- Each epoch, compute the loss with the **current** parameters, append it to the history, then take one step. So \`losses[0]\` is the loss of the all-zero model, \`mean(y ** 2)\`.
+- In the NumPy track you write the gradients by hand (what \`loss.backward()\` does for you in PyTorch).
+
+### Function Signature
+\`\`\`python
+def train_linear_model(X, y, lr=0.1, epochs=100) -> dict:
+\`\`\`
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'losses'\`: list of \`epochs\` Python floats, the loss **before** each update
+- \`'w'\`: learned weights, shape \`(d,)\`
+- \`'b'\`: learned bias, a Python float
+    `,
+    examples: [
+      {
+        input: 'np.random.seed(0); X = np.random.randn(64, 2); y = X @ [2, -3] + 0.5; lr=0.1, epochs=200',
+        output: "{'losses': [14.942, 8.856, ..., ~0.0], 'w': array([2., -3.]), 'b': 0.5}",
+        explanation: 'The loss decreases every epoch and the parameters converge to the true ones',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def train_linear_model(X, y, lr=0.1, epochs=100) -> dict:
+    """
+    Fit y ~ X @ w + b with full-batch gradient descent on the MSE.
+
+    Args:
+        X: Inputs of shape (N, d)
+        y: Targets of shape (N,)
+        lr: Learning rate
+        epochs: Number of gradient steps
+
+    Returns:
+        dict with 'losses' (list of floats, loss before each step),
+        'w' (array of shape (d,)) and 'b' (float)
+    """
+    w = np.zeros(X.shape[1])
+    b = 0.0
+    losses = []
+    # Your code here: forward, loss, gradients, update
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'History length, first loss, strictly decreasing',
+        input: "(lambda: (X := np.random.randn(32, 2), y := X @ np.array([2.0, -3.0]) + 0.5, r := train_linear_model(X, y, lr=0.1, epochs=50), len(r['losses']), bool(np.isclose(r['losses'][0], np.mean(y ** 2))), all(a > b for a, b in zip(r['losses'], r['losses'][1:])))[-3:])()",
+        expected: '(50, True, True)',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Converges to the true parameters',
+        input: "(lambda: (X := np.random.randn(64, 2), y := X @ np.array([2.0, -3.0]) + 0.5, r := train_linear_model(X, y, lr=0.1, epochs=200), np.round(r['w'], 3).tolist(), round(float(r['b']), 3), bool(r['losses'][-1] < 1e-6))[-3:])()",
+        expected: '([2.0, -3.0], 0.5, True)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Exact loss history and parameters on a tiny dataset',
+        input: "(lambda: (r := train_linear_model(np.array([[1.0], [2.0], [3.0]]), np.array([2.0, 4.0, 6.5]), lr=0.05, epochs=4), [round(l, 4) for l in r['losses']], np.round(r['w'], 4).tolist(), round(float(r['b']), 4))[1:])()",
+        expected: '([20.75, 4.2638, 0.9907, 0.3383], [1.716], 0.6924)',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Noisy data: converges to the least-squares solution',
+        input: `(lambda: (
+    X := np.random.randn(100, 3), y := X @ np.array([1.0, -2.0, 0.5]) - 1.0 + 0.3 * np.random.randn(100),
+    r := train_linear_model(X, y, lr=0.1, epochs=300),
+    A := np.hstack([X, np.ones((100, 1))]),
+    sol := np.linalg.lstsq(A, y, rcond=None)[0],
+    bool(np.allclose(r['w'], sol[:3], atol=1e-4)),
+    bool(abs(r['b'] - sol[3]) < 1e-4),
+    bool(abs(r['losses'][-1] - np.mean((A @ sol - y) ** 2)) < 1e-6)
+)[-3:])()`,
+        expected: '(True, True, True)',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Inside the loop: pred = X @ w + b, residual = pred - y, loss = np.mean(residual ** 2).',
+      'Append float(loss) to the history before updating the parameters.',
+      'Gradients: grad_w = 2 / N * X.T @ residual and grad_b = 2 / N * residual.sum(); then w -= lr * grad_w, b -= lr * grad_b.',
+    ],
+    solution: `import numpy as np
+
+def train_linear_model(X, y, lr=0.1, epochs=100) -> dict:
+    """
+    Fit y ~ X @ w + b with full-batch gradient descent on the MSE.
+    """
+    n = X.shape[0]
+    w = np.zeros(X.shape[1])
+    b = 0.0
+    losses = []
+    for _ in range(epochs):
+        # forward + loss
+        residual = X @ w + b - y
+        losses.append(float(np.mean(residual ** 2)))
+        # backward (by hand)
+        grad_w = 2 / n * X.T @ residual
+        grad_b = 2 / n * residual.sum()
+        # step
+        w = w - lr * grad_w
+        b = b - lr * grad_b
+    return {'losses': losses, 'w': w, 'b': float(b)}
+`,
+  },
+  {
+    id: 'dataloader-batching',
+    title: 'Minibatches: Dataset & DataLoader',
+    section: 'pytorch-basics',
+    difficulty: 'easy',
+    description: `
+## Minibatching with Shuffling
+
+Training on the whole dataset at every step is slow, and training on it in a fixed order biases each epoch. A **data loader** shuffles the sample indices once per epoch and cuts them into minibatches. In PyTorch this is
+
+\`\`\`python
+loader = DataLoader(TensorDataset(X, y), batch_size=32, shuffle=True, drop_last=False,
+                    generator=torch.Generator().manual_seed(0))
+for xb, yb in loader:
+    ...
+\`\`\`
+
+### Task
+Implement the iterator yourself and return all minibatches of one epoch as a list:
+
+1. Build an index order: \`np.arange(N)\` if \`shuffle=False\`, otherwise **exactly** \`np.random.default_rng(seed).permutation(N)\`.
+2. Cut the order into consecutive chunks of \`batch_size\`. The last chunk can be smaller.
+3. If \`drop_last=True\`, drop the last chunk when it has fewer than \`batch_size\` samples.
+4. For each chunk \`idx\`, emit the pair \`(X[idx], y[idx])\`, so rows of \`X\` stay paired with their labels.
+
+Shuffling with a seeded generator keeps the run reproducible: the same seed gives the same batches.
+
+| N | batch_size | drop_last | number of batches | last batch size |
+|---|---|---|---|---|
+| 10 | 4 | False | 3 | 2 |
+| 10 | 4 | True | 2 | 4 |
+| 12 | 4 | either | 3 | 4 |
+
+### Function Signature
+\`\`\`python
+def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -> list:
+\`\`\`
+
+### Return Format
+A **list** of tuples \`(X_batch, y_batch)\` with shapes \`(B, ...)\` and \`(B,)\`, where \`B = batch_size\` except possibly for the last batch.
+    `,
+    examples: [
+      {
+        input: 'X = np.arange(20).reshape(10, 2), y = np.arange(10), batch_size=4, shuffle=False',
+        output: '[(X[0:4], [0, 1, 2, 3]), (X[4:8], [4, 5, 6, 7]), (X[8:10], [8, 9])]',
+        explanation: 'Three batches; the last one holds the 2 leftover samples',
+      },
+      {
+        input: 'same, drop_last=True',
+        output: '[(X[0:4], [0, 1, 2, 3]), (X[4:8], [4, 5, 6, 7])]',
+        explanation: 'The incomplete last batch is dropped',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -> list:
+    """
+    Split (X, y) into minibatches for one epoch.
+
+    Args:
+        X: Inputs of shape (N, ...)
+        y: Labels of shape (N,)
+        batch_size: Samples per batch
+        shuffle: Shuffle with np.random.default_rng(seed).permutation(N)
+        drop_last: Drop the final batch if it is smaller than batch_size
+        seed: Seed for the shuffle
+
+    Returns:
+        List of (X_batch, y_batch) tuples
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'No shuffle: consecutive batches, smaller last batch',
+        input: '(lambda: [yb.tolist() for _, yb in make_batches(np.arange(20).reshape(10, 2), np.arange(10), 4, shuffle=False)])()',
+        expected: '[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'drop_last=True: batch shapes',
+        input: '(lambda: [xb.shape for xb, _ in make_batches(np.zeros((10, 3)), np.arange(10), 4, shuffle=True, drop_last=True)])()',
+        expected: '[[4, 3], [4, 3]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Shuffled order is exactly default_rng(seed).permutation(N)',
+        input: '(lambda: (bs := make_batches(np.arange(22).reshape(11, 2), np.arange(11), 3, seed=7), np.concatenate([yb for _, yb in bs]).tolist() == np.random.default_rng(7).permutation(11).tolist(), [len(yb) for _, yb in bs])[1:])()',
+        expected: '(True, [3, 3, 3, 2])',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Each sample exactly once, rows stay paired with labels',
+        input: '(lambda: (X := np.arange(26).reshape(13, 2), bs := make_batches(X, np.arange(13), 5, seed=3), sorted(np.concatenate([yb for _, yb in bs]).tolist()) == list(range(13)), all(bool((xb[:, 0] == 2 * yb).all()) for xb, yb in bs))[-2:])()',
+        expected: '(True, True)',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Same seed gives the same batches, a different seed does not',
+        input: '(lambda: (X := np.random.randn(16, 2), y := np.arange(16), a := [yb.tolist() for _, yb in make_batches(X, y, 4, seed=1)], b := [yb.tolist() for _, yb in make_batches(X, y, 4, seed=1)], c := [yb.tolist() for _, yb in make_batches(X, y, 4, seed=2)], a == b, a != c)[-2:])()',
+        expected: '(True, True)',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'order = np.random.default_rng(seed).permutation(N) if shuffle else np.arange(N).',
+      'Loop start = 0, batch_size, 2*batch_size, ... and take idx = order[start:start + batch_size].',
+      'With drop_last, skip idx when len(idx) < batch_size. Index both arrays with the same idx: (X[idx], y[idx]).',
+    ],
+    solution: `import numpy as np
+
+def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -> list:
+    """
+    Split (X, y) into minibatches for one epoch.
+    """
+    n = len(X)
+    order = np.random.default_rng(seed).permutation(n) if shuffle else np.arange(n)
+    batches = []
+    for start in range(0, n, batch_size):
+        idx = order[start:start + batch_size]
+        if drop_last and len(idx) < batch_size:
+            break
+        batches.append((X[idx], y[idx]))
+    return batches
+`,
+  },
 ];
