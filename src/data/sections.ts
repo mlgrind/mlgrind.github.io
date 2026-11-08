@@ -346,7 +346,7 @@ Unsupervised learning finds patterns in unlabeled data.
 
 Let's implement these algorithms!
     `,
-    problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan'],
+    problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan', 'kmeans-full'],
   },
   {
     id: 'model-evaluation',

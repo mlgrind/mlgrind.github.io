@@ -541,4 +541,222 @@ def dbscan(X, eps, min_samples):
     return labels
 `,
   },
+  {
+    id: 'kmeans-full',
+    title: 'K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)',
+    section: 'unsupervised-learning',
+    difficulty: 'hard',
+    description: `
+## K-Means from Scratch
+
+Implement the complete k-means algorithm (Lloyd's algorithm): seeding with **k-means++**, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty.
+
+You write two functions:
+- \`kmeans_pp_init(X, k, seed=0)\`: k-means++ seeding, returns the \`(k, d)\` initial centroids
+- \`kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0)\`: the full algorithm
+
+### k-means++ seeding (follow exactly, so results are reproducible)
+Create one generator \`rng = np.random.default_rng(seed)\` and draw every random number with \`u = rng.random()\`:
+1. First centroid: the point at index \`floor(u * n)\`.
+2. Each further centroid: compute \`D2[i]\`, the squared distance from point \`i\` to its **nearest already chosen** centroid, and \`cdf = cumsum(D2)\`. Pick the **first** index \`i\` with \`cdf[i] > u * cdf[-1]\`. This samples a point with probability proportional to \`D2\`.
+3. If \`cdf[-1] == 0\` (every point coincides with a chosen centroid), pick index \`floor(u * n)\` instead.
+
+### Lloyd iterations
+Starting from the initial centroids \`C\` (k-means++ when \`init == 'k-means++'\`, otherwise \`init\` is a \`(k, d)\` array), repeat for \`it = 1, 2, ..., max_iter\`:
+1. **Assign**: each point goes to its nearest centroid (squared Euclidean distance); ties go to the lowest centroid index.
+2. **Update**: each non-empty cluster's centroid becomes the mean of its points.
+3. **Empty clusters**: a cluster with no points is moved onto the point that is **farthest from its assigned centroid** in this iteration's assignment (largest squared distance; ties go to the lowest point index). If several clusters are empty, handle them in increasing cluster index, and a point can be used only once.
+4. **Stop** if the labels did not change since the previous iteration, or if the largest centroid shift \`max_j ||C_new[j] - C[j]||\` is below \`tol\`.
+
+\`\`\`
+inertia = sum_i ||x_i - C[label_i]||^2
+\`\`\`
+
+### Expected Return Format
+\`kmeans\` returns a dictionary with these keys:
+- \`'centroids'\`: \`(k, d)\` float array, the centroids after the last update
+- \`'labels'\`: \`(n,)\` int array, each point's nearest **returned** centroid (one final assignment step against the returned centroids)
+- \`'inertia'\`: Python float, computed from those labels and centroids
+- \`'n_iter'\`: int, the number of assign/update iterations performed (\`1 <= n_iter <= max_iter\`)
+`,
+    examples: [
+      {
+        input: 'kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]]))',
+        output: "{'centroids': [[1.25, 1.5], [3.9, 5.1]], 'labels': [0, 0, 1, 1, 1, 1, 1], 'inertia': 8.525, 'n_iter': 3}",
+        explanation: '(3, 4) is equally far from both initial centroids, so iteration 1 puts it in cluster 0 (lowest index); iteration 2 moves it to cluster 1; iteration 3 changes no label, so the loop stops.',
+      },
+      {
+        input: 'kmeans_pp_init(np.array([[0.0, 0.0], [0.0, 1.0], [10.0, 10.0], [10.0, 11.0], [20.0, 0.0]]), 3, seed=0)',
+        output: 'array([[10., 11.], [0., 0.], [20., 0.]])',
+        explanation: 'The first draw u = 0.637 picks index floor(0.637 * 5) = 3; each later pick is drawn in proportion to the squared distance to the nearest centroid chosen so far.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def kmeans_pp_init(X, k, seed=0):
+    """
+    k-means++ seeding (see the description for the exact sampling rule).
+
+    Args:
+        X: Data, array of shape (n, d)
+        k: Number of clusters
+        seed: Seed for np.random.default_rng
+
+    Returns:
+        centroids: Initial centroids, array of shape (k, d)
+    """
+    # Your code here
+    pass
+
+def kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0):
+    """
+    Full k-means (Lloyd's algorithm).
+
+    Args:
+        X: Data, array of shape (n, d)
+        k: Number of clusters
+        init: 'k-means++' or an initial centroid array of shape (k, d)
+        max_iter: Maximum number of assign/update iterations
+        tol: Stop when the largest centroid shift is below tol
+        seed: Seed for k-means++
+
+    Returns:
+        dict with 'centroids' (k, d), 'labels' (n,), 'inertia' (float), 'n_iter' (int)
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Labels from given initial centroids',
+        input: 'kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]]))["labels"].tolist()',
+        expected: '[0, 0, 1, 1, 1, 1, 1]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Final centroids',
+        input: 'np.round(kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]]))["centroids"], 4).tolist()',
+        expected: '[[1.25, 1.5], [3.9, 5.1]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'k-means++ picks (seed=0)',
+        input: 'kmeans_pp_init(np.array([[0.0, 0.0], [0.0, 1.0], [10.0, 10.0], [10.0, 11.0], [20.0, 0.0]]), 3, seed=0).tolist()',
+        expected: '[[10.0, 11.0], [0.0, 0.0], [20.0, 0.0]]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'n_iter and inertia',
+        input: '(lambda: (r := kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]])), (r["n_iter"], round(r["inertia"], 4)))[-1])()',
+        expected: '(3, 8.525)',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'max_iter=1: one update, then labels and inertia for the returned centroids',
+        input: '(lambda: (r := kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [1.5, 2.0]]), max_iter=1), (r["n_iter"], np.round(r["centroids"], 4).tolist(), r["labels"].tolist(), round(r["inertia"], 4)))[-1])()',
+        expected: '(1, [[1.0, 1.0], [3.5, 4.5833]], [0, 0, 1, 1, 1, 1, 1], 11.2847)',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Empty cluster is moved onto the farthest point',
+        input: '(lambda: (r := kmeans(np.array([[0.0, 0.0], [1.0, 0.0], [0.0, 3.0], [10.0, 10.0], [11.0, 10.0]]), 3, init=np.array([[0.0, 0.0], [10.0, 10.0], [100.0, 100.0]])), (np.round(r["centroids"], 4).tolist(), r["labels"].tolist()))[-1])()',
+        expected: '([[0.5, 0.0], [10.5, 10.0], [0.0, 3.0]], [0, 0, 2, 1, 1])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Large tol stops after the first iteration',
+        input: 'kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [1.5, 2.0]]), tol=10.0)["n_iter"]',
+        expected: '1',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'k-means++ picks, other seed',
+        input: 'kmeans_pp_init(np.array([[0.0, 0.0], [0.0, 1.0], [10.0, 10.0], [10.0, 11.0], [20.0, 0.0]]), 4, seed=7).tolist()',
+        expected: '[[10.0, 11.0], [20.0, 0.0], [0.0, 1.0], [0.0, 0.0]]',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Full run with k-means++ on three blobs',
+        input: '(lambda: (X := np.vstack([np.random.randn(10, 2), np.random.randn(10, 2) + 6, np.random.randn(10, 2) + [6, -6]]), r := kmeans(X, 3, seed=1), (round(r["inertia"], 3), r["n_iter"], sorted(np.bincount(r["labels"]).tolist())))[-1])()',
+        expected: '(52.505, 2, [10, 10, 10])',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Compute all point-to-centroid squared distances at once with broadcasting: `((X[:, None, :] - C[None, :, :]) ** 2).sum(-1)` has shape (n, k).',
+      'For the k-means++ draw, `np.sum(cdf <= u * cdf[-1])` is the first index whose cumulative weight exceeds `u * cdf[-1]`.',
+      'Keep the previous labels to detect "no change", and compute the centroid shift before overwriting C.',
+      'After the loop, run one more assignment so labels and inertia match the centroids you return.',
+    ],
+    solution: `import numpy as np
+
+def kmeans_pp_init(X, k, seed=0):
+    X = np.asarray(X, dtype=float)
+    n = X.shape[0]
+    rng = np.random.default_rng(seed)
+    chosen = [int(rng.random() * n)]
+    for _ in range(1, k):
+        # Squared distance from every point to its nearest chosen centroid
+        diff = X[:, None, :] - X[chosen][None, :, :]
+        d2 = (diff ** 2).sum(axis=-1).min(axis=1)
+        u = rng.random()
+        cdf = np.cumsum(d2)
+        if cdf[-1] == 0:
+            chosen.append(int(u * n))
+        else:
+            # First index whose cumulative weight exceeds u * total
+            chosen.append(min(int(np.sum(cdf <= u * cdf[-1])), n - 1))
+    return X[chosen].copy()
+
+def _assign(X, C):
+    d2 = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=-1)  # (n, k)
+    return d2.argmin(axis=1), d2
+
+def kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0):
+    X = np.asarray(X, dtype=float)
+    n = X.shape[0]
+    if isinstance(init, str):
+        C = kmeans_pp_init(X, k, seed)
+    else:
+        C = np.array(init, dtype=float)
+
+    labels = None
+    for n_iter in range(1, max_iter + 1):
+        new_labels, d2 = _assign(X, C)
+        new_C = C.copy()
+        empty = []
+        for j in range(k):
+            members = new_labels == j
+            if members.any():
+                new_C[j] = X[members].mean(axis=0)
+            else:
+                empty.append(j)
+        if empty:
+            # Move each empty cluster onto the farthest point (each point used once)
+            dist = d2[np.arange(n), new_labels].copy()
+            for j in empty:
+                far = int(dist.argmax())
+                new_C[j] = X[far]
+                dist[far] = -1.0
+
+        shift = np.sqrt(((new_C - C) ** 2).sum(axis=1)).max()
+        unchanged = labels is not None and np.array_equal(new_labels, labels)
+        C, labels = new_C, new_labels
+        if unchanged or shift < tol:
+            break
+
+    labels, d2 = _assign(X, C)
+    inertia = float(d2[np.arange(n), labels].sum())
+    return {'centroids': C, 'labels': labels, 'inertia': inertia, 'n_iter': n_iter}
+`,
+  },
 ];
