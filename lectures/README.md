@@ -56,7 +56,7 @@ gitignored.
 | Env var | Default | |
 |---------|---------|---|
 | `DEEPGRAM_API_KEY` | `proxy-injected` | Sent as `Authorization: Token …`. In the Claude sandbox the network proxy injects the real key, so leave it unset there. Never commit a key. |
-| `DEEPGRAM_VOICE` (or `DEEPGRAM_VOICE_A`) | `aura-arcas-en` | The same voice as the `learn` project. |
+| `DEEPGRAM_VOICE` (or `DEEPGRAM_VOICE_A`) | `aura-2-athena-en` | Deepgram Aura-2 voice used for every ML Grind lecture. |
 | `DEEPGRAM_CONCURRENCY` | `6` | Requests in flight. |
 
 The request is `POST https://api.deepgram.com/v1/speak?model=<voice>&encoding=linear16&sample_rate=24000&container=none`

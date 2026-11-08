@@ -18,7 +18,7 @@ import type { LectureManifest, ManifestCaption, ManifestSentence } from '../src/
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = path.resolve(ROOT, '..');
 
-const VOICE = (process.env.DEEPGRAM_VOICE ?? process.env.DEEPGRAM_VOICE_A ?? 'aura-arcas-en').trim();
+const VOICE = (process.env.DEEPGRAM_VOICE ?? process.env.DEEPGRAM_VOICE_A ?? 'aura-2-athena-en').trim();
 // In the sandbox the network proxy injects the real key for api.deepgram.com.
 const API_KEY = (process.env.DEEPGRAM_API_KEY ?? 'proxy-injected').trim();
 const SAMPLE_RATE = 24000;
