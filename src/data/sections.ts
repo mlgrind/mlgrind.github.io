@@ -399,33 +399,84 @@ Let's practice evaluation!
   {
     id: 'deep-learning',
     title: 'Deep Learning Basics',
-    description: 'Activation functions and fundamental building blocks.',
+    description: 'ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.',
     icon: '⚡',
     introduction: `
 # Deep Learning Basics
 
-Core building blocks that appear in every neural network.
+A neural network is a stack of simple pieces: an **affine map** (\`x @ W + b\`), a **non-linearity** (ReLU), and at the end a **softmax** that turns scores into probabilities. This section builds those three pieces. Every later section (MLPs, CNNs, transformers) reuses them, and interviewers expect you to write them correctly from memory, including the numerically stable softmax.
 
-## Key Concepts
+## Core Ideas
 
-### Activation Functions
-- **ReLU**: max(0, x) - Most common, avoids vanishing gradient
-- **Sigmoid**: 1/(1+e^-x) - Output in [0,1], used for binary classification
-- **Softmax**: Converts logits to probabilities that sum to 1
-- **Tanh**: Output in [-1, 1], zero-centered
+### 1. The dense (fully-connected) layer
+Each output unit takes a weighted sum of all inputs plus a bias. For a batch, it is one matrix product:
 
-### When to Use Each
-- **Hidden layers**: ReLU (or variants like LeakyReLU)
-- **Binary output**: Sigmoid
-- **Multi-class output**: Softmax
-- **RNNs**: Tanh (historically)
+\`\`\`text
+Z = X @ W + b        X: (batch, in_dim)   W: (in_dim, out_dim)   b: (out_dim,)   Z: (batch, out_dim)
+\`\`\`
 
-### Dense Layers
-- **Forward pass**: output = activation(W @ x + b)
-- **Parameters**: Weights W and biases b
-- **Computation**: Matrix multiplication + bias + activation
+The bias broadcasts over the batch. The layer has \`in_dim * out_dim + out_dim\` parameters and costs \`batch * in_dim * out_dim\` multiply-adds. (PyTorch's \`nn.Linear\` stores the transpose, \`weight: (out_dim, in_dim)\`, and computes \`X @ weight.T + bias\`.)
 
-Let's implement these fundamentals!
+### 2. Non-linearities
+Two linear layers in a row are still one linear map (\`(X @ W1) @ W2 = X @ (W1 @ W2)\`), so depth needs a non-linearity between them.
+
+| Activation | Formula | Range | Typical use |
+|------------|---------|-------|-------------|
+| ReLU | \`max(0, x)\` | \`[0, inf)\` | Hidden layers (default) |
+| Sigmoid | \`1 / (1 + exp(-x))\` | \`(0, 1)\` | Binary output, gates in LSTMs |
+| Tanh | \`(e^x - e^-x) / (e^x + e^-x)\` | \`(-1, 1)\` | RNN hidden states |
+| Softmax | \`exp(x_i) / sum_j exp(x_j)\` | probabilities summing to 1 | Multi-class output |
+
+ReLU's gradient is exactly 1 for positive inputs, so it does not shrink gradients the way sigmoid (max slope 0.25) and tanh do when they saturate.
+
+### 3. Softmax and its stable form
+Softmax is invariant to adding a constant to every score: \`softmax(x - c) = softmax(x)\`. Taking \`c = max(x)\` makes the largest exponent \`exp(0) = 1\`, so nothing overflows:
+
+\`\`\`python
+def softmax(x):
+    e = np.exp(x - np.max(x))
+    return e / e.sum()
+\`\`\`
+
+## Worked Micro-Example
+
+One input \`x = [1, 2]\`, a hidden layer with 3 ReLU units, and 2 output classes:
+
+\`\`\`text
+W1 = [[1, -1, 0.5],      b1 = [0, -1, 0.5]
+      [1, 0.5, -1]]
+z  = x @ W1 + b1 = [3, -1, -1]
+h  = relu(z)     = [3, 0, 0]          # two units are inactive for this input
+
+W2 = [[1, -1], [0, 2], [0.5, 0.5]],  b2 = [0, 0]
+logits = h @ W2 + b2 = [3, -3]
+p = softmax(logits)  = [0.9975, 0.0025]
+\`\`\`
+
+If the true class is 0, the cross-entropy loss is \`-log(0.9975) = 0.0025\`.
+
+## Common Pitfalls
+
+- **Overflow in softmax**: \`np.exp(1000)\` is \`inf\` and \`inf / inf\` is \`nan\`. Always subtract the max first.
+- **Wrong reduction**: \`np.max(x)\` reduces an array to a scalar; \`np.maximum(0, x)\` compares element-wise. Mixing them up is a classic ReLU and softmax bug.
+- **Shape and layout**: \`X @ W\` needs \`W\` as \`(in_dim, out_dim)\`; \`nn.Linear\` uses the transpose. A bias of shape \`(out_dim,)\` broadcasts over rows; one of shape \`(batch,)\` does not.
+- **Batched softmax**: for a \`(batch, classes)\` array, reduce with \`axis=-1, keepdims=True\`, otherwise you normalise across the whole batch.
+- **In-place edits**: \`x[x < 0] = 0\` changes the caller's array (and breaks autograd in PyTorch).
+
+## Interview Angle
+
+- "Why do we need non-linear activations?" Without them the network is one linear map.
+- "Implement softmax." The follow-up is always "what if the inputs are large?" (the max-shift), then "what is its Jacobian?" (\`diag(p) - p pᵀ\`) and "what is the gradient of softmax + cross-entropy?" (\`p - y\`).
+- "ReLU vs sigmoid vs tanh?" Saturation and vanishing gradients, dying ReLUs, zero-centred outputs.
+- Count the parameters and FLOPs of a dense layer.
+
+## Problems in This Section
+
+1. **ReLU Activation**: element-wise \`max(0, x)\` for arrays of any shape.
+2. **Dense Layer Forward Pass (ReLU)**: \`relu(X @ W + b)\` for a whole batch.
+3. **Numerically Stable Softmax**: probabilities from logits without overflow.
+
+Next, **Neural Networks** chains these into a full MLP with a hand-written backward pass, cross-entropy, initialization, batch norm and dropout. Leaky ReLU, GELU and temperature softmax are in **PyTorch Basics**.
     `,
     problems: ['perceptron', 'neural-network-forward', 'backpropagation'],
   },

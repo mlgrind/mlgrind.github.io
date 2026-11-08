@@ -7,20 +7,20 @@ import { LanguageVariant } from '../../../types';
  */
 export const deepLearningPyTorch: Record<string, LanguageVariant> = {
   'neural-network-forward': {
-    note: 'Use the @ operator and broadcasting for the bias; apply ReLU with torch.clamp (no nn.Linear needed).',
+    note: "Use the @ operator and broadcasting for the bias, then a ReLU (torch.clamp or torch.relu). Don't use nn.Linear or F.linear: W here is (in_dim, out_dim), the transpose of nn.Linear.weight.",
     starterCode: `import torch
 
 def dense_forward(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
-    Compute forward pass of a dense layer with ReLU activation.
+    Forward pass of a dense layer with ReLU activation: relu(X @ W + b).
 
     Args:
-        X: Input of shape (batch_size, input_dim)
-        W: Weights of shape (input_dim, output_dim)
-        b: Bias of shape (output_dim,)
+        X: Inputs, shape (batch, in_dim)
+        W: Weights, shape (in_dim, out_dim)
+        b: Bias, shape (out_dim,)
 
     Returns:
-        Output of shape (batch_size, output_dim)
+        Activations, shape (batch, out_dim)
     """
     # Your code here
     pass
@@ -29,12 +29,15 @@ def dense_forward(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor) -> torch.Te
 
 def dense_forward(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
-    Compute forward pass of a dense layer with ReLU activation.
+    Forward pass of a dense layer with ReLU activation: relu(X @ W + b).
+
+    Returns:
+        Activations, shape (batch, out_dim)
     """
-    # Linear transformation
-    Z = X @ W + b
-    # ReLU activation
-    return torch.clamp(Z, min=0)
+    Z = X @ W + b                 # (batch, out_dim); b broadcasts over the batch
+    return torch.clamp(Z, min=0)  # ReLU
+
+# Time O(batch * in_dim * out_dim), space O(batch * out_dim).
 `,
     testCases: [
       {
@@ -70,10 +73,19 @@ def dense_forward(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor) -> torch.Te
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Non-square float weights (2x2 @ 2x3)',
+        input: 'dense_forward(torch.tensor([[1.0, -1.0], [0.5, 2.0]]), torch.tensor([[1.0, -2.0, 0.5], [0.5, 1.0, -1.0]]), torch.tensor([0.0, 0.5, -0.5])).tolist()',
+        expected: '[[0.5, 0.0, 1.0], [1.5, 1.5, 0.0]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'First compute the linear transformation: Z = X @ W + b',
-      'Then apply ReLU: torch.clamp(Z, min=0)',
+      'Two stages: an affine map (weighted sums plus bias), then the non-linearity.',
+      'Shapes: (batch, in_dim) @ (in_dim, out_dim) -> (batch, out_dim); a bias of shape (out_dim,) broadcasts across the rows.',
+      'Z = X @ W + b, then torch.clamp(Z, min=0) (or torch.relu(Z)).',
+      "Don't use nn.Linear here: it stores its weight as (out_dim, in_dim) and computes X @ weight.T + bias.",
     ],
   },
   'perceptron': {
@@ -82,13 +94,13 @@ def dense_forward(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor) -> torch.Te
 
 def relu(x: torch.Tensor) -> torch.Tensor:
     """
-    Apply ReLU activation function.
+    Apply the ReLU activation element-wise.
 
     Args:
         x: Input tensor of any shape
 
     Returns:
-        Tensor with ReLU applied element-wise
+        Tensor of the same shape with max(0, x) applied element-wise
     """
     # Your code here
     pass
@@ -97,9 +109,15 @@ def relu(x: torch.Tensor) -> torch.Tensor:
 
 def relu(x: torch.Tensor) -> torch.Tensor:
     """
-    Apply ReLU activation function.
+    Apply the ReLU activation element-wise.
+
+    Returns:
+        Tensor of the same shape with max(0, x) applied element-wise
     """
+    # clamp is differentiable: gradient 1 where x > 0, 0 elsewhere
     return torch.clamp(x, min=0)
+
+# Time O(n), space O(n).
 `,
     testCases: [
       {
@@ -139,8 +157,10 @@ def relu(x: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'torch.clamp(x, min=0) keeps positive values and sets negative ones to 0.',
-      'torch.where(x > 0, x, torch.zeros_like(x)) works too.',
+      'ReLU acts on each element independently: compare every element with 0 at once.',
+      'Keep the larger of x and 0, element-wise; broadcasting handles any shape.',
+      'torch.clamp(x, min=0) is the idiom; torch.where(x > 0, x, torch.zeros_like(x)) also works.',
+      "Avoid in-place edits like x[x < 0] = 0: they change the caller's tensor and can break autograd.",
     ],
   },
   'backpropagation': {
@@ -149,28 +169,31 @@ def relu(x: torch.Tensor) -> torch.Tensor:
 
 def softmax(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute softmax probabilities.
+    Numerically stable softmax of a 1-D tensor.
 
     Args:
-        x: Input tensor (1D)
+        x: Scores (logits), 1-D float tensor of length n
 
     Returns:
-        Tensor of same shape with softmax probabilities
+        Probabilities, 1-D tensor of length n (positive, sums to 1)
     """
     # Your code here
-    # Hint: subtract max for numerical stability
     pass
 `,
     solution: `import torch
 
 def softmax(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute softmax probabilities.
+    Numerically stable softmax of a 1-D tensor.
+
+    Returns:
+        Probabilities, 1-D tensor of length n (positive, sums to 1)
     """
-    # Subtract max for numerical stability
-    x_shifted = x - x.max()
-    exp_x = torch.exp(x_shifted)
+    # Shift so the largest score is 0: exp never overflows, and the sum is >= 1
+    exp_x = torch.exp(x - x.max())
     return exp_x / exp_x.sum()
+
+# Time O(n), space O(n).
 `,
     testCases: [
       {
@@ -217,9 +240,10 @@ def softmax(x: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'Subtract x.max() for numerical stability.',
-      'Compute torch.exp of the shifted tensor.',
-      'Divide by its .sum().',
+      'Softmax has two jobs: make every score positive and make them sum to 1. Which op does each job?',
+      'Subtract a constant from every score before exponentiating; it cancels between numerator and denominator.',
+      'Exponentiate x - x.max() with torch.exp, then divide by the .sum() of the result.',
+      'Without the max-shift, torch.exp(torch.tensor(1000.)) is inf and the result is nan.',
     ],
   },
 };
