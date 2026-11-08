@@ -751,72 +751,80 @@ Each token leans toward its own value. With a causal mask, row 0 would become \`
   {
     id: 'llm-generation',
     title: 'LLM Generation & Decoding',
-    description: 'Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.',
+    description: 'Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.',
     icon: '💬',
     introduction: `
 # LLM Generation & Decoding
 
-Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.
+## Why it matters
+A trained LLM only outputs a distribution over the next token. Everything users see (how creative, repetitive or fast the model is) is decided by the decoding loop around it. Interviews for LLM roles routinely ask you to implement sampling, explain the KV cache, and reason about why decoding is memory-bound.
 
-## The Autoregressive Pipeline
+## Where decoding sits in the pipeline
+The **Transformer Architecture** section builds the model up to the logits. This section is the loop that turns logits into text:
 
-LLMs generate text one token at a time:
+\`\`\`text
+prompt ──tokenize──> ids (1, T)
+       ──prefill───> run all T tokens in parallel, fill the KV cache, logits for the last position
+loop:  logits (vocab,) ──repetition penalty──> ──/ temperature──> ──top-k / top-p filter──>
+       probs ──sample (or argmax, or beam search)──> next id
+       ──decode step──> run ONE new token, reading the KV cache; append k, v
+until EOS or max_new_tokens
 \`\`\`
-logits = model(input_tokens)        # Raw scores for each vocab token
-probs = softmax(logits / temperature)  # Convert to probabilities
-next_token = sample(probs)          # Pick a token
+
+Prefill is compute-bound (big matrix multiplies over the prompt). Each decode step processes a single token but must read every weight and the whole KV cache, so it is **memory-bandwidth-bound**. KV caching, grouped-query attention and speculative decoding all attack that cost.
+
+## Core ideas
+
+**From logits to a choice.** With logits \`z\` of shape \`(vocab_size,)\`:
+
+| Step | Formula | Effect |
+|------|---------|--------|
+| Repetition penalty | \`z_t / penalty\` if \`z_t > 0\` else \`z_t * penalty\`, for generated \`t\` | discourages loops |
+| Temperature | \`p = softmax(z / T)\` | \`T < 1\` sharper, \`T > 1\` flatter, ranking unchanged |
+| Top-k | keep the \`k\` largest logits | fixed-size candidate set |
+| Top-p (nucleus) | keep the smallest prefix with cumulative probability \`>= p\` | adaptive candidate set |
+| Greedy / beam | \`argmax\`, or keep the \`B\` best partial sequences | deterministic, used for "one right answer" tasks |
+
+**KV cache.** Keys and values of past tokens never change under causal attention, so each step projects only the new token and attends over the cached \`K, V\`. Cache size: \`2 · n_layers · n_kv_heads · d_head · seq_len\` values per sequence.
+
+**Speculative decoding.** A small draft model proposes \`K\` tokens; the target model scores all of them in one pass; token \`i\` is accepted with probability \`min(1, p_target / p_draft)\`, and the first rejection ends the draft. With residual resampling, the output follows the target distribution exactly.
+
+## Worked micro-example
+Logits \`z = [2.0, 1.0, 0.1]\`:
+
+\`\`\`text
+T = 1.0 : softmax(z)      = [0.659,  0.2424, 0.0986]
+T = 0.5 : softmax(z / .5) = [0.8638, 0.1169, 0.0193]     sharper
+T = 2.0 : softmax(z / 2)  = [0.5017, 0.3043, 0.194 ]     flatter
+top-k, k = 2 (T = 1)      = [0.7311, 0.2689, 0.0   ]     softmax of [2, 1]
+top-p, p = 0.8 (T = 1)    : cumulative [0.659, 0.9014, 1.0] reaches 0.8 at token 1
+                          = [0.7311, 0.2689, 0.0   ]     same two tokens here
 \`\`\`
 
-## Key Concepts
+## Common pitfalls
+- **Overflow**: subtract the max before \`exp\`, especially after dividing by a small temperature.
+- **Top-p off-by-one**: include the token that crosses \`p\`, or a confident distribution keeps nothing.
+- **Order of operations**: temperature before top-k/top-p; filter logits with \`-inf\`, then softmax (or renormalize after zeroing).
+- **Repetition penalty sign**: dividing a negative logit makes the token *more* likely; and each distinct token is penalized once.
+- **Beam search underflow**: add log-probabilities; never multiply raw probabilities over long sequences.
+- **Reproducibility**: seed once, then draw random numbers in a fixed order (the sampling problems here seed inside the function).
 
-### Temperature Scaling
-Controls randomness by scaling logits before softmax:
-\`\`\`
-scaled_logits = logits / T
-\`\`\`
-- T < 1: More deterministic (sharper distribution)
-- T > 1: More random (flatter distribution)
-- T → 0: Greedy decoding (always pick most likely)
+## Interview angle
+- Compare greedy, beam search, top-k, top-p. When would you use each?
+- Why is decoding memory-bound, and how do KV caching, GQA, quantization and batching help? Estimate the KV cache of a 7B model at 4k tokens.
+- Walk through speculative decoding and argue why it preserves the target distribution; what acceptance rate makes it worthwhile?
+- Complexity per generated token: \`O(t · d)\` attention with a cache vs \`O(t^2 · d)\` without.
 
-### Sampling Strategies
+## Problems in this section
+1. **Temperature Scaling**: \`softmax(logits / T)\`, stably.
+2. **Top-k Sampling**: keep the \`k\` best tokens, renormalize, sample.
+3. **Nucleus (Top-p) Sampling**: keep the smallest prefix with mass \`>= p\`.
+4. **Repetition Penalty**: the CTRL / Hugging Face penalty on already-generated tokens.
+5. **KV Cache for Efficient Generation**: one cached decoding step of attention.
+6. **Beam Search Decoding**: keep the \`B\` best hypotheses, with EOS handling.
+7. **Speculative Decoding**: the draft-then-verify acceptance loop.
 
-| Strategy | How It Works | When to Use |
-|----------|-------------|-------------|
-| **Top-k** | Keep only the k most likely tokens | Simple, predictable filtering |
-| **Top-p (Nucleus)** | Keep smallest set with cumulative prob ≥ p | Adaptive, works across distributions |
-| **Repetition Penalty** | Reduce probability of already-generated tokens | Prevent loops and repetition |
-
-### KV Cache
-The key optimization for efficient autoregressive generation:
-- Cache Key and Value projections from previous tokens
-- Only compute Q, K, V for the **new** token at each step
-- Reduces per-token cost from O(n²) to O(n)
-
-### Beam Search
-Maintain multiple candidate sequences:
-\`\`\`
-score(sequence) = sum(log P(token_i))
-\`\`\`
-- Explores multiple paths simultaneously
-- Finds higher-probability sequences than greedy decoding
-- Used in translation, summarization, and structured output
-
-### Speculative Decoding
-Use a small "draft" model to propose tokens, verified by the large model:
-1. Draft model generates K tokens quickly
-2. Target model verifies all K in one forward pass
-3. Accept with probability min(1, p_target / p_draft)
-- Mathematically guarantees target model distribution
-- 2-3x speedup in practice
-
-## Interview Essentials
-- Explain temperature scaling and its effect on output diversity
-- Compare top-k vs top-p sampling trade-offs
-- Describe how KV cache reduces inference cost
-- Implement beam search with length normalization
-- Explain why speculative decoding preserves the target distribution
-
-Let's implement these essential LLM techniques!
+**Related problems.** The logits come from the decoder built in **Transformer Architecture** (causal mask, GQA, RoPE) and measured by **Token Cross-Entropy and Perplexity** in **LLM Internals**, where **Online Softmax** shows how attention itself is made memory-efficient. **Mini GPT** (E2E Implementations) uses greedy generation with context cropping; try swapping in your top-p sampler. **Transformer Bug Hunt** checks the causal masking that makes cached decoding valid.
     `,
     problems: [
       'llm-temperature-scaling',

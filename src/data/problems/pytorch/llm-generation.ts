@@ -8,7 +8,7 @@ import { LanguageVariant } from '../../../types';
 export const llmGenerationPyTorch: Record<string, LanguageVariant> = {
   // Tracks for existing problems that had no PyTorch track yet.
   'llm-temperature-scaling': {
-    note: 'F.softmax is fine here: the point is where the temperature goes.',
+    note: 'F.softmax is fine here (it is numerically stable): the point is where the temperature goes.',
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -21,7 +21,7 @@ def temperature_scaling(logits, temperature=1.0):
         temperature: Temperature parameter (T > 0)
 
     Returns:
-        probs: Probability distribution over vocabulary, tensor (vocab_size,)
+        probs: softmax(logits / T), tensor (vocab_size,), sums to 1
     """
     # Your code here
     pass
@@ -80,8 +80,10 @@ def temperature_scaling(logits, temperature=1.0):
       },
     ],
     hints: [
-      'Divide the logits by the temperature before the softmax',
-      'F.softmax(scaled, dim=-1) is numerically stable',
+      'Temperature acts on the logits, before the softmax. What does dividing by T < 1 do to the gaps between logits?',
+      'Two steps: scale, then softmax over the vocabulary dimension.',
+      'F.softmax(logits / temperature, dim=-1).',
+      'Divide the logits, not the probabilities: probs ** (1/T) renormalized is equivalent, but softmax(logits) / T is not a distribution.',
     ],
   },
 
@@ -101,7 +103,7 @@ def top_k_sampling(logits, k, temperature=1.0):
 
     Returns:
         token: Sampled token index (Python int)
-        filtered_probs: Probability distribution after filtering, tensor (vocab_size,)
+        filtered_probs: tensor (vocab_size,), k non-zero entries summing to 1
     """
     torch.manual_seed(42)
     # Your code here
@@ -174,10 +176,10 @@ def top_k_sampling(logits, k, temperature=1.0):
       },
     ],
     hints: [
-      'Scale first: scaled = logits / temperature',
-      'top_vals, top_idx = torch.topk(scaled, k); build torch.full_like(scaled, float("-inf")) and write the top values back at top_idx',
-      'F.softmax over the filtered logits renormalizes automatically',
-      'torch.multinomial(probs, num_samples=1).item() samples a token',
+      'You need the k surviving tokens and a renormalized distribution over them.',
+      'Scale by the temperature, set every logit outside the top k to -inf, softmax, then sample.',
+      'top_vals, top_idx = torch.topk(scaled, k); filtered = torch.full_like(scaled, float(\'-inf\')); filtered[top_idx] = top_vals; token = torch.multinomial(probs, 1).item().',
+      'Apply the temperature before filtering, and return a Python int (int(token)), not a tensor.',
     ],
   },
 
@@ -197,7 +199,7 @@ def top_p_sampling(logits, p, temperature=1.0):
 
     Returns:
         token: Sampled token index (Python int)
-        filtered_probs: Probability distribution after filtering, tensor (vocab_size,)
+        filtered_probs: tensor (vocab_size,), non-zero on the nucleus only, sums to 1
     """
     torch.manual_seed(42)
     # Your code here
@@ -279,14 +281,15 @@ def top_p_sampling(logits, p, temperature=1.0):
       },
     ],
     hints: [
-      'probs = F.softmax(logits / temperature, dim=-1)',
-      'sorted_probs, sorted_idx = torch.sort(probs, descending=True); cumsum = torch.cumsum(sorted_probs, dim=-1)',
-      'A token is in the nucleus if the cumulative mass before it, cumsum - sorted_probs, is still < p',
-      'Zero the rest, renormalize, then torch.multinomial(filtered, 1).item()',
+      'The nucleus is a prefix of the tokens sorted by probability; find where it ends.',
+      'Softmax with temperature, sort descending, cumulative sum, keep the prefix that first reaches p, renormalize, sample.',
+      'sorted_probs, sorted_idx = torch.sort(probs, descending=True); cumsum = torch.cumsum(sorted_probs, dim=-1); keep = (cumsum - sorted_probs) < p.',
+      'Keep the token that crosses p (mass before it < p), so the top token is always kept; renormalize before torch.multinomial.',
     ],
   },
 
   'llm-repetition-penalty': {
+    note: 'Each distinct generated token is penalized once (as in Hugging Face\'s RepetitionPenaltyLogitsProcessor). Return a new tensor; don\'t modify the input.',
     starterCode: `import torch
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
@@ -295,12 +298,13 @@ def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
 
     Args:
         logits: Raw logits, tensor (vocab_size,)
-        generated_tokens: List of previously generated token indices
+        generated_tokens: List of previously generated token ids (may repeat)
         penalty: Repetition penalty factor (>= 1.0)
 
     Returns:
-        penalized_logits: New tensor with the penalty applied (vocab_size,);
-                          the input tensor must not be modified
+        penalized_logits: New tensor (vocab_size,); each distinct generated
+                          token: positive logit / penalty, else * penalty.
+                          The input tensor must not be modified.
     """
     # Your code here
     pass
@@ -308,15 +312,14 @@ def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
     solution: `import torch
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
-    logits = logits.clone()  # don't modify the caller's tensor
-
-    for token_id in generated_tokens:
-        if logits[token_id] > 0:
-            logits[token_id] = logits[token_id] / penalty
-        else:
-            logits[token_id] = logits[token_id] * penalty
-
-    return logits
+    out = logits.clone()  # don't modify the caller's tensor
+    if len(generated_tokens) == 0:
+        return out
+    ids = torch.unique(torch.tensor(generated_tokens))  # each distinct token once
+    vals = out[ids]
+    # Both branches lower the logit when penalty > 1
+    out[ids] = torch.where(vals > 0, vals / penalty, vals * penalty)
+    return out
 `,
     testCases: [
       {
@@ -368,11 +371,26 @@ def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
         expected: '[2.0, -1.0, 3.0, 1.0, -2.0, 3.0]',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'Repeated tokens are penalized only once',
+        input: 'apply_repetition_penalty(torch.tensor([2.0, -1.0, 3.0]), [0, 0, 1, 1, 1], 2.0).tolist()',
+        expected: '[1.0, -2.0, 3.0]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'No generated tokens: logits unchanged',
+        input: 'apply_repetition_penalty(torch.tensor([0.5, -0.5]), [], 1.3).tolist()',
+        expected: '[0.5, -0.5]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Start with logits = logits.clone() so the caller\'s tensor is untouched',
-      'Loop over generated_tokens and check logits[token_id] > 0',
-      'Positive: divide by penalty; otherwise multiply by penalty',
+      'With penalty > 1 every generated token must become less likely. What happens to a positive logit, and to a negative one?',
+      'Clone the logits, find the distinct generated ids, update those entries depending on their sign.',
+      'ids = torch.unique(torch.tensor(generated_tokens)); vals = out[ids]; out[ids] = torch.where(vals > 0, vals / penalty, vals * penalty).',
+      'Handle an empty list, don\'t divide negative logits (that raises them), and don\'t penalize a repeated token twice.',
     ],
   },
 
@@ -483,9 +501,10 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
       },
     ],
     hints: [
-      'Project only the new token: q = x_new @ W_Q, and likewise k, v',
-      'If the cache is None, start it with k and v; otherwise torch.cat([k_cache, k], dim=0)',
-      'scores = q @ k_cache.T / math.sqrt(d_k); output = F.softmax(scores, dim=-1) @ v_cache',
+      'Only the new token needs projecting: cached keys and values never change.',
+      'Project q, k, v for x_new; append k and v to the caches (or start them); attend with q over the whole cache.',
+      'k_cache = k if k_cache is None else torch.cat([k_cache, k], dim=0); output = F.softmax(q @ k_cache.T / math.sqrt(d_k), dim=-1) @ v_cache.',
+      'Append along dim=0 at the end, and scale by sqrt(d_k), not d_model.',
     ],
   },
 
@@ -502,7 +521,8 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
                    log_probs[t] gives log probs for step t.
         beam_width: Number of beams to maintain
         max_length: Maximum sequence length (defaults to num_steps)
-        eos_token: End-of-sequence token ID (optional)
+        eos_token: End-of-sequence token id (optional); a beam ending with it
+                   is carried forward unchanged
 
     Returns:
         best_sequence: List of token indices (Python ints) for the best beam
@@ -596,15 +616,15 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
       },
     ],
     hints: [
-      'Keep a list of (sequence, score) beams, starting from ([], 0)',
-      'Expanding a beam with every token is one tensor op: score + log_probs[step]',
-      'Concatenate all candidate scores and keep the best with torch.topk(scores, beam_width)',
-      'Carry a beam that already ends in eos_token forward unchanged',
+      'Each beam is (token list, total log-prob); all beams grow together, one step at a time.',
+      'Each step: carry EOS beams unchanged, expand the rest with every token, keep the beam_width best candidates.',
+      'Expanding one beam is a single tensor op, score + log_probs[step]; torch.cat the candidate scores and torch.topk(scores, beam_width).',
+      'Add log-probs (don\'t multiply probabilities), and round only the final score: round(best_score.item(), 4).',
     ],
   },
 
   'llm-speculative-decoding': {
-    note: 'Draw each uniform number with torch.rand. Keep the torch.manual_seed(42) line.',
+    note: 'Draw one torch.rand(1) per examined token, in order, after the torch.manual_seed(42) line. target_dist_next is not used here.',
     starterCode: `import torch
 
 def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
@@ -617,12 +637,12 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
         target_probs: Probability the target model assigns to each drafted token,
                       tensor (K,).
         draft_tokens: The K token IDs proposed by the draft model, tensor (K,).
-        target_dist_next: Full target distribution for position after last draft token,
-                          tensor (vocab_size,) or None.
+        target_dist_next: Full target distribution after the last drafted token,
+                          tensor (vocab_size,) or None (not used in this problem).
 
     Returns:
-        accepted_tokens: List of accepted token IDs (Python ints)
-        num_accepted: Number of accepted tokens (0 to K)
+        accepted_tokens: Accepted prefix of draft_tokens (list of Python ints)
+        num_accepted: len(accepted_tokens), between 0 and K
     """
     torch.manual_seed(42)
     # Your code here
@@ -701,9 +721,10 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
       },
     ],
     hints: [
-      'accept_prob = (target_probs / draft_probs).clamp(max=1.0), with torch.where for p_draft == 0',
-      'For each token draw r = torch.rand(1).item() and accept if r < accept_prob[i]',
-      'Stop at the first rejection; return the accepted prefix as Python ints and its length',
+      'Tokens are checked in order and the first rejection ends the loop, so the answer is a prefix of draft_tokens.',
+      'For each token: acceptance probability, one uniform draw, accept or stop.',
+      'accept_prob = (target_probs / draft_probs).clamp(max=1.0), with torch.where for draft_probs == 0; accept if torch.rand(1).item() < accept_prob[i].',
+      'Return Python ints (int(draft_tokens[i])) and the count; don\'t keep checking tokens after a rejection.',
     ],
   },
 };
