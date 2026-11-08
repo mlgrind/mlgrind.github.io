@@ -155,7 +155,7 @@ export const PositionalScene: React.FC<SceneProps> = ({ cues, durationInFrames }
             ))}
           </svg>
         </div>
-        <div style={{ position: 'absolute', left: 1060, top: 92 + 40 + PE_POS * chh + 18, display: 'flex', gap: 34, fontFamily: F.mono, fontSize: 19, opacity: hl }}>
+        <div style={{ position: 'absolute', left: 1060, top: 92 + 40 + PE_POS * chh + 18, display: 'flex', gap: 26, fontFamily: F.mono, fontSize: 17, whiteSpace: 'nowrap', opacity: hl }}>
           <span style={{ color: C.text }}>
             cos(pos {NEAR[0]}, pos {NEAR[1]}) = {cos(PE[NEAR[0]], PE[NEAR[1]]).toFixed(2)}
           </span>
