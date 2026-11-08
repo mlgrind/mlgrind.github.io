@@ -839,74 +839,102 @@ top-p, p = 0.8 (T = 1)    : cumulative [0.659, 0.9014, 1.0] reaches 0.8 at token
   {
     id: 'llm-internals',
     title: 'LLM Internals',
-    description: 'SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.',
+    description: 'How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention\'s online softmax, mixture-of-experts routing and perplexity.',
     icon: '🧩',
     introduction: `
 # LLM Internals
 
-You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how we measure a language model at all. These are the details LLM engineering interviews probe.
+## Why it matters
+You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how a language model is measured. LLM engineering interviews probe exactly these details, usually as "why" questions after you've written the code.
 
-Some pieces of the pipeline below have their own problems elsewhere: BPE tokenization, RoPE and grouped-query attention in **Transformer Architecture**, and temperature, top-k/top-p sampling, the KV cache and speculative decoding in **LLM Generation & Decoding**. This section covers the rest.
+## How an LLM works, end to end
+Each stage has a problem somewhere on this site:
 
-## How an LLM generates text, end to end
-
-\`\`\`
-text -> tokenizer -> token ids (B, T)
-     -> embedding lookup                         (B, T, d_model)
+\`\`\`text
+text -> tokenizer -> ids (B, T)                       BPE, longest match       (Transformer Architecture)
+     -> embedding lookup -> h (B, T, d_model)
      -> N x decoder block:
-            h = h + Attention(RMSNorm(h))        causal, multi-head, positions via RoPE
-            h = h + FFN(RMSNorm(h))              SwiGLU MLP, or a mixture of experts
-     -> final RMSNorm -> LM head                 logits (B, T, vocab)
-     -> pick next token (greedy / sampling), append it, repeat
+          h = h + Attention(RMSNorm(h))               causal, RoPE, GQA        (Transformer Architecture)
+                                                      computed with the online softmax (this section)
+          h = h + FFN(RMSNorm(h))                     SwiGLU MLP or a mixture of experts (this section)
+     -> final RMSNorm -> LM head -> logits (B, T, vocab)
+     -> training: next-token cross-entropy / perplexity (this section)
+     -> inference: KV cache + sampling, one token at a time (LLM Generation & Decoding)
 \`\`\`
 
-Training runs the whole sequence at once and minimizes next-token cross-entropy. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
+Training runs the whole sequence at once and is compute-bound. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
 
-## What each technique solves
+## Core ideas
 
-| Technique | Problem it solves | Axis | Problem here |
-|-----------|-------------------|------|--------------|
-| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality | SwiGLU Feed-Forward Block |
-| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory + speed | Online Softmax |
-| Mixture of experts | More parameters without more compute per token | Speed (compute) | Mixture-of-Experts Routing |
-| Cross-entropy / perplexity | One number to train on and to compare models with | Quality (evaluation) | Token Cross-Entropy and Perplexity |
-
-## Key formulas
+| Technique | Problem it solves | Axis |
+|-----------|-------------------|------|
+| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality |
+| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory traffic |
+| Mixture of experts | More parameters without more compute per token | Compute |
+| Cross-entropy / perplexity | One number to train on and to compare models with | Evaluation |
 
 **SwiGLU and RMSNorm** (LLaMA):
-\`\`\`
+
+\`\`\`text
 rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
-ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,   silu(z) = z * sigmoid(z)
+ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,     silu(z) = z * sigmoid(z)
 \`\`\`
 
-**Online softmax**: stream over key blocks, keeping a running max \`m\`, normalizer \`l\` and output \`acc\`:
-\`\`\`
+**Online softmax**: stream over key blocks with a running max \`m\`, normalizer \`l\` and output \`acc\`:
+
+\`\`\`text
 m' = max(m, rowmax(S_b))
 l  = l * exp(m - m') + rowsum(exp(S_b - m'))
-acc = acc * exp(m - m') + exp(S_b - m') @ V_b
-output = acc / l
+acc = acc * exp(m - m') + exp(S_b - m') @ V_b          output = acc / l
 \`\`\`
 
 **MoE routing** (top-k gates, Switch Transformer load-balancing loss):
-\`\`\`
-gates = softmax(top-k router logits)
-y = sum_j gates_j * expert_{i_j}(x)
-aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router prob)
+
+\`\`\`text
+gates    = softmax(top-k router logits)
+y        = sum_j gates_j * expert_{i_j}(x)
+aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router probability)
 \`\`\`
 
 **Perplexity**:
-\`\`\`
-mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)      (padding masked out)
-perplexity = exp(mean_nll)                           (uniform over V tokens -> V)
+
+\`\`\`text
+mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)        padding masked out
+perplexity = exp(mean_nll)                             uniform over V tokens -> V
 \`\`\`
 
-## Interview essentials
-- Why SwiGLU uses \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`
-- Why FlashAttention is exact (not an approximation) and what it saves: memory traffic, not FLOPs
-- What goes wrong in an MoE without the auxiliary loss (expert collapse) and how capacity factors drop tokens
-- Why perplexity must exclude padding, and why it's only comparable between models with the same tokenizer
+## Worked micro-example
+Online softmax of \`x = [0, 1, 5, 2, 9]\` with blocks of 2:
 
-Then put it all together in the capstone **Mini GPT** problem (E2E Implementations).
+\`\`\`text
+block [0, 1]: m = 1, l = e^-1 + e^0                   = 1.3679
+block [5, 2]: m = 5, l = 1.3679 * e^-4 + e^0 + e^-3   = 1.0748   (old sum rescaled by e^(1-5))
+block [9]   : m = 9, l = 1.0748 * e^-4 + e^0          = 1.0197
+softmax(x)  = exp(x - 9) / 1.0197 = [0.0001, 0.0003, 0.018, 0.0009, 0.9807]
+\`\`\`
+
+The same numbers come out of a two-pass softmax; the online version never needed the global max up front. FlashAttention does this for every query row, with \`acc\` carrying the weighted values.
+
+## Common pitfalls
+- **RMSNorm is not LayerNorm**: no mean subtraction and no bias; the residual adds the un-normalized input.
+- **Online softmax**: forgetting to rescale \`acc\` (not just \`l\`) when the max changes, or dividing by \`l\` inside the loop.
+- **MoE**: computing \`f\` from gates instead of routing counts, using the renormalized top-k gates for \`P\`, or running every expert on every token.
+- **Perplexity**: dividing by the number of positions instead of the number of real tokens; comparing perplexities across different tokenizers.
+- **Overflow** everywhere: log-softmax and attention need the max subtracted.
+
+## Interview angle
+- Why does SwiGLU use \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`?
+- Why is FlashAttention exact, and what does it save? (Memory traffic and \`O(T^2)\` memory, not FLOPs.)
+- What goes wrong in an MoE without the auxiliary loss (expert collapse)? How do capacity factors drop tokens? Total vs active parameters of Mixtral 8x7B (about 47B vs 13B).
+- Why must perplexity exclude padding, and why is it only comparable between models with the same tokenizer?
+
+## Problems in this section
+1. **SwiGLU Feed-Forward Block (LLaMA MLP)**: RMSNorm, the gated MLP and the residual.
+2. **Online Softmax (the FlashAttention Trick)**: streaming softmax and block-wise exact attention.
+3. **Mixture-of-Experts Routing**: top-k routing, dispatch/combine and the load-balancing loss.
+4. **Token Cross-Entropy and Perplexity**: the LM loss with a padding mask.
+
+**Related problems.** The attention half of the LLaMA block (RoPE, GQA, causal mask) is in **Transformer Architecture**, along with **Attention Backward Pass**, whose \`rowsum(dP * P)\` term FlashAttention's backward pass also needs. Decoding and the KV cache are in **LLM Generation & Decoding**. **Masked Cross-Entropy with Label Smoothing** (Neural Networks) is a close cousin of the perplexity problem. Then assemble a full model in **Mini GPT**, debug one in **Transformer Bug Hunt**, and compare with the post-norm encoder in **E2E: Transformer Encoder** (all in E2E Implementations).
     `,
     problems: ['rmsnorm-swiglu', 'online-softmax', 'moe-routing', 'perplexity'],
   },

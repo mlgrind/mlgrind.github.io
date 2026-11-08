@@ -133,9 +133,10 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
       },
     ],
     hints: [
-      'RMSNorm: x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps) * weight',
-      'SwiGLU: (F.silu(x @ W_gate) * (x @ W_up)) @ W_down',
-      'Block: x + swiglu_ffn(rms_norm(x, norm_weight, eps), ...)',
+      'Three small pieces that compose: a normalizer, a gated MLP and a residual add. Get each one right on its own.',
+      'RMSNorm divides by the root-mean-square of the last dim (no mean subtraction, no bias); SwiGLU multiplies F.silu(x @ W_gate) by x @ W_up elementwise, then projects down.',
+      'x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps) * weight; (F.silu(x @ W_gate) * (x @ W_up)) @ W_down.',
+      'The residual adds the original x, not rms_norm(x); keepdim=True keeps the RMS broadcastable over any leading dims.',
     ],
   },
   'online-softmax': {
@@ -253,10 +254,10 @@ def online_attention(Q, K, V, block_size):
       },
     ],
     hints: [
-      'm = torch.full((n_q, 1), float("-inf")); l = torch.zeros(n_q, 1); acc = torch.zeros(n_q, d_v)',
-      'Row max of a block: S.max(dim=1, keepdim=True).values; combine with torch.maximum(m, ...).',
-      'scale = torch.exp(m - m_new) rescales both l and acc before adding the new block.',
-      'Return acc / l.',
+      'With the global max known in advance, softmax is one pass. What must be fixed up when a later block reveals a bigger max?',
+      'Everything accumulated so far was computed relative to the old max m; multiplying by exp(m - m_new) re-bases it to the new max. Apply that to both l and acc.',
+      'm = torch.full((n_q, 1), float(\'-inf\')); l = torch.zeros(n_q, 1); acc = torch.zeros(n_q, d_v); m_new = torch.maximum(m, S.max(dim=1, keepdim=True).values).',
+      'Rescale before adding the new block, and divide acc / l once at the end; exp(-inf) = 0 makes the first block work without a special case.',
     ],
   },
   'moe-routing': {
@@ -274,8 +275,9 @@ def moe_layer(x, W_router, expert_weights, top_k):
         top_k: experts per token
 
     Returns:
-        dict with 'output' (T, d_out), 'expert_indices' (T, k),
-        'gates' (T, k) and 'aux_loss' (0-d tensor)
+        dict with 'output' (T, d_out), 'expert_indices' (T, k) sorted by
+        descending logit, 'gates' (T, k) rows summing to 1, and
+        'aux_loss' (0-d tensor) = E * sum_e f_e * P_e
     """
     # Your code here
     pass
@@ -376,10 +378,10 @@ def moe_layer(x, W_router, expert_weights, top_k):
       },
     ],
     hints: [
-      'topk_logits, expert_indices = torch.topk(logits, k, dim=-1); gates = torch.softmax(topk_logits, dim=-1)',
-      'token_ids, slot = torch.where(expert_indices == e) lists the (token, slot) pairs routed to expert e.',
-      'output = output.index_add(0, token_ids, gates[token_ids, slot].unsqueeze(-1) * (x[token_ids] @ expert_weights[e]))',
-      'f = torch.bincount(expert_indices.flatten(), minlength=E).float() / (T * k); aux = E * (f * probs.mean(0)).sum()',
+      'Four steps: router softmax, top-k selection with renormalized gates, per-expert dispatch/combine, aux loss.',
+      'torch.topk returns the k largest logits already sorted in descending order; the gates are a softmax over just those k values.',
+      'token_ids, slot = torch.where(expert_indices == e); output = output.index_add(0, token_ids, gates[token_ids, slot].unsqueeze(-1) * (x[token_ids] @ expert_weights[e])).',
+      'f comes from routing counts, torch.bincount(expert_indices.flatten(), minlength=E).float() / (T * k), and P from the full softmax over all E experts, not from the gates.',
     ],
   },
   'perplexity': {
@@ -463,9 +465,10 @@ def perplexity(logits, targets, mask=None):
       },
     ],
     hints: [
-      'log_probs = F.log_softmax(logits, dim=-1)',
-      'token_nll = -log_probs.gather(-1, targets.unsqueeze(-1)).squeeze(-1)',
-      'Multiply by mask.float(), divide the sum by mask.sum(), and torch.exp the mean.',
+      'Perplexity is exp of the average per-token loss; the work is a stable per-token loss averaged over the right positions.',
+      'Log-softmax over the vocabulary, gather the target log-prob, negate, mask, average over real tokens.',
+      'log_probs = F.log_softmax(logits, dim=-1); token_nll = -log_probs.gather(-1, targets.unsqueeze(-1)).squeeze(-1).',
+      'Multiply by mask.float() and divide by mask.sum(), not by the number of positions; gather needs int64 targets.',
     ],
   },
 };
