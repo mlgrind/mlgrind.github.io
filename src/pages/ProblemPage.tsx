@@ -263,13 +263,13 @@ export default function ProblemPage() {
   ) : null;
 
   const actionBar = (
-    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
       <div className="flex items-center gap-2">
         {languageToggle}
         <button
           onClick={handleRunTests}
           disabled={!isReady || isRunning}
-          className="px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isRunning ? 'Running...' : 'Run Tests'}
         </button>
@@ -288,21 +288,21 @@ export default function ProblemPage() {
         {testResults.length > 0 && testResults.every(r => r.passed) && nextProblemId && (
           <Link
             to={`/problem/${sectionId}/${nextProblemId}`}
-            className="px-4 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+            className="whitespace-nowrap px-4 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
           >
             Next Problem &rarr;
           </Link>
         )}
         <button
           onClick={() => setIsEditorMaximized(!isEditorMaximized)}
-          className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
+          className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
           title={isEditorMaximized ? 'Restore layout' : 'Maximize editor'}
         >
           {isEditorMaximized ? '\u229f Restore' : '\u229e Maximize'}
         </button>
         <button
           onClick={handleReset}
-          className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
+          className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
         >
           Reset
         </button>
@@ -438,7 +438,7 @@ export default function ProblemPage() {
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Action Bar */}
-              <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
                 <div className="flex items-center gap-2">
                   {languageToggle}
                   <button
