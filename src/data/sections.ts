@@ -136,64 +136,112 @@ Master einsum to write clean, efficient deep learning code!
   {
     id: 'pytorch-basics',
     title: 'PyTorch Basics',
-    description: 'Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.',
+    description: 'Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy.',
     icon: '🔥',
     defaultLanguage: 'pytorch',
     introduction: `
 # PyTorch Basics
 
-Learn PyTorch patterns and concepts. Problems in this section open in the **PyTorch** track, which runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build). Switch to **NumPy** with the toggle to implement the same ideas from scratch.
+Problems in this section open in the **PyTorch** track, which runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build). Switch to **NumPy** with the toggle to build the same ideas from scratch: same function names, same tests.
 
-## Tensor Operations
+## Why It Matters
 
-### Creation
+PyTorch is the default framework for research and most production deep learning, and "implement X in PyTorch" is a standard ML interview format. Interviewers expect you to move fluently between tensor shapes, autograd and \`nn.Module\`, and to know what the built-ins (\`F.cross_entropy\`, \`torch.optim.Adam\`, \`nn.LayerNorm\`) compute under the hood, because that is where silent bugs live.
+
+## Core Ideas
+
+### Tensors
+A tensor is an n-dimensional array with a \`dtype\`, a \`shape\` and (optionally) a gradient. The API mirrors NumPy almost one to one:
+
+| Task | PyTorch | NumPy |
+|------|---------|-------|
+| Create | \`torch.tensor(data)\`, \`torch.zeros(3, 4)\`, \`torch.randn(2, 3)\` | \`np.array(data)\`, \`np.zeros((3, 4))\`, \`np.random.randn(2, 3)\` |
+| Reduce | \`x.sum(dim=1, keepdim=True)\` | \`x.sum(axis=1, keepdims=True)\` |
+| Reshape | \`x.view(2, -1)\`, \`x.permute(0, 2, 1)\`, \`x.unsqueeze(0)\` | \`x.reshape(2, -1)\`, \`x.transpose(0, 2, 1)\`, \`x[None]\` |
+| Default float | \`float32\` | \`float64\` |
+| \`x.std()\` | unbiased (divides by n - 1) | population (divides by n) |
+
+Shapes in this section follow the usual conventions: \`(batch, features)\` for MLPs, \`(N, C, H, W)\` for images, \`(seq_len, d_model)\` for token sequences.
+
+### Autograd
+Every operation on a tensor with \`requires_grad=True\` is recorded in a graph. \`loss.backward()\` walks it in reverse with the chain rule and **adds** each gradient into \`.grad\`:
+
 \`\`\`python
-# PyTorch           # NumPy equivalent
-torch.tensor()      np.array()
-torch.zeros()       np.zeros()
-torch.randn()       np.random.randn()
+x = torch.tensor(2.0, requires_grad=True)
+y = x ** 2 + 3 * x + 1
+y.backward()
+x.grad  # tensor(7.) = 2x + 3
 \`\`\`
 
-### Operations
+For a linear layer \`Y = X @ W + b\` with upstream gradient \`G = dL/dY\`: \`dL/dW = X.T @ G\`, \`dL/db = G.sum(0)\`, \`dL/dX = G @ W.T\`. Every gradient has the shape of its tensor.
+
+### Modules, Losses and Optimizers
+An \`nn.Module\` owns \`nn.Parameter\`s and sub-modules and defines \`forward\`; \`model.parameters()\` collects every trainable tensor for the optimizer. Losses expect specific inputs (\`F.cross_entropy\` wants raw logits and integer classes). Optimizers (\`SGD\` with momentum, \`Adam\`) turn gradients into updates, and schedulers change the learning rate over time.
+
+### The Training Loop
+
 \`\`\`python
-# PyTorch           # NumPy equivalent
-x + y               x + y
-x @ y               x @ y
-x.sum(dim=1)        x.sum(axis=1)
-x.view(2, -1)       x.reshape(2, -1)
+for xb, yb in loader:              # minibatches from a DataLoader
+    optimizer.zero_grad()          # 1. clear old gradients
+    loss = loss_fn(model(xb), yb)  # 2-3. forward pass and loss
+    loss.backward()                # 4. gradients into p.grad
+    optimizer.step()               # 5. update the parameters
 \`\`\`
 
-## Autograd Concepts
+## Worked Micro-Example
 
-PyTorch tracks operations for automatic differentiation:
-\`\`\`python
-x = torch.tensor([2.0], requires_grad=True)
-y = x ** 2
-y.backward()  # dy/dx = 2x = 4
-\`\`\`
+Fit \`y_hat = w * x + b\` to \`X = [[1], [2], [3]]\`, \`y = [2, 4, 6.5]\`, starting from \`w = b = 0\` with \`lr = 0.05\`:
 
-In the NumPy track you implement this by hand to understand the math.
+| Quantity | Value |
+|----------|-------|
+| loss = mean((Xw + b - y)²) | (4 + 16 + 42.25) / 3 = 20.75 |
+| dL/dw = (2/3) * X.T @ residual | (2/3) * (-2 - 8 - 19.5) = -19.667 |
+| dL/db = (2/3) * sum(residual) | (2/3) * (-12.5) = -8.333 |
+| after one step | w = 0.9833, b = 0.4167 |
+| new loss | 4.2638 |
 
-## Module Pattern
-\`\`\`python
-class Linear(nn.Module):
-    def __init__(self, in_features, out_features):
-        self.weight = Parameter(...)
-        self.bias = Parameter(...)
+\`loss.backward()\` and \`optimizer.step()\` compute exactly this for \`nn.Linear(1, 1)\`; **The Training Loop** tests these numbers.
 
-    def forward(self, x):
-        return x @ self.weight + self.bias
-\`\`\`
+## Common Pitfalls
 
-## Loss Functions
-- CrossEntropyLoss: Classification
-- MSELoss: Regression
-- BCELoss: Binary classification
+- **Forgetting \`optimizer.zero_grad()\`**: gradients accumulate across steps.
+- **Shape broadcasting surprises**: \`nn.Linear\` returns \`(N, 1)\`; comparing it to targets of shape \`(N,)\` broadcasts the loss to \`(N, N)\`.
+- **Unstable softmax**: always subtract the row max, or use \`log_softmax\` / \`F.cross_entropy\` instead of \`log(softmax(x))\`.
+- **Wrong variance**: normalisation layers use the population variance (\`unbiased=False\`).
+- **dtype mismatches**: \`torch.tensor([1, 2])\` is \`int64\`; NumPy arrays come in as \`float64\`.
+- **Non-reproducible shuffles**: seed a \`torch.Generator\` for the \`DataLoader\`.
 
-## The Training Loop & Minibatches
-Everything comes together in the loop: zero the gradients, forward pass, loss, backward pass, optimizer step, repeated over minibatches. A \`DataLoader\` shuffles the sample indices once per epoch (from a seeded generator, so runs are reproducible) and cuts them into batches. Forgetting \`zero_grad()\` makes gradients accumulate across steps, and it is the most common bug in hand-written loops.
+## Interview Angle
 
-Learn these patterns to understand PyTorch!
+Expect to write a layer, loss or optimizer step from scratch and then compare it with the built-in. Typical follow-ups: why \`F.cross_entropy\` takes logits; what Adam's bias correction does at step 1; BatchNorm vs LayerNorm vs GroupNorm vs RMSNorm (which axes each reduces over); how gradient accumulation and checkpointing trade compute for memory; how many parameters LoRA trains. Know the costs: a linear layer is \`O(batch * in * out)\`, attention is \`O(seq_q * seq_kv * d)\` in time and \`O(seq_q * seq_kv)\` in memory.
+
+## Problems in This Section
+
+1. **Tensor Creation**: build tensors with \`tensor\`, \`zeros\`, \`randn\`, \`arange\`, \`linspace\`, \`eye\` and \`full\`.
+2. **Tensor Operations**: arithmetic, reductions over a dimension and reshapes.
+3. **Autograd Basics**: gradients of a polynomial and of a linear layer.
+4. **Neural Network Modules**: \`Linear\`, \`ReLU\`, \`Sequential\` and a 2-layer MLP.
+5. **Loss Functions**: softmax, cross-entropy, MSE and binary cross-entropy.
+6. **GELU Activation**: the transformer activation, tanh approximation.
+7. **LeakyReLU & Swish**: activations that avoid dead units.
+8. **Softmax with Temperature**: sharpen or flatten a distribution, stably.
+9. **RMS Normalization**: the LLaMA-style norm without mean subtraction.
+10. **Group Normalization**: batch-size-independent normalisation over channel groups.
+11. **Adam Optimizer**: one Adam step with bias correction.
+12. **SGD with Momentum**: PyTorch's momentum update.
+13. **Learning Rate Scheduling**: linear warmup plus cosine decay.
+14. **Gradient Accumulation**: large effective batches from micro-batches.
+15. **Instance Normalization**: per-image, per-channel normalisation.
+16. **ViT Patch Embeddings**: turn an image into a token sequence.
+17. **Cross-Attention**: queries from one sequence, keys and values from another.
+18. **Depthwise Separable Convolution**: MobileNet's cheap convolution.
+19. **Label Smoothing**: cross-entropy with softened targets.
+20. **LoRA Adapter**: low-rank fine-tuning of a frozen layer.
+21. **Gradient Checkpointing**: save some activations, recompute the rest.
+22. **The Training Loop**: the five-step loop on a linear model.
+23. **Minibatches: Dataset & DataLoader**: shuffled, seeded minibatches.
+
+Related sections: **Neural Networks** (backprop, batch norm), **Optimization & Training**, **Transformer Architecture** (multi-head attention) and **End-to-End Implementations**.
     `,
     problems: ['tensor-creation', 'tensor-operations', 'autograd-concepts', 'nn-modules', 'loss-functions', 'gelu-activation', 'leaky-relu-swish', 'softmax-temperature', 'rmsnorm', 'group-norm', 'adam-optimizer', 'sgd-momentum', 'lr-scheduling', 'gradient-accumulation', 'instance-norm', 'vit-patch-embeddings', 'cross-attention', 'depthwise-separable-conv', 'label-smoothing', 'lora-adapter', 'gradient-checkpointing', 'training-loop', 'dataloader-batching'],
   },

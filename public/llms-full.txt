@@ -68,12 +68,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 04: PyTorch Basics
 
 **URL**: /section/pytorch-basics
-**Summary**: Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.
+**Summary**: Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy.
 **Problems** (23):
 
-1. **Tensor Creation (NumPy Style)** (`/problem/pytorch-basics/tensor-creation`) — easy
+1. **Tensor Creation** (`/problem/pytorch-basics/tensor-creation`) — easy
 2. **Tensor Operations** (`/problem/pytorch-basics/tensor-operations`) — easy
-3. **Autograd Concepts (Manual)** (`/problem/pytorch-basics/autograd-concepts`) — medium
+3. **Autograd Basics** (`/problem/pytorch-basics/autograd-concepts`) — medium
 4. **Neural Network Modules** (`/problem/pytorch-basics/nn-modules`) — medium
 5. **Loss Functions** (`/problem/pytorch-basics/loss-functions`) — medium
 6. **GELU Activation** (`/problem/pytorch-basics/gelu-activation`) — easy

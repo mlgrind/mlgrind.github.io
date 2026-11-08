@@ -28,7 +28,7 @@ The platform covers 21 learning sections with 149 problems:
 - **01 NumPy Fundamentals** (`/section/numpy-fundamentals`) — Master NumPy array operations essential for ML development. _(5 problems)_
 - **02 Python Basics for ML** (`/section/python-basics`) — Master NumPy arrays and essential Python operations for machine learning. _(3 problems)_
 - **03 Einstein Summation (Einsum)** (`/section/einsum`) — Master einsum for elegant tensor operations. _(5 problems)_
-- **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy. _(23 problems)_
+- **04 PyTorch Basics** (`/section/pytorch-basics`) — Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy. _(23 problems)_
 - **05 Data Preprocessing** (`/section/data-preprocessing`) — Learn essential data cleaning and transformation techniques. _(5 problems)_
 - **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(12 problems)_
 - **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(5 problems)_
