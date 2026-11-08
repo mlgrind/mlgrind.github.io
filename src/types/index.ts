@@ -35,6 +35,8 @@ export interface LanguageVariant {
   testCases: TestCase[];
   /** Framework-specific hints; falls back to the problem's hints. */
   hints?: string[];
+  /** Framework-specific examples (e.g. torch.tensor inputs); falls back to the problem's examples. */
+  examples?: Example[];
   /** Short note shown above the editor, e.g. which torch APIs to avoid. */
   note?: string;
 }

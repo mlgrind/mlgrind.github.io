@@ -25,8 +25,9 @@ the subset of the API below, including reverse-mode autograd.
 | Checks | `npm test` (`src/__tests__/solutions.test.ts`): every PyTorch solution passes its tests under the shim, no starter code passes, tests call the function. `npm run test:runtime`: the same solutions and the shim's unit tests in real Pyodide |
 | Real-torch check | `npx tsx scripts/check-torch-tracks.ts --torch real --python /path/to/python-with-torch` runs the PyTorch solutions through the production harness with real PyTorch |
 
-`LanguageVariant` (see `src/types/index.ts`): `{ starterCode, solution, testCases, hints?, note? }`.
-`hints` falls back to the problem's hints; `note` is shown above the editor
+`LanguageVariant` (see `src/types/index.ts`): `{ starterCode, solution, testCases, hints?, examples?, note? }`.
+`hints` and `examples` fall back to the problem's own (write `examples` with
+`torch.tensor(...)` inputs so the Examples tab matches the track); `note` is shown above the editor
 after a fixed line saying the track runs on an in-browser NumPy-backed subset.
 
 Progress stores PyTorch code under `codes.pytorch` (NumPy code stays under
