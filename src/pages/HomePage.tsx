@@ -1,26 +1,18 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
 import { useProgress } from '../context/ProgressContext';
 import SEO from '../components/SEO/SEO';
-import { learningPaths, problemHref } from '../data/learningPaths';
+import { learningPaths, problemHref, sevenDayChallenge } from '../data/learningPaths';
 import { getProblemById } from '../data/problems';
+import { resolvedGroups, completedInSection } from '../data/curriculum';
 import Dashboard from '../components/Dashboard/Dashboard';
+import MenuButton from '../components/Menu/MenuButton';
+
+const totalProblems = sections.reduce((sum, s) => sum + s.problems.length, 0);
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default function HomePage() {
-  const { progress, getSectionProgress, getOverallProgress } = useProgress();
-
-  const sectionInfo = sections.map(s => ({
-    id: s.id,
-    problemCount: s.problems.length,
-  }));
-
-  const overallProgress = getOverallProgress(sectionInfo);
-
-  const totalProblems = useMemo(() =>
-    sections.reduce((sum, s) => sum + s.problems.length, 0),
-    []
-  );
+  const { progress } = useProgress();
 
   const recent = Object.entries(progress).flatMap(([section, entries]) =>
     Object.entries(entries).map(([id, entry]) => ({ section, id, ...entry }))
@@ -31,146 +23,131 @@ export default function HomePage() {
     <div className="max-w-[1200px] mx-auto">
       <SEO canonical="/" />
 
-      {/* Hero Section */}
-      <div className="text-center mb-16 pt-8">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-500 rounded-full text-sm text-gray-600 dark:text-dark-200 mb-8 animate-fade-up">
-          <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse-dot" />
-          100% browser-based &middot; No setup required
+      {/* Hero */}
+      <section className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 pt-4 sm:pt-8 pb-8 sm:pb-10 mb-8 sm:mb-10 border-b border-gray-200 dark:border-dark-500">
+        <div className="flex-[1_1_520px] min-w-0">
+          <p className="mb-3 font-mono text-[11px] sm:text-xs tracking-[0.08em] uppercase text-gray-500 dark:text-dark-300 animate-fade-up">
+            {totalProblems} problems &middot; NumPy or PyTorch &middot; Runs in your browser
+          </p>
+          <h1 className="font-display text-[clamp(2.25rem,5.5vw,4rem)] font-normal leading-[1.05] tracking-tight text-gray-900 dark:text-dark-100 animate-fade-up [animation-delay:0.1s]">
+            Learn Machine Learning by <em className="text-primary-400 dark:text-primary-300">Building</em>
+          </h1>
+          <p className="mt-4 max-w-[560px] text-base sm:text-lg text-gray-500 dark:text-dark-200 font-light leading-relaxed animate-fade-up [animation-delay:0.2s]">
+            Implement algorithms from scratch — NumPy, neural networks, transformers,
+            diffusion models. Write real Python with instant feedback, no setup or signup.
+          </p>
         </div>
-
-        <h1 className="font-display text-[clamp(2.5rem,6vw,4.2rem)] font-normal leading-[1.1] tracking-tight text-gray-900 dark:text-dark-100 mb-6 animate-fade-up [animation-delay:0.1s]">
-          Learn Machine Learning<br />by <em className="text-primary-400 dark:text-primary-300">Building</em>
-        </h1>
-
-        <p className="text-lg text-gray-500 dark:text-dark-200 max-w-[560px] mx-auto mb-10 font-light leading-relaxed animate-fade-up [animation-delay:0.2s]">
-          Implement algorithms from scratch — NumPy, neural networks, transformers,
-          diffusion models. Write real Python with instant feedback, directly in your browser.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-3 mb-5">
-          <Link to={problemHref('numpy-array-sum')} className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl">Solve your first problem →</Link>
-          <Link to="/challenge" className="px-6 py-3 rounded-xl border border-gray-300 dark:border-dark-500 text-gray-800 dark:text-dark-100">Try the seven-day challenge</Link>
+        <div className="flex flex-col gap-2 animate-fade-up [animation-delay:0.3s]">
+          <div className="flex flex-wrap gap-3">
+            {recent ? (
+              <Link
+                to={problemHref(recent.id)}
+                className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Continue: {getProblemById(recent.id)!.title} →
+              </Link>
+            ) : (
+              <Link
+                to={problemHref('numpy-array-sum')}
+                className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Solve your first problem →
+              </Link>
+            )}
+            <MenuButton
+              label="Learning paths"
+              align="right"
+              buttonClassName="inline-flex items-center gap-2 h-full px-5 py-3 rounded-xl border border-gray-300 dark:border-dark-500 text-gray-800 dark:text-dark-100 hover:border-primary-400 aria-expanded:border-primary-400 transition-colors"
+              trigger={
+                <>
+                  Learning paths
+                  <svg className="w-3.5 h-3.5 text-gray-400 dark:text-dark-300" viewBox="0 0 12 12" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M3 4.5L6 7.5l3-3" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </>
+              }
+            >
+              {close => (
+                <div className="w-[min(22rem,calc(100vw-2rem))]">
+                  {[...learningPaths, sevenDayChallenge].map(path => (
+                    <Link
+                      key={path.id}
+                      role="menuitem"
+                      to={path.id === sevenDayChallenge.id ? '/challenge' : `/learn/${path.id}`}
+                      onClick={close}
+                      className="block px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-600 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-dark-600 transition-colors"
+                    >
+                      <span className="block text-sm font-semibold text-gray-900 dark:text-dark-100">{path.title}</span>
+                      <span className="block mt-0.5 text-xs text-gray-500 dark:text-dark-200">{path.description}</span>
+                      <span className="block mt-1 text-[11px] text-primary-500">{path.minutes} min · {path.prerequisites}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </MenuButton>
+          </div>
+          {!recent && (
+            <p className="text-xs text-gray-500 dark:text-dark-300">Start with array sum · About 5 minutes · Basic Python</p>
+          )}
         </div>
-        <p className="text-sm text-gray-500 dark:text-dark-200 mb-8">Start with array sum · About 5 minutes · Basic Python · No signup</p>
-        {recent && <Link className="block mb-8 text-primary-500" to={problemHref(recent.id)}>Continue: {getProblemById(recent.id)!.title} →</Link>}
-        <div className="flex justify-center gap-12 animate-fade-up [animation-delay:0.3s]">
-          <div className="text-center">
-            <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-100">{totalProblems}+</div>
-            <div className="text-[11px] text-gray-400 dark:text-dark-300 uppercase tracking-widest mt-1">Problems</div>
-          </div>
-          <div className="text-center">
-            <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-100">{sections.length}</div>
-            <div className="text-[11px] text-gray-400 dark:text-dark-300 uppercase tracking-widest mt-1">Sections</div>
-          </div>
-          <div className="text-center">
-            <div className="font-mono text-2xl font-bold text-gray-900 dark:text-dark-100">{overallProgress}%</div>
-            <div className="text-[11px] text-gray-400 dark:text-dark-300 uppercase tracking-widest mt-1">Complete</div>
-          </div>
-        </div>
-      </div>
+      </section>
 
       {/* Dashboard — only renders when user has progress */}
       <Dashboard />
 
-      <section className="mb-12" aria-labelledby="paths-heading">
-        <h2 id="paths-heading" className="text-2xl font-display mb-5 text-gray-900 dark:text-dark-100">Choose your learning path</h2>
-        <div className="grid md:grid-cols-3 gap-4">{learningPaths.map(path => <Link key={path.id} to={`/learn/${path.id}`} className="p-5 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-500 hover:border-primary-400">
-          <h3 className="font-semibold text-gray-900 dark:text-dark-100">{path.title} →</h3>
-          <p className="mt-2 text-sm text-gray-500 dark:text-dark-200">{path.description}</p>
-          <p className="mt-3 text-xs text-primary-500">{path.minutes} min · {path.prerequisites}</p>
-        </Link>)}</div>
-      </section>
-      {/* Curriculum Label */}
-      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 mb-6 font-mono">
-        Curriculum
-      </div>
-
-      {/* Sections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {sections.map((section, index) => {
-          const progress = getSectionProgress(section.id, section.problems.length);
-
-          return (
-            <Link
-              key={section.id}
-              to={`/section/${section.id}`}
-              className="card-stagger animate-fade-up group relative flex gap-4 p-5 bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 hover:border-gray-300 dark:hover:border-dark-400 hover:bg-gray-50 dark:hover:bg-dark-700 hover:-translate-y-0.5 hover:shadow-lg dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all duration-250 overflow-hidden"
-            >
-              {/* Hover glow overlay */}
-              <div className="absolute inset-0 rounded-[14px] bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-              <div className="shrink-0 w-11 h-11 bg-gray-100 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-[10px] flex items-center justify-center text-[22px] group-hover:bg-primary-50 dark:group-hover:bg-primary-500/10 group-hover:border-primary-200 dark:group-hover:border-primary-500/25 transition-all relative z-[1]">
-                {section.icon}
-              </div>
-
-              <div className="flex-1 min-w-0 relative z-[1]">
-                <div className="font-mono text-[11px] text-gray-400 dark:text-dark-300 mb-0.5">
-                  {String(index + 1).padStart(2, '0')}
+      {/* Curriculum, grouped */}
+      <section aria-labelledby="curriculum-heading" className="mb-8">
+        <h2 id="curriculum-heading" className="sr-only">Curriculum</h2>
+        <div className="flex flex-col gap-8 sm:gap-9">
+          {resolvedGroups.map((group, groupIndex) => {
+            const groupTotal = group.sections.reduce((sum, sec) => sum + sec.problems.length, 0);
+            return (
+              <div
+                key={group.id}
+                className="grid grid-cols-1 lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)] gap-3 lg:gap-6 items-start"
+              >
+                <div>
+                  <p className="font-mono text-xs text-gray-400 dark:text-dark-300">{String(groupIndex + 1).padStart(2, '0')}</p>
+                  <h3 className="mt-0.5 mb-1 text-lg sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-dark-100">{group.title}</h3>
+                  <p className="text-[13px] text-gray-500 dark:text-dark-300">
+                    {plural(group.sections.length, 'section')} &middot; {plural(groupTotal, 'problem')}
+                  </p>
                 </div>
-                <div className="text-base font-semibold text-gray-900 dark:text-dark-100 tracking-tight mb-1.5 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors">
-                  {section.title}
-                </div>
-                <div className="text-[13px] text-gray-500 dark:text-dark-300 leading-relaxed mb-3.5">
-                  {section.description}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] text-gray-400 dark:text-dark-300">
-                    {section.problems.length} problems
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-[60px] h-[3px] bg-gray-200 dark:bg-dark-500 rounded-full overflow-hidden">
-                      <div
-                        className="h-full progress-gradient rounded-full transition-all duration-500"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <span className="font-mono text-[11px] text-gray-400 dark:text-dark-300">{progress}%</span>
-                  </div>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-2.5">
+                  {group.sections.map(section => {
+                    const done = completedInSection(progress, section);
+                    const total = section.problems.length;
+                    return (
+                      <Link
+                        key={section.id}
+                        to={`/section/${section.id}`}
+                        className="group flex flex-col gap-1.5 px-4 py-3.5 bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-500 hover:border-primary-300 dark:hover:border-primary-500/40 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
+                      >
+                        <span className="flex items-start justify-between gap-2">
+                          <span className="text-[15px] font-medium leading-snug text-gray-900 dark:text-dark-100 group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors">
+                            {section.title}
+                          </span>
+                          <span
+                            className={`shrink-0 mt-0.5 font-mono text-xs ${
+                              done > 0 ? 'text-primary-600 dark:text-primary-300' : 'text-gray-400 dark:text-dark-300'
+                            }`}
+                            aria-label={`${done} of ${total} problems solved`}
+                          >
+                            {done}/{total}
+                          </span>
+                        </span>
+                        <span className="text-[13px] leading-snug text-gray-500 dark:text-dark-300 line-clamp-2" title={section.description}>
+                          {section.description}
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
-
-              {/* Hover arrow */}
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 -translate-x-1 opacity-0 text-primary-500 dark:text-primary-300 text-lg group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-250">
-                &rarr;
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Features Section */}
-      <div className="mt-16 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-gray-200 dark:bg-dark-500 border border-gray-200 dark:border-dark-500 rounded-[14px] overflow-hidden">
-          <div className="bg-white dark:bg-dark-800 p-8 text-center hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-            <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-xl flex items-center justify-center text-[22px]">
-              🐍
-            </div>
-            <div className="font-semibold text-sm text-gray-900 dark:text-dark-100 tracking-tight mb-2">Python in Browser</div>
-            <div className="text-[13px] text-gray-500 dark:text-dark-300 leading-relaxed">
-              Real CPython with NumPy, running on WebAssembly. No install, no config.
-            </div>
-          </div>
-          <div className="bg-white dark:bg-dark-800 p-8 text-center hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-            <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-xl flex items-center justify-center text-[22px]">
-              ✅
-            </div>
-            <div className="font-semibold text-sm text-gray-900 dark:text-dark-100 tracking-tight mb-2">Instant Feedback</div>
-            <div className="text-[13px] text-gray-500 dark:text-dark-300 leading-relaxed">
-              Run your code against test suites and see results immediately.
-            </div>
-          </div>
-          <div className="bg-white dark:bg-dark-800 p-8 text-center hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-            <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-xl flex items-center justify-center text-[22px]">
-              💾
-            </div>
-            <div className="font-semibold text-sm text-gray-900 dark:text-dark-100 tracking-tight mb-2">Progress Saved Locally</div>
-            <div className="text-[13px] text-gray-500 dark:text-dark-300 leading-relaxed">
-              Your code and progress persist in your browser. Pick up anytime.
-            </div>
-          </div>
+            );
+          })}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
