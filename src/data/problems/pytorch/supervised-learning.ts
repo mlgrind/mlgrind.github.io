@@ -576,4 +576,180 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
       'loss.backward(), then update w and b inside torch.no_grad() and zero their gradients',
     ],
   },
+  'decision-tree-bagging': {
+    note: "A tree is plain Python control flow over tensors: use torch.unique, torch.bincount and boolean masks. Bootstrap indices come from np.random.default_rng(seed) in both tracks, so the trees match the NumPy track. Don't use sklearn.",
+    starterCode: `import numpy as np
+import torch
+
+def build_tree(X, y, max_depth=None, min_samples_split=2):
+    """
+    Grow a classification tree with Gini splits.
+
+    Args:
+        X: Features, float tensor (n_samples, n_features)
+        y: Non-negative integer labels, int64 tensor (n_samples,)
+        max_depth: Maximum depth (root = depth 0), or None for no limit
+        min_samples_split: Nodes with fewer samples become leaves
+
+    Returns:
+        Root node: {'leaf': True, 'value': c} or
+        {'leaf': False, 'feature': f, 'threshold': t, 'left': ..., 'right': ...}
+        (c and f Python ints, t a Python float)
+    """
+    # Your code here
+    pass
+
+def predict_tree(tree, X):
+    """Return the predicted class for each row of X, as an int64 tensor (n_samples,)."""
+    # Your code here
+    pass
+
+def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
+                    min_samples_split=2, seed=0):
+    """
+    Bagging: trees on bootstrap samples (np.random.default_rng(seed)), majority vote.
+
+    Returns:
+        Predicted classes for X_test, int64 tensor (n_test,)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import numpy as np
+import torch
+
+def _gini(y):
+    # Python floats from the class counts (float64, like the NumPy track)
+    n = len(y)
+    return 1.0 - sum((c / n) ** 2 for c in torch.bincount(y).tolist())
+
+def _best_split(X, y):
+    n, n_features = X.shape
+    best_imp, best_f, best_t = _gini(y), None, None
+    for f in range(n_features):
+        values = torch.unique(X[:, f])  # sorted
+        for t in ((values[:-1] + values[1:]) / 2).tolist():
+            left = X[:, f] <= t
+            n_left = int(left.sum().item())
+            imp = (n_left * _gini(y[left]) + (n - n_left) * _gini(y[~left])) / n
+            if imp < best_imp - 1e-12:
+                best_imp, best_f, best_t = imp, f, t
+    return best_f, best_t
+
+def build_tree(X, y, max_depth=None, min_samples_split=2):
+    X = X.float()
+    y = y.long()
+
+    def grow(idx, depth):
+        ys = y[idx]
+        leaf = {'leaf': True, 'value': int(torch.bincount(ys).argmax().item())}
+        too_deep = max_depth is not None and depth >= max_depth
+        if too_deep or len(idx) < min_samples_split or _gini(ys) == 0:
+            return leaf
+        f, t = _best_split(X[idx], ys)
+        if f is None:
+            return leaf
+        go_left = X[idx, f] <= t
+        return {'leaf': False, 'feature': int(f), 'threshold': float(t),
+                'left': grow(idx[go_left], depth + 1),
+                'right': grow(idx[~go_left], depth + 1)}
+
+    return grow(torch.arange(len(y)), 0)
+
+def predict_tree(tree, X):
+    out = []
+    for x in X.float().tolist():
+        node = tree
+        while not node['leaf']:
+            node = node['left'] if x[node['feature']] <= node['threshold'] else node['right']
+        out.append(node['value'])
+    return torch.tensor(out, dtype=torch.long)
+
+def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
+                    min_samples_split=2, seed=0):
+    rng = np.random.default_rng(seed)
+    n = len(y_train)
+    votes = []
+    for _ in range(n_estimators):
+        idx = torch.from_numpy(rng.integers(0, n, size=n))
+        tree = build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)
+        votes.append(predict_tree(tree, X_test))
+    votes = torch.stack(votes)  # (n_estimators, n_test)
+    n_classes = int(y_train.max().item()) + 1
+    return torch.tensor([int(torch.bincount(votes[:, j], minlength=n_classes).argmax().item())
+                         for j in range(votes.shape[1])], dtype=torch.long)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Fully grown tree fits the training data',
+        input: 'predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]])).tolist()',
+        expected: '[0, 0, 0, 1, 1, 1, 0, 1]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Root split (feature, threshold)',
+        input: '(lambda: (r := build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), (r["feature"], r["threshold"]))[-1])()',
+        expected: '(0, 4.5)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Predictions on new points',
+        input: 'predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]])).tolist()',
+        expected: '[0, 0, 0, 1]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'XOR-like data: stump vs full tree',
+        input: '(lambda: (predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=1), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist(), predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0])), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()))()',
+        expected: '([1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 1, 1, 0])',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Equal impurity ties go to feature 0',
+        input: '(lambda: (r := build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1])), (r["feature"], r["threshold"]))[-1])()',
+        expected: '(0, 2.5)',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'max_depth=0 is a majority leaf (ties to the smaller label)',
+        input: 'build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1]), max_depth=0)',
+        expected: "{'leaf': True, 'value': 0}",
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'min_samples_split stops splitting',
+        input: 'predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), min_samples_split=8), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()',
+        expected: '[1, 1, 1, 1, 1, 1, 1]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Depth-2 tree structure',
+        input: 'build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=2)',
+        expected: "{'leaf': False, 'feature': 0, 'threshold': 0.5, 'left': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}, 'right': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 1}, 'right': {'leaf': True, 'value': 0}}}",
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Bagging predictions on noisy data',
+        input: '(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), bagging_predict(torch.from_numpy(D[0]).float(), torch.from_numpy(D[1]), torch.from_numpy(D[2]).float(), n_estimators=7, max_depth=3, seed=0).tolist())[-1])()',
+        expected: '[0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1]',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'One bagged tree = a tree on the bootstrap sample',
+        input: '(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), X := torch.from_numpy(D[0]).float(), y := torch.from_numpy(D[1]), Xq := torch.from_numpy(D[2]).float(), idx := torch.from_numpy(np.random.default_rng(3).integers(0, 40, size=40)), bagging_predict(X, y, Xq, n_estimators=1, seed=3).tolist() == predict_tree(build_tree(X[idx], y[idx]), Xq).tolist())[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+  },
 };
