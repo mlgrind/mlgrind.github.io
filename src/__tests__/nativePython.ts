@@ -27,6 +27,7 @@ export function findPython(
 
 const runner = `
 import ast, contextlib, io, json, sys
+sys.dont_write_bytecode = True  # keep __pycache__ out of public/ (and so out of dist/)
 mode, shim_dir = sys.argv[1], sys.argv[2]
 if mode == 'shim':
     sys.path.insert(0, shim_dir)

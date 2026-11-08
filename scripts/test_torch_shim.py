@@ -32,6 +32,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'public', 'py'))
+sys.dont_write_bytecode = True  # keep __pycache__ out of public/ (and so out of dist/)
 import torch_shim  # noqa: E402
 
 S = torch_shim._build()
@@ -1640,7 +1641,7 @@ sys.modules['torch'] = fake
 assert torch_shim.install() is fake and sys.modules['torch'] is fake
 print('OK')
 '''
-    r = subprocess.run([sys.executable, '-c', code, os.path.join(HERE, '..', 'public', 'py')],
+    r = subprocess.run([sys.executable, '-B', '-c', code, os.path.join(HERE, '..', 'public', 'py')],
                        capture_output=True, text=True)
     report('install() registration / idempotence / real-torch guard', r.returncode == 0 and 'OK' in r.stdout,
            (r.stdout + r.stderr)[-500:])
