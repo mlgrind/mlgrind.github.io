@@ -38,8 +38,8 @@ describe.skipIf(!python)(
 const tracked = allProblems.filter((p) => p.pytorch);
 
 describe("PyTorch tracks", () => {
-  it("exist for the ported problems and keep the visible/hidden split", () => {
-    expect(tracked.length).toBeGreaterThanOrEqual(75);
+  it("exist for every problem and keep the visible/hidden split", () => {
+    expect(tracked.map((p) => p.id)).toEqual(allProblems.map((p) => p.id));
     for (const p of tracked) {
       const track = p.pytorch!;
       expect(track.testCases.some((t) => !t.hidden), p.id).toBe(true);

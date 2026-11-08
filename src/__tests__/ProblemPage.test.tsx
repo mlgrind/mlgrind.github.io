@@ -174,10 +174,18 @@ describe("NumPy | PyTorch track toggle", () => {
   });
 
   it("hides the toggle and uses NumPy for problems without a PyTorch track", () => {
-    localStorage.setItem("ml-lab-language", "pytorch");
-    mount("/problem/deep-learning/perceptron");
-    expect(getProblemById("perceptron")!.pytorch).toBeUndefined();
-    expect(screen.queryByRole("group", { name: "Solution language" })).not.toBeInTheDocument();
-    expect(editor()).toHaveValue(getProblemById("perceptron")!.starterCode);
+    // Every problem has a track today; drop one to cover the fallback.
+    const perceptron = getProblemById("perceptron")!;
+    const track = perceptron.pytorch;
+    delete perceptron.pytorch;
+    try {
+      localStorage.setItem("ml-lab-language", "pytorch");
+      mount("/problem/deep-learning/perceptron");
+      expect(screen.queryByRole("group", { name: "Solution language" })).not.toBeInTheDocument();
+      expect(editor()).toHaveValue(perceptron.starterCode);
+    } finally {
+      perceptron.pytorch = track;
+    }
   });
 });
+

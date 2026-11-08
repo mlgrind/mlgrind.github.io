@@ -379,4 +379,92 @@ def batch_norm_forward(X, gamma, beta, eps=1e-5):
       'Scale and shift: gamma * X_norm + beta',
     ],
   },
+  'dropout': {
+    note: "Build the mask yourself with torch.rand_like; don't call F.dropout or nn.Dropout, which don't return the mask.",
+    starterCode: `import torch
+
+def dropout_forward(X: torch.Tensor, keep_prob: float = 0.5, training: bool = True):
+    """
+    Apply dropout to input.
+
+    Args:
+        X: Input tensor
+        keep_prob: Probability of keeping a neuron
+        training: Whether in training mode
+
+    Returns:
+        out: Output after dropout
+        mask: Dropout mask (for backward pass), None in inference
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def dropout_forward(X: torch.Tensor, keep_prob: float = 0.5, training: bool = True):
+    if not training:
+        return X, None
+
+    # Inverted dropout: keep with probability keep_prob, scale by 1/keep_prob
+    mask = (torch.rand_like(X) < keep_prob).float() / keep_prob
+    out = X * mask
+
+    return out, mask
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Inference returns the input unchanged',
+        input: 'dropout_forward(torch.tensor([[1.0, 2.0, 3.0, 4.0]]), 0.5, False)[0].tolist()',
+        expected: '[[1.0, 2.0, 3.0, 4.0]]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Output shape preserved in training',
+        input: 'tuple(dropout_forward(torch.randn(4, 8), 0.5, True)[0].shape)',
+        expected: '(4, 8)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'out equals X * mask, and mask entries are 0 or 1/keep_prob',
+        input: `(lambda: (
+    X := torch.randn(6, 5),
+    r := dropout_forward(X, 0.7, True),
+    m := r[1],
+    bool(torch.allclose(r[0], X * m)),
+    bool(torch.logical_or(m == 0, torch.isclose(m, torch.full_like(m, 1 / 0.7))).all()),
+)[-2:])()`,
+        expected: '(True, True)',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'About keep_prob of the units survive',
+        input: '(lambda: (m := dropout_forward(torch.ones(100, 100), 0.7, True)[1], abs((m > 0).float().mean().item() - 0.7) < 0.02)[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Expected value preserved',
+        input: '(lambda: (out := dropout_forward(torch.ones(1000, 100), 0.8, True)[0], abs(out.mean().item() - 1.0) < 0.02)[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'No mask in inference',
+        input: 'dropout_forward(torch.ones(3, 3), 0.5, False)[1] is None',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'In training: mask = (torch.rand_like(X) < keep_prob).float()',
+      'Scale the mask by 1 / keep_prob (inverted dropout), then out = X * mask',
+      'In inference: return X, None',
+    ],
+  },
 };
