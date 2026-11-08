@@ -33,7 +33,7 @@ export default function ProblemDescription({ problem, hideTitle = false }: Probl
           // Fenced blocks render as <pre><code>. A fence without a language has
           // no `language-` class, so a newline in the content also marks a block.
           pre: ({ children }) => (
-            <pre className="bg-gray-100 dark:bg-dark-900 rounded-lg p-4 my-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{children}</pre>
+            <pre className="bg-gray-100 dark:bg-dark-800 border border-gray-200 dark:border-dark-500 rounded-lg p-4 my-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{children}</pre>
           ),
           code: ({ className, children }) => {
             const isBlock = className?.includes('language-') || String(children ?? '').includes('\n');
