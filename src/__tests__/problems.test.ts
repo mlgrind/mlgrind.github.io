@@ -55,7 +55,7 @@ describe('Problems Data', () => {
 
 describe('Sections Data', () => {
   it('should have all sections defined', () => {
-    expect(sections.length).toBe(16);
+    expect(sections.length).toBe(21);
   });
 
   it('should have valid section structure', () => {

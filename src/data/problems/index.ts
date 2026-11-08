@@ -15,6 +15,11 @@ import { pytorchBasicsProblems } from './pytorch-basics';
 import { e2eImplementationProblems } from './e2e-implementations';
 import { reinforcementLearningProblems } from './reinforcement-learning';
 import { llmGenerationProblems } from './llm-generation';
+import { optimizationProblems } from './optimization';
+import { sequenceModelsProblems } from './sequence-models';
+import { llmInternalsProblems } from './llm-internals';
+import { representationLearningProblems } from './representation-learning';
+import { postTrainingProblems } from './post-training';
 
 export const allProblems: Problem[] = [
   ...pythonBasicsProblems,
@@ -33,6 +38,11 @@ export const allProblems: Problem[] = [
   ...e2eImplementationProblems,
   ...reinforcementLearningProblems,
   ...llmGenerationProblems,
+  ...optimizationProblems,
+  ...sequenceModelsProblems,
+  ...llmInternalsProblems,
+  ...representationLearningProblems,
+  ...postTrainingProblems,
 ];
 
 export function getProblemById(id: string): Problem | undefined {
@@ -60,4 +70,9 @@ export {
   e2eImplementationProblems,
   reinforcementLearningProblems,
   llmGenerationProblems,
+  optimizationProblems,
+  sequenceModelsProblems,
+  llmInternalsProblems,
+  representationLearningProblems,
+  postTrainingProblems,
 };

@@ -470,6 +470,77 @@ Let's build neural networks from scratch!
     problems: ['cross-entropy-loss', 'mlp-forward-backward', 'weight-init', 'batch-norm', 'dropout'],
   },
   {
+    id: 'optimization',
+    title: 'Optimization & Training',
+    description: 'Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.',
+    icon: '⚙️',
+    introduction: `
+# Optimization & Training
+
+A model is only as good as the procedure that fits it. This section covers what happens between \`loss.backward()\` and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging.
+
+## From SGD to Adam
+
+Every optimizer turns a gradient \`g\` into an update for the parameters \`θ\`:
+
+| Optimizer | Update | Idea |
+|-----------|--------|------|
+| **SGD** | \`θ -= lr * g\` | Step down the current gradient |
+| **Momentum** | \`v = μv + g;  θ -= lr * v\` | Average gradients over time: speed up along consistent directions, damp oscillations |
+| **Nesterov** | \`θ -= lr * (g + μv)\` | Look ahead along the velocity before stepping |
+| **RMSprop** | \`s = ρs + (1-ρ)g²;  θ -= lr * g / √s\` | Per-parameter step size from recent gradient scale |
+| **Adam** | momentum on \`g\` + RMSprop on \`g²\` + bias correction | Default for most deep learning |
+| **AdamW** | Adam + decoupled weight decay \`θ *= 1 - lr·λ\` | Default for transformers; L2 inside Adam is *not* the same thing |
+
+You implement SGD with momentum, Adam and learning-rate schedules in **PyTorch Basics** (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).
+
+## Learning-Rate Schedules
+
+The learning rate is the single most important hyperparameter, and it rarely stays constant:
+
+\`\`\`
+warmup (linear 0 -> max)  ->  decay (cosine / linear / step)  ->  floor (min_lr)
+\`\`\`
+
+Warmup protects the first steps, when Adam's statistics are noisy and the weights are random. Decay lets the model settle into a minimum.
+
+## Keeping Training Stable
+
+| Problem | Symptom | Fix |
+|---------|---------|-----|
+| Exploding gradients | Loss spikes, NaNs | **Gradient clipping** by global norm (\`clip_grad_norm_\`, usually \`max_norm=1.0\`) |
+| Batch doesn't fit in memory | OOM errors | **Gradient accumulation**: sum the gradients of k micro-batches (each loss / k) before stepping (practiced in PyTorch Basics) |
+| fp16 gradients underflow to 0 | Training stalls in mixed precision | **Dynamic loss scaling**: multiply the loss by S, halve S on overflow, grow it after N clean steps |
+
+\`\`\`python
+# A typical modern training step
+with torch.autocast('cuda', dtype=torch.float16):
+    loss = model(x, y) / accum_steps
+scaler.scale(loss).backward()
+if (step + 1) % accum_steps == 0:
+    scaler.unscale_(optimizer)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    scaler.step(optimizer)          # skipped if the gradients overflowed
+    scaler.update()                 # adjust the loss scale
+    optimizer.zero_grad()
+    scheduler.step()
+\`\`\`
+
+## Why It Matters
+
+- **Interviews** regularly ask you to write Adam from memory, explain bias correction, or explain why AdamW decouples weight decay.
+- **In practice**, most "my model won't train" bugs are optimization bugs: a missing warmup, no clipping, a forgotten \`1/k\` in accumulation, or a loss scale stuck at 0.
+
+## Problems in This Section
+
+- **Gradient Clipping by Global Norm**: rescale all gradients together when their combined norm is too large
+- **Dynamic Loss Scaling**: simulate \`GradScaler\`'s scale updates for mixed-precision training
+
+Let's implement the stability tricks of a training step!
+    `,
+    problems: ['gradient-clipping', 'loss-scaling'],
+  },
+  {
     id: 'cnn',
     title: 'CNNs & Computer Vision',
     description: 'Implement convolutions, pooling, object detection, and segmentation.',
@@ -525,6 +596,69 @@ A ResNet basic block computes \`ReLU(F(x) + shortcut(x))\` with \`F = conv-BN-Re
 Let's implement CNN operations and detection/segmentation fundamentals!
     `,
     problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics', 'resnet-block'],
+  },
+  {
+    id: 'sequence-models',
+    title: 'Sequence Models',
+    description: 'RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.',
+    icon: '🔁',
+    introduction: `
+# Sequence Models
+
+Text, audio, time series and user sessions are all **sequences**: the order matters, and the length varies. Before transformers, recurrent networks were the standard way to model them. They still show up in streaming and on-device models, and modern state-space models (Mamba, RWKV) bring back the same recurrent idea.
+
+## The Recurrent Idea
+
+An RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the same weights at every step:
+
+\`\`\`
+h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)
+\`\`\`
+
+Training unrolls the loop over time and backpropagates through every step: **backpropagation through time (BPTT)**. The gradient reaching step 1 from step T is a product of T Jacobians:
+
+\`\`\`
+dh_T/dh_1 = prod_t  diag(1 - h_t^2) @ W_hh.T
+\`\`\`
+
+If the largest singular value of \`W_hh\` is below 1, this product **vanishes**; above 1, it can **explode**. Plain RNNs therefore struggle to learn dependencies longer than a few dozen steps (clipping helps with exploding gradients, but not with vanishing ones).
+
+## Gated Cells
+
+Gates are sigmoids in \`[0, 1]\` that decide, per dimension, how much information flows.
+
+| Cell | State | Gates | Key equation |
+|------|-------|-------|--------------|
+| **RNN** | \`h\` | none | \`h = tanh(W x + U h)\` |
+| **LSTM** | \`h\`, \`c\` | input \`i\`, forget \`f\`, output \`o\` (+ candidate \`g\`) | \`c = f*c + i*g\`, \`h = o*tanh(c)\` |
+| **GRU** | \`h\` | reset \`r\`, update \`z\` | \`h = (1-z)*n + z*h_prev\` |
+
+The LSTM's cell state is updated **additively**: when \`f ≈ 1\`, \`dc_t/dc_{t-1} ≈ 1\` and gradients can travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.
+
+## PyTorch Conventions (worth memorizing)
+
+| | LSTM (\`nn.LSTMCell\`) | GRU (\`nn.GRUCell\`) |
+|---|---|---|
+| Gate order in \`weight_ih\` / \`weight_hh\` | \`i, f, g, o\` | \`r, z, n\` |
+| Weight shapes | \`(4H, D)\`, \`(4H, H)\` | \`(3H, D)\`, \`(3H, H)\` |
+| Parameters (with both biases) | \`4(HD + H² + 2H)\` | \`3(HD + H² + 2H)\` |
+
+## RNNs vs Transformers
+
+| | RNN / LSTM | Transformer |
+|---|---|---|
+| Training | Sequential over time (slow) | Parallel over positions |
+| Inference per token | O(1) memory and compute | O(T) with a KV cache |
+| Long-range dependencies | Hard (bounded state) | Direct attention to any position |
+
+## Why It Matters
+
+- **Interviews** ask you to write an LSTM step, explain vanishing gradients and how gating fixes them, or count the parameters of a GRU.
+- **In practice**, understanding recurrence makes state-space models, streaming ASR and RNN-style inference tricks easy to follow.
+
+Let's build these cells from scratch!
+    `,
+    problems: ['rnn-forward', 'lstm-cell', 'gru-cell'],
   },
   {
     id: 'transformers',
@@ -663,6 +797,127 @@ Let's implement these essential LLM techniques!
     ],
   },
   {
+    id: 'llm-internals',
+    title: 'LLM Internals',
+    description: 'SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.',
+    icon: '🧩',
+    introduction: `
+# LLM Internals
+
+You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how we measure a language model at all. These are the details LLM engineering interviews probe.
+
+Some pieces of the pipeline below have their own problems elsewhere: BPE tokenization, RoPE and grouped-query attention in **Transformer Architecture**, and temperature, top-k/top-p sampling, the KV cache and speculative decoding in **LLM Generation & Decoding**. This section covers the rest.
+
+## How an LLM generates text, end to end
+
+\`\`\`
+text -> tokenizer -> token ids (B, T)
+     -> embedding lookup                         (B, T, d_model)
+     -> N x decoder block:
+            h = h + Attention(RMSNorm(h))        causal, multi-head, positions via RoPE
+            h = h + FFN(RMSNorm(h))              SwiGLU MLP, or a mixture of experts
+     -> final RMSNorm -> LM head                 logits (B, T, vocab)
+     -> pick next token (greedy / sampling), append it, repeat
+\`\`\`
+
+Training runs the whole sequence at once and minimizes next-token cross-entropy. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
+
+## What each technique solves
+
+| Technique | Problem it solves | Axis | Problem here |
+|-----------|-------------------|------|--------------|
+| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality | SwiGLU Feed-Forward Block |
+| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory + speed | Online Softmax |
+| Mixture of experts | More parameters without more compute per token | Speed (compute) | Mixture-of-Experts Routing |
+| Cross-entropy / perplexity | One number to train on and to compare models with | Quality (evaluation) | Token Cross-Entropy and Perplexity |
+
+## Key formulas
+
+**SwiGLU and RMSNorm** (LLaMA):
+\`\`\`
+rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
+ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,   silu(z) = z * sigmoid(z)
+\`\`\`
+
+**Online softmax**: stream over key blocks, keeping a running max \`m\`, normalizer \`l\` and output \`acc\`:
+\`\`\`
+m' = max(m, rowmax(S_b))
+l  = l * exp(m - m') + rowsum(exp(S_b - m'))
+acc = acc * exp(m - m') + exp(S_b - m') @ V_b
+output = acc / l
+\`\`\`
+
+**MoE routing** (top-k gates, Switch Transformer load-balancing loss):
+\`\`\`
+gates = softmax(top-k router logits)
+y = sum_j gates_j * expert_{i_j}(x)
+aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router prob)
+\`\`\`
+
+**Perplexity**:
+\`\`\`
+mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)      (padding masked out)
+perplexity = exp(mean_nll)                           (uniform over V tokens -> V)
+\`\`\`
+
+## Interview essentials
+- Why SwiGLU uses \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`
+- Why FlashAttention is exact (not an approximation) and what it saves: memory traffic, not FLOPs
+- What goes wrong in an MoE without the auxiliary loss (expert collapse) and how capacity factors drop tokens
+- Why perplexity must exclude padding, and why it's only comparable between models with the same tokenizer
+
+Then put it all together in the capstone **Mini GPT** problem (E2E Implementations).
+    `,
+    problems: ['rmsnorm-swiglu', 'online-softmax', 'moe-routing', 'perplexity'],
+  },
+  {
+    id: 'representation-learning',
+    title: 'Representation Learning & Retrieval',
+    description: 'Contrastive learning, embedding search and retrieval for RAG.',
+    icon: '🧭',
+    introduction: `
+# Representation Learning & Retrieval
+
+A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.
+
+## Embeddings and cosine similarity
+Most embedding models are compared with **cosine similarity**, the dot product of L2-normalised vectors:
+\`\`\`
+cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
+\`\`\`
+After normalisation, scoring a query against N documents is a single matrix multiply.
+
+## Contrastive learning
+Instead of labels, contrastive methods learn from **pairs**: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the **InfoNCE** loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.
+
+| Idea | Role |
+|------|------|
+| Positives | The matching pair (diagonal of the similarity matrix) |
+| Negatives | Every other item in the batch, so bigger batches give more negatives |
+| Temperature τ | Sharpens or softens the softmax; CLIP learns it |
+| Symmetric loss | Average of image→text and text→image cross-entropy |
+
+## Vector search
+Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
+
+## Retrieval-augmented generation (RAG)
+RAG answers a question by retrieving relevant passages and putting them in the LLM's prompt:
+1. **Retrieve** candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)
+2. **Rerank** the candidates with a stronger signal (a cross-encoder, or a fusion of scores)
+3. **Generate** with the top passages as context
+
+Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.
+
+## Interview Topics
+- Why normalise embeddings, and what the temperature does in InfoNCE
+- Why in-batch negatives make large batches important for CLIP
+- BM25's term-frequency saturation (k1) and length normalisation (b)
+- Exact vs approximate nearest-neighbour search
+- How the retrieval stage limits a RAG system's answer quality
+    `,
+    problems: ['infonce-loss', 'embedding-search', 'retrieve-and-rerank'],
+  },
+  {
     id: 'generative-models',
     title: 'Generative Models',
     description: 'Learn VAEs, diffusion models, and generative AI fundamentals.',
@@ -769,6 +1024,7 @@ Q(s,a) = E[r + γ * max_a' Q(s',a')]
 - **Reward Modeling**: Learn preferences from human feedback
 - **PPO for LLMs**: Fine-tune with KL constraints
 - **DPO**: Direct preference optimization without reward model
+- **GRPO**: Group-relative advantages without a critic (see Post-training & Efficiency)
 
 ### Interview Essentials
 - Implement Q-learning and SARSA from scratch
@@ -796,6 +1052,47 @@ Master these concepts for ML interviews at top companies!
       'rl-kl-penalty',
       'rl-ppo-llm-objective',
     ],
+  },
+
+  {
+    id: 'post-training',
+    title: 'Post-training & Efficiency',
+    description: 'GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.',
+    icon: '🎯',
+    introduction: `
+# Post-training & Efficiency
+
+A pretrained language model predicts text. Post-training turns it into an assistant that follows instructions and reflects human preferences, and efficiency techniques make it affordable to train and serve.
+
+## Preference learning
+| Method | Idea | Loss |
+|--------|------|------|
+| Reward model | Learn a scalar score from pairwise human preferences (Bradley–Terry) | \`-log σ(r_chosen - r_rejected)\` |
+| PPO-RLHF | Maximize reward with a KL penalty that keeps the policy near the reference model | clipped surrogate with \`A = r - β·KL\` |
+| DPO | Skip the reward model: optimize preferences directly through log-probability ratios | \`-log σ(β·(Δ_chosen - Δ_rejected))\` |
+| GRPO | Drop PPO's value network: sample a group of responses per prompt and use each reward relative to the group as the advantage | clipped surrogate with \`A = (r - mean) / std\` and a k3 KL term |
+
+## Why the KL penalty?
+Without it, the policy drifts toward outputs that fool the reward model ("reward hacking") and forgets how to write fluent text. The KL term measures how far the policy has moved from the frozen reference model.
+
+## GRPO and verifiable rewards
+GRPO (DeepSeekMath) is popular for reasoning models trained on **verifiable** rewards: a math answer checker or unit tests give 1 for correct and 0 for wrong. With G samples per prompt, the group mean is the baseline, so no critic has to be trained, and a prompt where every sample gets the same reward contributes no gradient.
+
+## Efficiency
+Fine-tuning and serving large models is dominated by memory. Low-rank adapters (LoRA) train a tiny fraction of the weights, and quantization stores weights in fewer bits.
+
+| Technique | Idea | Saves |
+|-----------|------|-------|
+| Int8 absmax quantization | \`scale = max(abs(w)) / 127\`, store \`round(w / scale)\` as int8; one scale per output channel limits the damage from outliers | 4× weight memory vs float32, faster int8 matmuls |
+
+## Problems in This Section
+
+- **GRPO: Group-Relative Advantages & Objective**
+- **Int8 Weight Quantization (absmax)**
+
+The reward-model loss, KL penalty, PPO-RLHF objective and DPO are practiced in **Reinforcement Learning**, and the LoRA adapter in **PyTorch Basics**.
+    `,
+    problems: ['grpo-advantages', 'int8-quantization'],
   },
 
   // ==========================================
