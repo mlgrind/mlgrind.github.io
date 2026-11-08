@@ -1,34 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { execFileSync } from "node:child_process";
 import { allProblems } from "../data/problems";
 import { testProgram, functionNameOf } from "../lib/pythonProgram";
-import type { TestResult } from "../types";
+import type { Problem, TestResult } from "../types";
+import { findPython, runPrograms } from "./nativePython";
 
-function findPython(): string | null {
-  for (const candidate of ["python3", "python"]) {
-    try {
-      execFileSync(candidate, ["-c", "import numpy"], { stdio: "ignore" });
-      return candidate;
-    } catch {
-      /* Native tests are optional; test:runtime always runs real Pyodide. */
-    }
-  }
-  return null;
-}
 const python = findPython();
-const runner = `
-import ast, contextlib, io, json, sys
-programs = json.load(sys.stdin)
-results = []
-for program in programs:
-    ns = {}
-    tree = ast.parse(program)
-    with contextlib.redirect_stdout(io.StringIO()):
-        exec(compile(ast.Module(body=tree.body[:-1], type_ignores=[]), '<harness>', 'exec'), ns)
-        value = eval(compile(ast.Expression(tree.body[-1].value), '<harness>', 'eval'), ns)
-    results.append(json.loads(value))
-json.dump(results, sys.stdout)
-`;
+
+function failuresOf(problems: Problem[], results: TestResult[][]): string[] {
+  return results.flatMap((cases, index) =>
+    cases
+      .filter((c) => !c.passed)
+      .map(
+        (c) =>
+          `${problems[index].id} #${c.id}: ${c.actual}; expected ${c.expected}`,
+      ),
+  );
+}
+
 describe.skipIf(!python)(
   "native reference solutions with production harness",
   () => {
@@ -36,22 +24,9 @@ describe.skipIf(!python)(
       const programs = allProblems.map((p) =>
         testProgram(p.solution, p.testCases, functionNameOf(p.starterCode)),
       );
-      const results: TestResult[][] = JSON.parse(
-        execFileSync(python!, ["-c", runner], {
-          input: JSON.stringify(programs),
-          encoding: "utf8",
-          maxBuffer: 10 * 1024 * 1024,
-        }),
-      );
+      const results = runPrograms(python!, programs);
       expect(results).toHaveLength(allProblems.length);
-      const failures = results.flatMap((cases, index) =>
-        cases
-          .filter((c) => !c.passed)
-          .map(
-            (c) =>
-              `${allProblems[index].id} #${c.id}: ${c.actual}; expected ${c.expected}`,
-          ),
-      );
+      const failures = failuresOf(allProblems, results);
       expect(failures, failures.join("\n")).toEqual([]);
       expect(results.flat()).toHaveLength(
         allProblems.reduce((count, p) => count + p.testCases.length, 0),
@@ -59,3 +34,64 @@ describe.skipIf(!python)(
     });
   },
 );
+
+const tracked = allProblems.filter((p) => p.pytorch);
+
+describe("PyTorch tracks", () => {
+  it("exist for the ported problems and keep the visible/hidden split", () => {
+    expect(tracked.length).toBeGreaterThanOrEqual(75);
+    for (const p of tracked) {
+      const track = p.pytorch!;
+      expect(track.testCases.some((t) => !t.hidden), p.id).toBe(true);
+      expect(track.testCases.some((t) => t.hidden), p.id).toBe(true);
+      // Same function as the NumPy track, so the shared description holds.
+      expect(functionNameOf(track.starterCode), p.id).toBe(
+        functionNameOf(p.starterCode),
+      );
+    }
+  });
+
+  it("use expression-based tests that call the function or class", () => {
+    const offenders: string[] = [];
+    for (const p of tracked) {
+      const names = [
+        ...p.pytorch!.starterCode.matchAll(/^(?:def|class)\s+(\w+)/gm),
+      ].map((m) => m[1]);
+      for (const t of p.pytorch!.testCases) {
+        if (!names.some((name) => new RegExp(`\\b${name}\\s*\\(`).test(t.input)))
+          offenders.push(`${p.id} #${t.id}: ${t.input.slice(0, 60)}`);
+      }
+    }
+    expect(offenders, offenders.join("\n")).toEqual([]);
+  });
+});
+
+describe.skipIf(!python)("PyTorch track solutions under the torch shim", () => {
+  const programs = (field: "solution" | "starterCode") =>
+    tracked.map((p) =>
+      testProgram(
+        p.pytorch![field],
+        p.pytorch!.testCases,
+        functionNameOf(p.pytorch!.starterCode),
+        "pytorch",
+      ),
+    );
+
+  it("every PyTorch solution passes every one of its tests", () => {
+    const results = runPrograms(python!, programs("solution"), "shim");
+    expect(results).toHaveLength(tracked.length);
+    const failures = failuresOf(tracked, results);
+    expect(failures, failures.join("\n")).toEqual([]);
+    expect(results.flat()).toHaveLength(
+      tracked.reduce((count, p) => count + p.pytorch!.testCases.length, 0),
+    );
+  });
+
+  it("no PyTorch starter code passes its tests", () => {
+    const results = runPrograms(python!, programs("starterCode"), "shim");
+    const passing = tracked
+      .filter((_, i) => results[i].every((r) => r.passed))
+      .map((p) => p.id);
+    expect(passing).toEqual([]);
+  });
+});
