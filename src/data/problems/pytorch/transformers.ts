@@ -391,4 +391,149 @@ def create_causal_mask(seq_len):
       'Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float("-inf"))',
     ],
   },
+  'attention-backward': {
+    note: "Compute the gradients by hand with tensor ops: don't call .backward() or torch.autograd in your solution (the hidden tests use autograd as the reference), and don't use F.scaled_dot_product_attention.",
+    starterCode: `import math
+import torch
+
+def attention_forward(Q, K, V, causal=False):
+    """
+    Scaled dot-product attention.
+
+    Args:
+        Q: Queries (n, d)
+        K: Keys (m, d)
+        V: Values (m, d_v)
+        causal: If True, query i may only attend to keys j <= i (n == m)
+
+    Returns:
+        Out: tensor (n, d_v)
+    """
+    # Your code here
+    pass
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    """
+    Gradients of attention with respect to Q, K and V, computed by hand.
+
+    Args:
+        Q, K, V: As in attention_forward
+        dOut: Upstream gradient dL/dOut, tensor (n, d_v)
+        causal: Same flag as in the forward pass
+
+    Returns:
+        (dQ, dK, dV) tensors with the shapes of Q, K, V
+    """
+    # Your code here
+    pass
+`,
+    solution: `import math
+import torch
+
+def _probs(Q, K, causal):
+    d = Q.shape[-1]
+    S = Q @ K.T / math.sqrt(d)
+    if causal:
+        n, m = S.shape
+        future = torch.triu(torch.ones(n, m), diagonal=1).bool()
+        S = S.masked_fill(future, float('-inf'))
+    S = S - S.max(dim=-1, keepdim=True).values
+    P = torch.exp(S)
+    return P / P.sum(dim=-1, keepdim=True)
+
+def attention_forward(Q, K, V, causal=False):
+    return _probs(Q, K, causal) @ V
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    d = Q.shape[-1]
+    P = _probs(Q, K, causal)                            # (n, m)
+    dV = P.T @ dOut                                     # (m, d_v)
+    dP = dOut @ V.T                                     # (n, m)
+    dS = P * (dP - (dP * P).sum(dim=-1, keepdim=True))
+    dQ = dS @ K / math.sqrt(d)                          # (n, d)
+    dK = dS.T @ Q / math.sqrt(d)                        # (m, d)
+    return dQ, dK, dV
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Forward: uniform attention averages V',
+        input: 'attention_forward(torch.zeros((2, 4)), torch.zeros((3, 4)), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])).tolist()',
+        expected: '[[3.0, 4.0], [3.0, 4.0]]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'dV for uniform attention',
+        input: '[[round(v, 4) for v in row] for row in attention_backward(torch.zeros((2, 4)), torch.zeros((3, 4)), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), torch.ones((2, 2)))[2].tolist()]',
+        expected: '[[0.6667, 0.6667], [0.6667, 0.6667], [0.6667, 0.6667]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Gradient shapes',
+        input: 'tuple(tuple(g.shape) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float(), torch.from_numpy(np.random.randn(5, 4)).float(), torch.from_numpy(np.random.randn(5, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float()))',
+        expected: '((3, 4), (5, 4), (5, 2))',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Matches autograd (n != m)',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(3, 4)).float().requires_grad_(),
+    K := torch.from_numpy(np.random.randn(5, 4)).float().requires_grad_(),
+    V := torch.from_numpy(np.random.randn(5, 2)).float().requires_grad_(),
+    G := torch.from_numpy(np.random.randn(3, 2)).float(),
+    out := torch.nn.functional.softmax(Q @ K.T / 2.0, dim=-1) @ V,
+    _ := out.backward(G),
+    grads := attention_backward(Q.detach(), K.detach(), V.detach(), G),
+    bool(torch.allclose(grads[0], Q.grad, atol=1e-5)
+         and torch.allclose(grads[1], K.grad, atol=1e-5)
+         and torch.allclose(grads[2], V.grad, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Matches autograd with a causal mask',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(4, 4)).float().requires_grad_(),
+    K := torch.from_numpy(np.random.randn(4, 4)).float().requires_grad_(),
+    V := torch.from_numpy(np.random.randn(4, 3)).float().requires_grad_(),
+    G := torch.from_numpy(np.random.randn(4, 3)).float(),
+    S := (Q @ K.T / 2.0).masked_fill(torch.triu(torch.ones(4, 4), diagonal=1).bool(), float('-inf')),
+    out := torch.nn.functional.softmax(S, dim=-1) @ V,
+    _ := out.backward(G),
+    grads := attention_backward(Q.detach(), K.detach(), V.detach(), G, causal=True),
+    bool(torch.allclose(grads[0], Q.grad, atol=1e-5)
+         and torch.allclose(grads[1], K.grad, atol=1e-5)
+         and torch.allclose(grads[2], V.grad, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Causal: the first query only sees the first key',
+        input: '(lambda: (Q := torch.from_numpy(np.random.randn(4, 4)).float(), V := torch.from_numpy(np.random.randn(4, 3)).float(), bool(torch.allclose(attention_forward(Q, torch.from_numpy(np.random.randn(4, 4)).float(), V, causal=True)[0], V[0], atol=1e-6)))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Exact gradient values',
+        input: '(lambda: (Q := torch.from_numpy(np.random.randn(2, 4)).float(), K := torch.from_numpy(np.random.randn(3, 4)).float(), V := torch.from_numpy(np.random.randn(3, 2)).float(), G := torch.from_numpy(np.random.randn(2, 2)).float(), [[[round(v, 3) for v in row] for row in g.tolist()] for g in attention_backward(Q, K, V, G)])[-1])()',
+        expected: '[[[0.073, -0.027, 0.014, -0.101], [0.287, -0.113, 0.018, -0.422]], [[-0.389, 0.124, -0.203, -0.111], [-0.059, 0.072, -0.027, 0.079], [0.447, -0.196, 0.23, 0.032]], [[0.151, 0.027], [0.43, 0.333], [0.998, 0.921]]]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Large scores stay finite (stable softmax)',
+        input: 'bool(all(not (torch.isnan(g).any().item() or torch.isinf(g).any().item()) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float())))',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+  },
 };
