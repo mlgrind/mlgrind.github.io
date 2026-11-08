@@ -536,4 +536,133 @@ def attention_backward(Q, K, V, dOut, causal=False):
       },
     ],
   },
+  'longest-match-tokenizer': {
+    note: 'Tokenization is string processing: no tensors are involved, so this track is plain Python with the same function as the NumPy track.',
+    starterCode: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    """
+    Greedy longest-match (maximal munch) tokenization.
+
+    Args:
+        text: Input string
+        vocab: Dict mapping token string -> id (contains unk_token)
+        unk_token: Token used for text that no vocabulary entry matches
+        wordpiece: If True, split on whitespace and look up non-initial
+                   pieces of a word with a '##' prefix
+
+    Returns:
+        List of token ids
+    """
+    # Your code here
+    pass
+`,
+    solution: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    unk_id = vocab[unk_token]
+    ids = []
+
+    if not wordpiece:
+        max_len = max(len(token) for token in vocab)
+        i = 0
+        while i < len(text):
+            # Try the longest candidate first
+            for length in range(min(max_len, len(text) - i), 0, -1):
+                piece = text[i:i + length]
+                if piece in vocab:
+                    ids.append(vocab[piece])
+                    i += length
+                    break
+            else:
+                ids.append(unk_id)  # no token starts here: one [UNK] per character
+                i += 1
+        return ids
+
+    # WordPiece: split on whitespace, '##' marks pieces that continue a word
+    for word in text.split():
+        pieces = []
+        i = 0
+        while i < len(word):
+            for end in range(len(word), i, -1):
+                piece = word[i:end] if i == 0 else '##' + word[i:end]
+                if piece in vocab:
+                    pieces.append(vocab[piece])
+                    i = end
+                    break
+            else:
+                pieces = [unk_id]  # the whole word becomes one [UNK]
+                break
+        ids.extend(pieces)
+    return ids
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Longest match wins',
+        input: 'tokenize("abcab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[4, 3]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Unknown character falls back to [UNK]',
+        input: 'tokenize("abxc", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[3, 0, 5]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Spaces are ordinary characters',
+        input: 'tokenize("the cab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[8, 7, 5, 3]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Greedy, not globally optimal',
+        input: 'tokenize("abcd", {\'[UNK]\': 0, \'ab\': 1, \'abc\': 2, \'cd\': 3, \'d\': 4, \'a\': 5, \'b\': 6, \'c\': 7})',
+        expected: '[2, 4]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'One [UNK] per unknown character',
+        input: 'tokenize("xyz", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[0, 0, 0]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Empty string',
+        input: 'tokenize("", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[]',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Custom unknown token',
+        input: 'tokenize("aXa", {\'<unk>\': 5, \'a\': 1}, unk_token=\'<unk>\')',
+        expected: '[1, 5, 1]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'WordPiece with ## continuations',
+        input: 'tokenize("unaffable playing plays", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[1, 2, 3, 4, 5, 4, 6]',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'WordPiece: an unmatched word becomes a single [UNK]',
+        input: 'tokenize("playx un aaa", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[0, 1, 9, 10, 10]',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'WordPiece ignores extra whitespace',
+        input: 'tokenize("  play   un  ", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[4, 1]',
+        hidden: true,
+      },
+    ],
+  },
 };

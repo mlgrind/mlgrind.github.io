@@ -714,7 +714,7 @@ Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
 
 Let's build transformers from scratch!
     `,
-    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention', 'attention-backward'],
+    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention', 'attention-backward', 'longest-match-tokenizer'],
   },
   {
     id: 'llm-generation',
