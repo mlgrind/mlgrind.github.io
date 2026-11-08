@@ -204,40 +204,83 @@ Learn these patterns to understand PyTorch!
   {
     id: 'data-preprocessing',
     title: 'Data Preprocessing',
-    description: 'Learn essential data cleaning and transformation techniques.',
+    description: 'Scale, impute, encode and split data without leaking the test set into training.',
     icon: '🧹',
     introduction: `
 # Data Preprocessing
 
-Real-world data is messy. Before training any model, you need to clean and transform your data.
+## Why it matters
 
-## Key Concepts
+Every production model sits behind a preprocessing pipeline: missing values are filled, features are scaled, categories are encoded and the data is split before any training happens. Bugs here are silent. The model still trains, but it learns from leaked or distorted data, and the offline score stops predicting what happens in production. Interviewers like this topic because it separates people who have shipped models from people who have only called \`fit\`.
 
-### Handling Missing Data
-- **Detection**: \`np.isnan()\`, \`pd.isnull()\`
-- **Strategies**: Remove, fill with mean/median/mode, interpolate
+## Core ideas
 
-### Feature Scaling
-- **Normalization**: Scale to [0, 1] range using min-max scaling
-- **Standardization**: Transform to zero mean, unit variance (z-score)
-- **When to use**: Most algorithms need scaled features
+Throughout, \`X\` has shape \`(n_samples, n_features)\`; statistics such as a mean or a median are computed **per column** (\`axis=0\`).
 
-### Encoding Categorical Data
-- **One-Hot Encoding**: Convert categories to binary vectors
-- **Label Encoding**: Map categories to integers
-- **When to use**: Tree-based models handle label encoding; others need one-hot
+### Feature scaling
 
-### Splitting the Data
-- **Train / validation / test**: fit on train, tune on validation, report on test once
-- **Stratified split**: split each class separately so every split keeps the class proportions, which matters for rare classes
+Distance-based models (k-NN, k-means, SVMs) and gradient descent are sensitive to the scale of each feature: a feature measured in thousands dominates one measured in fractions.
 
-### Why It Matters
-Garbage in, garbage out. Proper preprocessing can:
-- Improve model accuracy by 10-30%
-- Prevent training failures
-- Reduce overfitting
+| Method | Formula | Result | Sensitive to outliers? |
+|--------|---------|--------|------------------------|
+| Min-max | \`(x - min) / (max - min)\` | values in \`[0, 1]\` | Very: one extreme value sets the range |
+| Standardisation (z-score) | \`(x - mean) / std\` | mean 0, std 1 | Less, but the mean and std still move |
 
-Let's practice these essential skills!
+Tree-based models (decision trees, random forests, gradient boosting) only compare a feature with thresholds, so they don't need scaling.
+
+### Missing values
+
+Detect with \`np.isnan\`. Simple strategies are dropping rows, or filling (imputing) with the column **mean** (fine for symmetric data) or **median** (robust to outliers and skew). Adding a "was missing" indicator column often helps, because missingness itself can carry signal.
+
+### Categorical features
+
+**One-hot encoding** turns a category \`c\` out of \`K\` into a length-\`K\` vector with a single 1 at index \`c\`, so the model doesn't read an order into the labels. **Label encoding** (category to integer) is fine for trees but implies a false order for linear models.
+
+### Splitting the data
+
+Fit on **train**, tune hyperparameters on **validation**, and report on **test** once. A **stratified** split splits each class separately, so a rare class keeps its proportion in every split instead of disappearing from the test set by chance.
+
+### The golden rule: fit on train only
+
+Every statistic (min, max, mean, std, median, the category list) is **learned** from the training split and then **applied** unchanged to validation and test. Computing it on the full dataset leaks test information into training.
+
+## Worked micro-example
+
+One feature with an outlier: \`x = [2, 4, 6, 8, 100]\`.
+
+\`\`\`text
+min-max:  (x - 2) / 98       -> [0.000, 0.020, 0.041, 0.061, 1.000]
+z-score:  mean = 24, std = 38.05
+          (x - 24) / 38.05   -> [-0.578, -0.526, -0.473, -0.420, 1.997]
+\`\`\`
+
+Min-max squashes the four normal values into \`[0, 0.06]\` because the outlier sets the range. Now leakage: with train \`[1, 2, 3, NaN]\` the median fill is \`2.0\`; if you (wrongly) include a test value of \`100\` before imputing, the fill becomes \`2.5\`, so the test set has changed the training data.
+
+## Common pitfalls
+
+- **Train/test leakage**: scaling, imputing or selecting features on the whole dataset before splitting.
+- **Division by zero**: a constant column has \`max - min = 0\` and \`std = 0\`. Decide on a convention (scikit-learn leaves such a column at 0).
+- **\`np.mean\` on NaNs** returns \`nan\`; use \`np.nanmean\` / \`np.nanmedian\` or a mask.
+- **Modifying inputs in place**: \`arr[mask] = v\` changes the caller's array; copy first.
+- **Banker's rounding**: Python's \`round(2.5) == 2\`, which matters when you turn fractions into counts.
+- **Population vs sample std**: NumPy's \`std\` uses \`ddof=0\`, which is also what \`StandardScaler\` uses.
+
+## Interview angle
+
+- "Why must the scaler be fit on train only?" and "How would you catch leakage?" (a validation score that is too good to be true, or a feature that is only available after the label).
+- "Mean or median imputation?" (median for skewed data; mention indicator features).
+- "When does one-hot encoding break down?" (high cardinality: use hashing, target encoding with out-of-fold statistics, or embeddings).
+- "Why stratify?" (rare classes and stable metric estimates). All of these transforms are \`O(n * d)\`.
+
+## Problems in this section
+
+1. **Normalize Features**: min-max scale a 1-D array to \`[0, 1]\`, with a convention for constant input.
+2. **Handle Missing Data**: replace NaNs with the mean of the observed values without touching the input.
+3. **One-Hot Encoding**: turn integer labels into a \`(n, num_classes)\` indicator matrix.
+4. **Stratified Train/Val/Test Split**: reproducible per-class splitting with an explicit rounding rule.
+5. **Leakage-Safe Imputation and Scaling**: fit the imputer and scaler on train only, then transform both splits.
+
+Related: the cross-validation and evaluation problems in **Model Evaluation**, and the distance-based models in **Supervised Learning** and **Unsupervised Learning**, which depend on well-scaled features.
     `,
     problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split', 'leakage-safe-imputation'],
   },

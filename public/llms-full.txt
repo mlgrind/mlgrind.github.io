@@ -100,11 +100,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 05: Data Preprocessing
 
 **URL**: /section/data-preprocessing
-**Summary**: Learn essential data cleaning and transformation techniques.
+**Summary**: Scale, impute, encode and split data without leaking the test set into training.
 **Problems** (5):
 
-1. **Normalize Features** (`/problem/data-preprocessing/normalize-features`) — easy
-2. **Handle Missing Data** (`/problem/data-preprocessing/handle-missing-data`) — medium
+1. **Normalize Features (Min-Max Scaling)** (`/problem/data-preprocessing/normalize-features`) — easy
+2. **Handle Missing Data (Mean Imputation)** (`/problem/data-preprocessing/handle-missing-data`) — medium
 3. **One-Hot Encoding** (`/problem/data-preprocessing/one-hot-encode`) — medium
 4. **Stratified Train/Val/Test Split** (`/problem/data-preprocessing/stratified-split`) — medium
 5. **Leakage-Safe Imputation and Scaling** (`/problem/data-preprocessing/leakage-safe-imputation`) — medium
