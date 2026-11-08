@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>E2E: Tiny Vision Transformer - End-to-End Implementations | ML Grind</title>
+<meta name="description" content="Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier" data-rh="true" />
+<meta property="og:title" content="E2E: Tiny Vision Transformer - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="E2E: Tiny Vision Transformer - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Tiny Vision Transformer - End-to-End Implementations","description":"Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Tiny Vision Transformer - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Tiny Vision Transformer (ViT)</h2>
+<p>A Vision Transformer treats an image as a <strong>sequence of patches</strong>: cut it into <code>P x P</code> tiles, embed each tile linearly, prepend a learnable <strong>[CLS]</strong> token, add <strong>position embeddings</strong>, run a Transformer encoder, and classify from the final CLS token.</p>
+<p>Build <code>TinyViT</code> with <strong>one pre-norm encoder block</strong>.</p>
+<h3>Architecture</h3>
+<pre><code>x (B, C, H, W)
+  │ patchify                  (B, N, P*P*C)       N = (H/P) * (W/P)
+  │ @ W_patch + b_patch       (B, N, D)
+  │ prepend CLS token         (B, N+1, D)
+  │ + pos_emb (N+1, D)        (only if use_pos_emb)
+  ▼
+  t = t + MHA(LN1(t))         pre-norm attention with residual
+  t = t + MLP(LN2(t))         MLP: Linear(D, mlp_dim) -&gt; GELU -&gt; Linear(mlp_dim, D)
+  ▼
+  cls = LN_f(t[:, 0])         (B, D)      &lt;- cls_features(x)
+  logits = cls @ W_head + b_head  (B, num_classes)
+</code></pre>
+<h3>Details</h3>
+<ul>
+<li><strong>Patch order</strong>: patches in row-major order over the <code>(H/P, W/P)</code> grid; inside a patch, flatten as <code>(p1, p2, c)</code>, i.e. einops <code>&#x27;b c (h p1) (w p2) -&gt; b (h w) (p1 p2 c)&#x27;</code>. This matches a stride-<code>P</code> convolution.</li>
+<li><strong>MHA</strong>: <code>qkv = h @ W_qkv</code> (no bias) split into <code>Q, K, V</code> of width <code>D</code>; reshape to <code>num_heads</code> heads of size <code>D / num_heads</code>; <code>softmax(Q K^T / sqrt(d_head)) V</code>; merge heads; output projection <code>@ W_o</code> (no bias). No mask: every token attends to every token.</li>
+<li><strong>LayerNorm</strong>: over the last dimension, <code>eps = 1e-5</code>, with learnable gain (init 1) and bias (init 0).</li>
+<li><strong>GELU</strong>: tanh approximation, <code>0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))</code>.</li>
+<li><strong>Initialization</strong>: weights <code>~ N(0, 1/fan_in)</code>, biases 0, CLS token and position embeddings <code>~ N(0, 0.02^2)</code>.</li>
+</ul>
+<h3>Why position embeddings matter</h3>
+<p>Self-attention is <strong>permutation-equivariant</strong>, and the CLS token attends to all patches with the same weights regardless of where they are. So <strong>without</strong> position embeddings, shuffling the patches of an image leaves the CLS output (and the prediction) unchanged. Position embeddings are the only source of spatial order.</p>
+<h3>Methods to implement</h3>
+<ul>
+<li><code>patchify(x)</code>: <code>(B, C, H, W) -&gt; (B, N, P*P*C)</code></li>
+<li><code>cls_features(x)</code>: final-LayerNormed CLS token, <code>(B, D)</code></li>
+<li><code>forward(x)</code>: logits, <code>(B, num_classes)</code></li>
+<li><code>loss(x, y)</code>: mean cross-entropy (float), with integer labels <code>y</code></li>
+<li><code>train_step(x, y, lr)</code>: one plain SGD step on <code>loss(x, y)</code>; returns the loss <strong>before</strong> the step (float).
+<ul>
+<li><strong>NumPy track</strong>: update only the classification head (<code>W_head</code>, <code>b_head</code>); the encoder stays frozen (a <em>linear probe</em>). Its gradient is <code>dlogits = (softmax(logits) - onehot(y)) / B</code>, <code>dW_head = cls^T @ dlogits</code>, <code>db_head = dlogits.sum(0)</code>.</li>
+<li><strong>PyTorch track</strong>: autograd updates <strong>every</strong> parameter.</li>
+</ul>
+</li>
+</ul>
+<h3>Constructor</h3>
+<p><code>TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)</code></p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, num_classes=3).forward(np.random.randn(4, 1, 8, 8))
+Output: logits of shape (4, 3)</pre><p>4 patches of 4x4 pixels -&gt; 5 tokens (with CLS) of width 16 -&gt; CLS head.</p></div><div><pre class="overflow-auto">Input: model.patchify(np.arange(32.).reshape(1, 2, 4, 4)) with patch_size=2
+Output: shape (1, 4, 8); first patch [0, 16, 1, 17, 4, 20, 5, 21]</pre><p>Order (p1, p2, c): pixel (0,0) of both channels, then pixel (0,1), then (1,0), then (1,1).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+class TinyViT:
+    def __init__(self, img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2,
+                 mlp_dim=32, num_classes=2, use_pos_emb=True):
+        &quot;&quot;&quot;
+        Create all parameters (weights ~ N(0, 1/fan_in), biases 0,
+        CLS token and position embeddings ~ N(0, 0.02^2), LayerNorm gains 1).
+        &quot;&quot;&quot;
+        self.patch_size = patch_size
+        self.num_heads = num_heads
+        self.use_pos_emb = use_pos_emb
+        # Your code here
+
+    def patchify(self, x):
+        &quot;&quot;&quot;(B, C, H, W) -&gt; (B, N, P*P*C), patches row-major, flattened as (p1, p2, c).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def cls_features(self, x):
+        &quot;&quot;&quot;Embed patches, prepend CLS, add pos-emb, one pre-norm block, final LN on CLS -&gt; (B, D).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def forward(self, x):
+        &quot;&quot;&quot;Logits (B, num_classes).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def loss(self, x, y):
+        &quot;&quot;&quot;Mean cross-entropy (float).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def train_step(self, x, y, lr=0.1):
+        &quot;&quot;&quot;One SGD step on the head (W_head, b_head); returns the loss before the step.&quot;&quot;&quot;
+        # Your code here
+        pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

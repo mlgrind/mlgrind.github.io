@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Masked Cross-Entropy with Label Smoothing - Neural Networks | ML Grind</title>
+<meta name="description" content="Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce" data-rh="true" />
+<meta property="og:title" content="Masked Cross-Entropy with Label Smoothing - Neural Networks | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Masked Cross-Entropy with Label Smoothing - Neural Networks | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Masked Cross-Entropy with Label Smoothing - Neural Networks","description":"Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Masked Cross-Entropy with Label Smoothing - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Masked Cross-Entropy with Label Smoothing</h2>
+<p>Language-model training computes a cross-entropy loss per token, but batches are padded to a common length and the padding tokens must not count. Most LM training recipes also use <strong>label smoothing</strong>. Implement token-level cross-entropy with both, matching PyTorch&#x27;s <code>F.cross_entropy(logits, targets, ignore_index=..., label_smoothing=...)</code>.</p>
+<h3>Formula</h3>
+<p>For a token with logits <code>z</code> (V classes) and target class <code>y</code>:</p>
+<pre><code>log_p = z - logsumexp(z)                        # log-softmax, computed stably
+q_c   = (1 - eps) * [c == y] + eps / V          # smoothed target: eps spread over ALL V classes
+loss  = -sum_c q_c * log_p_c
+      = (1 - eps) * (-log_p_y) + eps * mean_c(-log_p_c)
+</code></pre>
+<p>The final loss is the <strong>mean over non-padded tokens only</strong> (tokens whose target is <code>ignore_index</code>):</p>
+<pre><code>L = sum_{tokens with y != ignore_index} loss / (number of such tokens)
+</code></pre>
+<h3>Details</h3>
+<ul>
+<li><code>logits</code> has shape <code>(N, V)</code> or <code>(B, T, V)</code>; <code>targets</code> has the matching shape <code>(N,)</code> or <code>(B, T)</code>. Flatten the leading dimensions.</li>
+<li><code>ignore_index</code> may be a value outside <code>[0, V)</code> (the default <code>-100</code>) or a real class id (e.g. a pad id of 0). Never use the target of an ignored token as an index.</li>
+<li>If every token is ignored, return <code>nan</code> (that is what PyTorch&#x27;s mean reduction gives).</li>
+<li>With <code>smoothing = 0</code> this is the ordinary cross-entropy.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>Return the loss as a Python <code>float</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]))
+Output: 0.2084</pre><p>The third token is padding, so the loss is the mean of the other three per-token losses (rounded here).</p></div><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]), smoothing=0.1)
+Output: 0.3906</pre><p>Smoothing moves 10% of the target mass onto all classes, which raises the loss of confident correct predictions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
+    &quot;&quot;&quot;
+    Token-level cross-entropy with label smoothing and a padding mask.
+
+    Args:
+        logits: Unnormalized scores, array (N, V) or (B, T, V)
+        targets: Class ids, int array (N,) or (B, T); ignore_index marks padding
+        ignore_index: Target value whose tokens are excluded from the loss
+        smoothing: Label smoothing eps in [0, 1]
+
+    Returns:
+        Mean loss over non-ignored tokens (float); nan if every token is ignored
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

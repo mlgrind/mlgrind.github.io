@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Optimization &amp; Training | ML Grind</title>
+<meta name="description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/section/optimization" data-rh="true" />
+<meta property="og:title" content="Optimization &amp; Training | ML Grind" data-rh="true" />
+<meta property="og:description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/section/optimization" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Optimization &amp; Training | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Optimization & Training","description":"Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.","url":"https://mlgrind.github.io/section/optimization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.</p><div class="prose dark:prose-invert max-w-none"><h2>Optimization &amp; Training</h2>
+<p>A model is only as good as the procedure that fits it. This section covers what happens between <code>loss.backward()</code> and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging.</p>
+<h2>From SGD to Adam</h2>
+<p>Every optimizer turns a gradient <code>g</code> into an update for the parameters <code>θ</code>:</p>
+<table><thead><tr><th>Optimizer</th><th>Update</th><th>Idea</th></tr></thead><tbody><tr><td><strong>SGD</strong></td><td><code>θ -= lr * g</code></td><td>Step down the current gradient</td></tr><tr><td><strong>Momentum</strong></td><td><code>v = μv + g;  θ -= lr * v</code></td><td>Average gradients over time: speed up along consistent directions, damp oscillations</td></tr><tr><td><strong>Nesterov</strong></td><td><code>θ -= lr * (g + μv)</code></td><td>Look ahead along the velocity before stepping</td></tr><tr><td><strong>RMSprop</strong></td><td><code>s = ρs + (1-ρ)g²;  θ -= lr * g / √s</code></td><td>Per-parameter step size from recent gradient scale</td></tr><tr><td><strong>Adam</strong></td><td>momentum on <code>g</code> + RMSprop on <code>g²</code> + bias correction</td><td>Default for most deep learning</td></tr><tr><td><strong>AdamW</strong></td><td>Adam + decoupled weight decay <code>θ *= 1 - lr·λ</code></td><td>Default for transformers; L2 inside Adam is <em>not</em> the same thing</td></tr></tbody></table>
+<p>You implement SGD with momentum, Adam and learning-rate schedules in <strong>PyTorch Basics</strong> (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).</p>
+<h2>Learning-Rate Schedules</h2>
+<p>The learning rate is the single most important hyperparameter, and it rarely stays constant:</p>
+<pre><code>warmup (linear 0 -&gt; max)  -&gt;  decay (cosine / linear / step)  -&gt;  floor (min_lr)
+</code></pre>
+<p>Warmup protects the first steps, when Adam&#x27;s statistics are noisy and the weights are random. Decay lets the model settle into a minimum.</p>
+<h2>Keeping Training Stable</h2>
+<table><thead><tr><th>Problem</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Exploding gradients</td><td>Loss spikes, NaNs</td><td><strong>Gradient clipping</strong> by global norm (<code>clip_grad_norm_</code>, usually <code>max_norm=1.0</code>)</td></tr><tr><td>Batch doesn&#x27;t fit in memory</td><td>OOM errors</td><td><strong>Gradient accumulation</strong>: sum the gradients of k micro-batches (each loss / k) before stepping (practiced in PyTorch Basics)</td></tr><tr><td>fp16 gradients underflow to 0</td><td>Training stalls in mixed precision</td><td><strong>Dynamic loss scaling</strong>: multiply the loss by S, halve S on overflow, grow it after N clean steps</td></tr></tbody></table>
+<pre><code class="language-python"># A typical modern training step
+with torch.autocast(&#x27;cuda&#x27;, dtype=torch.float16):
+    loss = model(x, y) / accum_steps
+scaler.scale(loss).backward()
+if (step + 1) % accum_steps == 0:
+    scaler.unscale_(optimizer)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    scaler.step(optimizer)          # skipped if the gradients overflowed
+    scaler.update()                 # adjust the loss scale
+    optimizer.zero_grad()
+    scheduler.step()
+</code></pre>
+<h2>Why It Matters</h2>
+<ul>
+<li><strong>Interviews</strong> regularly ask you to write Adam from memory, explain bias correction, or explain why AdamW decouples weight decay.</li>
+<li><strong>In practice</strong>, most &quot;my model won&#x27;t train&quot; bugs are optimization bugs: a missing warmup, no clipping, a forgotten <code>1/k</code> in accumulation, or a loss scale stuck at 0.</li>
+</ul>
+<h2>Problems in This Section</h2>
+<ul>
+<li><strong>Gradient Clipping by Global Norm</strong>: rescale all gradients together when their combined norm is too large</li>
+<li><strong>Dynamic Loss Scaling</strong>: simulate <code>GradScaler</code>&#x27;s scale updates for mixed-precision training</li>
+</ul>
+<p>Let&#x27;s implement the stability tricks of a training step!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/optimization/gradient-clipping">Gradient Clipping by Global Norm →</a></li><li><a href="/problem/optimization/loss-scaling">Dynamic Loss Scaling (Mixed Precision) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

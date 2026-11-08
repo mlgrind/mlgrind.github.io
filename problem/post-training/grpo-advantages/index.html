@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency | ML Grind</title>
+<meta name="description" content="Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/post-training/grpo-advantages" data-rh="true" />
+<meta property="og:title" content="GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/post-training/grpo-advantages" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"GRPO: Group-Relative Advantages & Objective - Post-training & Efficiency","description":"Implement GRPO: Group-Relative Advantages & Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/post-training/grpo-advantages","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GRPO: Group Relative Policy Optimization</h2>
+<p>GRPO (DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a <strong>group</strong> of G responses, score each with a reward model (or a verifier), and use the reward <strong>relative to the group</strong> as the advantage. The group mean plays the role of the critic&#x27;s baseline.</p>
+<h3>Step 1: group-normalized advantages</h3>
+<p>For prompt b with rewards r_{b,1..G}:</p>
+<pre><code>A_{b,i} = (r_{b,i} - mean_i(r_{b,:})) / (std_i(r_{b,:}) + eps)
+</code></pre>
+<ul>
+<li><code>std</code> is the <strong>population</strong> standard deviation (ddof = 0, i.e. <code>np.std</code> default; in PyTorch <code>unbiased=False</code>)</li>
+<li><code>eps = 1e-8</code>, so a group where every response gets the same reward has advantage 0 everywhere (no learning signal, no division by zero)</li>
+<li>This is outcome supervision: every token of response i gets the same advantage A_{b,i}</li>
+</ul>
+<h3>Step 2: per-token clipped surrogate with a KL term</h3>
+<p>For token t of response i (log-probs of the sampled token):</p>
+<pre><code>ratio = exp(logp - old_logp)
+surr  = min(ratio * A, clip(ratio, 1 - ε, 1 + ε) * A)
+
+# k3 estimator of KL(π_θ || π_ref), always &gt;= 0
+kl    = exp(ref_logp - logp) - (ref_logp - logp) - 1
+
+per_token = surr - β * kl
+</code></pre>
+<h3>Step 3: averaging (as in the DeepSeekMath objective)</h3>
+<pre><code>J = mean over (b, i) of [ (1 / |o_i|) * Σ_t mask_t * per_token_t ]
+</code></pre>
+<p>Average over each response&#x27;s <strong>valid</strong> tokens first (<code>mask</code> is 1 for real tokens and 0 for padding, |o_i| = mask.sum()), then average over all B·G responses. <code>&#x27;mean_kl&#x27;</code> uses the same averaging applied to <code>kl</code>. The training loss is <code>-J</code>.</p>
+<h3>Shapes</h3>
+<ul>
+<li><code>rewards</code>: (B, G)</li>
+<li><code>logp</code>, <code>old_logp</code>, <code>ref_logp</code>, <code>mask</code>: (B, G, T)</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p><code>group_advantages(rewards, eps=1e-8)</code> returns the (B, G) array of advantages.</p>
+<p><code>grpo_objective(...)</code> returns a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;advantages&#x27;</code>: (B, G) array from step 1</li>
+<li><code>&#x27;objective&#x27;</code>: J as a Python float (to maximize)</li>
+<li><code>&#x27;loss&#x27;</code>: <code>-J</code> as a Python float (to minimize)</li>
+<li><code>&#x27;mean_kl&#x27;</code>: averaged k3 KL as a Python float</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: group_advantages([[1.0, 0.0, 0.0, 1.0]])
+Output: [[1.0, -1.0, -1.0, 1.0]]</pre><p>mean 0.5, std 0.5: correct answers get +1, wrong ones -1</p></div><div><pre class="overflow-auto">Input: logp == old_logp == ref_logp
+Output: {&#x27;objective&#x27;: 0.0, &#x27;mean_kl&#x27;: 0.0, ...}</pre><p>ratio = 1 and KL = 0, so J is the mean advantage, which is 0 within every group</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def group_advantages(rewards, eps=1e-8):
+    &quot;&quot;&quot;
+    Group-normalized advantages.
+
+    Args:
+        rewards: (B, G) rewards, G sampled responses per prompt
+        eps: added to the std
+
+    Returns:
+        (B, G) array: (r - group mean) / (group std + eps), population std
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
+                   epsilon=0.2, beta=0.04, eps=1e-8):
+    &quot;&quot;&quot;
+    GRPO clipped objective with a k3 KL penalty.
+
+    Args:
+        logp: (B, G, T) token log-probs under the current policy
+        old_logp: (B, G, T) token log-probs under the policy that sampled
+        ref_logp: (B, G, T) token log-probs under the frozen reference model
+        rewards: (B, G) one scalar reward per response
+        mask: (B, G, T) 1 for real tokens, 0 for padding
+        epsilon: clipping range
+        beta: KL coefficient
+        eps: std epsilon for the advantages
+
+    Returns:
+        dict with &#x27;advantages&#x27; (B, G), &#x27;objective&#x27;, &#x27;loss&#x27;, &#x27;mean_kl&#x27; (floats)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning | ML Grind</title>
+<meta name="description" content="Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full" data-rh="true" />
+<meta property="og:title" content="K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning","description":"Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Means from Scratch</h2>
+<p>Implement the complete k-means algorithm (Lloyd&#x27;s algorithm): seeding with <strong>k-means++</strong>, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty.</p>
+<p>You write two functions:</p>
+<ul>
+<li><code>kmeans_pp_init(X, k, seed=0)</code>: k-means++ seeding, returns the <code>(k, d)</code> initial centroids</li>
+<li><code>kmeans(X, k, init=&#x27;k-means++&#x27;, max_iter=100, tol=1e-4, seed=0)</code>: the full algorithm</li>
+</ul>
+<h3>k-means++ seeding (follow exactly, so results are reproducible)</h3>
+<p>Create one generator <code>rng = np.random.default_rng(seed)</code> and draw every random number with <code>u = rng.random()</code>:</p>
+<ol>
+<li>First centroid: the point at index <code>floor(u * n)</code>.</li>
+<li>Each further centroid: compute <code>D2[i]</code>, the squared distance from point <code>i</code> to its <strong>nearest already chosen</strong> centroid, and <code>cdf = cumsum(D2)</code>. Pick the <strong>first</strong> index <code>i</code> with <code>cdf[i] &gt; u * cdf[-1]</code>. This samples a point with probability proportional to <code>D2</code>.</li>
+<li>If <code>cdf[-1] == 0</code> (every point coincides with a chosen centroid), pick index <code>floor(u * n)</code> instead.</li>
+</ol>
+<h3>Lloyd iterations</h3>
+<p>Starting from the initial centroids <code>C</code> (k-means++ when <code>init == &#x27;k-means++&#x27;</code>, otherwise <code>init</code> is a <code>(k, d)</code> array), repeat for <code>it = 1, 2, ..., max_iter</code>:</p>
+<ol>
+<li><strong>Assign</strong>: each point goes to its nearest centroid (squared Euclidean distance); ties go to the lowest centroid index.</li>
+<li><strong>Update</strong>: each non-empty cluster&#x27;s centroid becomes the mean of its points.</li>
+<li><strong>Empty clusters</strong>: a cluster with no points is moved onto the point that is <strong>farthest from its assigned centroid</strong> in this iteration&#x27;s assignment (largest squared distance; ties go to the lowest point index). If several clusters are empty, handle them in increasing cluster index, and a point can be used only once.</li>
+<li><strong>Stop</strong> if the labels did not change since the previous iteration, or if the largest centroid shift <code>max_j ||C_new[j] - C[j]||</code> is below <code>tol</code>.</li>
+</ol>
+<pre><code>inertia = sum_i ||x_i - C[label_i]||^2
+</code></pre>
+<h3>Expected Return Format</h3>
+<p><code>kmeans</code> returns a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;centroids&#x27;</code>: <code>(k, d)</code> float array, the centroids after the last update</li>
+<li><code>&#x27;labels&#x27;</code>: <code>(n,)</code> int array, each point&#x27;s nearest <strong>returned</strong> centroid (one final assignment step against the returned centroids)</li>
+<li><code>&#x27;inertia&#x27;</code>: Python float, computed from those labels and centroids</li>
+<li><code>&#x27;n_iter&#x27;</code>: int, the number of assign/update iterations performed (<code>1 &lt;= n_iter &lt;= max_iter</code>)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]]))
+Output: {&#x27;centroids&#x27;: [[1.25, 1.5], [3.9, 5.1]], &#x27;labels&#x27;: [0, 0, 1, 1, 1, 1, 1], &#x27;inertia&#x27;: 8.525, &#x27;n_iter&#x27;: 3}</pre><p>(3, 4) is equally far from both initial centroids, so iteration 1 puts it in cluster 0 (lowest index); iteration 2 moves it to cluster 1; iteration 3 changes no label, so the loop stops.</p></div><div><pre class="overflow-auto">Input: kmeans_pp_init(np.array([[0.0, 0.0], [0.0, 1.0], [10.0, 10.0], [10.0, 11.0], [20.0, 0.0]]), 3, seed=0)
+Output: array([[10., 11.], [0., 0.], [20., 0.]])</pre><p>The first draw u = 0.637 picks index floor(0.637 * 5) = 3; each later pick is drawn in proportion to the squared distance to the nearest centroid chosen so far.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def kmeans_pp_init(X, k, seed=0):
+    &quot;&quot;&quot;
+    k-means++ seeding (see the description for the exact sampling rule).
+
+    Args:
+        X: Data, array of shape (n, d)
+        k: Number of clusters
+        seed: Seed for np.random.default_rng
+
+    Returns:
+        centroids: Initial centroids, array of shape (k, d)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+def kmeans(X, k, init=&#x27;k-means++&#x27;, max_iter=100, tol=1e-4, seed=0):
+    &quot;&quot;&quot;
+    Full k-means (Lloyd&#x27;s algorithm).
+
+    Args:
+        X: Data, array of shape (n, d)
+        k: Number of clusters
+        init: &#x27;k-means++&#x27; or an initial centroid array of shape (k, d)
+        max_iter: Maximum number of assign/update iterations
+        tol: Stop when the largest centroid shift is below tol
+        seed: Seed for k-means++
+
+    Returns:
+        dict with &#x27;centroids&#x27; (k, d), &#x27;labels&#x27; (n,), &#x27;inertia&#x27; (float), &#x27;n_iter&#x27; (int)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/unsupervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

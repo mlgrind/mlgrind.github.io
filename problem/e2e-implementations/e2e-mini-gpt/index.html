@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Mini GPT (Character-Level Language Model) - End-to-End Implementations | ML Grind</title>
+<meta name="description" content="Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-mini-gpt" data-rh="true" />
+<meta property="og:title" content="Mini GPT (Character-Level Language Model) - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/e2e-implementations/e2e-mini-gpt" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Mini GPT (Character-Level Language Model) - End-to-End Implementations | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Mini GPT (Character-Level Language Model) - End-to-End Implementations","description":"Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-mini-gpt","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Mini GPT (Character-Level Language Model) - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Mini GPT: a Character-Level Language Model</h2>
+<p>Put the pieces together into a tiny decoder-only Transformer, the same architecture as GPT-2 (just very small), and run it end to end: forward pass, next-token loss, training and greedy generation.</p>
+<h3>Architecture</h3>
+<pre><code>idx (B, T) integer token ids, T &lt;= block_size
+x = tok_emb[idx] + pos_emb[:T]                       # (B, T, C)
+for each block:                                      # pre-norm residual blocks
+    x = x + Attn(LN1(x))                             # causal multi-head self-attention
+    x = x + MLP(LN2(x))                              # MLP(h) = gelu(h W_1 + b_1) W_2 + b_2
+h = LN_f(x)                                          # final LayerNorm
+logits = h @ W_lm                                    # (B, T, V)
+</code></pre>
+<p><strong>Causal self-attention</strong> with <code>H</code> heads, <code>d_head = C / H</code>:</p>
+<pre><code>q, k, v = split(x @ W_qkv, 3, axis=-1)               # each (B, T, C); W_qkv columns are [Q | K | V]
+reshape each to (B, H, T, d_head)                    # head h uses columns h*d_head:(h+1)*d_head
+scores = q @ k^T / sqrt(d_head), masked to -inf where key position &gt; query position
+out = softmax(scores) @ v -&gt; back to (B, T, C) -&gt; @ W_o
+</code></pre>
+<p>LayerNorm uses <code>eps = 1e-5</code>; GELU is the tanh approximation (both helpers are provided).</p>
+<h3>Loss</h3>
+<p>Mean cross-entropy of the next token over all <code>B*T</code> positions: <code>targets[b, t]</code> is the token that follows <code>idx[b, t]</code>. With the small (std 0.02) initialization the logits start near 0, so the <strong>initial loss is about <code>log(V)</code></strong>: the model starts out guessing uniformly.</p>
+<h3>Generation (greedy)</h3>
+<p>Repeat <code>max_new_tokens</code> times: crop the context to the last <code>block_size</code> tokens, run <code>forward</code>, take the <strong>argmax</strong> of the logits at the last position and append it.</p>
+<h3>Training</h3>
+<p><code>train_step</code> (provided in the NumPy track) does one SGD step on the LM head only, using <code>dL/dlogits = (softmax - one_hot) / N</code>. You write the loop.</p>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>MiniGPT(vocab_size, d_model=16, n_heads=2, n_layers=1, block_size=8)</code></li>
+<li><code>model.forward(idx)</code>: logits <code>(B, T, vocab_size)</code></li>
+<li><code>model.loss(idx, targets)</code>: mean cross-entropy (scalar)</li>
+<li><code>model.generate(idx, max_new_tokens)</code>: integer array <code>(B, T + max_new_tokens)</code> that starts with <code>idx</code></li>
+<li><code>train(model, idx, targets, steps, lr)</code>: list of <code>steps</code> losses, each computed <strong>before</strong> that step&#x27;s update</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: model = MiniGPT(vocab_size=5); model.forward(np.zeros((2, 8), dtype=int)).shape
+Output: (2, 8, 5)</pre><p></p></div><div><pre class="overflow-auto">Input: model.loss(idx, targets)
+Output: ≈ 1.609 (= log 5)</pre><p>Untrained model is close to uniform.</p></div><div><pre class="overflow-auto">Input: model.generate(np.array([[0, 1, 2]]), 5).shape
+Output: (1, 8)</pre><p></p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def layer_norm(x, gamma, beta, eps=1e-5):
+    mu = x.mean(axis=-1, keepdims=True)
+    var = x.var(axis=-1, keepdims=True)
+    return (x - mu) / np.sqrt(var + eps) * gamma + beta
+
+
+def gelu(x):
+    # tanh approximation (GPT-2)
+    return 0.5 * x * (1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (x + 0.044715 * x ** 3)))
+
+
+def softmax(x, axis=-1):
+    e = np.exp(x - x.max(axis=axis, keepdims=True))
+    return e / e.sum(axis=axis, keepdims=True)
+
+
+class MiniGPT:
+    &quot;&quot;&quot;A tiny character-level GPT: pre-norm decoder blocks, untied LM head.&quot;&quot;&quot;
+
+    def __init__(self, vocab_size, d_model=16, n_heads=2, n_layers=1, block_size=8, seed=0):
+        rng = np.random.default_rng(seed)
+
+        def normal(*shape):
+            return rng.normal(0.0, 0.02, size=shape)  # GPT-2 style small init
+
+        self.vocab_size, self.d_model = vocab_size, d_model
+        self.n_heads, self.block_size = n_heads, block_size
+        self.tok_emb = normal(vocab_size, d_model)   # (V, C)
+        self.pos_emb = normal(block_size, d_model)   # (block_size, C)
+        self.blocks = []
+        for _ in range(n_layers):
+            self.blocks.append({
+                &#x27;ln1_g&#x27;: np.ones(d_model), &#x27;ln1_b&#x27;: np.zeros(d_model),
+                &#x27;W_qkv&#x27;: normal(d_model, 3 * d_model),    # columns: [Q | K | V]
+                &#x27;W_o&#x27;: normal(d_model, d_model),
+                &#x27;ln2_g&#x27;: np.ones(d_model), &#x27;ln2_b&#x27;: np.zeros(d_model),
+                &#x27;W_1&#x27;: normal(d_model, 4 * d_model), &#x27;b_1&#x27;: np.zeros(4 * d_model),
+                &#x27;W_2&#x27;: normal(4 * d_model, d_model), &#x27;b_2&#x27;: np.zeros(d_model),
+            })
+        self.lnf_g, self.lnf_b = np.ones(d_model), np.zeros(d_model)
+        self.W_lm = normal(d_model, vocab_size)      # (C, V)
+
+    def attention(self, x, blk):
+        &quot;&quot;&quot;Causal multi-head self-attention. x: (B, T, C) -&gt; (B, T, C)&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def hidden_states(self, idx):
+        &quot;&quot;&quot;Embeddings -&gt; blocks -&gt; final LayerNorm. idx: (B, T) -&gt; (B, T, C)&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def forward(self, idx):
+        &quot;&quot;&quot;Return logits (B, T, vocab_size).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def loss(self, idx, targets):
+        &quot;&quot;&quot;Mean next-token cross-entropy (float).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def generate(self, idx, max_new_tokens):
+        &quot;&quot;&quot;Greedy decoding. Returns (B, T + max_new_tokens).&quot;&quot;&quot;
+        # Your code here
+        pass
+
+    def train_step(self, idx, targets, lr=1.0):
+        &quot;&quot;&quot;(Provided) One SGD step on the LM head W_lm only; everything else stays frozen.
+        For mean cross-entropy, dL/dlogits = (softmax(logits) - one_hot(targets)) / N.&quot;&quot;&quot;
+        h = self.hidden_states(idx)                  # (B, T, C)
+        probs = softmax(h @ self.W_lm)               # (B, T, V)
+        dlogits = (probs - np.eye(self.vocab_size)[targets]) / targets.size
+        grad = h.reshape(-1, self.d_model).T @ dlogits.reshape(-1, self.vocab_size)
+        self.W_lm -= lr * grad
+
+
+def train(model, idx, targets, steps=20, lr=1.0):
+    &quot;&quot;&quot;Call model.train_step `steps` times. Return the list of losses,
+    each computed before that step&#x27;s update.&quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

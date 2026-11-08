@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Decision Tree Classifier with Bagging - Supervised Learning | ML Grind</title>
+<meta name="description" content="Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging" data-rh="true" />
+<meta property="og:title" content="Decision Tree Classifier with Bagging - Supervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Decision Tree Classifier with Bagging - Supervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Decision Tree Classifier with Bagging - Supervised Learning","description":"Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Decision Tree Classifier with Bagging - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Decision Tree Classifier with Bagging</h2>
+<p>Build a full classification tree with recursive <strong>Gini</strong> splits, then an ensemble of trees trained on <strong>bootstrap samples</strong> whose predictions are combined by <strong>majority vote</strong> (bagging).</p>
+<h3>Gini impurity</h3>
+<pre><code>gini(S) = 1 - sum_c p_c^2              # p_c = fraction of S with class c
+split impurity = (n_L * gini(L) + n_R * gini(R)) / n
+</code></pre>
+<h3>Growing the tree (<code>build_tree</code>)</h3>
+<p>At a node holding samples <code>S</code> at depth <code>depth</code> (the root has depth 0):</p>
+<ol>
+<li>The node is a <strong>leaf</strong> if <code>max_depth</code> is not None and <code>depth &gt;= max_depth</code>, or <code>len(S) &lt; min_samples_split</code>, or <code>S</code> is pure.</li>
+<li>Otherwise search every feature <code>f</code> (in increasing order) and every threshold <code>t</code> (in increasing order), where the thresholds are the <strong>midpoints between consecutive distinct sorted values</strong> of feature <code>f</code> in <code>S</code>. A sample goes <strong>left if <code>x[f] &lt;= t</code></strong>, right otherwise.</li>
+<li>Start with <code>best = gini(S)</code>. A candidate replaces the current best only if its split impurity is <strong>lower by more than 1e-12</strong>. So ties keep the earlier candidate (smaller feature index, then smaller threshold), and a split is made only if it strictly reduces impurity.</li>
+<li>If no candidate qualified, the node is a leaf; otherwise recurse on both sides.</li>
+</ol>
+<p>A leaf predicts the <strong>majority class</strong> of its samples; ties go to the smallest class label. Labels are non-negative integers.</p>
+<h3>Tree format</h3>
+<ul>
+<li>Leaf: <code>{&#x27;leaf&#x27;: True, &#x27;value&#x27;: c}</code> with <code>c</code> a Python int</li>
+<li>Internal node: <code>{&#x27;leaf&#x27;: False, &#x27;feature&#x27;: f, &#x27;threshold&#x27;: t, &#x27;left&#x27;: subtree, &#x27;right&#x27;: subtree}</code> with <code>f</code> an int and <code>t</code> a float</li>
+</ul>
+<h3>Bagging (<code>bagging_predict</code>)</h3>
+<p>Create <code>rng = np.random.default_rng(seed)</code>. For each of the <code>n_estimators</code> trees, draw <code>idx = rng.integers(0, n, size=n)</code> (sampling with replacement), fit <code>build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)</code>, and predict <code>X_test</code>. Each test sample gets the class with the most votes; ties go to the smallest label.</p>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>build_tree(X, y, max_depth=None, min_samples_split=2)</code>: the root node dict</li>
+<li><code>predict_tree(tree, X)</code>: int array <code>(n_samples,)</code></li>
+<li><code>bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None, min_samples_split=2, seed=0)</code>: int array <code>(n_test,)</code></li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1]), max_depth=1)
+Output: {&#x27;leaf&#x27;: False, &#x27;feature&#x27;: 0, &#x27;threshold&#x27;: 4.5, &#x27;left&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 0}, &#x27;right&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 1}}</pre><p>x0 &lt;= 4.5 separates the classes perfectly, so its split impurity is 0.</p></div><div><pre class="overflow-auto">Input: predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]]))
+Output: array([0, 0, 0, 1])</pre><p>(4.5, 6) has x0 equal to the threshold 4.5, so it goes left (x[f] &lt;= t).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def build_tree(X, y, max_depth=None, min_samples_split=2):
+    &quot;&quot;&quot;
+    Grow a classification tree with Gini splits.
+
+    Args:
+        X: Features, array (n_samples, n_features)
+        y: Non-negative integer labels, array (n_samples,)
+        max_depth: Maximum depth (root = depth 0), or None for no limit
+        min_samples_split: Nodes with fewer samples become leaves
+
+    Returns:
+        Root node: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: c} or
+        {&#x27;leaf&#x27;: False, &#x27;feature&#x27;: f, &#x27;threshold&#x27;: t, &#x27;left&#x27;: ..., &#x27;right&#x27;: ...}
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+def predict_tree(tree, X):
+    &quot;&quot;&quot;Return the predicted class for each row of X, as an int array (n_samples,).&quot;&quot;&quot;
+    # Your code here
+    pass
+
+def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
+                    min_samples_split=2, seed=0):
+    &quot;&quot;&quot;
+    Bagging: trees on bootstrap samples (np.random.default_rng(seed)), majority vote.
+
+    Returns:
+        Predicted classes for X_test, int array (n_test,)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 10 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

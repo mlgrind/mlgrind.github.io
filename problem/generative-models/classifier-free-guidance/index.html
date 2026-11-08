@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Classifier-Free Guidance - Generative Models | ML Grind</title>
+<meta name="description" content="Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/classifier-free-guidance" data-rh="true" />
+<meta property="og:title" content="Classifier-Free Guidance - Generative Models | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/generative-models/classifier-free-guidance" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Classifier-Free Guidance - Generative Models | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Classifier-Free Guidance - Generative Models","description":"Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/classifier-free-guidance","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Classifier-Free Guidance - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Classifier-Free Guidance (CFG)</h2>
+<p>Conditional diffusion models (e.g. text-to-image) are trained with the condition randomly <strong>dropped</strong> (replaced by a null token) some fraction of the time, so the same network predicts both ε_c = ε_θ(x_t, t, c) and ε_u = ε_θ(x_t, t, ∅). At sampling time, Ho &amp; Salimans (2022) extrapolate away from the unconditional prediction:</p>
+<pre><code>ε_guided = ε_u + w · (ε_c - ε_u)
+</code></pre>
+<ul>
+<li><strong>w = 0</strong>: unconditional prediction</li>
+<li><strong>w = 1</strong>: plain conditional prediction (no guidance)</li>
+<li><strong>w &gt; 1</strong>: stronger guidance, samples follow the prompt more closely and lose diversity (Stable Diffusion&#x27;s default guidance scale is 7.5)</li>
+</ul>
+<p>This is the &quot;guidance scale&quot; convention used by most libraries. The paper writes ε̃ = (1 + w&#x27;)·ε_c - w&#x27;·ε_u, which is the same formula with w = 1 + w&#x27;.</p>
+<h3>Guided sampling step</h3>
+<p>Plug ε_guided into the DDPM reverse step (σ_t² = β_t, 0-indexed t, no noise at t = 0):</p>
+<pre><code>α_t = 1 - β_t,  ᾱ_t = Π_{s&lt;=t} α_s
+x_{t-1} = 1 / sqrt(α_t) · ( x_t - β_t / sqrt(1 - ᾱ_t) · ε_guided ) + σ_t · z
+</code></pre>
+<h3>What to implement</h3>
+<ul>
+<li><code>guided_noise(eps_uncond, eps_cond, w)</code>: returns ε_guided (same shape as the inputs)</li>
+<li><code>cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z)</code>: returns x_{t-1}</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: eps_uncond = [0.1, -0.2], eps_cond = [0.3, 0.2], w = 3
+Output: [0.7, 1.0]</pre><p>0.1 + 3·(0.3 - 0.1) = 0.7 and -0.2 + 3·(0.2 + 0.2) = 1.0</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def guided_noise(eps_uncond, eps_cond, w):
+    &quot;&quot;&quot;eps_uncond + w * (eps_cond - eps_uncond)&quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z):
+    &quot;&quot;&quot;
+    One DDPM reverse step using the guided noise prediction.
+
+    Args:
+        x_t: current sample
+        eps_uncond, eps_cond: unconditional / conditional noise predictions
+        w: guidance scale
+        t: timestep (int, 0-indexed into betas)
+        betas: (T,) noise schedule
+        z: standard normal noise (ignored at t = 0)
+
+    Returns:
+        x_{t-1}
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

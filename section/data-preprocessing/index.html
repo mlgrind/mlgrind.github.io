@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>Data Preprocessing | ML Grind</title>
 <meta name="description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/data-preprocessing" data-rh="true" />
@@ -119,6 +119,11 @@
 <li><strong>Label Encoding</strong>: Map categories to integers</li>
 <li><strong>When to use</strong>: Tree-based models handle label encoding; others need one-hot</li>
 </ul>
+<h3>Splitting the Data</h3>
+<ul>
+<li><strong>Train / validation / test</strong>: fit on train, tune on validation, report on test once</li>
+<li><strong>Stratified split</strong>: split each class separately so every split keeps the class proportions, which matters for rare classes</li>
+</ul>
 <h3>Why It Matters</h3>
 <p>Garbage in, garbage out. Proper preprocessing can:</p>
 <ul>
@@ -126,7 +131,7 @@
 <li>Prevent training failures</li>
 <li>Reduce overfitting</li>
 </ul>
-<p>Let&#x27;s practice these essential skills!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/data-preprocessing/normalize-features">Normalize Features →</a></li><li><a href="/problem/data-preprocessing/handle-missing-data">Handle Missing Data →</a></li><li><a href="/problem/data-preprocessing/one-hot-encode">One-Hot Encoding →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p>Let&#x27;s practice these essential skills!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/data-preprocessing/normalize-features">Normalize Features →</a></li><li><a href="/problem/data-preprocessing/handle-missing-data">Handle Missing Data →</a></li><li><a href="/problem/data-preprocessing/one-hot-encode">One-Hot Encoding →</a></li><li><a href="/problem/data-preprocessing/stratified-split">Stratified Train/Val/Test Split →</a></li><li><a href="/problem/data-preprocessing/leakage-safe-imputation">Leakage-Safe Imputation and Scaling →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

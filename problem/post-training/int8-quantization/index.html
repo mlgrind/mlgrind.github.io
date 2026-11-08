@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency | ML Grind</title>
+<meta name="description" content="Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/post-training/int8-quantization" data-rh="true" />
+<meta property="og:title" content="Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/post-training/int8-quantization" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Int8 Weight Quantization (absmax) - Post-training & Efficiency","description":"Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/post-training/int8-quantization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Symmetric Int8 Quantization</h2>
+<p>Storing weights in int8 instead of float32 cuts memory by 4×. <strong>Absmax</strong> (symmetric) quantization maps the largest magnitude to 127:</p>
+<pre><code>scale = max|w| / 127
+w_q   = clip(round(w / scale), -127, 127)     (stored as int8)
+w_hat = w_q * scale                            (dequantized)
+</code></pre>
+<p>Rounding is round-half-to-even (<code>np.round</code> / <code>torch.round</code>). The rounding error per weight is at most scale / 2.</p>
+<h3>Per-tensor vs per-channel</h3>
+<ul>
+<li><strong>Per-tensor</strong>: one scale for the whole matrix. One large outlier makes the scale large, and every small weight loses precision.</li>
+<li><strong>Per-channel</strong>: one scale per <strong>output row</strong> of W (shape (d_out, d_in)), so each row uses its own range. This is what LLM.int8() calls vector-wise quantization.</li>
+</ul>
+<p>To avoid dividing by zero, use <code>scale = max(absmax, 1e-8) / 127</code>.</p>
+<h3>Int8 matmul</h3>
+<p>To compute y = x Wᵀ in int8, also quantize the activations <strong>per row</strong> of x (per token), accumulate the integer products in int32 and rescale with both scales:</p>
+<pre><code>x_q, s_x = absmax-quantize each row of x          (n, d_in), (n,)
+acc      = x_q @ W_qᵀ   (int32 accumulation)       (n, d_out)
+y        ≈ acc * s_x[:, None] * s_w[None, :]
+</code></pre>
+<h3>What to implement</h3>
+<ul>
+<li><code>quantize_per_channel(W)</code> returns <code>(W_q, scales)</code>: W_q is an <strong>int8</strong> array (d_out, d_in), scales is (d_out,)</li>
+<li><code>quantize_per_tensor(W)</code> returns <code>(W_q, scale)</code>: int8 array and a Python float</li>
+<li><code>dequantize(W_q, scales)</code> returns floats; <code>scales</code> is either a (d_out,) array (one per row) or a scalar</li>
+<li><code>int8_matmul(x, W_q, w_scales)</code> returns the (n, d_out) float approximation of x Wᵀ</li>
+<li><code>quantization_report(W)</code> returns a dictionary:
+<ul>
+<li><code>&#x27;per_channel_error&#x27;</code>: max |W - dequantize(per-channel)| (Python float)</li>
+<li><code>&#x27;per_tensor_error&#x27;</code>: max |W - dequantize(per-tensor)| (Python float)</li>
+</ul>
+</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: W = [[0.7, -1.2, 0.3], [2.0, 0.1, -0.5]]
+Output: W_q = [[74, -127, 32], [127, 6, -32]], scales = [1.2/127, 2.0/127] = [0.009449, 0.015748]</pre><p>Each row is scaled so that its largest magnitude maps to ±127</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def quantize_per_channel(W):
+    &quot;&quot;&quot;Returns (W_q int8 (d_out, d_in), scales (d_out,)) with one scale per row.&quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def quantize_per_tensor(W):
+    &quot;&quot;&quot;Returns (W_q int8, scale float) with one scale for the whole matrix.&quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def dequantize(W_q, scales):
+    &quot;&quot;&quot;W_q * scale; scales is (d_out,) (per row) or a scalar.&quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def int8_matmul(x, W_q, w_scales):
+    &quot;&quot;&quot;
+    Approximate x @ W.T with int8 operands.
+
+    Args:
+        x: (n, d_in) float activations (quantize per row)
+        W_q: (d_out, d_in) int8 weights
+        w_scales: (d_out,) per-row weight scales
+
+    Returns:
+        (n, d_out) float array
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def quantization_report(W):
+    &quot;&quot;&quot;Returns {&#x27;per_channel_error&#x27;: float, &#x27;per_tensor_error&#x27;: float}.&quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

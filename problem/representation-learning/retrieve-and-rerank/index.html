@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval | ML Grind</title>
+<meta name="description" content="Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/representation-learning/retrieve-and-rerank" data-rh="true" />
+<meta property="og:title" content="RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/representation-learning/retrieve-and-rerank" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"RAG Retrieval: BM25 + Embedding Rerank - Representation Learning & Retrieval","description":"Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/representation-learning/retrieve-and-rerank","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Hybrid Retrieval for RAG</h2>
+<p>A retrieval-augmented generation (RAG) system first <strong>retrieves</strong> a few passages, then pastes them into the LLM&#x27;s prompt. A common recipe is two-stage: a cheap lexical retriever (BM25) picks candidates, then a semantic signal (embedding similarity) <strong>reranks</strong> them.</p>
+<h3>Stage 1: BM25 (Robertson &amp; Zaragoza)</h3>
+<p>For a query q and document d (both lists of tokens):</p>
+<pre><code>score(q, d) = Σ_{t in unique(q)}  IDF(t) · f(t,d) · (k1 + 1) / ( f(t,d) + k1 · (1 - b + b · |d| / avgdl) )
+
+IDF(t) = ln( (N - n_t + 0.5) / (n_t + 0.5) + 1 )
+</code></pre>
+<ul>
+<li>f(t, d): count of term t in d; |d|: number of tokens in d; avgdl: mean document length</li>
+<li>N: number of documents; n_t: number of documents containing t</li>
+<li>The <code>+ 1</code> inside the log (the Lucene variant) keeps IDF positive even for very common terms</li>
+<li>Defaults: <strong>k1 = 1.5</strong> (term-frequency saturation), <strong>b = 0.75</strong> (length normalisation)</li>
+<li>Each distinct query term counts once, in order of first appearance</li>
+</ul>
+<h3>Stage 2: candidates</h3>
+<p>Take the top-n documents by BM25 (descending; ties go to the lower document index).</p>
+<h3>Stage 3: rerank with weighted score fusion</h3>
+<p>For each candidate c, with <code>cos_c</code> the cosine similarity between the query embedding and the candidate&#x27;s embedding:</p>
+<pre><code>bm25_norm_c = bm25_c / max_{c&#x27; in candidates} bm25_c&#x27;      (0 for all if that max is 0)
+fused_c     = alpha · bm25_norm_c + (1 - alpha) · cos_c
+</code></pre>
+<p>Sort candidates by <code>fused</code> descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a [0, 1] scale like cosine. (Reciprocal rank fusion, which adds 1 / (60 + rank) from each ranker, is a common alternative that ignores raw scores; this problem uses the weighted fusion above.)</p>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)</code> returns an (N,) array of BM25 scores</li>
+<li><code>retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs, n=3, alpha=0.5, k1=1.5, b=0.75)</code> returns a dictionary:
+<ul>
+<li><code>&#x27;bm25&#x27;</code>: (N,) BM25 scores of every document</li>
+<li><code>&#x27;candidates&#x27;</code>: (n,) integer array of the top-n document indices by BM25</li>
+<li><code>&#x27;reranked&#x27;</code>: (n,) the same documents in fused order</li>
+<li><code>&#x27;fused&#x27;</code>: (n,) fused scores, aligned with <code>&#x27;reranked&#x27;</code></li>
+</ul>
+</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: query = [&#x27;cat&#x27;, &#x27;pet&#x27;], 5 short documents
+Output: bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0], reranked = [0, 2, 4]</pre><p>BM25 ranks doc 4 (it contains both words) first, but doc 0&#x27;s embedding is closest to the query, so the rerank moves it to the top. Doc 1 (&#x27;cats&#x27;, &#x27;pets&#x27;) scores 0 because BM25 matches exact tokens (no stemming)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
+    &quot;&quot;&quot;
+    BM25 score of every document for one query.
+
+    Args:
+        query_tokens: list of query tokens
+        docs_tokens: list of N token lists
+        k1, b: BM25 parameters
+
+    Returns:
+        (N,) array of scores
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
+                        n=3, alpha=0.5, k1=1.5, b=0.75):
+    &quot;&quot;&quot;
+    BM25 top-n, then rerank by alpha * normalised BM25 + (1 - alpha) * cosine.
+
+    Args:
+        query_emb: (D,) query embedding
+        doc_embs: (N, D) document embeddings
+
+    Returns:
+        dict with &#x27;bm25&#x27; (N,), &#x27;candidates&#x27; (n,), &#x27;reranked&#x27; (n,), &#x27;fused&#x27; (n,)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/representation-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

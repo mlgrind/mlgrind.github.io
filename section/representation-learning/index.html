@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Representation Learning &amp; Retrieval | ML Grind</title>
+<meta name="description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/section/representation-learning" data-rh="true" />
+<meta property="og:title" content="Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
+<meta property="og:description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/section/representation-learning" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Representation Learning & Retrieval","description":"Contrastive learning, embedding search and retrieval for RAG.","url":"https://mlgrind.github.io/section/representation-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Contrastive learning, embedding search and retrieval for RAG.</p><div class="prose dark:prose-invert max-w-none"><h2>Representation Learning &amp; Retrieval</h2>
+<p>A good representation maps inputs to vectors (<strong>embeddings</strong>) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.</p>
+<h2>Embeddings and cosine similarity</h2>
+<p>Most embedding models are compared with <strong>cosine similarity</strong>, the dot product of L2-normalised vectors:</p>
+<pre><code>cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
+</code></pre>
+<p>After normalisation, scoring a query against N documents is a single matrix multiply.</p>
+<h2>Contrastive learning</h2>
+<p>Instead of labels, contrastive methods learn from <strong>pairs</strong>: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the <strong>InfoNCE</strong> loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.</p>
+<table><thead><tr><th>Idea</th><th>Role</th></tr></thead><tbody><tr><td>Positives</td><td>The matching pair (diagonal of the similarity matrix)</td></tr><tr><td>Negatives</td><td>Every other item in the batch, so bigger batches give more negatives</td></tr><tr><td>Temperature τ</td><td>Sharpens or softens the softmax; CLIP learns it</td></tr><tr><td>Symmetric loss</td><td>Average of image→text and text→image cross-entropy</td></tr></tbody></table>
+<h2>Vector search</h2>
+<p>Exact search scores every document and keeps the top-k. Vector databases use <strong>approximate nearest neighbour</strong> indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.</p>
+<h2>Retrieval-augmented generation (RAG)</h2>
+<p>RAG answers a question by retrieving relevant passages and putting them in the LLM&#x27;s prompt:</p>
+<ol>
+<li><strong>Retrieve</strong> candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)</li>
+<li><strong>Rerank</strong> the candidates with a stronger signal (a cross-encoder, or a fusion of scores)</li>
+<li><strong>Generate</strong> with the top passages as context</li>
+</ol>
+<p>Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.</p>
+<h2>Interview Topics</h2>
+<ul>
+<li>Why normalise embeddings, and what the temperature does in InfoNCE</li>
+<li>Why in-batch negatives make large batches important for CLIP</li>
+<li>BM25&#x27;s term-frequency saturation (k1) and length normalisation (b)</li>
+<li>Exact vs approximate nearest-neighbour search</li>
+<li>How the retrieval stage limits a RAG system&#x27;s answer quality</li>
+</ul></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/representation-learning/infonce-loss">CLIP Contrastive Loss (InfoNCE) →</a></li><li><a href="/problem/representation-learning/embedding-search">Cosine Top-k Embedding Search →</a></li><li><a href="/problem/representation-learning/retrieve-and-rerank">RAG Retrieval: BM25 + Embedding Rerank →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

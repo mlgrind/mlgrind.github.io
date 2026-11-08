@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>Unsupervised Learning | ML Grind</title>
 <meta name="description" content="Implement clustering and dimensionality reduction algorithms." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/unsupervised-learning" data-rh="true" />
@@ -126,10 +126,23 @@
 </ol>
 </li>
 </ul>
+<h3>Gaussian Mixtures &amp; EM</h3>
+<ul>
+<li><strong>Soft clustering</strong>: each point gets a responsibility for every component</li>
+<li><strong>EM</strong>: E-step computes responsibilities (in log space), M-step re-fits weights, means and variances</li>
+<li><strong>Guarantee</strong>: the log-likelihood never decreases</li>
+</ul>
+<h3>DBSCAN</h3>
+<ul>
+<li><strong>Density-based</strong>: clusters are dense regions; sparse points are labelled noise</li>
+<li><strong>Core points</strong> have at least min_samples neighbours within eps; only they grow clusters</li>
+<li><strong>No K to choose</strong>, and clusters can have any shape</li>
+</ul>
 <h3>Why These Matter</h3>
 <ul>
 <li><strong>K-Means</strong>: Customer segmentation, image compression</li>
 <li><strong>PCA</strong>: Feature reduction, visualization, noise removal</li>
+<li><strong>GMM / DBSCAN</strong>: Density estimation, anomaly detection, non-spherical clusters</li>
 </ul>
 <h3>Interview Tips</h3>
 <ul>
@@ -137,7 +150,7 @@
 <li>Explain variance explained by components</li>
 <li>Discuss limitations (K-means assumes spherical clusters)</li>
 </ul>
-<p>Let&#x27;s implement these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/unsupervised-learning/kmeans-clustering">K-Means: Assign to Nearest Centroid →</a></li><li><a href="/problem/unsupervised-learning/pca-implementation">PCA: Center Data →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p>Let&#x27;s implement these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/unsupervised-learning/kmeans-clustering">K-Means: Assign to Nearest Centroid →</a></li><li><a href="/problem/unsupervised-learning/pca-implementation">PCA: Center Data →</a></li><li><a href="/problem/unsupervised-learning/gmm-em">Gaussian Mixture Model (EM) →</a></li><li><a href="/problem/unsupervised-learning/dbscan">DBSCAN Clustering →</a></li><li><a href="/problem/unsupervised-learning/kmeans-full">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

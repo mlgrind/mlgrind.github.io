@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement core supervised learning algorithms from scratch." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/supervised-learning" data-rh="true" />
@@ -129,6 +129,13 @@
 <li><strong>Regularization</strong>: L2 penalty on weights to maximize margin</li>
 <li><strong>Key insight</strong>: Only &quot;support vectors&quot; (points near the boundary) affect the decision boundary</li>
 </ul>
+<h3>Beyond Linear Models</h3>
+<ul>
+<li><strong>k-Nearest Neighbours</strong>: no training; predict by majority vote of the k closest points</li>
+<li><strong>Gaussian Naive Bayes</strong>: Bayes&#x27; rule with per-class Gaussians, computed in log space with logsumexp</li>
+<li><strong>Ridge &amp; Lasso</strong>: L2 shrinks weights smoothly (closed form); L1 sets some exactly to zero (coordinate descent)</li>
+<li><strong>Gradient Boosting</strong>: add weak learners (stumps) one at a time, each fit to the residuals of the current model</li>
+</ul>
 <h3>The Interview Perspective</h3>
 <p>Interviewers often ask you to:</p>
 <ul>
@@ -137,7 +144,7 @@
 <li>Compute and interpret hinge loss</li>
 <li>Discuss trade-offs between algorithms</li>
 </ul>
-<p>Let&#x27;s build these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/supervised-learning/logistic-regression">Sigmoid Function →</a></li><li><a href="/problem/supervised-learning/binary-cross-entropy">Binary Cross-Entropy Loss →</a></li><li><a href="/problem/supervised-learning/hinge-loss">Hinge Loss →</a></li><li><a href="/problem/supervised-learning/decision-tree-split">Gini Impurity →</a></li><li><a href="/problem/supervised-learning/linear-regression-gd">Linear Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/logistic-regression-full">Logistic Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/linear-svm">Linear SVM with Gradient Descent →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p>Let&#x27;s build these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/supervised-learning/logistic-regression">Sigmoid Function →</a></li><li><a href="/problem/supervised-learning/binary-cross-entropy">Binary Cross-Entropy Loss →</a></li><li><a href="/problem/supervised-learning/hinge-loss">Hinge Loss →</a></li><li><a href="/problem/supervised-learning/decision-tree-split">Gini Impurity →</a></li><li><a href="/problem/supervised-learning/linear-regression-gd">Linear Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/logistic-regression-full">Logistic Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/linear-svm">Linear SVM with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/knn-classifier">k-Nearest Neighbours Classifier →</a></li><li><a href="/problem/supervised-learning/naive-bayes">Gaussian Naive Bayes →</a></li><li><a href="/problem/supervised-learning/ridge-lasso">Ridge &amp; Lasso Regression →</a></li><li><a href="/problem/supervised-learning/gradient-boosting">Gradient Boosting with Stumps →</a></li><li><a href="/problem/supervised-learning/decision-tree-bagging">Decision Tree Classifier with Bagging →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

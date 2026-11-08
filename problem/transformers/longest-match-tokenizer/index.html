@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Greedy Longest-Match Tokenizer - Transformer Architecture | ML Grind</title>
+<meta name="description" content="Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/transformers/longest-match-tokenizer" data-rh="true" />
+<meta property="og:title" content="Greedy Longest-Match Tokenizer - Transformer Architecture | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/transformers/longest-match-tokenizer" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Greedy Longest-Match Tokenizer - Transformer Architecture | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Greedy Longest-Match Tokenizer - Transformer Architecture","description":"Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/longest-match-tokenizer","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Greedy Longest-Match Tokenizer - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Greedy Longest-Match Tokenizer</h2>
+<p>Given a fixed vocabulary, a simple and widely used way to tokenize text is <strong>greedy longest match</strong> (&quot;maximal munch&quot;): at each position, take the longest vocabulary entry that matches, emit its id, and continue after it. WordPiece (BERT) uses the same idea inside each word.</p>
+<h3>Default mode (<code>wordpiece=False</code>)</h3>
+<p>Scan <code>text</code> from left to right, character positions included as-is (spaces are ordinary characters and can be tokens):</p>
+<ol>
+<li>At position <code>i</code>, find the <strong>longest</strong> vocabulary token that is a prefix of <code>text[i:]</code>.</li>
+<li>If one exists, emit its id and move past it.</li>
+<li>Otherwise emit <code>vocab[unk_token]</code> for the single character <code>text[i]</code> and move one character on. A run of unknown characters gives one unknown id <strong>per character</strong>.</li>
+</ol>
+<p>Greedy is not globally optimal: with tokens <code>{&#x27;ab&#x27;, &#x27;abc&#x27;, &#x27;cd&#x27;, &#x27;d&#x27;}</code>, <code>&quot;abcd&quot;</code> becomes <code>abc + d</code>, even though <code>ab + cd</code> also covers it.</p>
+<h3>WordPiece mode (<code>wordpiece=True</code>)</h3>
+<ol>
+<li>Split <code>text</code> on whitespace (<code>text.split()</code>); whitespace never produces tokens.</li>
+<li>Tokenize each word with greedy longest match, where the first piece is looked up as-is and every <strong>later piece with a <code>##</code> prefix</strong> (<code>&quot;playing&quot;</code> becomes <code>play</code>, <code>##ing</code>).</li>
+<li>If at some point no piece matches, the <strong>whole word</strong> becomes a single unknown id (BERT&#x27;s behaviour); pieces already matched in that word are dropped.</li>
+</ol>
+<h3>Expected Return Format</h3>
+<p>Return a list of token ids (Python ints). <code>unk_token</code> is always in <code>vocab</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: tokenize(&quot;abcab&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;a&#x27;: 1, &#x27;b&#x27;: 2, &#x27;ab&#x27;: 3, &#x27;abc&#x27;: 4, &#x27;c&#x27;: 5, &#x27;bc&#x27;: 6, &#x27; &#x27;: 7, &#x27;the&#x27;: 8, &#x27;th&#x27;: 9, &#x27;t&#x27;: 10, &#x27;h&#x27;: 11, &#x27;e&#x27;: 12})
+Output: [4, 3]</pre><p>&quot;abc&quot; is the longest match at position 0, then &quot;ab&quot;.</p></div><div><pre class="overflow-auto">Input: tokenize(&quot;abxc&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;a&#x27;: 1, &#x27;b&#x27;: 2, &#x27;ab&#x27;: 3, &#x27;abc&#x27;: 4, &#x27;c&#x27;: 5, &#x27;bc&#x27;: 6, &#x27; &#x27;: 7, &#x27;the&#x27;: 8, &#x27;th&#x27;: 9, &#x27;t&#x27;: 10, &#x27;h&#x27;: 11, &#x27;e&#x27;: 12})
+Output: [3, 0, 5]</pre><p>No token starts with &quot;x&quot;, so it becomes [UNK] (id 0).</p></div><div><pre class="overflow-auto">Input: tokenize(&quot;unaffable plays&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;un&#x27;: 1, &#x27;##aff&#x27;: 2, &#x27;##able&#x27;: 3, &#x27;play&#x27;: 4, &#x27;##ing&#x27;: 5, &#x27;##s&#x27;: 6, &#x27;u&#x27;: 7, &#x27;##n&#x27;: 8, &#x27;a&#x27;: 9, &#x27;##a&#x27;: 10}, wordpiece=True)
+Output: [1, 2, 3, 4, 6]</pre><p>un, ##aff, ##able, play, ##s</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def tokenize(text, vocab, unk_token=&#x27;[UNK]&#x27;, wordpiece=False):
+    &quot;&quot;&quot;
+    Greedy longest-match (maximal munch) tokenization.
+
+    Args:
+        text: Input string
+        vocab: Dict mapping token string -&gt; id (contains unk_token)
+        unk_token: Token used for text that no vocabulary entry matches
+        wordpiece: If True, split on whitespace and look up non-initial
+                   pieces of a word with a &#x27;##&#x27; prefix
+
+    Returns:
+        List of token ids
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 10 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

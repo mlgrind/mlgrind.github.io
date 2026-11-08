@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>The Training Loop - PyTorch Basics | ML Grind</title>
+<meta name="description" content="Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/training-loop" data-rh="true" />
+<meta property="og:title" content="The Training Loop - PyTorch Basics | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/pytorch-basics/training-loop" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The Training Loop - PyTorch Basics | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"The Training Loop - PyTorch Basics","description":"Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/training-loop","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">The Training Loop - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>The Training Loop</h2>
+<p>Every PyTorch model, from linear regression to an LLM, is trained by the same five-line loop:</p>
+<pre><code class="language-python">for epoch in range(epochs):
+    optimizer.zero_grad()          # 1. clear the gradients from the last step
+    pred = model(X)                # 2. forward pass
+    loss = loss_fn(pred, y)        # 3. compute the loss
+    loss.backward()                # 4. backprop: fill p.grad for every parameter
+    optimizer.step()               # 5. update the parameters
+</code></pre>
+<p>Forgetting <code>zero_grad()</code> is the classic bug: <code>.grad</code> <strong>accumulates</strong>, so every step would use the sum of all past gradients.</p>
+<h3>Task</h3>
+<p>Fit a linear model <code>y_hat = X @ w + b</code> with <strong>full-batch gradient descent</strong> on the mean squared error, and record the loss at every epoch.</p>
+<pre><code>L     = mean((X @ w + b - y) ** 2)
+dL/dw = (2 / N) * X.T @ (X @ w + b - y)
+dL/db = (2 / N) * sum(X @ w + b - y)
+w     = w - lr * dL/dw
+b     = b - lr * dL/db
+</code></pre>
+<ul>
+<li>Start from <strong>zeros</strong>: <code>w = 0</code> (shape <code>(d,)</code>), <code>b = 0</code>.</li>
+<li>Each epoch, compute the loss with the <strong>current</strong> parameters, append it to the history, then take one step. So <code>losses[0]</code> is the loss of the all-zero model, <code>mean(y ** 2)</code>.</li>
+<li>In the NumPy track you write the gradients by hand (what <code>loss.backward()</code> does for you in PyTorch).</li>
+</ul>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def train_linear_model(X, y, lr=0.1, epochs=100) -&gt; dict:
+</code></pre>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;losses&#x27;</code>: list of <code>epochs</code> Python floats, the loss <strong>before</strong> each update</li>
+<li><code>&#x27;w&#x27;</code>: learned weights, shape <code>(d,)</code></li>
+<li><code>&#x27;b&#x27;</code>: learned bias, a Python float</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.random.seed(0); X = np.random.randn(64, 2); y = X @ [2, -3] + 0.5; lr=0.1, epochs=200
+Output: {&#x27;losses&#x27;: [14.942, 8.856, ..., ~0.0], &#x27;w&#x27;: array([2., -3.]), &#x27;b&#x27;: 0.5}</pre><p>The loss decreases every epoch and the parameters converge to the true ones</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def train_linear_model(X, y, lr=0.1, epochs=100) -&gt; dict:
+    &quot;&quot;&quot;
+    Fit y ~ X @ w + b with full-batch gradient descent on the MSE.
+
+    Args:
+        X: Inputs of shape (N, d)
+        y: Targets of shape (N,)
+        lr: Learning rate
+        epochs: Number of gradient steps
+
+    Returns:
+        dict with &#x27;losses&#x27; (list of floats, loss before each step),
+        &#x27;w&#x27; (array of shape (d,)) and &#x27;b&#x27; (float)
+    &quot;&quot;&quot;
+    w = np.zeros(X.shape[1])
+    b = 0.0
+    losses = []
+    # Your code here: forward, loss, gradients, update
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

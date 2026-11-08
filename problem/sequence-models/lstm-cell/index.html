@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>LSTM Cell - Sequence Models | ML Grind</title>
+<meta name="description" content="Implement LSTM Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/sequence-models/lstm-cell" data-rh="true" />
+<meta property="og:title" content="LSTM Cell - Sequence Models | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement LSTM Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/sequence-models/lstm-cell" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="LSTM Cell - Sequence Models | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement LSTM Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"LSTM Cell - Sequence Models","description":"Implement LSTM Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/sequence-models/lstm-cell","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">LSTM Cell - Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement LSTM Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>LSTM Cell (one time step)</h2>
+<p>The LSTM fixes the vanilla RNN&#x27;s vanishing gradients with a separate <strong>cell state</strong> <code>c</code> that is updated <em>additively</em>, controlled by three gates. When the forget gate is close to 1, gradients flow back through <code>c</code> almost unchanged.</p>
+<h3>Equations (PyTorch&#x27;s <code>nn.LSTMCell</code>)</h3>
+<pre><code>gates = x @ W_ih.T + b_ih + h_prev @ W_hh.T + b_hh      # (N, 4H)
+i, f, g, o = split(gates, 4)                            # each (N, H), in this order
+
+i = sigmoid(i)        # input gate:  how much new content to write
+f = sigmoid(f)        # forget gate: how much of the old cell to keep
+g = tanh(g)           # candidate cell content
+o = sigmoid(o)        # output gate: how much of the cell to expose
+
+c = f * c_prev + i * g
+h = o * tanh(c)
+</code></pre>
+<h3>Weight layout</h3>
+<p>The four gates are stacked along the <strong>first</strong> axis of each weight, in the order <strong>i, f, g, o</strong>, exactly like <code>nn.LSTMCell.weight_ih</code> / <code>weight_hh</code>:</p>
+<table><thead><tr><th>Rows</th><th>Gate</th></tr></thead><tbody><tr><td><code>0 : H</code></td><td>input gate <code>i</code></td></tr><tr><td><code>H : 2H</code></td><td>forget gate <code>f</code></td></tr><tr><td><code>2H : 3H</code></td><td>candidate <code>g</code></td></tr><tr><td><code>3H : 4H</code></td><td>output gate <code>o</code></td></tr></tbody></table>
+<table><thead><tr><th>Tensor</th><th>Shape</th></tr></thead><tbody><tr><td><code>x</code></td><td><code>(N, D)</code></td></tr><tr><td><code>h_prev</code>, <code>c_prev</code></td><td><code>(N, H)</code></td></tr><tr><td><code>W_ih</code></td><td><code>(4H, D)</code></td></tr><tr><td><code>W_hh</code></td><td><code>(4H, H)</code></td></tr><tr><td><code>b_ih</code>, <code>b_hh</code></td><td><code>(4H,)</code></td></tr></tbody></table>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
+</code></pre>
+<h3>Return Format</h3>
+<p>Return a tuple <code>(h, c)</code>: the new hidden state and the new cell state, each of shape <code>(N, H)</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: All weights and biases zero, c_prev = [[1.0, -2.0]]
+Output: (array([[0.231059, -0.380797]]), array([[0.5, -1.0]]))</pre><p>Every gate is sigmoid(0) = 0.5 and g = tanh(0) = 0, so c = 0.5 * c_prev and h = 0.5 * tanh(c)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
+    &quot;&quot;&quot;
+    One LSTM step (gate order i, f, g, o, as in nn.LSTMCell).
+
+    Args:
+        x: Input (N, D)
+        h_prev: Previous hidden state (N, H)
+        c_prev: Previous cell state (N, H)
+        W_ih: Input weights (4H, D)
+        W_hh: Hidden weights (4H, H)
+        b_ih, b_hh: Biases (4H,)
+
+    Returns:
+        (h, c): new hidden and cell states, each (N, H)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/sequence-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

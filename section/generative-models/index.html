@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>Generative Models | ML Grind</title>
 <meta name="description" content="Learn VAEs, diffusion models, and generative AI fundamentals." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/generative-models" data-rh="true" />
@@ -135,7 +135,13 @@ L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
 <li>Diffusion forward/reverse process</li>
 <li>Compare GANs vs VAEs vs Diffusion</li>
 </ul>
-<p>Let&#x27;s implement generative models!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/generative-models/kl-divergence">KL Divergence (Gaussians) →</a></li><li><a href="/problem/generative-models/vae-reparameterization">VAE Reparameterization Trick →</a></li><li><a href="/problem/generative-models/vae-loss">VAE Loss Function →</a></li><li><a href="/problem/generative-models/vqvae-quantization">VQ-VAE Vector Quantization →</a></li><li><a href="/problem/generative-models/diffusion-noise-schedule">Diffusion Noise Schedule →</a></li><li><a href="/problem/generative-models/diffusion-forward">Diffusion Forward Process →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h3>Sampling, Guidance and Flow Matching</h3>
+<ul>
+<li><strong>DDPM sampling</strong> runs the reverse process: start from noise and repeatedly subtract the predicted noise, adding a little fresh noise (σ_t² = β_t) until the last step</li>
+<li><strong>Classifier-free guidance</strong> combines conditional and unconditional predictions, <code>ε = ε_u + w·(ε_c − ε_u)</code>, so a guidance scale w &gt; 1 trades diversity for prompt fidelity</li>
+<li><strong>Flow matching / rectified flow</strong> regresses a velocity field onto straight paths <code>x_t = (1 − t)·x0 + t·x1</code> with target <code>x1 − x0</code>, then samples by integrating the ODE with a few Euler steps</li>
+</ul>
+<p>Let&#x27;s implement generative models!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/generative-models/kl-divergence">KL Divergence (Gaussians) →</a></li><li><a href="/problem/generative-models/vae-reparameterization">VAE Reparameterization Trick →</a></li><li><a href="/problem/generative-models/vae-loss">VAE Loss Function →</a></li><li><a href="/problem/generative-models/vqvae-quantization">VQ-VAE Vector Quantization →</a></li><li><a href="/problem/generative-models/diffusion-noise-schedule">Diffusion Noise Schedule →</a></li><li><a href="/problem/generative-models/diffusion-forward">Diffusion Forward Process →</a></li><li><a href="/problem/generative-models/ddpm-sampling-step">DDPM Reverse Sampling Step →</a></li><li><a href="/problem/generative-models/classifier-free-guidance">Classifier-Free Guidance →</a></li><li><a href="/problem/generative-models/flow-matching">Flow Matching (Rectified Flow) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

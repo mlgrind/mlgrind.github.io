@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement convolutions, pooling, object detection, and segmentation." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/cnn" data-rh="true" />
@@ -131,6 +131,8 @@
 <li><strong>VGG</strong>: Very deep, small kernels</li>
 <li><strong>ResNet</strong>: Skip connections</li>
 </ul>
+<h3>Residual Blocks</h3>
+<p>A ResNet basic block computes <code>ReLU(F(x) + shortcut(x))</code> with <code>F = conv-BN-ReLU-conv-BN</code>. The shortcut is the identity, or a strided 1x1 conv + BN when the channels or resolution change. If the identity is optimal, the block only has to drive <code>F</code> to zero, which is what makes 100+ layer networks trainable.</p>
 <h3>Object Detection</h3>
 <ul>
 <li><strong>IoU (Intersection over Union)</strong>: Measures overlap between predicted and ground truth boxes</li>
@@ -144,7 +146,7 @@
 <li><strong>Evaluation metrics</strong>: IoU (Jaccard), Dice Coefficient, Pixel Accuracy</li>
 <li><strong>Key architectures</strong>: U-Net, FCN, Mask R-CNN</li>
 </ul>
-<p>Let&#x27;s implement CNN operations and detection/segmentation fundamentals!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/cnn/conv-output-size">Convolution Output Size →</a></li><li><a href="/problem/cnn/conv2d-forward">2D Convolution →</a></li><li><a href="/problem/cnn/max-pool">Max Pooling →</a></li><li><a href="/problem/cnn/flatten-layer">Flatten Layer →</a></li><li><a href="/problem/cnn/conv2d-advanced">Advanced 2D Convolution →</a></li><li><a href="/problem/cnn/iou-bounding-box">IoU (Intersection over Union) →</a></li><li><a href="/problem/cnn/nms">Non-Maximum Suppression (NMS) →</a></li><li><a href="/problem/cnn/focal-loss">Focal Loss →</a></li><li><a href="/problem/cnn/smooth-l1-loss">Smooth L1 Loss →</a></li><li><a href="/problem/cnn/seg-metrics">Segmentation Metrics →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p>Let&#x27;s implement CNN operations and detection/segmentation fundamentals!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/cnn/conv-output-size">Convolution Output Size →</a></li><li><a href="/problem/cnn/conv2d-forward">2D Convolution →</a></li><li><a href="/problem/cnn/max-pool">Max Pooling →</a></li><li><a href="/problem/cnn/flatten-layer">Flatten Layer →</a></li><li><a href="/problem/cnn/conv2d-advanced">Advanced 2D Convolution →</a></li><li><a href="/problem/cnn/iou-bounding-box">IoU (Intersection over Union) →</a></li><li><a href="/problem/cnn/nms">Non-Maximum Suppression (NMS) →</a></li><li><a href="/problem/cnn/focal-loss">Focal Loss →</a></li><li><a href="/problem/cnn/smooth-l1-loss">Smooth L1 Loss →</a></li><li><a href="/problem/cnn/seg-metrics">Segmentation Metrics →</a></li><li><a href="/problem/cnn/resnet-block">ResNet Basic Block →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

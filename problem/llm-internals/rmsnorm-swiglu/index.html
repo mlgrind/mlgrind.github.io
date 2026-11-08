@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals | ML Grind</title>
+<meta name="description" content="Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/llm-internals/rmsnorm-swiglu" data-rh="true" />
+<meta property="og:title" content="SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/llm-internals/rmsnorm-swiglu" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals","description":"Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-internals/rmsnorm-swiglu","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>SwiGLU Feed-Forward Block (LLaMA MLP)</h2>
+<p>The original Transformer MLP is <code>ReLU(x W_1) W_2</code>. LLaMA, Mistral, Qwen and PaLM replace it with a <strong>gated</strong> MLP, <strong>SwiGLU</strong> (Shazeer, 2020, &quot;GLU Variants Improve Transformer&quot;): one projection is passed through SiLU and used as a <em>gate</em> that multiplies a second, linear projection elementwise.</p>
+<h3>SiLU (a.k.a. Swish with beta = 1)</h3>
+<pre><code>silu(z) = z * sigmoid(z) = z / (1 + exp(-z))
+</code></pre>
+<h3>SwiGLU FFN</h3>
+<pre><code>gate   = silu(x @ W_gate)          # (..., d_ff)
+up     = x @ W_up                  # (..., d_ff)
+ffn(x) = (gate * up) @ W_down      # (..., d_model)
+</code></pre>
+<p>No biases (LLaMA uses none). There are <strong>three</strong> weight matrices instead of two, so to keep the parameter count of a <code>4 * d_model</code> ReLU MLP, LLaMA uses <code>d_ff ≈ (2/3) * 4 * d_model</code>.</p>
+<h3>RMSNorm (brief)</h3>
+<p>LLaMA normalizes with RMSNorm: like LayerNorm but <strong>no mean subtraction and no bias</strong>:</p>
+<pre><code>rms_norm(x) = x / sqrt(mean(x**2, axis=-1) + eps) * weight
+</code></pre>
+<h3>The full pre-norm MLP sub-block</h3>
+<pre><code>llama_mlp_block(x) = x + ffn(rms_norm(x))
+</code></pre>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>rms_norm(x, weight, eps=1e-6)</code>: array with the same shape as <code>x</code> (normalized over the last axis)</li>
+<li><code>swiglu_ffn(x, W_gate, W_up, W_down)</code>: <code>W_gate</code>, <code>W_up</code> are <code>(d_model, d_ff)</code>, <code>W_down</code> is <code>(d_ff, d_model)</code>; returns shape <code>(..., d_model)</code></li>
+<li><code>llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6)</code>: same shape as <code>x</code></li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: rms_norm(np.array([[3.0, 4.0]]), np.ones(2))
+Output: [[0.8485, 1.1314]]</pre><p>mean(x**2) = 12.5, rms = 3.5355</p></div><div><pre class="overflow-auto">Input: x (4, 8), W_gate/W_up (8, 16), W_down (16, 8)
+Output: llama_mlp_block(...) shape (4, 8)</pre><p>Residual connection keeps the model dimension.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def rms_norm(x, weight, eps=1e-6):
+    &quot;&quot;&quot;
+    RMSNorm over the last axis.
+
+    Args:
+        x: (..., d_model)
+        weight: (d_model,) learned scale
+
+    Returns:
+        Array with the same shape as x
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def swiglu_ffn(x, W_gate, W_up, W_down):
+    &quot;&quot;&quot;
+    SwiGLU feed-forward network: (silu(x @ W_gate) * (x @ W_up)) @ W_down
+
+    Args:
+        x: (..., d_model)
+        W_gate, W_up: (d_model, d_ff)
+        W_down: (d_ff, d_model)
+
+    Returns:
+        Array of shape (..., d_model)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
+    &quot;&quot;&quot;
+    Pre-norm MLP sub-block with a residual: x + swiglu_ffn(rms_norm(x)).
+
+    Returns:
+        Array with the same shape as x
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/llm-internals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

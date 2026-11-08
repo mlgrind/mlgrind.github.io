@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Precision-Recall Curve and Best-F1 Threshold - Model Evaluation | ML Grind</title>
+<meta name="description" content="Implement Precision-Recall Curve and Best-F1 Threshold in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/pr-curve-thresholds" data-rh="true" />
+<meta property="og:title" content="Precision-Recall Curve and Best-F1 Threshold - Model Evaluation | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Precision-Recall Curve and Best-F1 Threshold in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/model-evaluation/pr-curve-thresholds" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Precision-Recall Curve and Best-F1 Threshold - Model Evaluation | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Precision-Recall Curve and Best-F1 Threshold in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Precision-Recall Curve and Best-F1 Threshold - Model Evaluation","description":"Implement Precision-Recall Curve and Best-F1 Threshold in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/pr-curve-thresholds","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Precision-Recall Curve and Best-F1 Threshold - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Precision-Recall Curve and Best-F1 Threshold in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Precision-Recall Curve and Best-F1 Threshold</h2>
+<p>A classifier outputs a score per sample; turning scores into labels needs a threshold. Compute <strong>precision, recall and F1 at every distinct score threshold</strong>, and find the threshold with the best F1.</p>
+<h3>Definitions</h3>
+<p>For a threshold <code>t</code>, predict positive when <code>score &gt;= t</code>:</p>
+<pre><code>TP(t) = #{score &gt;= t and y = 1}      FP(t) = #{score &gt;= t and y = 0}
+P     = #{y = 1}                     FN(t) = P - TP(t)
+
+precision(t) = TP / (TP + FP)
+recall(t)    = TP / P
+F1(t)        = 2 * TP / (2 * TP + FP + FN)    (= 2PR / (P + R))
+</code></pre>
+<h3>Conventions</h3>
+<ul>
+<li><strong>Thresholds</strong> are the distinct score values, in <strong>descending</strong> order. Tied scores enter together: a threshold equal to a tied score counts every sample with that score.</li>
+<li>Every threshold is an observed score, so <code>TP + FP &gt;= 1</code> and precision is always defined.</li>
+<li><strong>No positive labels</strong> (<code>P = 0</code>): recall is set to <code>1.0</code> at every threshold, as scikit-learn&#x27;s <code>precision_recall_curve</code> does, and F1 is then 0 (it is 0 whenever <code>TP = 0</code>).</li>
+<li><strong>Best threshold</strong>: the one with the highest F1; ties go to the <strong>higher</strong> threshold (the first one in the descending list).</li>
+<li>Differences from scikit-learn&#x27;s <code>precision_recall_curve</code>: we list thresholds in descending order and don&#x27;t append its final <code>(precision=1, recall=0)</code> point.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;thresholds&#x27;</code>: list of floats, distinct scores in descending order</li>
+<li><code>&#x27;precision&#x27;</code>, <code>&#x27;recall&#x27;</code>, <code>&#x27;f1&#x27;</code>: lists of floats, one per threshold</li>
+<li><code>&#x27;best_threshold&#x27;</code>: float, the threshold with the highest F1</li>
+<li><code>&#x27;best_f1&#x27;</code>: float, that F1</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))
+Output: {&#x27;thresholds&#x27;: [0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.1], &#x27;precision&#x27;: [1.0, 0.5, 0.5, 0.6, 0.5, 0.5714, 0.5], &#x27;recall&#x27;: [0.25, 0.25, 0.5, 0.75, 0.75, 1.0, 1.0], &#x27;f1&#x27;: [0.4, 0.3333, 0.5, 0.6667, 0.6, 0.7273, 0.6667], &#x27;best_threshold&#x27;: 0.3, &#x27;best_f1&#x27;: 0.7273}</pre><p>At t = 0.7 both tied samples (one positive, one negative) become positive at once. Values are shown rounded to 4 decimals.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def pr_curve(y_true, scores):
+    &quot;&quot;&quot;
+    Precision, recall and F1 at every distinct score threshold.
+
+    Args:
+        y_true: Binary labels (0/1), array (n,)
+        scores: Classifier scores, array (n,); predict positive when score &gt;= threshold
+
+    Returns:
+        dict with &#x27;thresholds&#x27; (descending), &#x27;precision&#x27;, &#x27;recall&#x27;, &#x27;f1&#x27; (lists of floats),
+        &#x27;best_threshold&#x27; (float) and &#x27;best_f1&#x27; (float)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

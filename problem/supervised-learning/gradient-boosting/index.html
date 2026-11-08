@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Gradient Boosting with Stumps - Supervised Learning | ML Grind</title>
+<meta name="description" content="Implement Gradient Boosting with Stumps in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/gradient-boosting" data-rh="true" />
+<meta property="og:title" content="Gradient Boosting with Stumps - Supervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Gradient Boosting with Stumps in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/supervised-learning/gradient-boosting" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Gradient Boosting with Stumps - Supervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Gradient Boosting with Stumps in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gradient Boosting with Stumps - Supervised Learning","description":"Implement Gradient Boosting with Stumps in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/gradient-boosting","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gradient Boosting with Stumps - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gradient Boosting with Stumps in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gradient Boosting for Regression (Decision Stumps)</h2>
+<p>Gradient boosting builds a strong model as a sum of weak ones. Each new weak learner is fit to the <strong>negative gradient</strong> of the loss at the current predictions. For squared loss <code>L = 0.5 * (y - F)^2</code> the negative gradient is simply the <strong>residual</strong> <code>y - F</code>.</p>
+<p>Implement two functions.</p>
+<h3>1. <code>fit_stump(X, r)</code>: best depth-1 tree</h3>
+<p>A stump splits on one feature <code>j</code> at a threshold <code>t</code>: samples with <code>X[:, j] &lt;= t</code> go <strong>left</strong>, the others go <strong>right</strong>, and each side predicts the <strong>mean</strong> of <code>r</code> on that side.</p>
+<p>Search <strong>exhaustively</strong>:</p>
+<ul>
+<li>For each feature <code>j = 0 .. d-1</code>, take the sorted unique values <code>u</code> of <code>X[:, j]</code>; the candidate thresholds are the <strong>midpoints</strong> <code>(u[:-1] + u[1:]) / 2</code> (a feature with a single unique value has none).</li>
+<li>Pick the split with the smallest sum of squared errors</li>
+</ul>
+<pre><code>SSE = sum_left (r - mean_left)^2 + sum_right (r - mean_right)^2
+</code></pre>
+<ul>
+<li><strong>Ties</strong>: keep the first one found, scanning features in order and thresholds in ascending order (i.e. only replace the best on a strictly smaller SSE).</li>
+<li>If there is no candidate at all, return <code>(0, inf, mean(r), mean(r))</code>.</li>
+</ul>
+<p>Returns <code>(feature, threshold, left_value, right_value)</code>.</p>
+<h3>2. <code>gradient_boosting(X, y, n_rounds, learning_rate)</code></h3>
+<pre><code>F_0 = mean(y)                          # constant initial prediction
+for m = 1 .. n_rounds:
+    r   = y - F_{m-1}                   # residuals = negative gradient
+    h_m = fit_stump(X, r)
+    F_m = F_{m-1} + learning_rate * h_m(X)
+    loss_m = mean((y - F_m)^2)          # training MSE after round m
+</code></pre>
+<p>Because each stump&#x27;s leaf values are the least-squares fit to the residuals, the training loss is <strong>non-increasing</strong> for <code>0 &lt; learning_rate &lt;= 1</code>.</p>
+<h3>Expected Return Format</h3>
+<p><code>gradient_boosting</code> returns a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;f0&#x27;</code>: the initial constant prediction (float)</li>
+<li><code>&#x27;stumps&#x27;</code>: list of <code>n_rounds</code> tuples <code>(feature, threshold, left_value, right_value)</code></li>
+<li><code>&#x27;predictions&#x27;</code>: final training predictions <code>F_M</code>, shape <code>(n,)</code></li>
+<li><code>&#x27;losses&#x27;</code>: list of <code>n_rounds</code> floats, the training MSE after each round</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: fit_stump(np.array([[1], [2], [3], [4], [5], [6]]), np.array([-2., -2., -2., 2., 2., 2.]))
+Output: (0, 3.5, -2.0, 2.0)</pre><p>Splitting between 3 and 4 separates the residuals perfectly (SSE = 0).</p></div><div><pre class="overflow-auto">Input: gradient_boosting(X, y=[1, 1, 1, 5, 5, 5], n_rounds=3, learning_rate=0.5)
+Output: f0 = 3.0, losses = [1.0, 0.25, 0.0625]</pre><p>Each round removes half of the remaining residual: MSE 4 -&gt; 1 -&gt; 0.25 -&gt; 0.0625.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def fit_stump(X, r):
+    &quot;&quot;&quot;
+    Exhaustively find the best depth-1 regression tree for targets r.
+
+    Args:
+        X: Features, shape (n, d)
+        r: Targets (residuals), shape (n,)
+
+    Returns:
+        (feature, threshold, left_value, right_value)
+        Left side is X[:, feature] &lt;= threshold.
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
+    &quot;&quot;&quot;
+    Gradient boosting with decision stumps on squared loss.
+
+    Args:
+        X: Features, shape (n, d)
+        y: Targets, shape (n,)
+        n_rounds: Number of boosting rounds
+        learning_rate: Shrinkage applied to every stump
+
+    Returns:
+        dict with &#x27;f0&#x27;, &#x27;stumps&#x27;, &#x27;predictions&#x27; (n,), &#x27;losses&#x27; (list of n_rounds floats)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

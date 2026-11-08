@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>ROC Curve &amp; AUC (with Ties) - Model Evaluation | ML Grind</title>
+<meta name="description" content="Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/roc-auc" data-rh="true" />
+<meta property="og:title" content="ROC Curve &amp; AUC (with Ties) - Model Evaluation | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/model-evaluation/roc-auc" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ROC Curve &amp; AUC (with Ties) - Model Evaluation | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"ROC Curve & AUC (with Ties) - Model Evaluation","description":"Implement ROC Curve & AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/roc-auc","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ROC Curve &amp; AUC (with Ties) - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ROC Curve and AUC</h2>
+<p>A classifier that outputs scores can be turned into a yes/no decision with a threshold: predict positive when <code>score &gt;= t</code>. The <strong>ROC curve</strong> traces, over all thresholds,</p>
+<pre><code>TPR(t) = TP(t) / P        (recall: fraction of positives with score &gt;= t)
+FPR(t) = FP(t) / N        (fraction of negatives with score &gt;= t)
+</code></pre>
+<p>where <code>P</code> and <code>N</code> are the numbers of positive and negative samples. <strong>AUC</strong> is the area under this curve.</p>
+<p>Implement <code>roc_curve_auc(y_true, scores)</code>.</p>
+<h3>Thresholds</h3>
+<ul>
+<li>Use <code>+inf</code> first (nothing is predicted positive, giving the point <code>(0, 0)</code>), then <strong>every distinct score in decreasing order</strong>.</li>
+<li>The last threshold is the smallest score, where everything is predicted positive: <code>(1, 1)</code>.</li>
+<li><strong>Tied scores form a single threshold.</strong> Several samples cross the threshold together, so the curve takes one diagonal step instead of a staircase. Never break ties by sample order.</li>
+</ul>
+<p>This matches <code>sklearn.metrics.roc_curve(y_true, scores, drop_intermediate=False)</code>.</p>
+<h3>AUC by the trapezoidal rule</h3>
+<pre><code>AUC = sum_i (FPR[i+1] - FPR[i]) * (TPR[i+1] + TPR[i]) / 2
+</code></pre>
+<p>With ties handled as above, this equals <code>sklearn.metrics.roc_auc_score</code> and the normalized <strong>Mann-Whitney U statistic</strong>: the probability that a random positive outscores a random negative, counting ties as one half:</p>
+<pre><code>AUC = (1 / (P * N)) * sum_{i in pos} sum_{j in neg} ( [s_i &gt; s_j] + 0.5 * [s_i == s_j] )
+</code></pre>
+<p>You may assume both classes are present.</p>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;thresholds&#x27;</code>: array of shape <code>(T + 1,)</code>, <code>[inf, s_max, ..., s_min]</code> for <code>T</code> distinct scores</li>
+<li><code>&#x27;fpr&#x27;</code>: array of shape <code>(T + 1,)</code>, starting at <code>0.0</code> and ending at <code>1.0</code></li>
+<li><code>&#x27;tpr&#x27;</code>: array of shape <code>(T + 1,)</code>, starting at <code>0.0</code> and ending at <code>1.0</code></li>
+<li><code>&#x27;auc&#x27;</code>: float</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y_true = [0, 0, 1, 1], scores = [0.1, 0.4, 0.35, 0.8]
+Output: thresholds [inf, 0.8, 0.4, 0.35, 0.1], fpr [0, 0, 0.5, 0.5, 1], tpr [0, 0.5, 0.5, 1, 1], auc 0.75</pre><p>3 of the 4 positive/negative pairs are ranked correctly.</p></div><div><pre class="overflow-auto">Input: y_true = [0, 1], scores = [0.5, 0.5]
+Output: fpr [0, 1], tpr [0, 1], auc 0.5</pre><p>A tie is a single diagonal step: worth half a correctly ranked pair.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def roc_curve_auc(y_true, scores):
+    &quot;&quot;&quot;
+    ROC curve over all distinct thresholds, and AUC by the trapezoidal rule.
+
+    Args:
+        y_true: Binary labels (0/1), shape (n,)
+        scores: Real-valued scores, shape (n,); higher means more positive
+
+    Returns:
+        dict with &#x27;thresholds&#x27;, &#x27;fpr&#x27;, &#x27;tpr&#x27; (each shape (T+1,)) and &#x27;auc&#x27; (float)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

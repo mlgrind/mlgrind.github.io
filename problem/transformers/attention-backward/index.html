@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Attention Backward Pass (dQ, dK, dV) - Transformer Architecture | ML Grind</title>
+<meta name="description" content="Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/transformers/attention-backward" data-rh="true" />
+<meta property="og:title" content="Attention Backward Pass (dQ, dK, dV) - Transformer Architecture | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/transformers/attention-backward" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Attention Backward Pass (dQ, dK, dV) - Transformer Architecture | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Attention Backward Pass (dQ, dK, dV) - Transformer Architecture","description":"Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/attention-backward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Attention Backward Pass (dQ, dK, dV) - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Attention Backward Pass</h2>
+<p>Implement single-head scaled dot-product attention <strong>and its backward pass by hand</strong>: given the upstream gradient <code>dOut = dL/dOut</code>, return <code>dQ</code>, <code>dK</code> and <code>dV</code>. This is the computation that autograd (and FlashAttention&#x27;s backward kernel) performs for every attention layer.</p>
+<h3>Forward</h3>
+<pre><code>S   = Q @ K.T / sqrt(d)          # (n, m), d = Q.shape[-1]
+S   = S masked with -inf where j &gt; i   (only if causal=True; then n == m)
+P   = softmax(S, axis=-1)         # each row sums to 1
+Out = P @ V                       # (n, d_v)
+</code></pre>
+<p>Shapes: <code>Q (n, d)</code>, <code>K (m, d)</code>, <code>V (m, d_v)</code>, <code>dOut (n, d_v)</code>.</p>
+<h3>Backward</h3>
+<p>Work backwards through each line:</p>
+<pre><code>dV = P.T @ dOut
+dP = dOut @ V.T
+dS = P * (dP - rowsum(dP * P))    # softmax Jacobian-vector product, row by row
+dQ = dS @ K / sqrt(d)
+dK = dS.T @ Q / sqrt(d)
+</code></pre>
+<p>Masked positions have <code>P = 0</code>, so they get <code>dS = 0</code> automatically: no special case is needed in the backward pass. Use a numerically stable softmax (subtract the row max).</p>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>attention_forward(Q, K, V, causal=False)</code>: <code>Out</code>, array <code>(n, d_v)</code></li>
+<li><code>attention_backward(Q, K, V, dOut, causal=False)</code>: tuple <code>(dQ, dK, dV)</code> with the shapes of <code>Q</code>, <code>K</code>, <code>V</code></li>
+</ul>
+<p>The hidden tests compare your gradients with <strong>finite differences</strong> of <code>L = sum(Out * dOut)</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+Output: array([[3., 4.], [3., 4.]])</pre><p>All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.</p></div><div><pre class="overflow-auto">Input: attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]
+Output: array of shape (3, 2), every entry 2/3</pre><p>dV = P.T @ dOut, and each column of P sums to 2/3.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def attention_forward(Q, K, V, causal=False):
+    &quot;&quot;&quot;
+    Scaled dot-product attention.
+
+    Args:
+        Q: Queries (n, d)
+        K: Keys (m, d)
+        V: Values (m, d_v)
+        causal: If True, query i may only attend to keys j &lt;= i (n == m)
+
+    Returns:
+        Out: (n, d_v)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    &quot;&quot;&quot;
+    Gradients of attention with respect to Q, K and V.
+
+    Args:
+        Q, K, V: As in attention_forward
+        dOut: Upstream gradient dL/dOut, shape (n, d_v)
+        causal: Same flag as in the forward pass
+
+    Returns:
+        (dQ, dK, dV) with the shapes of Q, K, V
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

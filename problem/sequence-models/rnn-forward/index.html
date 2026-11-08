@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Vanilla RNN: Forward &amp; BPTT - Sequence Models | ML Grind</title>
+<meta name="description" content="Implement Vanilla RNN: Forward &amp; BPTT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/sequence-models/rnn-forward" data-rh="true" />
+<meta property="og:title" content="Vanilla RNN: Forward &amp; BPTT - Sequence Models | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Vanilla RNN: Forward &amp; BPTT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/sequence-models/rnn-forward" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Vanilla RNN: Forward &amp; BPTT - Sequence Models | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Vanilla RNN: Forward &amp; BPTT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Vanilla RNN: Forward & BPTT - Sequence Models","description":"Implement Vanilla RNN: Forward & BPTT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/sequence-models/rnn-forward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Vanilla RNN: Forward &amp; BPTT - Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Vanilla RNN: Forward &amp; BPTT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Vanilla RNN: Forward Pass and Backpropagation Through Time</h2>
+<p>A recurrent neural network reads a sequence one step at a time and carries a <strong>hidden state</strong> <code>h</code> that summarizes everything it has seen so far. The <em>same</em> weights are reused at every time step.</p>
+<h3>Forward</h3>
+<pre><code>h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        for t = 1..T, starting from h_0
+</code></pre>
+<table><thead><tr><th>Tensor</th><th>Shape</th><th>Meaning</th></tr></thead><tbody><tr><td><code>X</code></td><td><code>(N, T, D)</code></td><td>batch of N sequences, T steps, D features (batch first)</td></tr><tr><td><code>h0</code></td><td><code>(N, H)</code></td><td>initial hidden state</td></tr><tr><td><code>W_xh</code></td><td><code>(D, H)</code></td><td>input-to-hidden weights</td></tr><tr><td><code>W_hh</code></td><td><code>(H, H)</code></td><td>hidden-to-hidden weights</td></tr><tr><td><code>b</code></td><td><code>(H,)</code></td><td>bias</td></tr><tr><td>returned <code>H_all</code></td><td><code>(N, T, H)</code></td><td><code>H_all[:, t]</code> is the hidden state after reading step t (<code>h_0</code> is <strong>not</strong> included)</td></tr></tbody></table>
+<p>(<code>nn.RNN</code> stores the transposes, <code>weight_ih</code> of shape <code>(H, D)</code>, and has two biases; here we use the <code>x @ W</code> layout and a single bias.)</p>
+<h3>Backward (BPTT)</h3>
+<p>Given <code>dH = dL/dH_all</code> of shape <code>(N, T, H)</code> (the loss can depend on every hidden state), walk the sequence <strong>backwards</strong>. The gradient that reaches <code>h_t</code> has two parts: the direct one, <code>dH[:, t]</code>, and the one flowing back from <code>h_{t+1}</code>:</p>
+<pre><code>dh_next = 0
+for t = T..1:
+    dh   = dH[:, t] + dh_next
+    da   = dh * (1 - h_t ** 2)               # through tanh
+    dW_xh += x_t.T @ da
+    dW_hh += h_{t-1}.T @ da
+    db    += da.sum(axis=0)
+    dX[:, t] = da @ W_xh.T
+    dh_next  = da @ W_hh.T                   # flows into h_{t-1}
+dh0 = dh_next
+</code></pre>
+<p>The repeated multiplication by <code>W_hh.T</code> and <code>(1 - h**2)</code> is why gradients <strong>vanish or explode</strong> over long sequences.</p>
+<h3>Function Signatures</h3>
+<pre><code class="language-python">def rnn_forward(X, h0, W_xh, W_hh, b) -&gt; np.ndarray:          # returns H_all (N, T, H)
+def rnn_backward(X, h0, W_xh, W_hh, H_all, dH) -&gt; dict:
+</code></pre>
+<h3>Expected Return Format (<code>rnn_backward</code>)</h3>
+<p>Return a dictionary with these keys, each the same shape as the matching input:</p>
+<ul>
+<li><code>&#x27;dX&#x27;</code>: <code>(N, T, D)</code></li>
+<li><code>&#x27;dh0&#x27;</code>: <code>(N, H)</code></li>
+<li><code>&#x27;dW_xh&#x27;</code>: <code>(D, H)</code></li>
+<li><code>&#x27;dW_hh&#x27;</code>: <code>(H, H)</code></li>
+<li><code>&#x27;db&#x27;</code>: <code>(H,)</code></li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = ones((1, 3, 1)), h0 = [[0]], W_xh = [[0.5]], W_hh = [[1.0]], b = [0]
+Output: [[[0.462117], [0.74522], [0.846938]]]</pre><p>h1 = tanh(0.5), h2 = tanh(0.5 + h1), h3 = tanh(0.5 + h2)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def rnn_forward(X, h0, W_xh, W_hh, b):
+    &quot;&quot;&quot;
+    Run a vanilla RNN over a batch of sequences.
+
+    Args:
+        X: Inputs (N, T, D)
+        h0: Initial hidden state (N, H)
+        W_xh: Input-to-hidden weights (D, H)
+        W_hh: Hidden-to-hidden weights (H, H)
+        b: Bias (H,)
+
+    Returns:
+        H_all: Hidden states for every step (N, T, H)
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def rnn_backward(X, h0, W_xh, W_hh, H_all, dH):
+    &quot;&quot;&quot;
+    Backpropagation through time.
+
+    Args:
+        X, h0, W_xh, W_hh: Same as rnn_forward
+        H_all: Output of rnn_forward (N, T, H)
+        dH: Gradient of the loss w.r.t. H_all (N, T, H)
+
+    Returns:
+        dict with &#x27;dX&#x27;, &#x27;dh0&#x27;, &#x27;dW_xh&#x27;, &#x27;dW_hh&#x27;, &#x27;db&#x27;
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/sequence-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

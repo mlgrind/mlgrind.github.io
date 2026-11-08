@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training | ML Grind</title>
+<meta name="description" content="Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/optimization/loss-scaling" data-rh="true" />
+<meta property="og:title" content="Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/optimization/loss-scaling" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Dynamic Loss Scaling (Mixed Precision) - Optimization & Training","description":"Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/optimization/loss-scaling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dynamic Loss Scaling for Mixed Precision</h2>
+<p>In fp16, the smallest normal number is about <code>6e-5</code>, and anything below about <code>6e-8</code> rounds to 0. Many gradients are smaller than that and would <strong>underflow</strong> to zero. The fix is to multiply the loss by a large <strong>scale</strong> <code>S</code> before <code>backward()</code>. Every gradient is then <code>S</code> times larger and fits in fp16. Before the optimizer step the gradients are divided by <code>S</code> again.</p>
+<p>If <code>S</code> is too large, some gradient overflows to <code>inf</code>/<code>nan</code>. <strong>Dynamic</strong> loss scaling (<code>torch.amp.GradScaler</code>) adapts <code>S</code> as training goes:</p>
+<pre><code>for each step:
+    use the current scale S for this step&#x27;s loss
+    if the gradients overflowed:
+        skip the optimizer step
+        S = S * backoff_factor          # e.g. halve
+        good_steps = 0
+    else:
+        apply the optimizer step
+        good_steps += 1
+        if good_steps == growth_interval:
+            S = S * growth_factor       # e.g. double
+            good_steps = 0
+</code></pre>
+<p>So the scale stays as high as possible without overflowing: it drops right after an overflow and creeps back up after <code>growth_interval</code> clean steps in a row. PyTorch&#x27;s defaults are <code>init_scale=65536</code>, <code>growth_factor=2</code>, <code>backoff_factor=0.5</code> and <code>growth_interval=2000</code>.</p>
+<h3>Function Signature</h3>
+<pre><code class="language-python">def dynamic_loss_scale(overflows, init_scale=65536.0, growth_factor=2.0,
+                       backoff_factor=0.5, growth_interval=2000) -&gt; dict:
+</code></pre>
+<p><code>overflows</code> is a list of booleans: <code>overflows[i]</code> is <code>True</code> if step <code>i</code>&#x27;s gradients contained inf/nan.</p>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;scales&#x27;</code>: list of floats, the scale <strong>used</strong> at each step (before that step&#x27;s update), same length as <code>overflows</code></li>
+<li><code>&#x27;skipped&#x27;</code>: list of the indices of the steps whose optimizer update was skipped</li>
+<li><code>&#x27;final_scale&#x27;</code>: float, the scale after the last step</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: overflows=[False, True, False, False, False], init_scale=8.0, growth_interval=2
+Output: {&#x27;scales&#x27;: [8.0, 8.0, 4.0, 4.0, 8.0], &#x27;skipped&#x27;: [1], &#x27;final_scale&#x27;: 8.0}</pre><p>Step 1 overflows (8 -&gt; 4, counter reset); steps 2 and 3 are two good steps in a row (4 -&gt; 8)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def dynamic_loss_scale(overflows, init_scale=65536.0, growth_factor=2.0,
+                       backoff_factor=0.5, growth_interval=2000) -&gt; dict:
+    &quot;&quot;&quot;
+    Simulate GradScaler&#x27;s dynamic loss scale over a sequence of steps.
+
+    Args:
+        overflows: List of bools, True if that step&#x27;s gradients had inf/nan
+        init_scale: Starting scale
+        growth_factor: Multiplier after growth_interval good steps in a row
+        backoff_factor: Multiplier after an overflow
+        growth_interval: Number of consecutive good steps before growing
+
+    Returns:
+        dict with &#x27;scales&#x27; (scale used at each step), &#x27;skipped&#x27; (indices of
+        skipped steps) and &#x27;final_scale&#x27;
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/optimization">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>

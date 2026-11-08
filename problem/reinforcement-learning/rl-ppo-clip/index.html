@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-BFm8Y9OI.js"></script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-react-DPqMa5GJ.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-D_Vn96Jz.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-GbwOl0cY.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
   <title>PPO Clipped Objective - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement PPO Clipped Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-clip" data-rh="true" />
@@ -125,7 +125,7 @@
 <pre><code class="language-python">def ppo_clip_objective(old_probs: np.ndarray, new_probs: np.ndarray,
                        advantages: np.ndarray, epsilon: float) -&gt; float:
 </code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: old_probs=[0.5], new_probs=[0.6], advantages=[1.0], epsilon=0.2
-Output: 1.0</pre><p>Ratio=1.2, clipped to 1.2, advantage positive: min(1.2, 1.2)*1=1.2, but capped at 1.0 example</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: 1.2</pre><p>ratio = 1.2 is inside [0.8, 1.2], so min(1.2 * 1, clip(1.2) * 1) = 1.2</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def ppo_clip_objective(old_probs: np.ndarray, new_probs: np.ndarray,
                        advantages: np.ndarray, epsilon: float) -&gt; float:

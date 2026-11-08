@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Primary Meta Tags -->
+    
+    
+    
+    <meta name="keywords" content="machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI, artificial intelligence, learn ML, ML tutorials" />
+    <meta name="author" content="Siddharth Choudhary" />
+    <meta name="robots" content="index, follow" />
+    
+
+    <!-- Copyright -->
+    <meta name="copyright" content="Copyright 2024-2026 Siddharth Choudhary. All rights reserved." />
+    <meta name="rights" content="Educational content may not be reproduced without permission." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    
+    
+    
+    
+    <meta property="og:site_name" content="ML Grind" />
+
+    <!-- Twitter -->
+    
+    
+    
+    
+    
+
+    <!-- Structured Data - Course/Learning Platform -->
+    
+    
+
+    <!-- Google Analytics (gtag.js) -->
+    <script>
+      (function() {
+        try {
+          if (navigator.doNotTrack === '1' || localStorage.getItem('mlgrind-analytics-disabled') === 'true') return;
+        } catch (_) { return; }
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){dataLayer.push(arguments);};
+        gtag('js', new Date());
+        var config = {send_page_view: false, page_location: location.origin + location.pathname, allow_google_signals: false, allow_ad_personalization_signals: false};
+        var campaign = new URLSearchParams(location.search);
+        var fields = {utm_source: 'campaign_source', utm_medium: 'campaign_medium', utm_campaign: 'campaign_name', utm_content: 'campaign_content'};
+        Object.keys(fields).forEach(function(key) {
+          var value = campaign.get(key);
+          if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) config[fields[key]] = value;
+        });
+        gtag('config', 'G-08K80C8WQX', config);
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-08K80C8WQX';
+        document.head.appendChild(script);
+      })();
+    </script>
+
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
+    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+  <title>Ridge &amp; Lasso Regression - Supervised Learning | ML Grind</title>
+<meta name="description" content="Implement Ridge &amp; Lasso Regression in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/ridge-lasso" data-rh="true" />
+<meta property="og:title" content="Ridge &amp; Lasso Regression - Supervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Ridge &amp; Lasso Regression in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:url" content="https://mlgrind.github.io/problem/supervised-learning/ridge-lasso" data-rh="true" />
+<meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Ridge &amp; Lasso Regression - Supervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Ridge &amp; Lasso Regression in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Ridge & Lasso Regression - Supervised Learning","description":"Implement Ridge & Lasso Regression in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/ridge-lasso","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+  <body>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Ridge &amp; Lasso Regression - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Ridge &amp; Lasso Regression in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Ridge and Lasso Regression</h2>
+<p>Both add a penalty on the weights to least squares. <strong>Ridge</strong> (L2) shrinks all weights smoothly and has a closed form. <strong>Lasso</strong> (L1) has no closed form, but it sets some weights to <strong>exactly zero</strong>, which makes it a feature selector.</p>
+<h3>The intercept is not penalised</h3>
+<p>Penalising <code>b</code> would make the fit depend on where the origin of <code>y</code> is. Instead, <strong>centre</strong> the data, fit without an intercept, then recover it:</p>
+<pre><code>x_mean = X.mean(axis=0),  y_mean = y.mean()
+Xc = X - x_mean,          yc = y - y_mean
+... fit w on (Xc, yc) ...
+b = y_mean - x_mean @ w
+</code></pre>
+<p>This is what scikit-learn&#x27;s <code>Ridge</code> and <code>Lasso</code> do with <code>fit_intercept=True</code>.</p>
+<h3>1. Ridge: <code>ridge_fit(X, y, lam)</code></h3>
+<p>Minimizes <code>||yc - Xc w||^2 + lam * ||w||^2</code>, whose solution is</p>
+<pre><code>w = (Xc^T Xc + lam * I)^(-1) Xc^T yc
+</code></pre>
+<p>Use <code>np.linalg.solve(A, b)</code> rather than forming the inverse. Matches <code>sklearn.linear_model.Ridge(alpha=lam)</code>.</p>
+<h3>2. Lasso: <code>lasso_fit(X, y, lam, n_sweeps=100)</code></h3>
+<p>Minimizes (scikit-learn&#x27;s scaling, so <code>lam</code> means the same as <code>Lasso(alpha=lam)</code>):</p>
+<pre><code>(1 / (2n)) * ||yc - Xc w||^2 + lam * ||w||_1
+</code></pre>
+<p>by <strong>cyclic coordinate descent</strong>: start from <code>w = 0</code>; each sweep updates <code>j = 0, 1, ..., d-1</code> in order, each using the latest values of the others:</p>
+<pre><code>r     = yc - Xc @ w                       # current residual
+rho_j = (1/n) * Xc[:, j] @ (r + Xc[:, j] * w_j)
+z_j   = (1/n) * Xc[:, j] @ Xc[:, j]
+w_j   = soft_threshold(rho_j, lam) / z_j  # (w_j = 0 if z_j == 0)
+
+soft_threshold(a, lam) = sign(a) * max(|a| - lam, 0)
+</code></pre>
+<p>Run exactly <code>n_sweeps</code> full sweeps. Whenever <code>|rho_j| &lt;= lam</code> the weight is set to <strong>exactly 0</strong>. If <code>lam &gt;= max_j |Xc[:, j] @ yc| / n</code>, every weight is zero.</p>
+<h3>Expected Return Format</h3>
+<p>Both functions return a tuple <code>(w, b)</code>:</p>
+<ul>
+<li><code>w</code>: weight array of shape <code>(d,)</code></li>
+<li><code>b</code>: intercept, a Python float</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[1], [2], [3], [4]], y = [3, 5, 7, 9], lam = 0
+Output: ridge_fit -&gt; (array([2.]), 1.0)</pre><p>With no penalty, ridge is ordinary least squares: y = 2x + 1.</p></div><div><pre class="overflow-auto">Input: Same data, lam = 5
+Output: ridge_fit -&gt; (array([1.0]), 3.5)</pre><p>Xc^T Xc = 5 and Xc^T yc = 10, so w = 10 / (5 + 5) = 1; b = 6 - 2.5 * 1 = 3.5.</p></div><div><pre class="overflow-auto">Input: X = np.random.randn(40, 5), y = 3*X[:, 0] - 2*X[:, 1] + 0.1*noise + 4, lasso_fit(X, y, 0.3)
+Output: w ≈ [2.74, -1.68, 0.0, 0.0, 0.0], b ≈ 3.94</pre><p>The three noise features get exactly zero weight; the true weights (3, -2) are shrunk towards zero by the L1 penalty.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+
+def ridge_fit(X, y, lam):
+    &quot;&quot;&quot;
+    Ridge regression in closed form (intercept not penalised).
+
+    Args:
+        X: Features, shape (n, d)
+        y: Targets, shape (n,)
+        lam: L2 penalty strength
+
+    Returns:
+        (w, b): weights of shape (d,) and float intercept
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+
+
+def lasso_fit(X, y, lam, n_sweeps=100):
+    &quot;&quot;&quot;
+    Lasso regression by cyclic coordinate descent with soft-thresholding.
+    Objective: (1/(2n)) * ||y - Xw - b||^2 + lam * ||w||_1
+
+    Args:
+        X: Features, shape (n, d)
+        y: Targets, shape (n,)
+        lam: L1 penalty strength
+        n_sweeps: Number of full passes over the coordinates
+
+    Returns:
+        (w, b): weights of shape (d,) and float intercept
+    &quot;&quot;&quot;
+    # Your code here
+    pass
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+    <script>
+      // Apply theme before React loads to prevent flash
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('ml-lab-dark-mode'); } catch (_) {}
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </body>
+</html>
