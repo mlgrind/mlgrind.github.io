@@ -544,57 +544,109 @@ Let's implement the stability tricks of a training step!
   {
     id: 'cnn',
     title: 'CNNs & Computer Vision',
-    description: 'Implement convolutions, pooling, object detection, and segmentation.',
+    description: 'Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.',
     icon: '🖼️',
     introduction: `
 # Convolutional Neural Networks (CNNs)
 
-CNNs are the backbone of computer vision. They learn hierarchical features from images.
+## Why It Matters
 
-## Key Concepts
+Convolutions are how neural networks see. Image classifiers, object detectors (Faster R-CNN, RetinaNet, YOLO), segmentation models (U-Net, Mask R-CNN) and the image encoders of diffusion models and vision-language models are built from the same few pieces. Interviews test them directly: compute an output shape in your head, write a convolution with loops, implement IoU and NMS without bugs, explain why ResNet trains.
 
-### Convolution Operation
-- **Kernel/Filter**: Small matrix that slides over input
-- **Feature maps**: Output of applying filters
-- **Parameters**: Stride, padding, kernel size
+## Core Ideas
 
-### Pooling Layers
-- **Max pooling**: Take maximum in each region
-- **Average pooling**: Take average in each region
-- **Purpose**: Reduce spatial dimensions, add translation invariance
+### Convolution = a small dense layer slid over the image
+A conv layer applies the **same** small weight tensor (the kernel) at every spatial position. That gives two inductive biases: **locality** (each output looks at a \`k x k\` patch) and **weight sharing** (a cat ear detector works anywhere in the image). Deep learning "convolution" is really **cross-correlation**: the kernel is not flipped.
 
-### CNN Architecture Components
-1. **Convolutional layers**: Extract features
-2. **Pooling layers**: Reduce dimensions
-3. **Flatten**: Convert 2D to 1D
-4. **Fully connected**: Classification
-
-### Output Size Formula
-\`\`\`
-output = (input - kernel + 2*padding) / stride + 1
+\`\`\`text
+out[n, o, i, j] = b[o] + sum over c, a, b' of  x[n, c, i*s + a, j*s + b'] * w[o, c, a, b']
 \`\`\`
 
-### Classic Architectures
-- **LeNet**: First successful CNN
-- **AlexNet**: Deep CNNs for ImageNet
-- **VGG**: Very deep, small kernels
-- **ResNet**: Skip connections
+### Shape conventions (get these right first)
 
-### Residual Blocks
-A ResNet basic block computes \`ReLU(F(x) + shortcut(x))\` with \`F = conv-BN-ReLU-conv-BN\`. The shortcut is the identity, or a strided 1x1 conv + BN when the channels or resolution change. If the identity is optimal, the block only has to drive \`F\` to zero, which is what makes 100+ layer networks trainable.
+| Name | Layout | Used by |
+|------|--------|---------|
+| **NCHW** | \`(batch, channels, height, width)\` | PyTorch (\`nn.Conv2d\`), and the conv problems here |
+| **NHWC** | \`(batch, height, width, channels)\` | TensorFlow/Keras, image files; used in **Flatten Layer** |
+| Conv weight | \`(C_out, C_in // groups, kH, kW)\` | PyTorch and **Advanced 2D Convolution** |
+| Single image | \`(H, W)\` | **2D Convolution** and **Max Pooling** (one channel, no batch) |
 
-### Object Detection
-- **IoU (Intersection over Union)**: Measures overlap between predicted and ground truth boxes
-- **Non-Maximum Suppression (NMS)**: Filters redundant detections by keeping only the highest-scoring box per object
-- **Focal Loss**: Addresses class imbalance by down-weighting easy examples (RetinaNet)
-- **Smooth L1 Loss**: Bounding box regression loss — less sensitive to outliers than L2
+Box formats in detection differ too: the problems here use **\`xyxy\`** = \`[x1, y1, x2, y2]\` (top-left and bottom-right corners, \`x2 > x1\`, \`y2 > y1\`). COCO stores **\`xywh\`** = \`[x, y, width, height]\` and YOLO uses **\`cxcywh\`** (centre plus size), so convert before computing IoU.
 
-### Image Segmentation
-- **Pixel-level classification**: Assign a label to every pixel
-- **Evaluation metrics**: IoU (Jaccard), Dice Coefficient, Pixel Accuracy
-- **Key architectures**: U-Net, FCN, Mask R-CNN
+### Output size, parameters and compute
 
-Let's implement CNN operations and detection/segmentation fundamentals!
+\`\`\`text
+H_out = floor((H + 2*padding - kH) / stride) + 1
+params = C_out * (C_in // groups) * kH * kW  (+ C_out biases)
+MACs   = params_without_bias * H_out * W_out  (per image)
+\`\`\`
+
+| Building block | What it does |
+|----------------|--------------|
+| Padding \`p = (k-1)/2\`, stride 1 | "same" convolution: keeps \`H, W\` |
+| Stride 2 conv or 2x2 max pool | halves the resolution |
+| Grouped conv (\`groups = G\`) | \`G\` independent convs on channel slices, \`1/G\` of the params |
+| Depthwise conv (\`groups = C_in = C_out\`) + 1x1 conv | MobileNet's depthwise separable conv |
+| Flatten + linear | turn the final feature map into class logits |
+| Residual block | \`out = ReLU(F(x) + shortcut(x))\`, makes 100+ layers trainable |
+
+### Detection and segmentation
+A detector outputs many scored boxes: **IoU** measures overlap, **NMS** removes duplicates, **focal loss** stops easy background anchors from swamping the classifier, and **smooth L1** regresses box offsets robustly. Segmentation predicts a class per pixel, scored with mask **IoU** and **Dice**.
+
+## Worked Micro-Example
+
+Cross-correlate a \`3 x 3\` image with a \`2 x 2\` kernel (no padding, stride 1, so the output is \`(3 - 2) + 1 = 2\` per side):
+
+\`\`\`text
+image = [[1, 2, 0],      kernel = [[1,  0],
+         [0, 1, 3],                [0, -1]]
+         [2, 1, 0]]
+
+out[0, 0] = 1*1 + 2*0 + 0*0 + 1*(-1) =  0
+out[0, 1] = 2*1 + 0*0 + 1*0 + 3*(-1) = -1
+out[1, 0] = 0*1 + 1*0 + 2*0 + 1*(-1) = -1
+out[1, 1] = 1*1 + 3*0 + 1*0 + 0*(-1) =  1
+\`\`\`
+
+Shapes through the ResNet stem: a \`224 x 224\` image, conv 7x7 stride 2 padding 3 gives \`(224 + 6 - 7) // 2 + 1 = 112\`, then max pool 3x3 stride 2 padding 1 gives \`(112 + 2 - 3) // 2 + 1 = 56\`. A 3x3 conv from 64 to 128 channels at \`56 x 56\` has \`3*3*64*128 = 73,728\` weights and costs about \`73,728 * 56 * 56 ≈ 231M\` multiply-adds per image.
+
+IoU of \`xyxy\` boxes \`[0, 0, 4, 4]\` and \`[2, 0, 6, 4]\`: the intersection is \`2 x 4 = 8\`, the union is \`16 + 16 - 8 = 24\`, so IoU \`= 1/3\`.
+
+## Common Pitfalls
+
+- **Layout mix-ups**: NCHW vs NHWC, \`(H, W)\` vs \`(W, H)\`, \`xyxy\` vs \`xywh\`. Write the shape next to every line.
+- **Flipping the kernel**: frameworks compute cross-correlation; flipping gives a different answer for asymmetric kernels.
+- **Truncating floats**: \`astype(int)\` on a convolution output silently corrupts non-integer results.
+- **Output size**: use floor division; forgetting the \`+ 1\` or the \`2 * padding\` is the classic off-by-one.
+- **IoU**: clamp the intersection width and height at 0, or disjoint boxes get a positive "overlap". Guard a zero-area union.
+- **NMS**: suppress with \`IoU > threshold\` against the box you just kept, not against the original top box only.
+- **Losses**: clip probabilities before \`log\`; in focal loss, \`alpha\` weights the **positive** class.
+- **Residual blocks**: the final ReLU comes **after** the addition; the shortcut needs a projection whenever the shape changes.
+
+## Interview Angle
+
+- "What is the output shape and parameter count of this layer?" Answer in seconds with the formulas above.
+- "Write conv2d with loops, then vectorise it" (loop over kernel taps, or im2col + one matmul).
+- "Why do two 3x3 convs beat one 5x5?" (same 5x5 receptive field, \`18 C^2\` vs \`25 C^2\` weights, an extra non-linearity.) "What does a 1x1 conv do?"
+- "Implement IoU and NMS." Follow-ups: batched IoU as an \`(N, M)\` matrix, soft-NMS, class-aware NMS, \`O(N^2)\` cost.
+- "Why focal loss, and what do \`alpha\` and \`gamma\` do?" "Why smooth L1 rather than L2 for boxes?"
+- "Why does ResNet work?" Identity paths keep gradients flowing; a block can fall back to the identity by pushing \`F\` to 0.
+
+## Problems in This Section
+
+1. **Convolution Output Size**: the \`floor((H + 2p - k) / s) + 1\` formula.
+2. **2D Convolution**: a single-channel \`(H, W)\` cross-correlation, no padding, stride 1.
+3. **Max Pooling**: non-overlapping \`k x k\` max pooling on an \`(H, W)\` map.
+4. **Flatten Layer**: \`(N, H, W, C)\` (NHWC) feature maps to \`(N, H*W*C)\` vectors.
+5. **Advanced 2D Convolution**: NCHW batches with padding, stride and groups (depthwise conv).
+6. **IoU (Intersection over Union)**: overlap of two \`xyxy\` boxes.
+7. **Non-Maximum Suppression (NMS)**: greedy duplicate removal for detections.
+8. **Focal Loss**: RetinaNet's loss for extreme class imbalance.
+9. **Smooth L1 Loss**: the box regression loss of Fast/Faster R-CNN.
+10. **Segmentation Metrics**: IoU, pixel accuracy and Dice for binary masks.
+11. **ResNet Basic Block**: conv-BN-ReLU-conv-BN plus an identity or projection shortcut.
+
+Related: **Batch Normalization** (Neural Networks), **Precision and Recall** (Model Evaluation, the basis of detection mAP) and **E2E: Convolutional Neural Network** (End-to-End Implementations).
     `,
     problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics', 'resnet-block'],
   },
