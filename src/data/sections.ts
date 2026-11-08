@@ -664,56 +664,87 @@ Let's build these cells from scratch!
   {
     id: 'transformers',
     title: 'Transformer Architecture',
-    description: 'Master attention, positional encoding, and modern LLM architecture.',
+    description: 'Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.',
     icon: '🤖',
     introduction: `
-# Attention and Transformers
+# Transformer Architecture
 
-Transformers have revolutionized NLP and are now used in vision, speech, and more.
+## Why it matters
+Every modern LLM (GPT, LLaMA, Mistral, Qwen) is a stack of the same Transformer block, and so are vision transformers and speech models. "Implement attention" is the single most common ML coding interview question, usually followed by "now make it multi-head", "now make it causal" and "how would you make it faster?".
 
-## Key Concepts
+## The pipeline, end to end
+This section builds every stage of a decoder-only LLM except decoding, which has its own section:
 
-### Self-Attention
-- **Query, Key, Value**: Three projections of input
-- **Attention scores**: Q @ K.T / sqrt(d_k)
-- **Output**: Weighted sum of values
-
-### Scaled Dot-Product Attention
+\`\`\`text
+text ──tokenize──> ids (batch, seq_len)                     BPE / longest match
+     ──embed────> x   (batch, seq_len, d_model)             lookup table (+ positions)
+     ──N blocks─> x = x + Attn(Norm(x))                      causal multi-head attention, RoPE
+                  x = x + FFN(Norm(x))                       MLP (SwiGLU in LLaMA)
+     ──LM head──> logits (batch, seq_len, vocab)            final norm, x @ W_vocab
+     ──decode───> next token, append, repeat                LLM Generation & Decoding
 \`\`\`
-Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
+
+Training feeds the whole sequence at once and uses the causal mask so position \`t\` only sees tokens \`0..t\`; generation runs the same network one token at a time.
+
+## Core ideas
+
+**Attention** is a soft lookup: each query scores every key, a softmax turns the scores into weights, and the output is the weighted mix of the values.
+
+| Piece | Formula | Shape |
+|-------|---------|-------|
+| Scores | \`S = Q K^T / sqrt(d_k)\` | \`(seq_len, seq_len)\` |
+| Causal mask | \`S[i, j] = -inf\` for \`j > i\` | same |
+| Weights | \`A = softmax(S, axis=-1)\` | rows sum to 1 |
+| Output | \`A V\` | \`(seq_len, d_v)\` |
+| Multi-head | split \`d_model\` into \`H\` heads of \`d_k = d_model / H\`, attend per head, concatenate | \`(seq_len, d_model)\` |
+
+The \`sqrt(d_k)\` keeps the scores at unit variance so the softmax doesn't saturate.
+
+**Positions.** Attention ignores order, so position must be injected: sinusoidal or learned vectors **added** to the embeddings (original Transformer, GPT-2), or **RoPE**, which rotates \`q\` and \`k\` so that \`q · k\` depends only on the relative offset (LLaMA and most current LLMs).
+
+**Normalization and residuals.** Each sub-layer is wrapped as \`x + f(Norm(x))\` (pre-norm). LayerNorm normalizes each token's features: \`gamma * (x - mean) / sqrt(var + eps) + beta\`.
+
+**Efficient attention variants.** Grouped-query attention shares K/V heads across query heads to shrink the KV cache; sliding-window attention limits each token to the last \`W\` positions, so cost drops from \`O(n^2)\` to \`O(n · W)\`.
+
+## Worked micro-example
+Two tokens with \`Q = K = [[1, 0], [0, 1]]\`, \`V = [[1, 2], [3, 4]]\`, \`d_k = 2\`:
+
+\`\`\`text
+S = Q K^T / sqrt(2) = [[0.7071, 0     ], [0,      0.7071]]
+A = softmax(S)      = [[0.6698, 0.3302], [0.3302, 0.6698]]
+out = A V           = [[1.6605, 2.6605], [2.3395, 3.3395]]
 \`\`\`
 
-### Multi-Head Attention
-- **Multiple heads**: Parallel attention with different projections
-- **Concatenate**: Combine all head outputs
-- **Project**: Linear transformation back to model dimension
+Each token leans toward its own value. With a causal mask, row 0 would become \`[1, 0]\` and its output exactly \`[1, 2]\`.
 
-### Transformer Components
-- **Positional Encoding**: Inject position information
-- **Layer Normalization**: Normalize across features
-- **Feed-Forward Network**: MLP after attention
-- **Residual Connections**: Add input to output
+## Common pitfalls
+- **Unstable softmax**: subtract the row max before \`exp\`, or large scores overflow to \`inf\` and give NaN.
+- **Head reshapes**: go \`(seq_len, d_model) -> (seq_len, H, d_k) -> (H, seq_len, d_k)\`; reshaping straight to \`(H, seq_len, d_k)\` mixes tokens across heads.
+- **Wrong scale**: per-head attention divides by \`sqrt(d_k)\`, not \`sqrt(d_model)\`.
+- **Mask off-by-one**: the diagonal must stay visible (\`np.triu(..., k=1)\`); a fully masked row gives NaN.
+- **Biased vs unbiased variance** in LayerNorm (use the biased one, as PyTorch does).
+- **Layouts**: interleaved RoPE pairs vs Hugging Face's \`rotate_half\`; \`np.repeat\` vs \`np.tile\` when sharing KV heads. Both give plausible-looking but wrong numbers.
 
-### Causal Masking
-- **Purpose**: Prevent attending to future tokens
-- **Implementation**: Add -inf to upper triangle before softmax
+## Interview angle
+- Why scale by \`sqrt(d_k)\`? Why LayerNorm rather than BatchNorm?
+- Complexity: attention is \`O(n^2 · d)\` time and \`O(n^2)\` memory per head; the MLP is \`O(n · d^2)\`. Which dominates at 128k context?
+- Parameter count of one block: about \`4 d^2\` (attention) + \`8 d^2\` (a \`4d\`-wide MLP) = \`12 d^2\`.
+- How do RoPE and GQA reduce the cost of serving long contexts? Derive the backward pass of attention.
 
-### Modern LLM Architecture
-- **BPE Tokenization**: Subword tokenization used by GPT, LLaMA, and most LLMs
-- **Rotary Positional Embeddings (RoPE)**: Encodes relative positions via rotation, replacing sinusoidal
-- **Grouped Query Attention (GQA)**: Shares KV heads across query head groups for efficient inference
-- **Sliding Window Attention**: Local attention pattern for efficient long-context processing
+## Problems in this section
+1. **Scaled Dot-Product Attention**: the core \`softmax(QK^T / sqrt(d_k)) V\`, returning output and weights.
+2. **Multi-Head Attention**: split into heads, attend in parallel, merge back.
+3. **Sinusoidal Positional Encoding**: the original fixed position table.
+4. **Layer Normalization**: per-token normalization with \`gamma\` and \`beta\`.
+5. **Causal Attention Mask**: the \`-inf\` upper triangle that makes a model autoregressive.
+6. **BPE Tokenization**: learn merge rules, the first stage of the pipeline.
+7. **Rotary Positional Embeddings (RoPE)**: relative positions by rotating \`q\` and \`k\`.
+8. **Grouped Query Attention (GQA)**: share K/V heads to shrink the KV cache.
+9. **Sliding Window Attention**: a banded causal mask for long contexts.
+10. **Attention Backward Pass**: \`dQ\`, \`dK\`, \`dV\` by hand, checked against finite differences.
+11. **Greedy Longest-Match Tokenizer**: encode text with a fixed vocabulary (WordPiece style).
 
-### Interview Essentials
-- Implement scaled dot-product attention
-- Explain why we scale by sqrt(d_k)
-- Multi-head attention benefits
-- Positional encoding purpose
-- BPE tokenization algorithm
-- RoPE vs sinusoidal positional encoding
-- GQA/MQA for efficient inference
-
-Let's build transformers from scratch!
+**Where this leads.** **LLM Generation & Decoding** turns logits into text and adds the KV cache; **LLM Internals** swaps in RMSNorm + SwiGLU, FlashAttention's online softmax, mixture-of-experts and perplexity; **Representation Learning & Retrieval** uses the embeddings for search and RAG. The capstones assemble everything: **E2E: Transformer Encoder** (one encoder block), **Mini GPT** (a full decoder-only LM with training and generation) and **Transformer Bug Hunt** (find the four bugs in a broken mini-GPT).
     `,
     problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention', 'attention-backward', 'longest-match-tokenizer'],
   },

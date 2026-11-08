@@ -22,7 +22,7 @@ def scaled_dot_product_attention(Q, K, V):
 
     Returns:
         output: Attention output (seq_len, d_v)
-        attention_weights: Attention weights (seq_len, seq_len)
+        attention_weights: Attention weights (seq_len, seq_len), rows sum to 1
     """
     # Your code here
     pass
@@ -89,9 +89,10 @@ def scaled_dot_product_attention(Q, K, V):
       },
     ],
     hints: [
-      'scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k)',
-      'torch.softmax(scores, dim=-1) normalizes each query row',
-      'Return (weights @ V, weights)',
+      'Every query is scored against every key: one matmul gives the whole (seq_len, seq_len) score matrix.',
+      'Three steps: scores, softmax over the key axis, weighted sum of V. Return (output, weights).',
+      'scores = Q @ K.transpose(-2, -1) / math.sqrt(Q.shape[-1]); weights = torch.softmax(scores, dim=-1); output = weights @ V.',
+      'Softmax over dim=-1 (keys), not dim=0; and divide by sqrt(d_k), not d_k.',
     ],
   },
   'multi-head-attention': {
@@ -181,9 +182,10 @@ def multi_head_attention(Q, K, V, num_heads):
       },
     ],
     hints: [
-      'Reshape to (seq_len, num_heads, d_k), then transpose(0, 1) to (num_heads, seq_len, d_k)',
-      'Batched matmul handles all heads at once: Qh @ Kh.transpose(-2, -1)',
-      'Transpose back and reshape to (seq_len, d_model)',
+      'Each head is plain attention on a d_k-wide slice of the columns; put the heads on a leading axis so one batched matmul handles them all.',
+      'Split: .reshape(seq_len, num_heads, d_k).transpose(0, 1) gives (num_heads, seq_len, d_k). Attend, then undo both steps.',
+      'scores = Qh @ Kh.transpose(-2, -1) / math.sqrt(d_k); heads = torch.softmax(scores, dim=-1) @ Vh.',
+      'Merge with heads.transpose(0, 1).reshape(seq_len, d_model). Reshaping without the transpose mixes tokens across heads.',
     ],
   },
   'positional-encoding': {
@@ -253,9 +255,10 @@ def positional_encoding(max_len, d_model):
       },
     ],
     hints: [
-      'position = torch.arange(max_len).float().unsqueeze(1)',
-      'div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))',
-      'PE[:, 0::2] = torch.sin(position * div_term); PE[:, 1::2] = torch.cos(position * div_term)',
+      'Each column pair (2i, 2i+1) shares one frequency; the table is sin/cos of an outer product of positions and frequencies.',
+      'position = torch.arange(max_len).float().unsqueeze(1) (max_len, 1); div_term has shape (d_model/2,).',
+      'div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)); PE[:, 0::2] = torch.sin(position * div_term); PE[:, 1::2] = torch.cos(position * div_term).',
+      'Call .float() on the aranges: integer tensors times a float tensor work, but integer division or exponent tricks silently truncate.',
     ],
   },
   'layer-norm': {
@@ -322,9 +325,10 @@ def layer_norm(X, gamma, beta, eps=1e-5):
       },
     ],
     hints: [
-      'X.mean(dim=-1, keepdim=True) and X.var(dim=-1, keepdim=True, unbiased=False)',
-      'keepdim=True keeps the shapes broadcastable',
-      'Normalize, then gamma * X_norm + beta',
+      'Each position is normalized on its own, over the feature (last) dimension.',
+      'Mean and variance over dim=-1 with keepdim=True, normalize, then gamma * x_hat + beta.',
+      'X.mean(dim=-1, keepdim=True) and X.var(dim=-1, keepdim=True, unbiased=False); torch.sqrt(var + eps).',
+      'Tensor.var defaults to the unbiased (N-1) estimator; LayerNorm uses the biased one, so pass unbiased=False.',
     ],
   },
   'causal-mask': {
@@ -382,9 +386,10 @@ def create_causal_mask(seq_len):
       },
     ],
     hints: [
-      "torch.full((n, n), float('-inf')) fills a matrix with -inf",
-      'torch.triu(x, diagonal=1) keeps only the part strictly above the diagonal (the rest becomes 0)',
-      'Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float("-inf"))',
+      'Query i may see keys j <= i: everything strictly above the diagonal is forbidden.',
+      'Start from a matrix filled with -inf and keep only its strict upper triangle; the rest becomes 0.',
+      'torch.triu(torch.full((n, n), float(\'-inf\')), diagonal=1). Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float(\'-inf\')).',
+      'Use diagonal=1, not 0: masking the diagonal hides each token from itself and makes row 0 all -inf (NaN after softmax).',
     ],
   },
   // Tracks for existing problems that had no PyTorch track yet.
@@ -402,7 +407,8 @@ def bpe_train(word_freqs, num_merges):
         num_merges: Number of merge operations to perform
 
     Returns:
-        merges: List of (token_a, token_b) tuples merged, in order
+        merges: List of (token_a, token_b) tuples, in the order merged
+                (ties: the pair seen first, scanning words in dict order)
     """
     # Your code here
     pass
@@ -480,6 +486,12 @@ def bpe_train(word_freqs, num_merges):
         hidden: true,
       },
     ],
+    hints: [
+      'Keep the current token list of every word and recount pair frequencies from scratch after each merge.',
+      'Each iteration: count weighted adjacent pairs, pick the best, record it, rewrite every word with the pair merged.',
+      'for a, b in zip(tokens, tokens[1:]): counts[(a, b)] += freq; best = max(counts, key=counts.get) (first seen wins ties).',
+      'Merge left to right and skip ahead by 2 after a merge; stop early when the counter is empty.',
+    ],
   },
   'rope-embeddings': {
     note: "Implement the rotation with tensor ops (slicing, torch.stack). Complex-number tricks such as torch.view_as_complex aren't supported in the browser.",
@@ -487,15 +499,15 @@ def bpe_train(word_freqs, num_merges):
 
 def apply_rope(Q, K):
     """
-    Apply Rotary Positional Embeddings to Q and K.
+    Apply Rotary Positional Embeddings to Q and K (interleaved pairs).
 
     Args:
         Q: Queries, tensor (seq_len, d_model) where d_model is even
         K: Keys, tensor (seq_len, d_model)
 
     Returns:
-        Q_rot: Rotated queries (seq_len, d_model)
-        K_rot: Rotated keys (seq_len, d_model)
+        (Q_rot, K_rot): pair (2i, 2i+1) of row pos rotated by pos * theta_i,
+                        theta_i = 1 / 10000^(2i / d_model)
     """
     # Your code here
     pass
@@ -586,9 +598,10 @@ def apply_rope(Q, K):
       },
     ],
     hints: [
-      'theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d); angles = positions[:, None] * theta',
-      'Split the pairs with x[:, 0::2] and x[:, 1::2]',
-      'Rotate: (even*cos - odd*sin, even*sin + odd*cos), then torch.stack(..., dim=-1).flatten(1) to interleave',
+      'Each row is d/2 two-dimensional points; point i of row pos is rotated by pos * theta_i.',
+      'Build angles (seq_len, d/2) = positions.unsqueeze(1) * theta, then rotate every (even, odd) pair at once.',
+      'theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d); rotated pairs = (even*cos - odd*sin, even*sin + odd*cos); torch.stack(..., dim=-1).flatten(1) interleaves them back.',
+      'Don\'t write the even half in place and then read it for the odd half; build a new tensor. Use the interleaved layout, not rotate_half.',
     ],
   },
   'grouped-query-attention': {
@@ -599,7 +612,7 @@ import torch.nn.functional as F
 
 def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
     """
-    Grouped Query Attention.
+    Grouped Query Attention (query head h uses KV head h // group_size).
 
     Args:
         Q: Queries, tensor (seq_len, num_q_heads * d_head)
@@ -690,13 +703,14 @@ def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
       },
     ],
     hints: [
-      'Reshape Q to (seq_len, num_q_heads, d_head) and .transpose(0, 1) to put heads first; same for K, V with num_kv_heads',
-      'k.repeat_interleave(group_size, dim=0) gives query head h the KV head h // group_size',
-      'F.softmax(q @ k.transpose(-2, -1) / math.sqrt(d_head), dim=-1) @ v',
-      'Transpose back and reshape to (seq_len, num_q_heads * d_head)',
+      'Multi-head attention where consecutive query heads share a K/V head: query head h reads KV head h // group_size.',
+      'Reshape Q to (num_q_heads, seq_len, d_head) and K, V to (num_kv_heads, seq_len, d_head) with reshape + transpose(0, 1); expand K, V to one head per query head.',
+      'k.repeat_interleave(group_size, dim=0) does the expansion; then F.softmax(q @ k.transpose(-2, -1) / math.sqrt(d_head), dim=-1) @ v.',
+      'k.repeat(group_size, 1, 1) cycles the heads (wrong grouping); scale by sqrt(d_head), not the full width.',
     ],
   },
   'sliding-window-attention': {
+    note: 'Build the mask from index comparisons (torch.arange, broadcasting, masked_fill). The result is a float mask: 0 where allowed, -inf where masked.',
     starterCode: `import torch
 
 def sliding_window_mask(seq_len, window_size):
@@ -770,9 +784,10 @@ def sliding_window_mask(seq_len, window_size):
       },
     ],
     hints: [
-      'rows = torch.arange(seq_len).unsqueeze(1), cols = torch.arange(seq_len).unsqueeze(0)',
-      'allowed = (cols <= rows) & (rows - cols < window_size)',
-      'torch.zeros(seq_len, seq_len).masked_fill(~allowed, float("-inf"))',
+      'Two conditions must hold: the key is not in the future, and it is within the last window_size positions.',
+      'A column of row indices and a row of column indices broadcast to every (i, j) pair.',
+      'rows = torch.arange(n).unsqueeze(1); cols = torch.arange(n).unsqueeze(0); allowed = (cols <= rows) & (rows - cols < window_size); torch.zeros(n, n).masked_fill(~allowed, float(\'-inf\')).',
+      'The window includes the token itself: rows - cols < window_size, not <=.',
     ],
   },
   'attention-backward': {
@@ -919,6 +934,12 @@ def attention_backward(Q, K, V, dOut, causal=False):
         hidden: true,
       },
     ],
+    hints: [
+      'Every gradient is written in terms of P, so share a helper that computes P (with the optional mask) between forward and backward.',
+      'Go backwards: Out = P @ V gives dV and dP; P = softmax(S) gives dS; S = Q @ K.T / sqrt(d) gives dQ and dK.',
+      'dS = P * (dP - (dP * P).sum(dim=-1, keepdim=True)); dQ = dS @ K / math.sqrt(d); dK = dS.T @ Q / math.sqrt(d).',
+      'Mask with masked_fill(torch.triu(torch.ones(n, m), diagonal=1).bool(), float(\'-inf\')) before the softmax; masked entries then get P = 0 and need no special case in the backward.',
+    ],
   },
   'longest-match-tokenizer': {
     note: 'Tokenization is string processing: no tensors are involved, so this track is plain Python with the same function as the NumPy track.',
@@ -1047,6 +1068,12 @@ def attention_backward(Q, K, V, dOut, causal=False):
         expected: '[4, 1]',
         hidden: true,
       },
+    ],
+    hints: [
+      'At each position try candidate lengths from the longest token length down to 1; the first hit is the longest match.',
+      'Default mode is a while loop over a position i; WordPiece mode runs the same loop on each word of text.split() with a different lookup key.',
+      'for ... else: the else branch runs when nothing matched. In WordPiece mode the key is word[i:end] for the first piece and \'##\' + word[i:end] afterwards.',
+      'Default mode: one [UNK] per unknown character. WordPiece mode: an unmatched word becomes a single [UNK], dropping its partial pieces.',
     ],
   },
 };
