@@ -14,7 +14,12 @@ import SEO from '../components/SEO/SEO';
 import { TestResult, TestCase, Language } from '../types';
 import SuccessBanner from '../components/SuccessBanner/SuccessBanner';
 import { useDarkMode } from '../hooks/useDarkMode';
-import ShareChallenge from '../components/Share/ShareChallenge';
+import CompactShare from '../components/Share/CompactShare';
+import DifficultyBadge from '../components/ProblemView/DifficultyBadge';
+import CompanyTags from '../components/CompanyTags/CompanyTags';
+import MenuButton from '../components/Menu/MenuButton';
+import { menuItemClass } from '../components/Menu/menuItemClass';
+import { useShareChallenge } from '../hooks/useShareChallenge';
 import { track, trackOnce } from '../lib/analytics';
 import { functionNameOf } from '../lib/pythonProgram';
 import { readStorage, writeStorage } from '../lib/storage';
@@ -61,15 +66,13 @@ export default function ProblemPage() {
   const [isEditorMaximized, setIsEditorMaximized] = useState(false);
   const [editableTestCases, setEditableTestCases] = useState<TestCase[]>([]);
   const [resetKey, setResetKey] = useState(0);
-  const [showShortcutHint, setShowShortcutHint] = useState(
-    () => !readStorage('ml-lab-shortcut-hint-dismissed')
-  );
   const [showCelebration, setShowCelebration] = useState(false);
   const wasCompletedRef = useRef(false);
   const [descriptionTab, setDescriptionTab] = useState<'description' | 'examples' | 'hints'>('description');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [mobileTab, setMobileTab] = useState<'problem' | 'code'>('problem');
   const { isDark } = useDarkMode();
+  const share = useShareChallenge(`/problem/${sectionId}/${problemId}`, true);
   const { feedback: aiFeedback, isLoading: aiFeedbackLoading, error: aiFeedbackError, requestFeedback, clearFeedback } = useAIFeedback();
 
   // `getProblemProgress` is re-created on every progress write. Keep it in a ref so
@@ -109,22 +112,6 @@ export default function ProblemPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem?.id, sectionId, activeLanguage]);
-
-  // Auto-dismiss shortcut hint after 10 seconds
-  useEffect(() => {
-    if (showShortcutHint) {
-      const timer = setTimeout(() => {
-        setShowShortcutHint(false);
-        writeStorage('ml-lab-shortcut-hint-dismissed', 'true');
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [showShortcutHint]);
-
-  const dismissShortcutHint = useCallback(() => {
-    setShowShortcutHint(false);
-    writeStorage('ml-lab-shortcut-hint-dismissed', 'true');
-  }, []);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -223,20 +210,118 @@ export default function ProblemPage() {
     .join(' ')
     .substring(0, 155);
 
-  const shortcutHintEl = showShortcutHint ? (
-    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-dark-800 dark:bg-dark-600 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-50">
-      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-dark-800 dark:bg-dark-600 rotate-45" />
-      <span>Pro tip: </span>
-      <span className="font-medium">Shift+Enter</span>
-      <span> runs tests</span>
-      <button
-        onClick={dismissShortcutHint}
-        className="ml-2 text-gray-400 hover:text-white underline"
-      >
-        Got it
-      </button>
+  const allPassed = testResults.length > 0 && testResults.every(r => r.passed);
+  const runTitle = 'Run tests (Shift+Enter)';
+
+  const pythonStatus = (
+    <span
+      className="text-gray-500 dark:text-dark-200 text-xs flex items-center gap-2 whitespace-nowrap"
+      title={isReady ? 'Python ready' : isLoading ? 'Loading Python...' : 'Python unavailable'}
+    >
+      <span className={`w-2 h-2 rounded-full shrink-0 ${isReady ? 'bg-accent-500' : 'bg-yellow-500 animate-pulse'}`} />
+      <span className={isReady ? 'sr-only' : 'hidden sm:inline'}>
+        {isReady ? 'Python ready' : isLoading ? 'Loading Python...' : 'Python unavailable'}
+      </span>
+    </span>
+  );
+
+  const navIconClass =
+    'inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 transition-colors';
+  const navIcon = (d: string) => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />
+    </svg>
+  );
+
+  // Title row: H1 + difficulty, then prev / position / next and Share.
+  const titleRow = (
+    <div className="flex items-start gap-3 min-w-0">
+      <div className="flex flex-1 flex-wrap items-center gap-x-3 gap-y-1 min-w-0 pt-0.5">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-dark-100 min-w-0 break-words">{problem.title}</h1>
+        <DifficultyBadge difficulty={problem.difficulty} />
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+      <nav aria-label="Problem navigation" className="flex items-center gap-1">
+        {prevProblemId ? (
+          <Link to={`/problem/${sectionId}/${prevProblemId}`} aria-label="Previous problem" title="Previous problem" className={navIconClass}>
+            {navIcon('M15 6l-6 6 6 6')}
+          </Link>
+        ) : (
+          <span aria-hidden="true" className={`${navIconClass} opacity-30 pointer-events-none`}>{navIcon('M15 6l-6 6 6 6')}</span>
+        )}
+        <span className="text-xs text-gray-400 dark:text-dark-300 font-mono whitespace-nowrap">
+          {currentIndex + 1} / {section.problems.length}
+        </span>
+        {nextProblemId ? (
+          <Link to={`/problem/${sectionId}/${nextProblemId}`} aria-label="Next problem" title="Next problem" className={navIconClass}>
+            {navIcon('M9 6l6 6-6 6')}
+          </Link>
+        ) : (
+          <span aria-hidden="true" className={`${navIconClass} opacity-30 pointer-events-none`}>{navIcon('M9 6l6 6-6 6')}</span>
+        )}
+      </nav>
+      <CompactShare title={problem.title} message={share.message} onCopy={share.copy} completed={allPassed} />
+      </div>
     </div>
-  ) : null;
+  );
+
+  const overflowMenu = (withMaximize: boolean) => (
+    <MenuButton
+      label="More actions"
+      title="More actions"
+      buttonClassName="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 dark:border-dark-500 text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 aria-expanded:bg-gray-100 dark:aria-expanded:bg-dark-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-colors"
+      trigger={
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="12" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="19" cy="12" r="1.8" />
+        </svg>
+      }
+    >
+      {close => (
+        <>
+          {withMaximize && (
+            <button
+              role="menuitem"
+              type="button"
+              className={menuItemClass}
+              onClick={() => {
+                close();
+                setIsEditorMaximized(m => !m);
+              }}
+            >
+              <span aria-hidden="true" className="w-4 text-center">{isEditorMaximized ? '\u229f' : '\u229e'}</span>
+              {isEditorMaximized ? 'Restore layout' : 'Maximize editor'}
+            </button>
+          )}
+          <button
+            role="menuitem"
+            type="button"
+            className={menuItemClass}
+            onClick={() => {
+              close();
+              handleReset();
+            }}
+          >
+            <span aria-hidden="true" className="w-4 text-center">&#8634;</span>
+            Reset code
+          </button>
+          <button
+            role="menuitem"
+            type="button"
+            className={menuItemClass}
+            onClick={() => {
+              close();
+              share.copy();
+            }}
+          >
+            <span aria-hidden="true" className="w-4 text-center">&#8599;</span>
+            Copy share link
+          </button>
+        </>
+      )}
+    </MenuButton>
+  );
 
   const languageToggle = problem.pytorch ? (
     <div
@@ -273,56 +358,40 @@ export default function ProblemPage() {
     </div>
   ) : null;
 
-  const actionBar = (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
-      <div className="flex items-center gap-2">
-        {languageToggle}
-        <button
-          onClick={handleRunTests}
-          disabled={!isReady || isRunning}
-          className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isRunning ? 'Running...' : 'Run Tests'}
-        </button>
-        <span className="text-xs text-gray-400 dark:text-dark-300">or</span>
-        <div className="relative">
-          <div className="flex items-center gap-1 text-gray-500 dark:text-dark-200">
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-dark-600 border border-gray-300 dark:border-dark-500 rounded shadow-sm">Shift</kbd>
-            <span className="text-xs">+</span>
-            <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-dark-600 border border-gray-300 dark:border-dark-500 rounded shadow-sm">Enter</kbd>
-          </div>
-          {shortcutHintEl}
-        </div>
-      </div>
+  const runButton = (
+    <button
+      onClick={handleRunTests}
+      disabled={!isReady || isRunning}
+      title={runTitle}
+      aria-keyshortcuts="Shift+Enter"
+      className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      {isRunning ? 'Running...' : 'Run Tests'}
+    </button>
+  );
 
-      <div className="flex items-center gap-2">
-        {testResults.length > 0 && testResults.every(r => r.passed) && nextProblemId && (
-          <Link
-            to={`/problem/${sectionId}/${nextProblemId}`}
-            className="whitespace-nowrap px-4 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
-          >
-            Next Problem &rarr;
-          </Link>
-        )}
-        <button
-          onClick={() => setIsEditorMaximized(!isEditorMaximized)}
-          className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
-          title={isEditorMaximized ? 'Restore layout' : 'Maximize editor'}
-        >
-          {isEditorMaximized ? '\u229f Restore' : '\u229e Maximize'}
-        </button>
-        <button
-          onClick={handleReset}
-          className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
-        >
-          Reset
-        </button>
-      </div>
+  const nextAfterPass = allPassed && nextProblemId ? (
+    <Link
+      to={`/problem/${sectionId}/${nextProblemId}`}
+      className="whitespace-nowrap px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+    >
+      Next Problem &rarr;
+    </Link>
+  ) : null;
+
+  const actionBar = (withMaximize: boolean) => (
+    <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
+      {languageToggle}
+      {runButton}
+      <div className="flex-1" />
+      {pythonStatus}
+      {nextAfterPass}
+      {overflowMenu(withMaximize)}
     </div>
   );
 
   return (
-    <div className="h-full min-h-0 flex flex-col -m-6">
+    <div className="h-[calc(100%+3rem)] min-h-0 flex flex-col -m-6">
       <SEO
         title={`${problem.title} - ${section.title}`}
         description={`${problemDescriptionText}... Practice this ${problem.difficulty} ML coding problem with instant feedback.`}
@@ -334,139 +403,74 @@ export default function ProblemPage() {
       {storageError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your browser could not save your code. Keep a copy before leaving this page.</p>}
       {error && <div role="alert" className="p-3 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
       {isRunning && <div className="p-2 bg-gray-100 dark:bg-dark-800"><button onClick={() => stop()} className="px-4 py-2 rounded bg-red-600 text-white">Stop execution</button><span className="ml-3 text-sm text-gray-600 dark:text-dark-200">30-second time limit</span></div>}
-      <div className="px-4 py-2 bg-white dark:bg-dark-800"><ShareChallenge title={problem.title} path={`/problem/${sectionId}/${problem.id}`} completed={testResults.length > 0 && testResults.every(result => result.passed)} /></div>
-      {/* Problem Header */}
-      <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 min-w-0 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Link
-            to={`/section/${sectionId}`}
-            className="text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 transition-colors shrink-0"
-            title={section.title}
-          >
-            <span aria-hidden="true">&larr;</span>
-            <span className="hidden md:inline"> {section.title}</span>
-            <span className="sr-only"> Back to {section.title}</span>
-          </Link>
-          <span className="text-gray-300 dark:text-dark-500 hidden md:inline">/</span>
-          <span className="text-gray-900 dark:text-dark-100 font-medium truncate">{problem.title}</span>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Problem Navigation */}
-          <div className="flex items-center gap-1">
-            {prevProblemId ? (
-              <Link
-                to={`/problem/${sectionId}/${prevProblemId}`}
-                className="px-2 py-1 text-sm text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded transition-colors"
-              >
-                <span aria-hidden="true">&larr;</span>
-                <span className="hidden sm:inline"> Prev</span>
-                <span className="sr-only"> Previous problem</span>
-              </Link>
-            ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">
-                <span aria-hidden="true">&larr;</span>
-                <span className="hidden sm:inline"> Prev</span>
-              </span>
-            )}
-            <span className="text-xs text-gray-400 dark:text-dark-300 font-mono">
-              ({currentIndex + 1}/{section.problems.length})
-            </span>
-            {nextProblemId ? (
-              <Link
-                to={`/problem/${sectionId}/${nextProblemId}`}
-                className="px-2 py-1 text-sm text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded transition-colors"
-              >
-                <span className="hidden sm:inline">Next </span>
-                <span aria-hidden="true">&rarr;</span>
-                <span className="sr-only">Next problem</span>
-              </Link>
-            ) : (
-              <span className="px-2 py-1 text-sm text-gray-300 dark:text-dark-400 cursor-default">
-                <span className="hidden sm:inline">Next </span>
-                <span aria-hidden="true">&rarr;</span>
-              </span>
-            )}
-          </div>
-
-          <span className="text-gray-300 dark:text-dark-500 hidden sm:inline">|</span>
-
-          {!isReady && (
-            <span
-              className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2"
-              title={isLoading ? 'Loading Python...' : 'Python unavailable'}
-            >
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse shrink-0" />
-              <span className="hidden sm:inline">{isLoading ? 'Loading Python...' : 'Python unavailable'}</span>
-            </span>
-          )}
-          {isReady && (
-            <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2" title="Python ready">
-              <div className="w-2 h-2 bg-accent-500 rounded-full shrink-0" />
-              <span className="hidden sm:inline">Python ready</span>
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Mobile Layout */}
       {isMobile ? (
         <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-dark-800">
-          {/* Mobile Tab Switcher */}
-          <div className="flex border-b border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-900">
-            <button
-              onClick={() => setMobileTab('problem')}
-              className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'problem'
-                  ? 'text-primary-600 dark:text-primary-300 border-b-2 border-primary-500 bg-white dark:bg-dark-800'
-                  : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
-              }`}
-            >
-              Problem
-            </button>
-            <button
-              onClick={() => setMobileTab('code')}
-              className={`flex-1 px-4 py-2.5 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'code'
-                  ? 'text-primary-600 dark:text-primary-300 border-b-2 border-primary-500 bg-white dark:bg-dark-800'
-                  : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
-              }`}
-            >
-              Code
-            </button>
+          <div className="px-4 pt-3.5 pb-2.5 space-y-1.5 min-w-0">
+            <p className="text-xs text-gray-500 dark:text-dark-300 break-words">
+              <Link to={`/section/${sectionId}`} className="hover:text-gray-900 dark:hover:text-dark-100">{section.title}</Link>
+              {' '}&middot; {currentIndex + 1} of {section.problems.length}
+            </p>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <h1 className="flex-1 min-w-0 text-lg font-semibold text-gray-900 dark:text-dark-100 break-words">{problem.title}</h1>
+              <DifficultyBadge difficulty={problem.difficulty} />
+            </div>
+            <CompanyTags key={problem.id} problemId={problem.id} />
+          </div>
+          {/* Problem | Code segmented control */}
+          <div role="tablist" aria-label="View" className="flex mx-4 p-0.5 rounded-lg bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-500">
+            {(['problem', 'code'] as const).map(tab => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={mobileTab === tab}
+                onClick={() => setMobileTab(tab)}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  mobileTab === tab
+                    ? 'bg-white dark:bg-dark-500 text-gray-900 dark:text-dark-100 shadow-sm'
+                    : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
+                }`}
+              >
+                {tab === 'problem' ? 'Problem' : 'Code'}
+              </button>
+            ))}
           </div>
 
           {mobileTab === 'problem' ? (
-            <div className="flex-1 overflow-y-auto p-4">
-              <ProblemDescription problem={problem} />
-              <Examples examples={problem.examples} />
-              <Hints
-                key={`${problem.id}-${activeLanguage}`}
-                hints={variantHints}
-                solution={variant.solution}
-              />
-            </div>
+            <>
+              <div className="flex-1 overflow-y-auto p-4">
+                <ProblemDescription problem={problem} hideTitle />
+                <Examples examples={problem.examples} />
+                <Hints
+                  key={`${problem.id}-${activeLanguage}`}
+                  hints={variantHints}
+                  solution={variant.solution}
+                />
+              </div>
+              {/* Sticky bottom bar */}
+              <div className="flex items-center gap-2.5 px-4 pt-2.5 pb-4 border-t border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-900">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab('code')}
+                  className="flex-1 h-11 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
+                >
+                  Start coding
+                </button>
+                <div className="rounded-xl border border-gray-200 dark:border-dark-500 p-1.5">
+                  <CompactShare title={problem.title} message={share.message} onCopy={share.copy} completed={allPassed} />
+                </div>
+              </div>
+            </>
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Action Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
-                <div className="flex items-center gap-2">
-                  {languageToggle}
-                  <button
-                    onClick={handleRunTests}
-                    disabled={!isReady || isRunning}
-                    className="px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isRunning ? 'Running...' : 'Run Tests'}
-                  </button>
-                  <button
-                    onClick={handleReset}
-                    className="px-3 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
-                  >
-                    Reset
-                  </button>
-                </div>
-                {testResults.length > 0 && testResults.every(r => r.passed) && nextProblemId && (
+              <div className="flex flex-wrap items-center gap-2 px-4 py-2 mt-3 bg-gray-50 dark:bg-dark-900 border-y border-gray-200 dark:border-dark-500">
+                {languageToggle}
+                {runButton}
+                <div className="flex-1" />
+                {pythonStatus}
+                {allPassed && nextProblemId && (
                   <Link
                     to={`/problem/${sectionId}/${nextProblemId}`}
                     className="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
@@ -474,6 +478,7 @@ export default function ProblemPage() {
                     Next &rarr;
                   </Link>
                 )}
+                {overflowMenu(false)}
               </div>
               {trackNotes}
               {/* Editor */}
@@ -508,7 +513,8 @@ export default function ProblemPage() {
       ) : isEditorMaximized ? (
         /* Maximized Layout - Editor and Console side by side */
         <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-dark-800">
-          {actionBar}
+          <div className="px-6 py-3 border-b border-gray-200 dark:border-dark-500">{titleRow}</div>
+          {actionBar(true)}
           {trackNotes}
 
           <Split
@@ -552,6 +558,11 @@ export default function ProblemPage() {
         >
           {/* Left Panel - Tabbed Problem Description */}
           <div className="problem-panel flex flex-col overflow-hidden bg-gray-50 dark:bg-dark-900 min-w-0">
+            {/* Title row, with the company interview tags right below it */}
+            <div className="px-6 pt-4 pb-3 bg-white dark:bg-dark-800 space-y-2.5">
+              {titleRow}
+              <CompanyTags key={problem.id} problemId={problem.id} />
+            </div>
             {/* Tab Bar */}
             <div className="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 px-4 shrink-0">
               <button
@@ -588,7 +599,7 @@ export default function ProblemPage() {
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
               {descriptionTab === 'description' && (
-                <ProblemDescription problem={problem} />
+                <ProblemDescription problem={problem} hideTitle />
               )}
               {descriptionTab === 'examples' && (
                 <div>
@@ -610,7 +621,7 @@ export default function ProblemPage() {
 
           {/* Right Panel - Editor and Console */}
           <div className="flex flex-col overflow-hidden bg-white dark:bg-dark-800">
-            {actionBar}
+            {actionBar(true)}
             {trackNotes}
 
             <Split

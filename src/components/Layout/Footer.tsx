@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export default function Footer() {
+export default function Footer({ onOpenFeedback }: { onOpenFeedback?: () => void }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -20,7 +20,16 @@ export default function Footer() {
             . All rights reserved.
           </div>
 
-          <div className="flex items-center gap-6 text-xs">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
+            {onOpenFeedback && (
+              <button
+                type="button"
+                onClick={onOpenFeedback}
+                className="text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100 transition-colors"
+              >
+                Feedback
+              </button>
+            )}
             <Link
               to="/terms"
               className="text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100 transition-colors"

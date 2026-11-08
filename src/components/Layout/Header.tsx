@@ -1,42 +1,60 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useProgress } from '../../context/ProgressContext';
 import { sections } from '../../data/sections';
-import FeedbackModal from '../FeedbackModal/FeedbackModal';
+import { completedInSection } from '../../data/curriculum';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useFlashCards } from '../../hooks/useFlashCards';
 import UserMenu from '../Auth/UserMenu';
+import { ToolsMenu } from './Tools';
 
 interface HeaderProps {
   onMenuToggle?: () => void;
+  /** Whether the curriculum drawer is open (for aria-expanded). */
+  isMenuOpen?: boolean;
+  /** Show the menu button on desktop too (pages without the docked sidebar). */
+  menuOnDesktop?: boolean;
+  onOpenFeedback: () => void;
 }
 
-export default function Header({ onMenuToggle }: HeaderProps) {
-  const { getOverallProgress } = useProgress();
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+export default function Header({ onMenuToggle, isMenuOpen = false, menuOnDesktop = false, onOpenFeedback }: HeaderProps) {
+  const { progress } = useProgress();
   const { isDark, toggle } = useDarkMode();
   const { getDueCount } = useFlashCards();
   const flashDueCount = getDueCount();
+  const { pathname } = useLocation();
 
-  const sectionInfo = sections.map(s => ({
-    id: s.id,
-    problemCount: s.problems.length,
-  }));
+  const totalProblems = sections.reduce((sum, s) => sum + s.problems.length, 0);
+  const solvedProblems = sections.reduce((sum, s) => sum + completedInSection(progress, s), 0);
+  const overallProgress = totalProblems ? Math.round((solvedProblems / totalProblems) * 100) : 0;
 
-  const overallProgress = getOverallProgress(sectionInfo);
+  // On problem pages the header carries the breadcrumb (desktop) and prev/next (mobile).
+  const problemMatch = pathname.match(/^\/problem\/([^/]+)\/([^/]+)/);
+  const problemSection = problemMatch ? sections.find(s => s.id === problemMatch[1]) : undefined;
+  const problemIndex = problemSection ? problemSection.problems.indexOf(problemMatch![2]) : -1;
+  const prevId = problemIndex > 0 ? problemSection!.problems[problemIndex - 1] : undefined;
+  const nextId = problemIndex >= 0 ? problemSection!.problems[problemIndex + 1] : undefined;
+  const mobileNavClass =
+    'lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-600 hover:text-gray-900 dark:hover:text-dark-100 transition-colors';
+  const chevron = (d: string) => (
+    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={d} />
+    </svg>
+  );
 
   return (
-    <>
     <header className="bg-white/80 dark:bg-dark-900/80 backdrop-blur-xl backdrop-saturate-[1.2] border-b border-gray-200 dark:border-dark-500 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            {/* Hamburger menu - mobile only */}
+      <div className={`${problemSection ? '' : 'max-w-7xl mx-auto '}px-4 sm:px-6 lg:px-8`}>
+        <div className="flex items-center justify-between gap-2 h-16">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Menu button: opens the curriculum drawer (mobile, and desktop pages without the docked sidebar) */}
             {onMenuToggle && (
               <button
                 onClick={onMenuToggle}
-                className="lg:hidden p-2 -ml-2 text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded-lg transition-colors"
+                className={`${menuOnDesktop ? '' : 'lg:hidden '}p-2 -ml-2 text-gray-600 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-600 rounded-lg transition-colors`}
                 aria-label="Toggle menu"
+                aria-expanded={isMenuOpen}
+                aria-controls={isMenuOpen ? "curriculum-drawer" : undefined}
+                title="Curriculum"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -59,52 +77,41 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 <span className="text-gray-900 dark:text-dark-100"> Grind</span>
               </span>
             </Link>
+            {problemSection && (
+              <nav aria-label="Breadcrumb" className="hidden lg:flex items-center gap-3 min-w-0">
+                <span className="text-gray-300 dark:text-dark-500" aria-hidden="true">/</span>
+                <Link
+                  to={`/section/${problemSection.id}`}
+                  className="text-sm text-gray-500 dark:text-dark-200 hover:text-gray-900 dark:hover:text-dark-100 truncate transition-colors"
+                >
+                  {problemSection.title}
+                </Link>
+              </nav>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/scratchpad"
-              className="hidden lg:flex px-3 py-1.5 text-gray-600 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-dark-100 border border-transparent hover:border-gray-200 dark:hover:border-dark-500 transition-all items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Scratchpad
-            </Link>
-            <Link
-              to="/flashcards"
-              className="hidden lg:flex px-3 py-1.5 text-gray-600 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-dark-100 border border-transparent hover:border-gray-200 dark:hover:border-dark-500 transition-all items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              Flash Cards
-              {flashDueCount > 0 && (
-                <span className="min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold rounded-full bg-primary-500 text-white">
-                  {flashDueCount > 99 ? '99+' : flashDueCount}
-                </span>
-              )}
-            </Link>
-            <a
-              href={`${import.meta.env.BASE_URL}ml-cheatsheet.html`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex px-3 py-1.5 text-primary-600 dark:text-primary-300 text-sm font-medium rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20 hover:bg-primary-100 dark:hover:bg-primary-500/20 hover:border-primary-300 dark:hover:border-primary-500/30 transition-all items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Cheat Sheet
-            </a>
-            <button
-              onClick={() => setIsFeedbackOpen(true)}
-              className="hidden lg:flex px-3 py-1.5 text-gray-500 dark:text-dark-200 text-sm font-medium hover:text-gray-700 dark:hover:text-dark-100 transition-colors items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Feedback
-            </button>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {problemSection && (
+              <>
+                {prevId ? (
+                  <Link to={`/problem/${problemSection.id}/${prevId}`} aria-label="Previous problem" className={mobileNavClass}>
+                    {chevron('M15 6l-6 6 6 6')}
+                  </Link>
+                ) : (
+                  <span aria-hidden="true" className={`${mobileNavClass} opacity-30 pointer-events-none`}>{chevron('M15 6l-6 6 6 6')}</span>
+                )}
+                {nextId ? (
+                  <Link to={`/problem/${problemSection.id}/${nextId}`} aria-label="Next problem" className={mobileNavClass}>
+                    {chevron('M9 6l6 6-6 6')}
+                  </Link>
+                ) : (
+                  <span aria-hidden="true" className={`${mobileNavClass} opacity-30 pointer-events-none`}>{chevron('M9 6l6 6-6 6')}</span>
+                )}
+              </>
+            )}
+            <div className="hidden lg:block">
+              <ToolsMenu flashDueCount={flashDueCount} onOpenFeedback={onOpenFeedback} />
+            </div>
             {/* Dark mode toggle */}
             <button
               onClick={toggle}
@@ -123,21 +130,24 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             </button>
             <UserMenu />
             {/* Progress pill */}
-            <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-200 dark:border-dark-500 text-xs">
-              <div className="w-20 h-1 bg-gray-200 dark:bg-dark-500 rounded-full overflow-hidden">
+            <div
+              className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-gray-100 dark:bg-dark-800 border border-gray-200 dark:border-dark-500 text-xs"
+              title={`${solvedProblems} of ${totalProblems} problems solved (${overallProgress}%)`}
+            >
+              <div className="w-16 h-1 bg-gray-200 dark:bg-dark-500 rounded-full overflow-hidden">
                 <div
                   className="h-full progress-gradient rounded-full transition-all duration-500"
                   style={{ width: `${overallProgress}%` }}
                 />
               </div>
-              <span className="font-mono font-semibold text-primary-600 dark:text-primary-300">{overallProgress}%</span>
+              <span className="font-mono font-semibold text-primary-600 dark:text-primary-300">
+                {solvedProblems} / {totalProblems}
+                <span className="sr-only"> problems solved</span>
+              </span>
             </div>
           </div>
         </div>
       </div>
     </header>
-
-    <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
-  </>
   );
 }

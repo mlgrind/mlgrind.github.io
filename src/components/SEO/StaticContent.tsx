@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { allProblems } from "../../data/problems";
 import { sections } from "../../data/sections";
+import { resolvedGroups } from "../../data/curriculum";
 import { allPaths, problemHref } from "../../data/learningPaths";
 import { getCompanyIndex } from "../../data/companyTags";
 
@@ -150,10 +151,15 @@ export function StaticContent({ path }: { path: string }) {
             <h2 className="text-2xl">
               {allProblems.length} exercises across {sections.length} sections
             </h2>
-            {sections.map((s) => (
-              <p key={s.id}>
-                <a href={`/section/${s.id}`}>{s.title} →</a> — {s.description}
-              </p>
+            {resolvedGroups.map((group) => (
+              <section key={group.id}>
+                <h3 className="text-xl">{group.title}</h3>
+                {group.sections.map((s) => (
+                  <p key={s.id}>
+                    <a href={`/section/${s.id}`}>{s.title} →</a> — {s.description}
+                  </p>
+                ))}
+              </section>
             ))}
           </>
         )}

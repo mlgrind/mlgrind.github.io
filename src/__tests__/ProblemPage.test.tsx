@@ -91,7 +91,8 @@ describe("problem editor persistence", () => {
     expect(
       screen.getByRole("button", { name: "Examples" }).className,
     ).toContain("border-primary-500");
-    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Reset code" }));
     const starter = getProblemById("numpy-array-sum")!.starterCode;
     expect(screen.getByLabelText("Python code")).toHaveValue(starter);
     view.unmount();
@@ -221,5 +222,74 @@ describe("section default track", () => {
     mount(path);
     expect(screen.getByRole("button", { name: "NumPy" })).toHaveAttribute("aria-pressed", "true");
     expect(editor()).toHaveValue("numpy draft");
+  });
+});
+
+describe("decluttered problem page", () => {
+  it("shows the title once: the H1 stays, a repeated leading heading is hidden", () => {
+    // The scaled dot-product attention description opens with "## Scaled Dot-Product Attention".
+    const problem = getProblemById("scaled-dot-product-attention")!;
+    expect(problem.description.trimStart().startsWith(`## ${problem.title}`)).toBe(true);
+    mount(`/problem/${problem.section}/${problem.id}`);
+    expect(screen.getAllByRole("heading", { name: problem.title })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 1, name: problem.title })).toBeInTheDocument();
+  });
+
+  it("puts Share in the title row and Run's shortcut in its tooltip, with no kbd hint", () => {
+    mount();
+    expect(screen.getByRole("button", { name: "Share challenge" })).toBeInTheDocument();
+    expect(screen.queryByText("Share challenge")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run Tests" })).toHaveAttribute(
+      "title",
+      "Run tests (Shift+Enter)",
+    );
+    expect(document.querySelector("kbd")).toBeNull();
+    expect(screen.queryByText(/Pro tip/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Maximize/ })).not.toBeInTheDocument();
+  });
+
+  it("has an accessible overflow menu with Maximize/Restore, Reset and Share", () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    mount();
+    const trigger = screen.getByRole("button", { name: "More actions" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    const items = screen.getAllByRole("menuitem").map((item) => item.textContent?.trim());
+    expect(items).toEqual([
+      expect.stringContaining("Maximize editor"),
+      expect.stringContaining("Reset code"),
+      expect.stringContaining("Copy share link"),
+    ]);
+
+    // Escape closes the menu and returns focus to the trigger.
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    // Keyboard open focuses the first item; arrows move between items.
+    fireEvent.keyDown(trigger, { key: "ArrowDown" });
+    const menuItems = screen.getAllByRole("menuitem");
+    expect(menuItems[0]).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "ArrowDown" });
+    expect(menuItems[1]).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "ArrowUp" });
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "ArrowUp" });
+    expect(menuItems[2]).toHaveFocus();
+
+    fireEvent.click(menuItems[0]);
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    // The maximized layout renders its own action bar.
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.getByRole("menuitem", { name: /Restore layout/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /Copy share link/ }));
+    expect(writeText).toHaveBeenCalledWith(
+      "https://mlgrind.github.io/problem/python-basics/numpy-array-sum",
+    );
   });
 });
