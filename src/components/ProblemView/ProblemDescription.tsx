@@ -38,14 +38,15 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
           p: ({ children }) => (
             <p className="text-gray-600 dark:text-dark-200 mb-3 leading-relaxed">{children}</p>
           ),
+          // Fenced blocks render as <pre><code>. A fence without a language has
+          // no `language-` class, so a newline in the content also marks a block.
+          pre: ({ children }) => (
+            <pre className="bg-gray-100 dark:bg-dark-900 rounded-lg p-4 my-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{children}</pre>
+          ),
           code: ({ className, children }) => {
-            const isBlock = className?.includes('language-');
+            const isBlock = className?.includes('language-') || String(children ?? '').includes('\n');
             if (isBlock) {
-              return (
-                <pre className="bg-gray-100 dark:bg-dark-900 rounded-lg p-4 overflow-x-auto my-3">
-                  <code className="text-sm text-gray-800 dark:text-dark-100">{children}</code>
-                </pre>
-              );
+              return <code className="text-sm text-gray-800 dark:text-dark-100">{children}</code>;
             }
             return (
               <code className="bg-gray-100 dark:bg-dark-600 px-1.5 py-0.5 rounded text-primary-600 dark:text-primary-300 text-sm break-words">

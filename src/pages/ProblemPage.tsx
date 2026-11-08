@@ -601,7 +601,7 @@ export default function ProblemPage() {
                     key={`${problem.id}-${activeLanguage}`}
                     hints={variantHints}
                     solution={variant.solution}
-                    onLoadToEditor={setCode}
+                    onLoadToEditor={handleCodeChange}
                   />
                 </div>
               )}
