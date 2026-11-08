@@ -564,15 +564,16 @@ Related: Layer Norm and RMSNorm are in **Transformers** and **PyTorch Basics**; 
   {
     id: 'optimization',
     title: 'Optimization & Training',
-    description: 'Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.',
+    description: 'Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.',
     icon: '⚙️',
     introduction: `
 # Optimization & Training
 
-A model is only as good as the procedure that fits it. This section covers what happens between \`loss.backward()\` and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging.
+A model is only as good as the procedure that fits it. This section covers what happens between \`loss.backward()\` and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging. Most "my model won't train" bugs are optimization bugs, and interviews regularly ask you to write Adam from memory or explain why a run produced NaNs.
 
-## From SGD to Adam
+## Core Ideas
 
+### From SGD to Adam
 Every optimizer turns a gradient \`g\` into an update for the parameters \`θ\`:
 
 | Optimizer | Update | Idea |
@@ -580,55 +581,80 @@ Every optimizer turns a gradient \`g\` into an update for the parameters \`θ\`:
 | **SGD** | \`θ -= lr * g\` | Step down the current gradient |
 | **Momentum** | \`v = μv + g;  θ -= lr * v\` | Average gradients over time: speed up along consistent directions, damp oscillations |
 | **Nesterov** | \`θ -= lr * (g + μv)\` | Look ahead along the velocity before stepping |
-| **RMSprop** | \`s = ρs + (1-ρ)g²;  θ -= lr * g / √s\` | Per-parameter step size from recent gradient scale |
-| **Adam** | momentum on \`g\` + RMSprop on \`g²\` + bias correction | Default for most deep learning |
-| **AdamW** | Adam + decoupled weight decay \`θ *= 1 - lr·λ\` | Default for transformers; L2 inside Adam is *not* the same thing |
+| **RMSprop** | \`s = ρs + (1-ρ)g²;  θ -= lr * g / (√s + ε)\` | Per-parameter step size from recent gradient scale |
+| **Adam** | \`m = β1·m + (1-β1)g;  s = β2·s + (1-β2)g²;  θ -= lr * m̂ / (√ŝ + ε)\` | Momentum + RMSprop, with bias correction \`m̂ = m / (1 - β1^t)\`, \`ŝ = s / (1 - β2^t)\` |
+| **AdamW** | Adam + decoupled weight decay \`θ *= 1 - lr·λ\` | Default for transformers; L2 added to the loss inside Adam is *not* the same thing |
 
 You implement SGD with momentum, Adam and learning-rate schedules in **PyTorch Basics** (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).
 
-## Learning-Rate Schedules
+### Learning-rate schedules
+The learning rate is the most important hyperparameter, and it rarely stays constant:
 
-The learning rate is the single most important hyperparameter, and it rarely stays constant:
-
-\`\`\`
-warmup (linear 0 -> max)  ->  decay (cosine / linear / step)  ->  floor (min_lr)
+\`\`\`text
+warmup (linear 0 -> max_lr)  ->  decay (cosine / linear / step)  ->  floor (min_lr)
 \`\`\`
 
 Warmup protects the first steps, when Adam's statistics are noisy and the weights are random. Decay lets the model settle into a minimum.
 
-## Keeping Training Stable
+### Keeping training stable
 
 | Problem | Symptom | Fix |
 |---------|---------|-----|
 | Exploding gradients | Loss spikes, NaNs | **Gradient clipping** by global norm (\`clip_grad_norm_\`, usually \`max_norm=1.0\`) |
-| Batch doesn't fit in memory | OOM errors | **Gradient accumulation**: sum the gradients of k micro-batches (each loss / k) before stepping (practiced in PyTorch Basics) |
-| fp16 gradients underflow to 0 | Training stalls in mixed precision | **Dynamic loss scaling**: multiply the loss by S, halve S on overflow, grow it after N clean steps |
+| Batch doesn't fit in memory | OOM errors | **Gradient accumulation**: sum the gradients of k micro-batches (each loss / k) before stepping (practised in PyTorch Basics) |
+| fp16 gradients underflow to 0 | Training stalls in mixed precision | **Dynamic loss scaling**: multiply the loss by S, back off S on overflow, grow it after N clean steps |
 
 \`\`\`python
-# A typical modern training step
+# A typical mixed-precision training step with accumulation
 with torch.autocast('cuda', dtype=torch.float16):
     loss = model(x, y) / accum_steps
 scaler.scale(loss).backward()
 if (step + 1) % accum_steps == 0:
-    scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    scaler.step(optimizer)          # skipped if the gradients overflowed
-    scaler.update()                 # adjust the loss scale
+    scaler.unscale_(optimizer)                                # true gradients again
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)   # clip the unscaled grads
+    scaler.step(optimizer)                                    # skipped if any grad is inf/NaN
+    scaler.update()                                           # adjust the loss scale
     optimizer.zero_grad()
     scheduler.step()
 \`\`\`
 
-## Why It Matters
+## Worked Micro-Example
 
-- **Interviews** regularly ask you to write Adam from memory, explain bias correction, or explain why AdamW decouples weight decay.
-- **In practice**, most "my model won't train" bugs are optimization bugs: a missing warmup, no clipping, a forgotten \`1/k\` in accumulation, or a loss scale stuck at 0.
+**Global-norm clipping.** Two parameters have gradients \`g1 = [3, 4]\` and \`g2 = [12]\`, and \`max_norm = 1\`:
+
+\`\`\`text
+total_norm = sqrt(3² + 4² + 12²) = sqrt(169) = 13
+clip_coef  = 1 / 13 = 0.0769
+g1 -> [0.2308, 0.3077],  g2 -> [0.9231]       # new global norm = 1, direction unchanged
+\`\`\`
+
+Clipping each tensor separately would instead give \`[0.6, 0.8]\` and \`[1.0]\`: a different direction.
+
+**Adam's first step.** With \`g = 0.5\`, \`β1 = 0.9\`, \`β2 = 0.999\`: \`m = 0.05\`, \`s = 0.00025\`, and after bias correction \`m̂ = 0.5\`, \`ŝ = 0.25\`, so the step is \`lr * 0.5 / 0.5 = lr\`. Adam's early steps have size about \`lr\` whatever the gradient's scale; without bias correction the first step would be \`lr * 0.05 / sqrt(0.00025) ≈ 3.16 * lr\`, because the second-moment estimate starts much closer to 0 than the first.
+
+## Common Pitfalls
+
+- **Clipping the scaled gradients** in mixed precision: unscale first, otherwise \`max_norm\` is compared with \`S\` times the real norm.
+- **Per-tensor instead of global clipping**: it changes the update direction; \`clip_grad_norm_\` uses one norm over all parameters.
+- **Gradient accumulation without \`1/k\`**: the effective learning rate becomes k times larger.
+- **L2 penalty vs weight decay in Adam**: adding \`λ‖θ‖²\` to the loss gets rescaled by Adam's denominator; AdamW decays the weights directly.
+- **No warmup** with Adam on transformers: early updates are large and noisy and can diverge.
+- **A loss scale that keeps shrinking**: the overflows are real (a numerical bug or a too-high learning rate), not a scaling problem.
+
+## Interview Angle
+
+- Write Adam from memory, including bias correction; explain why the first steps are about \`lr\` in size and what happens without it.
+- "Why does AdamW decouple weight decay?" and "What does warmup protect against?"
+- "Your loss goes to NaN after 10k steps. What do you check?" Learning rate, clipping, fp16 overflow and loss scale, bad data, log of 0, division by a zero norm.
+- Memory: Adam stores two extra tensors per parameter (\`m\` and \`s\`), so optimizer state is 2x the model size in fp32.
+- Clipping costs one pass over all gradients, \`O(P)\` time for \`P\` parameters.
 
 ## Problems in This Section
 
-- **Gradient Clipping by Global Norm**: rescale all gradients together when their combined norm is too large
-- **Dynamic Loss Scaling**: simulate \`GradScaler\`'s scale updates for mixed-precision training
+1. **Gradient Clipping by Global Norm**: rescale all gradients together when their combined norm is too large, like \`clip_grad_norm_\`.
+2. **Dynamic Loss Scaling (Mixed Precision)**: simulate \`GradScaler\`'s backoff and growth of the loss scale and the skipped steps.
 
-Let's implement the stability tricks of a training step!
+Related: the optimizers and schedules themselves (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling, Gradient Accumulation) are in **PyTorch Basics**; a full training loop is in **PyTorch Basics** (Training Loop) and **E2E Implementations**.
     `,
     problems: ['gradient-clipping', 'loss-scaling'],
   },

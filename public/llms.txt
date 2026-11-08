@@ -33,9 +33,9 @@ The platform covers 21 learning sections with 149 problems:
 - **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(12 problems)_
 - **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(5 problems)_
 - **08 Model Evaluation** (`/section/model-evaluation`) — Learn metrics and techniques to evaluate ML models properly. _(6 problems)_
-- **09 Deep Learning Basics** (`/section/deep-learning`) — Activation functions and fundamental building blocks. _(3 problems)_
-- **10 Neural Networks** (`/section/neural-networks`) — Build neural networks from scratch with forward and backward passes. _(6 problems)_
-- **11 Optimization & Training** (`/section/optimization`) — Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable. _(2 problems)_
+- **09 Deep Learning Basics** (`/section/deep-learning`) — ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from. _(3 problems)_
+- **10 Neural Networks** (`/section/neural-networks`) — Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss. _(6 problems)_
+- **11 Optimization & Training** (`/section/optimization`) — Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable. _(2 problems)_
 - **12 CNNs & Computer Vision** (`/section/cnn`) — Implement convolutions, pooling, object detection, and segmentation. _(11 problems)_
 - **13 Sequence Models** (`/section/sequence-models`) — RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention. _(3 problems)_
 - **14 Transformer Architecture** (`/section/transformers`) — Master attention, positional encoding, and modern LLM architecture. _(11 problems)_

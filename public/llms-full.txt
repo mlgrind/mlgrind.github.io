@@ -164,19 +164,19 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 09: Deep Learning Basics
 
 **URL**: /section/deep-learning
-**Summary**: Activation functions and fundamental building blocks.
+**Summary**: ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.
 **Problems** (3):
 
 1. **ReLU Activation** (`/problem/deep-learning/perceptron`) — easy
-2. **Dense Layer Forward Pass** (`/problem/deep-learning/neural-network-forward`) — medium
-3. **Softmax Function** (`/problem/deep-learning/backpropagation`) — medium
+2. **Dense Layer Forward Pass (ReLU)** (`/problem/deep-learning/neural-network-forward`) — medium
+3. **Numerically Stable Softmax** (`/problem/deep-learning/backpropagation`) — medium
 
 ---
 
 ### Section 10: Neural Networks
 
 **URL**: /section/neural-networks
-**Summary**: Build neural networks from scratch with forward and backward passes.
+**Summary**: Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.
 **Problems** (6):
 
 1. **Cross-Entropy Loss** (`/problem/neural-networks/cross-entropy-loss`) — easy
@@ -191,7 +191,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 11: Optimization & Training
 
 **URL**: /section/optimization
-**Summary**: Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.
+**Summary**: Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.
 **Problems** (2):
 
 1. **Gradient Clipping by Global Norm** (`/problem/optimization/gradient-clipping`) — easy
