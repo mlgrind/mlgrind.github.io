@@ -8,7 +8,7 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 - Read problem descriptions and theory introductions
 - Write Python code in a Monaco editor
 - Execute code in-browser via Pyodide (WebAssembly), in a Web Worker with a 30s timeout and Stop
-- Solve problems in **NumPy** or, where a track exists, **PyTorch** (NumPy-backed torch shim, see `docs/TORCH_TRACK.md`)
+- Solve every problem in **NumPy** or **PyTorch** (NumPy-backed torch shim, see `docs/TORCH_TRACK.md`); PyTorch Basics opens in PyTorch by default
 - Run tests and see pass/fail results
 - Edit test cases to experiment with different inputs/expected values
 - Track progress across sections
@@ -267,7 +267,7 @@ def function_name(arr):
 
 3. Add the problem ID to the section's `problems` array in `src/data/sections.ts`
 4. Include at least one **hidden** test that checks values (not just shapes), so hard-coding the visible answers doesn't pass
-5. Optionally add a PyTorch track in `src/data/problems/pytorch/[section].ts` (rules in `docs/TORCH_TRACK.md`: same function and semantics as the NumPy track, expression-based tests only)
+5. Add a PyTorch track in `src/data/problems/pytorch/[section].ts` (rules in `docs/TORCH_TRACK.md`: same function and semantics as the NumPy track, expression-based tests only). Every problem has one, and `solutions.test.ts` fails if a problem doesn't
 6. Run `npm test`: `src/__tests__/solutions.test.ts` checks every NumPy and PyTorch solution against its own tests with the production harness, and that PyTorch starter code doesn't pass
 
 ### Problem Description Best Practices

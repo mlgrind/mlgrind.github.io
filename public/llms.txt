@@ -28,7 +28,7 @@ The platform covers 21 learning sections with 141 problems:
 - **01 NumPy Fundamentals** (`/section/numpy-fundamentals`) — Master NumPy array operations essential for ML development. _(5 problems)_
 - **02 Python Basics for ML** (`/section/python-basics`) — Master NumPy arrays and essential Python operations for machine learning. _(3 problems)_
 - **03 Einstein Summation (Einsum)** (`/section/einsum`) — Master einsum for elegant tensor operations. _(5 problems)_
-- **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns implemented in NumPy. _(23 problems)_
+- **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy. _(23 problems)_
 - **05 Data Preprocessing** (`/section/data-preprocessing`) — Learn essential data cleaning and transformation techniques. _(4 problems)_
 - **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(11 problems)_
 - **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(4 problems)_
@@ -69,9 +69,10 @@ A URL of the form `/problem/{problem-id}` is not canonical; it redirects.
 ## Technical Details
 
 - **In-Browser Python**: Uses Pyodide (Python compiled to WebAssembly)
-- **Pre-loaded Libraries**: NumPy only. pandas, scikit-learn, scipy and torch are
-  NOT available -- problems in the PyTorch section reimplement PyTorch semantics
-  in NumPy on purpose.
+- **Pre-loaded Libraries**: NumPy only. pandas, scikit-learn and scipy are NOT
+  available. Real PyTorch has no WebAssembly build: every problem also has a
+  PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API
+  (with autograd), downloaded on the first PyTorch run.
 - **Progress Storage**: localStorage, plus Firestore when signed in with Google
 - **Code Editor**: Monaco Editor with Python syntax highlighting
 

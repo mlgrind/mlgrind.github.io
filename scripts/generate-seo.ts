@@ -134,9 +134,10 @@ A URL of the form \`/problem/{problem-id}\` is not canonical; it redirects.
 ## Technical Details
 
 - **In-Browser Python**: Uses Pyodide (Python compiled to WebAssembly)
-- **Pre-loaded Libraries**: NumPy only. pandas, scikit-learn, scipy and torch are
-  NOT available -- problems in the PyTorch section reimplement PyTorch semantics
-  in NumPy on purpose.
+- **Pre-loaded Libraries**: NumPy only. pandas, scikit-learn and scipy are NOT
+  available. Real PyTorch has no WebAssembly build: every problem also has a
+  PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API
+  (with autograd), downloaded on the first PyTorch run.
 - **Progress Storage**: localStorage, plus Firestore when signed in with Google
 - **Code Editor**: Monaco Editor with Python syntax highlighting
 
@@ -229,7 +230,8 @@ ${curriculum}
 ### Pyodide Environment
 - Python runs in WebAssembly (client-side)
 - NumPy is pre-loaded and available
-- pandas, scikit-learn, scipy, matplotlib and torch are NOT available
+- pandas, scikit-learn, scipy and matplotlib are NOT available
+- \`import torch\` works in PyTorch-track runs only: a NumPy-backed subset of the torch API, not real PyTorch
 - No network requests for code execution
 - Memory limited by browser
 

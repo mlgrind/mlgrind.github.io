@@ -68,7 +68,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 04: PyTorch Basics
 
 **URL**: /section/pytorch-basics
-**Summary**: Learn PyTorch patterns implemented in NumPy.
+**Summary**: Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.
 **Problems** (23):
 
 1. **Tensor Creation (NumPy Style)** (`/problem/pytorch-basics/tensor-creation`) — easy
@@ -360,7 +360,8 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Pyodide Environment
 - Python runs in WebAssembly (client-side)
 - NumPy is pre-loaded and available
-- pandas, scikit-learn, scipy, matplotlib and torch are NOT available
+- pandas, scikit-learn, scipy and matplotlib are NOT available
+- `import torch` works in PyTorch-track runs only: a NumPy-backed subset of the torch API, not real PyTorch
 - No network requests for code execution
 - Memory limited by browser
 
