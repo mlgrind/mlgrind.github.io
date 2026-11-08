@@ -6,7 +6,7 @@ Practice machine learning by implementing algorithms in real Python, directly in
 
 ![ML Grind: real Python, instant feedback, no setup](https://mlgrind.github.io/og-image.png)
 
-The curriculum contains **110 exercises across 16 sections**, covering NumPy, einsum, classical ML, neural networks, computer vision, transformers, LLM decoding, generative models, reinforcement learning, and end-to-end implementations. PyTorch exercises teach PyTorch concepts through NumPy implementations; this browser runtime does not include PyTorch.
+The curriculum contains **110 exercises across 16 sections**, covering NumPy, einsum, classical ML, neural networks, computer vision, transformers, LLM decoding, generative models, reinforcement learning, and end-to-end implementations. 75 problems can also be solved in PyTorch: a NumPy | PyTorch toggle swaps in a PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build; see [docs/TORCH_TRACK.md](docs/TORCH_TRACK.md)).
 
 - Real CPython and NumPy via Pyodide, isolated in a Web Worker with Stop and a 30-second execution limit.
 - Monaco editor, progressive hints, reference solutions, and numerical test feedback.
@@ -30,7 +30,7 @@ Optional Firebase configuration is read from `VITE_FIREBASE_*` variables documen
 | --- | --- |
 | `npm run check` | Lint, unit/reference tests, and production build |
 | `npm run test:run` | Run tests once |
-| `npm run test:runtime` | Run reference solutions using real Pyodide and NumPy; requires network on first run |
+| `npm run test:runtime` | Run reference solutions (NumPy and PyTorch tracks) and the torch shim tests using real Pyodide; requires network on first run |
 | `npm run build` | Generate discovery files, compile, and generate static routes/PNG cards |
 | `npm run verify:static` | Verify built route files, canonical URLs, content, and sitemap coverage |
 | `npm run preview` | Preview the production build |

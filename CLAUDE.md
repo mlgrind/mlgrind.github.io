@@ -7,7 +7,8 @@ This file contains context and instructions for Claude to work on this project e
 This is a LeetCode/HelloInterview-style web application for learning ML by building. Users can:
 - Read problem descriptions and theory introductions
 - Write Python code in a Monaco editor
-- Execute code in-browser via Pyodide (WebAssembly)
+- Execute code in-browser via Pyodide (WebAssembly), in a Web Worker with a 30s timeout and Stop
+- Solve problems in **NumPy** or, where a track exists, **PyTorch** (NumPy-backed torch shim, see `docs/TORCH_TRACK.md`)
 - Run tests and see pass/fail results
 - Edit test cases to experiment with different inputs/expected values
 - Track progress across sections
@@ -67,13 +68,15 @@ src/
 │   ├── AuthContext.tsx      # Firebase auth state (Google sign-in/out)
 │   └── ProgressContext.tsx  # Global progress state (localStorage + Firestore sync)
 ├── lib/
+│   ├── pythonProgram.ts     # Test harness (testProgram), shared by the worker and the tests
 │   ├── firebase.ts          # Firebase app init, auth, Firestore exports
 │   ├── firestoreSync.ts     # Firestore read/write for progress data
 │   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
 │   ├── sections.ts          # Section definitions with intros (16 sections)
 │   └── problems/            # Problem definitions by section (110 problems)
-│       ├── index.ts         # Exports all problems
+│       ├── pytorch/         # PyTorch tracks, one file per section (Record<problemId, LanguageVariant>)
+│       ├── index.ts         # Exports all problems (attaches PyTorch tracks as problem.pytorch)
 │       ├── numpy-fundamentals.ts   # Part 1: Foundations
 │       ├── python-basics.ts
 │       ├── einsum.ts
@@ -113,13 +116,16 @@ src/
 - **`src/lib/firebase.ts`** - Initializes Firebase app from `VITE_FIREBASE_*` env vars. Exports `auth`, `db` (Firestore), `googleProvider`, and `isConfigured` boolean. Gracefully no-ops when env vars are missing.
 - **`src/context/AuthContext.tsx`** - React Context wrapping Firebase Auth. Provides `user`, `loading`, `signInWithGoogle` (popup-based), `signOut`, and `useAuth()` hook.
 - **`src/lib/firestoreSync.ts`** - `loadProgressFromFirestore(uid)` and `saveProgressToFirestore(uid, progress, userInfo)`. Document path: `users/{uid}`.
-- **`src/lib/mergeProgress.ts`** - Per-problem merge: `completed` > `in_progress` > `not_started`. On tie, keeps the more recent `lastAttempt`.
+- **`src/lib/mergeProgress.ts`** - Per-problem merge: `completed` > `in_progress` > `not_started`. On tie, keeps the more recent `lastAttempt`. PyTorch fields merge separately: `codes.pytorch` follows the more recent `lastAttempt`, `solvedIn` is the union.
 
 ### State Management
-- **`src/context/ProgressContext.tsx`** - React Context for tracking problem completion, saved code. Stored in localStorage under key `ml-interview-progress`. When signed in, also syncs to Firestore with debounced writes (2s). Merges local + cloud progress on login.
+- **`src/context/ProgressContext.tsx`** - React Context for tracking problem completion, saved code. Stored in localStorage under key `ml-interview-progress`. NumPy code is saved as `code` (backward compatible), PyTorch code as `codes.pytorch`, and `solvedIn` lists the tracks a problem was solved in. When signed in, also syncs to Firestore with debounced writes (2s). Merges local + cloud progress on login.
 
 ### Python Execution
-- **`src/hooks/usePyodide.ts`** - Loads Pyodide, executes user code, runs test cases, captures stdout/stderr
+- **`public/python-worker.js`** - Classic Web Worker that loads Pyodide + NumPy. For PyTorch runs it fetches and installs `public/py/torch_shim.py` on first use only
+- **`src/hooks/usePyodide.ts`** - Starts the worker, 30s timeout and Stop (both restart the worker), `runCode`, `runTests(code, tests, functionName, language)`, captures stdout/stderr
+- **`src/lib/pythonProgram.ts`** - `testProgram(code, tests, functionName, language)`: the harness used by the worker, `src/__tests__/solutions.test.ts` and `tests/runtime.test.ts`. Fresh namespace per run, `np.random`/`random`/`torch` seeded with 0 before the submission and each test, tensors converted via `.detach().numpy()`, `ast.literal_eval` + tolerant comparison of expected values
+- **`public/py/torch_shim.py`** - NumPy-backed `torch` subset with autograd; `install()` registers it as `torch`. Tests: `scripts/test_torch_shim.py`
 
 ### Main UI
 - **`src/pages/ProblemPage.tsx`** - The main coding interface with split panes (problem description | code editor + console)
@@ -245,6 +251,9 @@ def function_name(arr):
 ```
 
 3. Add the problem ID to the section's `problems` array in `src/data/sections.ts`
+4. Include at least one **hidden** test that checks values (not just shapes), so hard-coding the visible answers doesn't pass
+5. Optionally add a PyTorch track in `src/data/problems/pytorch/[section].ts` (rules in `docs/TORCH_TRACK.md`: same function and semantics as the NumPy track, expression-based tests only)
+6. Run `npm test`: `src/__tests__/solutions.test.ts` checks every NumPy and PyTorch solution against its own tests with the production harness, and that PyTorch starter code doesn't pass
 
 ### Problem Description Best Practices
 
@@ -424,7 +433,7 @@ The section introduction uses `ReactMarkdown` with `remarkGfm`. Ensure your mark
 
 ### Test Case Format & Guidelines
 
-The test runner in `src/hooks/usePyodide.ts` supports two types of test inputs:
+The harness in `src/lib/pythonProgram.ts` supports two types of test inputs (PyTorch tracks may use only the first):
 
 #### 1. Expression-Based Tests (Recommended)
 
@@ -444,7 +453,7 @@ Use when you need to call the function and check properties of the result:
 { input: 'function_name(x, y)[0].shape', expected: '(4, 8)' }
 ```
 
-**Detection**: The test runner detects expressions by checking if `input` contains the function name, contains `.`, or is a simple identifier.
+**Detection**: The harness parses `input`: a list, tuple or number literal is treated as function arguments; anything else (calls, indexing, lambdas...) is evaluated as a complete expression.
 
 #### 2. Argument-Based Tests (Simple Cases)
 
@@ -529,10 +538,13 @@ Or multi-step validation:
 **Option 0: Just run the test suite (automatic)**
 
 `src/__tests__/solutions.test.ts` executes every problem's `solution` against its
-own `testCases` using the same semantics as the in-browser runner. `npm test`
+own `testCases` using the same harness as the in-browser runner, and every
+PyTorch track's solution under the torch shim. `npm test`
 will fail with the exact problem id, expected value and actual value if a
 solution and its tests disagree. This requires a local `python3` with numpy;
-without one the suite skips.
+without one the suite skips. To check the PyTorch tracks against real PyTorch:
+`npx tsx scripts/check-torch-tracks.ts --torch real --python /path/to/python-with-torch`.
+`npm run test:runtime` runs the same checks in real Pyodide (needs network).
 
 **Option 1: Manual Testing via Browser**
 1. Run the dev server: `npm run dev`
@@ -635,10 +647,11 @@ The left panel uses the `.problem-panel` CSS class (defined in `src/index.css`) 
 
 ### Fixing Python Execution Issues
 
-The Python execution logic is in `src/hooks/usePyodide.ts`:
-- `runCode()` - Executes arbitrary Python code
-- `runTests()` - Runs test cases against user's function
-- Function name is extracted from starter code via regex
+- Test evaluation (expression vs argument tests, comparison, tensor conversion, seeding): `src/lib/pythonProgram.ts`
+- Worker protocol, Pyodide loading, lazy torch shim install: `public/python-worker.js`
+- Timeout, Stop, restart: `src/hooks/usePyodide.ts`
+- torch API gaps or wrong gradients: `public/py/torch_shim.py`, then `scripts/test_torch_shim.py`
+- Function name is extracted from starter code via regex (last `def`, `functionNameOf`)
 
 ## Deployment
 
@@ -654,8 +667,9 @@ The `base` path in `vite.config.ts` is set to `/` for GitHub Pages (org site at 
 
 1. **Pyodide loading time** - First load takes a few seconds to download WebAssembly
 2. **Limited Python packages** - Only numpy is pre-loaded; sklearn requires additional loading
-3. **No code execution timeout** - Long-running code can freeze the browser
-4. **Firestore sync requires sign-in** - Anonymous users still use localStorage only
+3. **PyTorch is a shim** - Real PyTorch has no WebAssembly build; the PyTorch track runs a NumPy-backed subset (unsupported APIs raise a clear `NotImplementedError`, seeded randomness matches NumPy, not real torch). The first PyTorch run downloads the shim (~300 KB)
+4. **Execution timeout** - Runs stop after 30 seconds; the worker restarts, so the next run reloads Pyodide
+5. **Firestore sync requires sign-in** - Anonymous users still use localStorage only
 
 ## Content References
 
@@ -667,7 +681,6 @@ The problem content was developed using these resources:
 ## Future Improvements to Consider
 
 - Add more ML packages (sklearn, pandas)
-- Implement code execution timeout
 - ~~Add user authentication for cloud sync~~ (Done - Firebase Auth + Firestore)
 - Add problem difficulty filters
 - Add search functionality
@@ -685,6 +698,10 @@ Tests are in `src/__tests__/`:
 - `Console.test.tsx` - Console component (editable test cases, tabs, parsing)
 - `ProgressContext.test.tsx` - Progress state management
 - `problems.test.ts` - Problem data validation
+- `solutions.test.ts` - Every NumPy and PyTorch reference solution passes its tests (native python3, torch shim)
+- `mergeProgress.test.ts`, `progressCompatibility.test.ts` - Progress merging and old saved data
+- `ProblemPage.test.tsx` - Editor persistence and the NumPy | PyTorch toggle
+- `tests/runtime.test.ts` (`npm run test:runtime`) - Reference solutions and the torch shim tests in real Pyodide
 
 Run with: `npm test`
 
