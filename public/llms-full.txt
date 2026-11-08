@@ -23,7 +23,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ## Complete Curriculum
 
-16 sections, 110 problems.
+21 sections, 141 problems.
 
 ### Section 01: NumPy Fundamentals
 
@@ -69,7 +69,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/pytorch-basics
 **Summary**: Learn PyTorch patterns implemented in NumPy.
-**Problems** (21):
+**Problems** (23):
 
 1. **Tensor Creation (NumPy Style)** (`/problem/pytorch-basics/tensor-creation`) — easy
 2. **Tensor Operations** (`/problem/pytorch-basics/tensor-operations`) — easy
@@ -92,6 +92,8 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 19. **Label Smoothing** (`/problem/pytorch-basics/label-smoothing`) — medium
 20. **LoRA Adapter** (`/problem/pytorch-basics/lora-adapter`) — hard
 21. **Gradient Checkpointing** (`/problem/pytorch-basics/gradient-checkpointing`) — hard
+22. **The Training Loop** (`/problem/pytorch-basics/training-loop`) — easy
+23. **Minibatches: Dataset & DataLoader** (`/problem/pytorch-basics/dataloader-batching`) — easy
 
 ---
 
@@ -99,11 +101,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/data-preprocessing
 **Summary**: Learn essential data cleaning and transformation techniques.
-**Problems** (3):
+**Problems** (4):
 
 1. **Normalize Features** (`/problem/data-preprocessing/normalize-features`) — easy
 2. **Handle Missing Data** (`/problem/data-preprocessing/handle-missing-data`) — medium
 3. **One-Hot Encoding** (`/problem/data-preprocessing/one-hot-encode`) — medium
+4. **Stratified Train/Val/Test Split** (`/problem/data-preprocessing/stratified-split`) — medium
 
 ---
 
@@ -111,7 +114,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/supervised-learning
 **Summary**: Implement core supervised learning algorithms from scratch.
-**Problems** (7):
+**Problems** (11):
 
 1. **Sigmoid Function** (`/problem/supervised-learning/logistic-regression`) — easy
 2. **Binary Cross-Entropy Loss** (`/problem/supervised-learning/binary-cross-entropy`) — easy
@@ -120,6 +123,10 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 5. **Linear Regression with Gradient Descent** (`/problem/supervised-learning/linear-regression-gd`) — medium
 6. **Logistic Regression with Gradient Descent** (`/problem/supervised-learning/logistic-regression-full`) — medium
 7. **Linear SVM with Gradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
+8. **k-Nearest Neighbours Classifier** (`/problem/supervised-learning/knn-classifier`) — medium
+9. **Gaussian Naive Bayes** (`/problem/supervised-learning/naive-bayes`) — medium
+10. **Ridge & Lasso Regression** (`/problem/supervised-learning/ridge-lasso`) — hard
+11. **Gradient Boosting with Stumps** (`/problem/supervised-learning/gradient-boosting`) — hard
 
 ---
 
@@ -127,10 +134,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/unsupervised-learning
 **Summary**: Implement clustering and dimensionality reduction algorithms.
-**Problems** (2):
+**Problems** (4):
 
 1. **K-Means: Assign to Nearest Centroid** (`/problem/unsupervised-learning/kmeans-clustering`) — medium
 2. **PCA: Center Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
+3. **Gaussian Mixture Model (EM)** (`/problem/unsupervised-learning/gmm-em`) — hard
+4. **DBSCAN Clustering** (`/problem/unsupervised-learning/dbscan`) — medium
 
 ---
 
@@ -138,11 +147,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/model-evaluation
 **Summary**: Learn metrics and techniques to evaluate ML models properly.
-**Problems** (3):
+**Problems** (5):
 
 1. **Precision and Recall** (`/problem/model-evaluation/precision-recall-f1`) — medium
 2. **K-Fold Split Indices** (`/problem/model-evaluation/cross-validation`) — medium
 3. **Accuracy Score** (`/problem/model-evaluation/confusion-matrix`) — easy
+4. **ROC Curve & AUC (with Ties)** (`/problem/model-evaluation/roc-auc`) — medium
+5. **Expected Calibration Error** (`/problem/model-evaluation/calibration-ece`) — medium
 
 ---
 
@@ -172,11 +183,22 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ---
 
-### Section 11: CNNs & Computer Vision
+### Section 11: Optimization & Training
+
+**URL**: /section/optimization
+**Summary**: Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.
+**Problems** (2):
+
+1. **Gradient Clipping by Global Norm** (`/problem/optimization/gradient-clipping`) — easy
+2. **Dynamic Loss Scaling (Mixed Precision)** (`/problem/optimization/loss-scaling`) — easy
+
+---
+
+### Section 12: CNNs & Computer Vision
 
 **URL**: /section/cnn
 **Summary**: Implement convolutions, pooling, object detection, and segmentation.
-**Problems** (10):
+**Problems** (11):
 
 1. **Convolution Output Size** (`/problem/cnn/conv-output-size`) — easy
 2. **2D Convolution** (`/problem/cnn/conv2d-forward`) — hard
@@ -188,10 +210,23 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 8. **Focal Loss** (`/problem/cnn/focal-loss`) — medium
 9. **Smooth L1 Loss** (`/problem/cnn/smooth-l1-loss`) — easy
 10. **Segmentation Metrics** (`/problem/cnn/seg-metrics`) — medium
+11. **ResNet Basic Block** (`/problem/cnn/resnet-block`) — medium
 
 ---
 
-### Section 12: Transformer Architecture
+### Section 13: Sequence Models
+
+**URL**: /section/sequence-models
+**Summary**: RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.
+**Problems** (3):
+
+1. **Vanilla RNN: Forward & BPTT** (`/problem/sequence-models/rnn-forward`) — hard
+2. **LSTM Cell** (`/problem/sequence-models/lstm-cell`) — medium
+3. **GRU Cell** (`/problem/sequence-models/gru-cell`) — medium
+
+---
+
+### Section 14: Transformer Architecture
 
 **URL**: /section/transformers
 **Summary**: Master attention, positional encoding, and modern LLM architecture.
@@ -209,7 +244,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ---
 
-### Section 13: LLM Generation & Decoding
+### Section 15: LLM Generation & Decoding
 
 **URL**: /section/llm-generation
 **Summary**: Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.
@@ -225,11 +260,36 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ---
 
-### Section 14: Generative Models
+### Section 16: LLM Internals
+
+**URL**: /section/llm-internals
+**Summary**: SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.
+**Problems** (4):
+
+1. **SwiGLU Feed-Forward Block (LLaMA MLP)** (`/problem/llm-internals/rmsnorm-swiglu`) — medium
+2. **Online Softmax (the FlashAttention Trick)** (`/problem/llm-internals/online-softmax`) — hard
+3. **Mixture-of-Experts Routing** (`/problem/llm-internals/moe-routing`) — hard
+4. **Token Cross-Entropy and Perplexity** (`/problem/llm-internals/perplexity`) — easy
+
+---
+
+### Section 17: Representation Learning & Retrieval
+
+**URL**: /section/representation-learning
+**Summary**: Contrastive learning, embedding search and retrieval for RAG.
+**Problems** (3):
+
+1. **CLIP Contrastive Loss (InfoNCE)** (`/problem/representation-learning/infonce-loss`) — medium
+2. **Cosine Top-k Embedding Search** (`/problem/representation-learning/embedding-search`) — easy
+3. **RAG Retrieval: BM25 + Embedding Rerank** (`/problem/representation-learning/retrieve-and-rerank`) — medium
+
+---
+
+### Section 18: Generative Models
 
 **URL**: /section/generative-models
 **Summary**: Learn VAEs, diffusion models, and generative AI fundamentals.
-**Problems** (6):
+**Problems** (9):
 
 1. **KL Divergence (Gaussians)** (`/problem/generative-models/kl-divergence`) — easy
 2. **VAE Reparameterization Trick** (`/problem/generative-models/vae-reparameterization`) — medium
@@ -237,10 +297,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 4. **VQ-VAE Vector Quantization** (`/problem/generative-models/vqvae-quantization`) — hard
 5. **Diffusion Noise Schedule** (`/problem/generative-models/diffusion-noise-schedule`) — easy
 6. **Diffusion Forward Process** (`/problem/generative-models/diffusion-forward`) — medium
+7. **DDPM Reverse Sampling Step** (`/problem/generative-models/ddpm-sampling-step`) — medium
+8. **Classifier-Free Guidance** (`/problem/generative-models/classifier-free-guidance`) — easy
+9. **Flow Matching (Rectified Flow)** (`/problem/generative-models/flow-matching`) — medium
 
 ---
 
-### Section 15: Reinforcement Learning
+### Section 19: Reinforcement Learning
 
 **URL**: /section/reinforcement-learning
 **Summary**: Master RL fundamentals from Q-learning to policy gradients.
@@ -264,11 +327,22 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ---
 
-### Section 16: End-to-End Implementations
+### Section 20: Post-training & Efficiency
+
+**URL**: /section/post-training
+**Summary**: GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.
+**Problems** (2):
+
+1. **GRPO: Group-Relative Advantages & Objective** (`/problem/post-training/grpo-advantages`) — hard
+2. **Int8 Weight Quantization (absmax)** (`/problem/post-training/int8-quantization`) — medium
+
+---
+
+### Section 21: End-to-End Implementations
 
 **URL**: /section/e2e-implementations
 **Summary**: Build complete ML models from scratch.
-**Problems** (6):
+**Problems** (8):
 
 1. **E2E: 2-Layer MLP with Backprop** (`/problem/e2e-implementations/e2e-mlp`) — hard
 2. **E2E: Transformer Encoder** (`/problem/e2e-implementations/e2e-transformer`) — hard
@@ -276,6 +350,8 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 4. **E2E: Vector Quantized VAE** (`/problem/e2e-implementations/e2e-vqvae`) — hard
 5. **E2E: Diffusion Model** (`/problem/e2e-implementations/e2e-diffusion`) — hard
 6. **E2E: Convolutional Neural Network** (`/problem/e2e-implementations/e2e-cnn`) — hard
+7. **Mini GPT (Character-Level Language Model)** (`/problem/e2e-implementations/e2e-mini-gpt`) — hard
+8. **E2E: Tiny Vision Transformer** (`/problem/e2e-implementations/e2e-vit-classifier`) — hard
 
 ---
 

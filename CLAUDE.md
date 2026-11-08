@@ -71,8 +71,8 @@ src/
 │   ├── firestoreSync.ts     # Firestore read/write for progress data
 │   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
-│   ├── sections.ts          # Section definitions with intros (16 sections)
-│   └── problems/            # Problem definitions by section (110 problems)
+│   ├── sections.ts          # Section definitions with intros (21 sections)
+│   └── problems/            # Problem definitions by section (141 problems)
 │       ├── index.ts         # Exports all problems
 │       ├── numpy-fundamentals.ts   # Part 1: Foundations
 │       ├── python-basics.ts
@@ -84,10 +84,18 @@ src/
 │       ├── model-evaluation.ts
 │       ├── deep-learning.ts        # Part 4: Deep Learning
 │       ├── neural-networks.ts
+│       ├── optimization.ts
 │       ├── cnn.ts
+│       ├── sequence-models.ts
 │       ├── transformers.ts
+│       ├── llm-generation.ts
+│       ├── llm-internals.ts
+│       ├── representation-learning.ts
 │       ├── generative-models.ts
-│       └── e2e-implementations.ts  # Part 5: Capstone
+│       ├── reinforcement-learning.ts
+│       ├── post-training.ts
+│       ├── e2e-implementations.ts  # Part 5: Capstone
+│       └── pytorch-pending/        # Staged PyTorch tracks, not imported yet (see its README)
 ├── hooks/
 │   ├── usePyodide.ts    # Python execution hook
 │   └── useProgress.ts   # Progress tracking (if needed separately)
@@ -106,8 +114,8 @@ src/
 ## Key Files to Understand
 
 ### Data Layer
-- **`src/data/sections.ts`** - Defines the 16 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
-- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (110 problems total)
+- **`src/data/sections.ts`** - Defines the 21 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
+- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (141 problems total)
 
 ### Authentication & Sync
 - **`src/lib/firebase.ts`** - Initializes Firebase app from `VITE_FIREBASE_*` env vars. Exports `auth`, `db` (Firestore), `googleProvider`, and `isConfigured` boolean. Gracefully no-ops when env vars are missing.
@@ -136,33 +144,40 @@ Sections are organized in a logical learning progression:
 | **NumPy Fundamentals** | `numpy-fundamentals.ts` | Array Creation, Indexing, Broadcasting, Aggregations, Reshape/Transpose |
 | **Python Basics for ML** | `python-basics.ts` | Array Sum, Matrix Multiply, Broadcast Add |
 | **Einstein Summation** | `einsum.ts` | Basics, Matrix Ops, Batch Ops, Advanced (Multi-Head), Equivalences |
-| **PyTorch Basics** | `pytorch-basics.ts` | Tensor Creation, Operations, Autograd Concepts, NN Modules, Loss Functions |
+| **PyTorch Basics** | `pytorch-basics.ts` | Tensor Creation, Operations, Autograd Concepts, NN Modules, Loss Functions, ..., Training Loop, Minibatches (DataLoader) |
 
 ### Part 2: Data
 | Section | File | Problems |
 |---------|------|----------|
-| **Data Preprocessing** | `data-preprocessing.ts` | Normalize Features, Handle Missing Data, One-Hot Encode |
+| **Data Preprocessing** | `data-preprocessing.ts` | Normalize Features, Handle Missing Data, One-Hot Encode, Stratified Split |
 
 ### Part 3: Classical ML
 | Section | File | Problems |
 |---------|------|----------|
-| **Supervised Learning** | `supervised-learning.ts` | Linear Regression (GD), Logistic Regression, Logistic (Full), Binary Cross-Entropy, Decision Tree Split |
-| **Unsupervised Learning** | `unsupervised-learning.ts` | K-Means Clustering, PCA Implementation |
-| **Model Evaluation** | `model-evaluation.ts` | Precision/Recall/F1, Cross-Validation, Confusion Matrix |
+| **Supervised Learning** | `supervised-learning.ts` | Linear Regression (GD), Logistic Regression, Logistic (Full), Binary Cross-Entropy, Decision Tree Split, ..., k-NN, Gaussian Naive Bayes, Ridge & Lasso, Gradient Boosting |
+| **Unsupervised Learning** | `unsupervised-learning.ts` | K-Means Clustering, PCA Implementation, GMM (EM), DBSCAN |
+| **Model Evaluation** | `model-evaluation.ts` | Precision/Recall/F1, Cross-Validation, Confusion Matrix, ROC/AUC, Calibration (ECE) |
 
 ### Part 4: Deep Learning
 | Section | File | Problems |
 |---------|------|----------|
 | **Deep Learning Basics** | `deep-learning.ts` | Perceptron, Neural Network Forward, Backpropagation |
 | **Neural Networks** | `neural-networks.ts` | Cross-Entropy Loss, MLP Forward, Backprop Gradients, Weight Init, Batch Norm, Dropout |
-| **CNNs** | `cnn.ts` | Conv Output Size, 2D Convolution, Max Pooling, Flatten Layer |
-| **Transformers** | `transformers.ts` | Scaled Dot-Product Attention, Multi-Head Attention, Positional Encoding, Layer Norm, Causal Mask |
-| **Generative Models** | `generative-models.ts` | KL Divergence, VAE Reparameterization, VAE Loss, Diffusion Noise Schedule, Diffusion Forward |
+| **Optimization & Training** | `optimization.ts` | Gradient Clipping (global norm), Dynamic Loss Scaling |
+| **CNNs** | `cnn.ts` | Conv Output Size, 2D Convolution, Max Pooling, Flatten Layer, ..., ResNet Residual Block |
+| **Sequence Models** | `sequence-models.ts` | Vanilla RNN (forward + BPTT), LSTM Cell, GRU Cell |
+| **Transformers** | `transformers.ts` | Scaled Dot-Product Attention, Multi-Head Attention, Positional Encoding, Layer Norm, Causal Mask, ... |
+| **LLM Generation & Decoding** | `llm-generation.ts` | Temperature, Top-k, Top-p, Repetition Penalty, KV Cache, Beam Search, Speculative Decoding |
+| **LLM Internals** | `llm-internals.ts` | SwiGLU Block, Online Softmax, MoE Routing, Perplexity |
+| **Representation Learning & Retrieval** | `representation-learning.ts` | CLIP InfoNCE Loss, Embedding Search, Retrieve & Rerank |
+| **Generative Models** | `generative-models.ts` | KL Divergence, VAE Reparameterization, VAE Loss, Diffusion Noise Schedule, Diffusion Forward, DDPM Sampling Step, Classifier-Free Guidance, Flow Matching |
+| **Reinforcement Learning** | `reinforcement-learning.ts` | Q-learning to PPO, plus RLHF reward model, DPO, KL penalty, PPO-RLHF |
+| **Post-training & Efficiency** | `post-training.ts` | GRPO, Int8 Quantization |
 
 ### Part 5: Capstone
 | Section | File | Problems |
 |---------|------|----------|
-| **E2E Implementations** | `e2e-implementations.ts` | 2-Layer MLP (full backprop), Transformer Encoder, VAE, Diffusion Model, CNN |
+| **E2E Implementations** | `e2e-implementations.ts` | 2-Layer MLP (full backprop), Transformer Encoder, VAE, Diffusion Model, CNN, Mini GPT, Tiny ViT |
 
 ## Commands
 
@@ -393,7 +408,7 @@ This ensures users know exactly what to store and in what order, which is critic
    - Add to allProblems: `...newSectionProblems,`
    - Add to exports: `newSectionProblems,`
 
-4. **Update test expectations** in `src/__tests__/problems.test.ts`:
+4. **Update test expectations** in `src/__tests__/problems.test.ts` (currently 21):
    - Update sections count: `expect(sections.length).toBe(N)` where N is new total
 
 5. **Verify markdown rendering**:

@@ -23,7 +23,7 @@ Reuse each demonstration on X and in a relevant community only where its current
 
 > I built ML Grind to practice machine learning by implementing it.
 >
-> It runs real Python and NumPy in your browser: no installation or signup. There are 110 exercises across 16 sections, from array operations to attention, LLM decoding, and reinforcement learning.
+> It runs real Python and NumPy in your browser: no installation or signup. There are 141 exercises across 21 sections, from array operations to attention, LLM decoding, and reinforcement learning.
 >
 > Start with a five-minute problem, or follow the seven-day challenge: https://mlgrind.github.io/challenge
 >
