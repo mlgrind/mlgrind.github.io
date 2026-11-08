@@ -1,7 +1,6 @@
 ---
 section: transformers
 title: Attention and Transformers
-replica: default
 target_minutes: 4
 caption_replace: { "d k": "d_k" }
 chapters:
