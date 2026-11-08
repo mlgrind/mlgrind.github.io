@@ -6,6 +6,7 @@ import { sections } from '../data/sections';
 import { getProblemsBySection } from '../data/problems';
 import { useProgress } from '../context/ProgressContext';
 import SEO from '../components/SEO/SEO';
+import { CompanyLogoStack } from '../components/CompanyTags/CompanyTags';
 
 export default function SectionPage() {
   const { sectionId } = useParams<{ sectionId: string }>();
@@ -201,11 +202,11 @@ export default function SectionPage() {
                   {problemProgress.status === 'completed' ? '✓' : index + 1}
                 </div>
 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-gray-900 dark:text-dark-100 font-medium group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors">
                     {problem.title}
                   </h3>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                     <span
                       className={`text-xs px-2 py-0.5 rounded ${
                         problem.difficulty === 'easy'
@@ -232,6 +233,7 @@ export default function SectionPage() {
                         </span>
                       )
                     )}
+                    <CompanyLogoStack problemId={problem.id} />
                   </div>
                 </div>
 
