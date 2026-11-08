@@ -7,18 +7,23 @@ import { LanguageVariant } from '../../../types';
  */
 export const einsumPyTorch: Record<string, LanguageVariant> = {
   'einsum-basics': {
-    note: 'torch.einsum takes the same subscript strings as np.einsum.',
+    note: 'torch.einsum takes the same subscript strings as np.einsum. Compute every value with torch.einsum.',
     starterCode: `import torch
 
 def einsum_basics(arr: torch.Tensor) -> dict:
     """
-    Perform basic einsum operations.
+    Single-matrix operations with torch.einsum.
 
     Args:
-        arr: 2D input tensor
+        arr: 2D tensor of shape (m, n)
 
     Returns:
-        Dictionary with einsum results
+        dict with keys:
+            'sum_all':   sum of all elements (0-d tensor)
+            'row_sum':   row sums, shape (m,)
+            'col_sum':   column sums, shape (n,)
+            'transpose': arr transposed, shape (n, m)
+            'diagonal':  diagonal, shape (m,), if arr is square, else None
     """
     # Your code here
     pass
@@ -26,12 +31,19 @@ def einsum_basics(arr: torch.Tensor) -> dict:
     solution: `import torch
 
 def einsum_basics(arr: torch.Tensor) -> dict:
+    """
+    Returns:
+        dict with 'sum_all', 'row_sum', 'col_sum', 'transpose' and
+        'diagonal' (None when arr is not square).
+    """
+    is_square = arr.shape[0] == arr.shape[1]
     return {
-        'sum_all': torch.einsum('ij->', arr),
-        'row_sum': torch.einsum('ij->i', arr),
-        'col_sum': torch.einsum('ij->j', arr),
-        'transpose': torch.einsum('ij->ji', arr),
-        'diagonal': torch.einsum('ii->i', arr) if arr.shape[0] == arr.shape[1] else None,
+        'sum_all': torch.einsum('ij->', arr),      # no letters kept: sum everything
+        'row_sum': torch.einsum('ij->i', arr),     # keep i, sum over j
+        'col_sum': torch.einsum('ij->j', arr),     # keep j, sum over i
+        'transpose': torch.einsum('ij->ji', arr),  # keep both, swapped
+        # A repeated letter walks the diagonal; it needs equal dim sizes
+        'diagonal': torch.einsum('ii->i', arr) if is_square else None,
     }
 `,
     testCases: [
@@ -72,20 +84,20 @@ def einsum_basics(arr: torch.Tensor) -> dict:
       },
     ],
     hints: [
-      "'ij->' sums all elements",
-      "'ij->i' sums each row",
-      "'ij->ji' transposes",
-      "'ii->i' extracts the diagonal (square matrices only)",
+      'For each output, ask: which dims survive? Those letters go after the arrow; the rest are summed away.',
+      "Label arr's dims 'ij'. Keep nothing for the total, keep i for row sums, keep j for column sums, and write the kept letters in swapped order for the transpose.",
+      "torch.einsum('ij->', arr), 'ij->i', 'ij->j', 'ij->ji', and 'ii->i' for the diagonal.",
+      "Pitfall: 'ij->i' keeps i, so it sums over j and gives one value per row. And 'ii->i' raises an error on a non-square tensor: check arr.shape first and return None.",
     ],
   },
 
   'einsum-matrix-ops': {
-    note: 'Use torch.einsum for every entry.',
+    note: 'Use torch.einsum for every entry (not @, torch.outer or torch.trace).',
     starterCode: `import torch
 
 def einsum_matrix_ops(A: torch.Tensor, B: torch.Tensor, v: torch.Tensor) -> dict:
     """
-    Perform matrix operations using einsum.
+    Two-operand products with torch.einsum.
 
     Args:
         A: Matrix of shape (m, k)
@@ -93,7 +105,13 @@ def einsum_matrix_ops(A: torch.Tensor, B: torch.Tensor, v: torch.Tensor) -> dict
         v: Vector of shape (k,)
 
     Returns:
-        Dictionary with operation results
+        dict with keys:
+            'matmul':        A @ B, shape (m, n)
+            'matvec':        A @ v, shape (m,)
+            'outer_product': outer(v, v), shape (k, k)
+            'hadamard':      A * A, shape (m, k)
+            'frobenius':     (A * A).sum(), 0-d tensor
+            'trace':         trace of A if square, else None
     """
     # Your code here
     pass
@@ -101,13 +119,19 @@ def einsum_matrix_ops(A: torch.Tensor, B: torch.Tensor, v: torch.Tensor) -> dict
     solution: `import torch
 
 def einsum_matrix_ops(A: torch.Tensor, B: torch.Tensor, v: torch.Tensor) -> dict:
+    """
+    Returns:
+        dict with 'matmul', 'matvec', 'outer_product', 'hadamard',
+        'frobenius' and 'trace' (None when A is not square).
+    """
+    is_square = A.shape[0] == A.shape[1]
     return {
-        'matmul': torch.einsum('ik,kj->ij', A, B),
+        'matmul': torch.einsum('ik,kj->ij', A, B),       # k shared and dropped: contracted
         'matvec': torch.einsum('ij,j->i', A, v),
-        'outer_product': torch.einsum('i,j->ij', v, v),
-        'hadamard': torch.einsum('ij,ij->ij', A, A),  # A * A
-        'frobenius': torch.einsum('ij,ij->', A, A),   # (A * A).sum()
-        'trace': torch.einsum('ii->', A) if A.shape[0] == A.shape[1] else None,
+        'outer_product': torch.einsum('i,j->ij', v, v),  # no shared letter: outer product
+        'hadamard': torch.einsum('ij,ij->ij', A, A),     # shared and kept: elementwise
+        'frobenius': torch.einsum('ij,ij->', A, A),      # elementwise, then sum everything
+        'trace': torch.einsum('ii->', A) if is_square else None,
     }
 `,
     testCases: [
@@ -148,28 +172,32 @@ def einsum_matrix_ops(A: torch.Tensor, B: torch.Tensor, v: torch.Tensor) -> dict
       },
     ],
     hints: [
-      "'ik,kj->ij' contracts over k (matrix multiply)",
-      "'ij,j->i' contracts the vector with the columns",
-      "'i,j->ij' creates an outer product (no contraction)",
+      'Write down the shape of each result. Which letters must appear after the arrow, and which are shared but disappear?',
+      'A shared letter missing from the output is multiplied and summed (contracted); a shared letter kept in the output is just multiplied elementwise; operands with no letter in common give an outer product.',
+      "'ik,kj->ij' (matmul), 'ij,j->i' (matvec), 'i,j->ij' (outer), 'ij,ij->ij' (Hadamard), 'ij,ij->' (Frobenius) and 'ii->' (trace).",
+      "Pitfall: 'ij,ij->ij' keeps both letters, so nothing is summed. torch.einsum also needs all operands to share a dtype: don't mix int and float tensors.",
     ],
   },
 
   'einsum-batch-ops': {
-    note: 'Use torch.einsum for the two batched products; F.softmax(x, dim=-1) is fine for the softmax.',
+    note: "Use torch.einsum for the two batched products (not @ or torch.bmm); F.softmax(x, dim=-1) is fine for the softmax. Don't use F.scaled_dot_product_attention.",
     starterCode: `import torch
 import torch.nn.functional as F
 
 def einsum_batch_ops(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> dict:
     """
-    Perform batch operations using einsum.
+    Batched scaled dot-product attention with torch.einsum.
 
     Args:
-        Q: Queries of shape (batch, seq_q, dim)
-        K: Keys of shape (batch, seq_k, dim)
-        V: Values of shape (batch, seq_k, dim_v)
+        Q: Queries of shape (batch, seq_q, d)
+        K: Keys of shape (batch, seq_k, d)
+        V: Values of shape (batch, seq_k, d_v)
 
     Returns:
-        Dictionary with batch operation results
+        dict with keys:
+            'scores':            Q @ K^T per batch (unscaled), shape (batch, seq_q, seq_k)
+            'attention_weights': softmax(scores / sqrt(d)) over keys, shape (batch, seq_q, seq_k)
+            'output':            weights @ V per batch, shape (batch, seq_q, d_v)
     """
     # Your code here
     pass
@@ -179,6 +207,11 @@ import torch
 import torch.nn.functional as F
 
 def einsum_batch_ops(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> dict:
+    """
+    Returns:
+        dict with 'scores' (batch, seq_q, seq_k), 'attention_weights'
+        (batch, seq_q, seq_k) and 'output' (batch, seq_q, d_v).
+    """
     # Attention scores: Q @ K.T for each batch -> (batch, seq_q, seq_k)
     scores = torch.einsum('bqd,bkd->bqk', Q, K)
 
@@ -211,6 +244,13 @@ def einsum_batch_ops(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> dict:
         hidden: false,
       },
       {
+        id: '5',
+        description: 'Raw scores of a small example',
+        input: 'einsum_batch_ops(torch.tensor([[[1., 0.], [0., 1.]]]), torch.tensor([[[1., 1.], [2., 0.], [0., 3.]]]), torch.tensor([[[1., 0.], [0., 1.], [1., 1.]]]))["scores"]',
+        expected: '[[[1.0, 2.0, 0.0], [1.0, 0.0, 3.0]]]',
+        hidden: false,
+      },
+      {
         id: '3',
         description: 'Scores equal Q @ K^T',
         input: `(lambda: (
@@ -239,9 +279,10 @@ def einsum_batch_ops(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> dict:
       },
     ],
     hints: [
-      "'bqd,bkd->bqk' computes Q @ K.T for each batch",
-      "'bqk,bkv->bqv' applies the attention weights to the values",
-      'b is the batch dimension, preserved in the output',
+      'The batch letter b must appear in every operand and in the output, so each batch element is handled independently.',
+      'Three steps: an einsum for the scores (contract the feature dim d), a softmax over the key dim, then an einsum that contracts the key dim k with V.',
+      "torch.einsum('bqd,bkd->bqk', Q, K), then F.softmax(scores / math.sqrt(d), dim=-1), then torch.einsum('bqk,bkv->bqv', weights, V).",
+      'Pitfall: return the scores before scaling, but scale by 1/sqrt(d) before the softmax. And normalise over the keys (dim=-1), not the queries.',
     ],
   },
 
@@ -254,16 +295,16 @@ import torch.nn.functional as F
 def multi_head_attention_einsum(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor,
                                  num_heads: int) -> torch.Tensor:
     """
-    Multi-head attention using einsum.
+    Multi-head scaled dot-product attention using einsum (no projections).
 
     Args:
         Q: Queries (batch, seq_q, d_model)
         K: Keys (batch, seq_k, d_model)
         V: Values (batch, seq_k, d_model)
-        num_heads: Number of attention heads
+        num_heads: Number of heads; divides d_model
 
     Returns:
-        output: (batch, seq_q, d_model)
+        output: (batch, seq_q, d_model); channels h*d_k:(h+1)*d_k come from head h
     """
     batch, seq_q, d_model = Q.shape
     seq_k = K.shape[1]
@@ -282,7 +323,7 @@ def multi_head_attention_einsum(Q: torch.Tensor, K: torch.Tensor, V: torch.Tenso
     seq_k = K.shape[1]
     d_k = d_model // num_heads
 
-    # Split heads: (batch, seq, num_heads, d_k)
+    # Split heads: (batch, seq, num_heads, d_k); head h owns channels h*d_k:(h+1)*d_k
     Q = Q.reshape(batch, seq_q, num_heads, d_k)
     K = K.reshape(batch, seq_k, num_heads, d_k)
     V = V.reshape(batch, seq_k, num_heads, d_k)
@@ -320,6 +361,13 @@ def multi_head_attention_einsum(Q: torch.Tensor, K: torch.Tensor, V: torch.Tenso
         hidden: false,
       },
       {
+        id: '5',
+        description: 'Two heads on a 2-channel example',
+        input: '(lambda X: bool(torch.allclose(multi_head_attention_einsum(X, X, X, 2), torch.tensor([[[0.7311, 0.5], [0.5, 0.7311]]]), atol=1e-4)))(torch.tensor([[[1., 0.], [0., 1.]]]))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
         id: '3',
         description: 'Output is finite',
         input: 'bool(not torch.isnan(multi_head_attention_einsum(torch.ones(2, 4, 64), torch.ones(2, 4, 64), torch.ones(2, 4, 64), 8)).any())',
@@ -343,10 +391,10 @@ def multi_head_attention_einsum(Q: torch.Tensor, K: torch.Tensor, V: torch.Tenso
       },
     ],
     hints: [
-      'Reshape Q, K, V to (batch, seq, num_heads, d_k)',
-      "Use 'bqhd,bkhd->bhqk' for the attention scores per head",
-      "Use 'bhqk,bkhd->bqhd' for the weighted values",
-      'Reshape back to (batch, seq, d_model)',
+      'Each head is ordinary attention on its own d_k-wide slice of the features. Reshaping exposes that slice as a separate dim.',
+      'Reshape Q, K, V to (batch, seq, num_heads, d_k); compute per-head scores; softmax over keys; weight the values; reshape back to (batch, seq_q, d_model).',
+      "torch.einsum('bqhd,bkhd->bhqk', Q, K) / math.sqrt(d_k), F.softmax(..., dim=-1), then torch.einsum('bhqk,bkhd->bqhd', A, V). Putting q before h in the output means the final reshape needs no permute.",
+      'Pitfall: scale by sqrt(d_k), not sqrt(d_model). If you produce (batch, heads, seq_q, d_k) and reshape it directly to (batch, seq_q, d_model), heads and positions get mixed silently (and .view fails on a permuted tensor).',
     ],
   },
 
@@ -359,11 +407,14 @@ def einsum_equivalence(A: torch.Tensor, B: torch.Tensor) -> dict:
     Compare einsum with traditional tensor operations.
 
     Args:
-        A: First matrix (m, k)
-        B: Second matrix (k, n)
+        A: First float matrix (m, k)
+        B: Second float matrix (k, n)
 
     Returns:
-        Dictionary with 'einsum' and 'numpy' (plain torch op) results for comparison
+        dict with keys:
+            'results':   {'sum', 'row_sum', 'matmul', 'transpose', 'hadamard_sum'},
+                         each mapping to {'einsum': ..., 'numpy': <plain torch op>}
+            'all_match': Python bool, True if every pair is torch.allclose
     """
     # Your code here
     pass
@@ -433,8 +484,10 @@ def einsum_equivalence(A: torch.Tensor, B: torch.Tensor) -> dict:
       },
     ],
     hints: [
-      'Use torch.allclose() to compare floating point tensors',
-      "Remember 'ik,kj->ij' is matrix multiplication",
+      'Build one small dict per operation holding both versions, then check them all at the end.',
+      "Use the table in the description: the einsum string on one side, the familiar op on the other (torch.sum, torch.sum(A, dim=1), A @ B, A.T, torch.sum(A * A)). 'hadamard_sum' uses A twice.",
+      "all_match = all(torch.allclose(r['einsum'], r['numpy']) for r in results.values()) gives a Python bool.",
+      "Pitfall: keep the key name 'numpy' even though the values are torch tensors, and compare with torch.allclose rather than ==.",
     ],
   },
 };
