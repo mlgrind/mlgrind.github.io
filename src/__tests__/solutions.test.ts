@@ -4,6 +4,10 @@ import { testProgram, functionNameOf } from "../lib/pythonProgram";
 import type { Problem, TestResult } from "../types";
 import { findPython, runPrograms } from "./nativePython";
 
+// Each native run executes the whole curriculum in one python3 process, which
+// takes several seconds when the other test files run in parallel.
+const NATIVE_TIMEOUT = 60_000;
+
 const python = findPython();
 
 function failuresOf(problems: Problem[], results: TestResult[][]): string[] {
@@ -31,7 +35,7 @@ describe.skipIf(!python)(
       expect(results.flat()).toHaveLength(
         allProblems.reduce((count, p) => count + p.testCases.length, 0),
       );
-    });
+    }, NATIVE_TIMEOUT);
   },
 );
 
@@ -85,7 +89,7 @@ describe.skipIf(!python)("PyTorch track solutions under the torch shim", () => {
     expect(results.flat()).toHaveLength(
       tracked.reduce((count, p) => count + p.pytorch!.testCases.length, 0),
     );
-  });
+  }, NATIVE_TIMEOUT);
 
   it("no PyTorch starter code passes its tests", () => {
     const results = runPrograms(python!, programs("starterCode"), "shim");
@@ -93,5 +97,5 @@ describe.skipIf(!python)("PyTorch track solutions under the torch shim", () => {
       .filter((_, i) => results[i].every((r) => r.passed))
       .map((p) => p.id);
     expect(passing).toEqual([]);
-  });
+  }, NATIVE_TIMEOUT);
 });
