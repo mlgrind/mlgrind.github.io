@@ -77,7 +77,6 @@ def precision_recall(y_true: torch.Tensor, y_pred: torch.Tensor) -> tuple:
       'Use .item() to turn the counts into Python ints before dividing.',
     ],
   },
-
   'cross-validation': {
     note: 'Slice torch.arange(n_samples) into folds and join the rest with torch.cat. Return plain Python lists (.tolist()).',
     starterCode: `import torch
@@ -153,7 +152,6 @@ def kfold_indices(n_samples: int, k: int) -> list:
       'torch.cat([indices[:start], indices[start + size:]]) is the training set.',
     ],
   },
-
   'confusion-matrix': {
     note: 'Compare tensors element-wise, convert the boolean result to float, and take the mean. Return a Python float.',
     starterCode: `import torch
@@ -394,6 +392,119 @@ def expected_calibration_error(probs, labels, n_bins=10):
       'confidence, prediction = probs.max(dim=1)',
       'bins = (confidence.unsqueeze(1) > inner_edges.unsqueeze(0)).sum(dim=1) implements the (lo, hi] rule.',
       'torch.bincount(bins, minlength=M) for counts; a (n, M) one-hot of the bins gives per-bin sums by a column sum.',
+    ],
+  },
+  'pr-curve-thresholds': {
+    note: "Return Python lists and floats (use .tolist() / .item()). Comparing each score with every threshold by broadcasting is fine at this size. Don't use sklearn or torchmetrics.",
+    starterCode: `import torch
+
+def pr_curve(y_true, scores):
+    """
+    Precision, recall and F1 at every distinct score threshold.
+
+    Args:
+        y_true: Binary labels (0/1), int64 tensor (n,)
+        scores: Classifier scores, float tensor (n,); predict positive when score >= threshold
+
+    Returns:
+        dict with 'thresholds' (descending), 'precision', 'recall', 'f1' (lists of floats),
+        'best_threshold' (float) and 'best_f1' (float)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def pr_curve(y_true, scores):
+    y = y_true.long()
+    thresholds = torch.unique(scores).flip(0)            # distinct scores, descending
+
+    # pred[i, j]: sample j is predicted positive at threshold i
+    pred = scores[None, :] >= thresholds[:, None]
+    pos = (y == 1)[None, :]
+    tp = (pred & pos).sum(dim=1).float()
+    fp = (pred & ~pos).sum(dim=1).float()
+    n_pos = int(y.sum().item())
+    fn = n_pos - tp
+
+    precision = tp / (tp + fp)
+    recall = tp / n_pos if n_pos > 0 else torch.ones_like(tp)
+    f1 = 2 * tp / (2 * tp + fp + fn)
+
+    best = int(torch.argmax(f1).item())  # first maximum = highest threshold
+    return {
+        'thresholds': thresholds.tolist(),
+        'precision': precision.tolist(),
+        'recall': recall.tolist(),
+        'f1': f1.tolist(),
+        'best_threshold': thresholds[best].item(),
+        'best_f1': f1[best].item(),
+    }
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Distinct thresholds, descending',
+        input: '[round(v, 4) for v in pr_curve(torch.tensor([1, 0, 1, 0, 1, 0, 1, 0]), torch.tensor([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["thresholds"]]',
+        expected: '[0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.1]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Precision at each threshold',
+        input: '[round(v, 4) for v in pr_curve(torch.tensor([1, 0, 1, 0, 1, 0, 1, 0]), torch.tensor([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["precision"]]',
+        expected: '[1.0, 0.5, 0.5, 0.6, 0.5, 0.5714, 0.5]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Recall at each threshold',
+        input: '[round(v, 4) for v in pr_curve(torch.tensor([1, 0, 1, 0, 1, 0, 1, 0]), torch.tensor([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["recall"]]',
+        expected: '[0.25, 0.25, 0.5, 0.75, 0.75, 1.0, 1.0]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'F1 at each threshold',
+        input: '[round(v, 4) for v in pr_curve(torch.tensor([1, 0, 1, 0, 1, 0, 1, 0]), torch.tensor([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["f1"]]',
+        expected: '[0.4, 0.3333, 0.5, 0.6667, 0.6, 0.7273, 0.6667]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Best threshold and F1',
+        input: '(lambda: (r := pr_curve(torch.tensor([1, 0, 1, 0, 1, 0, 1, 0]), torch.tensor([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1])), (round(r["best_threshold"], 4), round(r["best_f1"], 4)))[-1])()',
+        expected: '(0.3, 0.7273)',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'All scores tied: one threshold',
+        input: '(lambda: (r := pr_curve(torch.tensor([1, 0, 0, 1, 0]), torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5])), (r["thresholds"], [round(v, 4) for v in r["precision"]], r["recall"]))[-1])()',
+        expected: '([0.5], [0.4], [1.0])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'No positives: recall 1.0, F1 0.0, highest threshold wins',
+        input: '(lambda: (r := pr_curve(torch.tensor([0, 0, 0]), torch.tensor([0.2, 0.9, 0.5])), (r["recall"], r["f1"], round(r["best_threshold"], 4)))[-1])()',
+        expected: '([1.0, 1.0, 1.0], [0.0, 0.0, 0.0], 0.9)',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'F1 ties go to the higher threshold',
+        input: '(lambda: (r := pr_curve(torch.tensor([1, 0, 1, 0, 0, 1]), torch.tensor([0.9, 0.8, 0.7, 0.6, 0.5, 0.4])), (round(r["best_threshold"], 4), round(r["best_f1"], 4)))[-1])()',
+        expected: '(0.7, 0.6667)',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Random scores with many ties',
+        input: '(lambda: (y := torch.from_numpy((np.random.rand(50) < 0.4).astype(int)), s := torch.from_numpy(np.round(np.random.rand(50), 1)).float(), r := pr_curve(y, s), (len(r["thresholds"]), round(r["best_threshold"], 1), round(r["best_f1"], 4)))[-1])()',
+        expected: '(11, 0.2, 0.4706)',
+        hidden: true,
+      },
     ],
   },
 };

@@ -356,6 +356,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mlgrind.github.io/problem/data-preprocessing/leakage-safe-imputation</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mlgrind.github.io/problem/supervised-learning/logistic-regression</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -411,6 +416,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://mlgrind.github.io/problem/unsupervised-learning/kmeans-clustering</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -427,6 +437,11 @@
   </url>
   <url>
     <loc>https://mlgrind.github.io/problem/unsupervised-learning/dbscan</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -452,6 +467,11 @@
   </url>
   <url>
     <loc>https://mlgrind.github.io/problem/model-evaluation/calibration-ece</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/model-evaluation/pr-curve-thresholds</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -492,6 +512,11 @@
   </url>
   <url>
     <loc>https://mlgrind.github.io/problem/neural-networks/dropout</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -617,6 +642,16 @@
   </url>
   <url>
     <loc>https://mlgrind.github.io/problem/transformers/sliding-window-attention</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/transformers/attention-backward</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/transformers/longest-match-tokenizer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -857,6 +892,11 @@
   </url>
   <url>
     <loc>https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mlgrind.github.io/problem/e2e-implementations/transformer-bug-hunt</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

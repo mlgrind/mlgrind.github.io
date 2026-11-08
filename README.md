@@ -6,7 +6,7 @@ Practice machine learning by implementing algorithms in real Python, directly in
 
 ![ML Grind: real Python, instant feedback, no setup](https://mlgrind.github.io/og-image.png)
 
-The curriculum contains **141 exercises across 21 sections**, covering NumPy, einsum, classical ML, neural networks, optimization, computer vision, sequence models, transformers, LLM decoding and internals, retrieval, generative models, reinforcement learning, post-training, and end-to-end implementations. Every problem can also be solved in PyTorch: a NumPy | PyTorch toggle swaps in a PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build; see [docs/TORCH_TRACK.md](docs/TORCH_TRACK.md)).
+The curriculum contains **149 exercises across 21 sections**, covering NumPy, einsum, classical ML, neural networks, optimization, computer vision, sequence models, transformers, LLM decoding and internals, retrieval, generative models, reinforcement learning, post-training, and end-to-end implementations. Every problem can also be solved in PyTorch: a NumPy | PyTorch toggle swaps in a PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build; see [docs/TORCH_TRACK.md](docs/TORCH_TRACK.md)).
 
 - Real CPython and NumPy via Pyodide, isolated in a Web Worker with Stop and a 30-second execution limit.
 - Monaco editor, progressive hints, reference solutions, and numerical test feedback.

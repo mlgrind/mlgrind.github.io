@@ -239,7 +239,7 @@ Garbage in, garbage out. Proper preprocessing can:
 
 Let's practice these essential skills!
     `,
-    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split'],
+    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split', 'leakage-safe-imputation'],
   },
 
   // ==========================================
@@ -295,7 +295,7 @@ Interviewers often ask you to:
 
 Let's build these algorithms!
     `,
-    problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm', 'knn-classifier', 'naive-bayes', 'ridge-lasso', 'gradient-boosting'],
+    problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm', 'knn-classifier', 'naive-bayes', 'ridge-lasso', 'gradient-boosting', 'decision-tree-bagging'],
   },
   {
     id: 'unsupervised-learning',
@@ -347,7 +347,7 @@ Unsupervised learning finds patterns in unlabeled data.
 
 Let's implement these algorithms!
     `,
-    problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan'],
+    problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan', 'kmeans-full'],
   },
   {
     id: 'model-evaluation',
@@ -390,7 +390,7 @@ Building a model is only half the job. You need to evaluate it properly.
 
 Let's practice evaluation!
     `,
-    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece'],
+    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece', 'pr-curve-thresholds'],
   },
 
   // ==========================================
@@ -468,7 +468,7 @@ Neural networks are the foundation of deep learning. Understanding the math behi
 
 Let's build neural networks from scratch!
     `,
-    problems: ['cross-entropy-loss', 'mlp-forward-backward', 'weight-init', 'batch-norm', 'dropout'],
+    problems: ['cross-entropy-loss', 'mlp-forward-backward', 'weight-init', 'batch-norm', 'dropout', 'masked-label-smoothing-ce'],
   },
   {
     id: 'optimization',
@@ -715,7 +715,7 @@ Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
 
 Let's build transformers from scratch!
     `,
-    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention'],
+    problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention', 'attention-backward', 'longest-match-tokenizer'],
   },
   {
     id: 'llm-generation',
@@ -1169,6 +1169,6 @@ Image classifier with:
 
 Build these models to truly understand deep learning!
     `,
-    problems: ['e2e-mlp', 'e2e-transformer', 'e2e-vae', 'e2e-vqvae', 'e2e-diffusion', 'e2e-cnn', 'e2e-mini-gpt', 'e2e-vit-classifier'],
+    problems: ['e2e-mlp', 'e2e-transformer', 'e2e-vae', 'e2e-vqvae', 'e2e-diffusion', 'e2e-cnn', 'e2e-mini-gpt', 'e2e-vit-classifier', 'transformer-bug-hunt'],
   },
 ];

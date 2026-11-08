@@ -158,7 +158,6 @@ def mlp_backward(Y, output, cache):
       'You can check your result yourself: build the loss from output, call loss.backward(), and compare with W1.grad',
     ],
   },
-
   'cross-entropy-loss': {
     note: "Implement with tensor ops (torch.log, sum). Don't use F.cross_entropy, F.nll_loss or nn.CrossEntropyLoss.",
     starterCode: `import torch
@@ -227,7 +226,6 @@ def cross_entropy_loss(Y_pred, Y_true):
       'Return a Python float: round(loss.item(), 4)',
     ],
   },
-
   'weight-init': {
     note: "Scale torch.randn yourself. Don't use nn.init.xavier_normal_ or nn.init.kaiming_normal_ (and note that torch reads fan_in from dim 1 of a weight).",
     starterCode: `import torch
@@ -300,7 +298,6 @@ def initialize_weights(n_in, n_out, method='xavier'):
       'Return W.std().item() rounded to 4 decimals',
     ],
   },
-
   'batch-norm': {
     note: "Implement with tensor ops (mean, var(unbiased=False)). Don't use F.batch_norm or nn.BatchNorm1d.",
     starterCode: `import torch
@@ -465,6 +462,109 @@ def dropout_forward(X: torch.Tensor, keep_prob: float = 0.5, training: bool = Tr
       'In training: mask = (torch.rand_like(X) < keep_prob).float()',
       'Scale the mask by 1 / keep_prob (inverted dropout), then out = X * mask',
       'In inference: return X, None',
+    ],
+  },
+  'masked-label-smoothing-ce': {
+    note: "Implement it with tensor ops (torch.logsumexp is fine); don't call F.cross_entropy, nn.CrossEntropyLoss or F.nll_loss. The hidden tests compare against F.cross_entropy(..., ignore_index=..., label_smoothing=...).",
+    starterCode: `import torch
+
+def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
+    """
+    Token-level cross-entropy with label smoothing and a padding mask.
+
+    Args:
+        logits: Unnormalized scores, float tensor (N, V) or (B, T, V)
+        targets: Class ids, int64 tensor (N,) or (B, T); ignore_index marks padding
+        ignore_index: Target value whose tokens are excluded from the loss
+        smoothing: Label smoothing eps in [0, 1]
+
+    Returns:
+        Mean loss over non-ignored tokens (float); nan if every token is ignored
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
+    V = logits.shape[-1]
+    logits = logits.reshape(-1, V)
+    targets = targets.reshape(-1)
+
+    keep = targets != ignore_index
+    if not keep.any():
+        return float('nan')
+    z, y = logits[keep], targets[keep]
+
+    log_p = z - torch.logsumexp(z, dim=-1, keepdim=True)    # stable log-softmax
+    nll = -log_p[torch.arange(len(y)), y]                   # -log p_y
+    uniform = -log_p.mean(dim=-1)                           # mean_c -log p_c
+    loss = (1 - smoothing) * nll + smoothing * uniform
+    return loss.mean().item()
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'No smoothing, one token',
+        input: 'round(masked_label_smoothing_ce(torch.tensor([[2.0, 1.0, 0.1]]), torch.tensor([0])), 4)',
+        expected: '0.417',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Padding token is ignored',
+        input: 'round(masked_label_smoothing_ce(torch.tensor([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), torch.tensor([0, 1, -100, 2])), 4)',
+        expected: '0.2084',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Smoothing 0.1 with padding',
+        input: 'round(masked_label_smoothing_ce(torch.tensor([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), torch.tensor([0, 1, -100, 2]), smoothing=0.1), 4)',
+        expected: '0.3906',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Matches F.cross_entropy on (B, T, V) with padding',
+        input: `(lambda: (
+    L := torch.from_numpy(np.random.randn(3, 5, 7) * 2).float(),
+    T := torch.from_numpy(np.random.randint(0, 7, size=(3, 5))),
+    T := torch.where(torch.from_numpy(np.random.rand(3, 5) < 0.3), torch.full((3, 5), -100), T),
+    ours := masked_label_smoothing_ce(L, T, smoothing=0.1),
+    ref := torch.nn.functional.cross_entropy(L.reshape(-1, 7), T.reshape(-1), ignore_index=-100, label_smoothing=0.1).item(),
+    bool(abs(ours - ref) < 1e-5)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Matches F.cross_entropy with pad id 0',
+        input: `(lambda: (
+    L := torch.from_numpy(np.random.randn(6, 4) * 3).float(),
+    T := torch.tensor([0, 3, 0, 1, 2, 0]),
+    ours := masked_label_smoothing_ce(L, T, ignore_index=0, smoothing=0.25),
+    ref := torch.nn.functional.cross_entropy(L, T, ignore_index=0, label_smoothing=0.25).item(),
+    bool(abs(ours - ref) < 1e-5)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Every token ignored gives nan',
+        input: 'bool(np.isnan(masked_label_smoothing_ce(torch.from_numpy(np.random.randn(3, 4)).float(), torch.tensor([-100, -100, -100]))))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Large logits stay finite',
+        input: 'round(masked_label_smoothing_ce(torch.tensor([[1000.0, 0.0, -1000.0], [0.0, 500.0, 0.0]]), torch.tensor([0, 2]), smoothing=0.1), 4)',
+        expected: '291.6667',
+        hidden: true,
+      },
     ],
   },
 };

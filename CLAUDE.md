@@ -74,7 +74,7 @@ src/
 │   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
 │   ├── sections.ts          # Section definitions with intros (21 sections)
-│   └── problems/            # Problem definitions by section (141 problems)
+│   └── problems/            # Problem definitions by section (149 problems)
 │       ├── pytorch/         # PyTorch tracks, one file per section (Record<problemId, LanguageVariant>)
 │       ├── index.ts         # Exports all problems (attaches PyTorch tracks as problem.pytorch)
 │       ├── numpy-fundamentals.ts   # Part 1: Foundations
@@ -118,7 +118,7 @@ src/
 
 ### Data Layer
 - **`src/data/sections.ts`** - Defines the 21 learning sections organized in 5 parts (Foundations → Data → Classical ML → Deep Learning → Capstone)
-- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (141 problems total)
+- **`src/data/problems/*.ts`** - Problem definitions with descriptions, starter code, test cases, hints, solutions (149 problems total)
 
 ### Authentication & Sync
 - **`src/lib/firebase.ts`** - Initializes Firebase app from `VITE_FIREBASE_*` env vars. Exports `auth`, `db` (Firestore), `googleProvider`, and `isConfigured` boolean. Gracefully no-ops when env vars are missing.

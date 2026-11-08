@@ -1032,4 +1032,374 @@ def sliding_window_mask(seq_len, window_size):
     return np.where(allowed, 0.0, float('-inf'))
 `,
   },
+  {
+    id: 'attention-backward',
+    title: 'Attention Backward Pass (dQ, dK, dV)',
+    section: 'transformers',
+    difficulty: 'hard',
+    description: `
+## Attention Backward Pass
+
+Implement single-head scaled dot-product attention **and its backward pass by hand**: given the upstream gradient \`dOut = dL/dOut\`, return \`dQ\`, \`dK\` and \`dV\`. This is the computation that autograd (and FlashAttention's backward kernel) performs for every attention layer.
+
+### Forward
+\`\`\`
+S   = Q @ K.T / sqrt(d)          # (n, m), d = Q.shape[-1]
+S   = S masked with -inf where j > i   (only if causal=True; then n == m)
+P   = softmax(S, axis=-1)         # each row sums to 1
+Out = P @ V                       # (n, d_v)
+\`\`\`
+Shapes: \`Q (n, d)\`, \`K (m, d)\`, \`V (m, d_v)\`, \`dOut (n, d_v)\`.
+
+### Backward
+Work backwards through each line:
+\`\`\`
+dV = P.T @ dOut
+dP = dOut @ V.T
+dS = P * (dP - rowsum(dP * P))    # softmax Jacobian-vector product, row by row
+dQ = dS @ K / sqrt(d)
+dK = dS.T @ Q / sqrt(d)
+\`\`\`
+Masked positions have \`P = 0\`, so they get \`dS = 0\` automatically: no special case is needed in the backward pass. Use a numerically stable softmax (subtract the row max).
+
+### Expected Return Format
+- \`attention_forward(Q, K, V, causal=False)\`: \`Out\`, array \`(n, d_v)\`
+- \`attention_backward(Q, K, V, dOut, causal=False)\`: tuple \`(dQ, dK, dV)\` with the shapes of \`Q\`, \`K\`, \`V\`
+
+The hidden tests compare your gradients with **finite differences** of \`L = sum(Out * dOut)\`.
+`,
+    examples: [
+      {
+        input: 'attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))',
+        output: 'array([[3., 4.], [3., 4.]])',
+        explanation: 'All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.',
+      },
+      {
+        input: 'attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]',
+        output: 'array of shape (3, 2), every entry 2/3',
+        explanation: 'dV = P.T @ dOut, and each column of P sums to 2/3.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def attention_forward(Q, K, V, causal=False):
+    """
+    Scaled dot-product attention.
+
+    Args:
+        Q: Queries (n, d)
+        K: Keys (m, d)
+        V: Values (m, d_v)
+        causal: If True, query i may only attend to keys j <= i (n == m)
+
+    Returns:
+        Out: (n, d_v)
+    """
+    # Your code here
+    pass
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    """
+    Gradients of attention with respect to Q, K and V.
+
+    Args:
+        Q, K, V: As in attention_forward
+        dOut: Upstream gradient dL/dOut, shape (n, d_v)
+        causal: Same flag as in the forward pass
+
+    Returns:
+        (dQ, dK, dV) with the shapes of Q, K, V
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Forward: uniform attention averages V',
+        input: 'attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])).tolist()',
+        expected: '[[3.0, 4.0], [3.0, 4.0]]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'dV for uniform attention',
+        input: 'np.round(attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2], 4).tolist()',
+        expected: '[[0.6667, 0.6667], [0.6667, 0.6667], [0.6667, 0.6667]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Gradient shapes',
+        input: 'tuple(g.shape for g in attention_backward(np.random.randn(3, 4), np.random.randn(5, 4), np.random.randn(5, 2), np.random.randn(3, 2)))',
+        expected: '((3, 4), (5, 4), (5, 2))',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Finite differences (n != m)',
+        input: `(lambda: (
+    Q := np.random.randn(3, 4), K := np.random.randn(5, 4), V := np.random.randn(5, 2), G := np.random.randn(3, 2),
+    f := lambda Q, K, V: float(np.sum((lambda E: E / E.sum(-1, keepdims=True))(np.exp((Q @ K.T / 2.0) - (Q @ K.T / 2.0).max(-1, keepdims=True))) @ V * G)),
+    fd := lambda g, A: np.array([(g(A + E) - g(A - E)) / 2e-5 for E in [np.eye(A.size)[i].reshape(A.shape) * 1e-5 for i in range(A.size)]]).reshape(A.shape),
+    grads := attention_backward(Q, K, V, G),
+    bool(np.allclose(grads[0], fd(lambda A: f(A, K, V), Q), atol=1e-6)
+         and np.allclose(grads[1], fd(lambda A: f(Q, A, V), K), atol=1e-6)
+         and np.allclose(grads[2], fd(lambda A: f(Q, K, A), V), atol=1e-6))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Finite differences with a causal mask',
+        input: `(lambda: (
+    Q := np.random.randn(4, 4), K := np.random.randn(4, 4), V := np.random.randn(4, 3), G := np.random.randn(4, 3),
+    M := np.triu(np.full((4, 4), -np.inf), 1),
+    f := lambda Q, K, V: float(np.sum((lambda S: (lambda E: E / E.sum(-1, keepdims=True))(np.exp(S - S.max(-1, keepdims=True))))(Q @ K.T / 2.0 + M) @ V * G)),
+    fd := lambda g, A: np.array([(g(A + E) - g(A - E)) / 2e-5 for E in [np.eye(A.size)[i].reshape(A.shape) * 1e-5 for i in range(A.size)]]).reshape(A.shape),
+    grads := attention_backward(Q, K, V, G, causal=True),
+    bool(np.allclose(grads[0], fd(lambda A: f(A, K, V), Q), atol=1e-6)
+         and np.allclose(grads[1], fd(lambda A: f(Q, A, V), K), atol=1e-6)
+         and np.allclose(grads[2], fd(lambda A: f(Q, K, A), V), atol=1e-6))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Causal: the first query only sees the first key',
+        input: '(lambda: (Q := np.random.randn(4, 4), V := np.random.randn(4, 3), bool(np.allclose(attention_forward(Q, np.random.randn(4, 4), V, causal=True)[0], V[0])))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Causal: dK and dV of the last key come only from the last query',
+        input: '(lambda: (Q := np.random.randn(4, 4), K := np.random.randn(4, 4), V := np.random.randn(4, 3), G := np.random.randn(4, 3), G2 := np.vstack([np.zeros((3, 3)), G[3:]]), a := attention_backward(Q, K, V, G, causal=True), b := attention_backward(Q, K, V, G2, causal=True), bool(np.allclose(a[1][3], b[1][3]) and np.allclose(a[2][3], b[2][3])))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Exact gradient values',
+        input: '(lambda: (Q := np.random.randn(2, 4), K := np.random.randn(3, 4), V := np.random.randn(3, 2), G := np.random.randn(2, 2), [np.round(g, 4).tolist() for g in attention_backward(Q, K, V, G)])[-1])()',
+        expected: '[[[0.0727, -0.0266, 0.0142, -0.101], [0.2869, -0.1133, 0.0177, -0.4224]], [[-0.3888, 0.1243, -0.2026, -0.111], [-0.0587, 0.0719, -0.0273, 0.0789], [0.4475, -0.1962, 0.23, 0.0321]], [[0.1512, 0.0272], [0.4298, 0.3335], [0.9976, 0.9215]]]',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Large scores stay finite (stable softmax)',
+        input: 'bool(all(np.all(np.isfinite(g)) for g in attention_backward(np.random.randn(3, 4) * 100, np.random.randn(3, 4) * 100, np.random.randn(3, 2), np.random.randn(3, 2))))',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Recompute P in the backward pass (or share a helper with the forward pass); every gradient is written in terms of P.',
+      'For one row p of a softmax, the Jacobian-vector product is p * (g - p . g). Applied to all rows: `P * (dP - (dP * P).sum(-1, keepdims=True))`.',
+      'Do not forget the 1/sqrt(d) factor in both dQ and dK.',
+      'Shape check: dQ must be (n, d) = (n, m) @ (m, d), and dK must be (m, d) = (m, n) @ (n, d).',
+    ],
+    solution: `import numpy as np
+
+def _probs(Q, K, causal):
+    d = Q.shape[-1]
+    S = Q @ K.T / np.sqrt(d)
+    if causal:
+        n, m = S.shape
+        S = np.where(np.tril(np.ones((n, m), dtype=bool)), S, -np.inf)
+    S = S - S.max(axis=-1, keepdims=True)
+    P = np.exp(S)
+    return P / P.sum(axis=-1, keepdims=True)
+
+def attention_forward(Q, K, V, causal=False):
+    return _probs(Q, K, causal) @ V
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    d = Q.shape[-1]
+    P = _probs(Q, K, causal)                            # (n, m)
+    dV = P.T @ dOut                                     # (m, d_v)
+    dP = dOut @ V.T                                     # (n, m)
+    dS = P * (dP - (dP * P).sum(axis=-1, keepdims=True))
+    dQ = dS @ K / np.sqrt(d)                            # (n, d)
+    dK = dS.T @ Q / np.sqrt(d)                          # (m, d)
+    return dQ, dK, dV
+`,
+  },
+  {
+    id: 'longest-match-tokenizer',
+    title: 'Greedy Longest-Match Tokenizer',
+    section: 'transformers',
+    difficulty: 'medium',
+    description: `
+## Greedy Longest-Match Tokenizer
+
+Given a fixed vocabulary, a simple and widely used way to tokenize text is **greedy longest match** ("maximal munch"): at each position, take the longest vocabulary entry that matches, emit its id, and continue after it. WordPiece (BERT) uses the same idea inside each word.
+
+### Default mode (\`wordpiece=False\`)
+Scan \`text\` from left to right, character positions included as-is (spaces are ordinary characters and can be tokens):
+1. At position \`i\`, find the **longest** vocabulary token that is a prefix of \`text[i:]\`.
+2. If one exists, emit its id and move past it.
+3. Otherwise emit \`vocab[unk_token]\` for the single character \`text[i]\` and move one character on. A run of unknown characters gives one unknown id **per character**.
+
+Greedy is not globally optimal: with tokens \`{'ab', 'abc', 'cd', 'd'}\`, \`"abcd"\` becomes \`abc + d\`, even though \`ab + cd\` also covers it.
+
+### WordPiece mode (\`wordpiece=True\`)
+1. Split \`text\` on whitespace (\`text.split()\`); whitespace never produces tokens.
+2. Tokenize each word with greedy longest match, where the first piece is looked up as-is and every **later piece with a \`##\` prefix** (\`"playing"\` becomes \`play\`, \`##ing\`).
+3. If at some point no piece matches, the **whole word** becomes a single unknown id (BERT's behaviour); pieces already matched in that word are dropped.
+
+### Expected Return Format
+Return a list of token ids (Python ints). \`unk_token\` is always in \`vocab\`.
+`,
+    examples: [
+      {
+        input: 'tokenize("abcab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        output: '[4, 3]',
+        explanation: '"abc" is the longest match at position 0, then "ab".',
+      },
+      {
+        input: 'tokenize("abxc", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        output: '[3, 0, 5]',
+        explanation: 'No token starts with "x", so it becomes [UNK] (id 0).',
+      },
+      {
+        input: 'tokenize("unaffable plays", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        output: '[1, 2, 3, 4, 6]',
+        explanation: 'un, ##aff, ##able, play, ##s',
+      },
+    ],
+    starterCode: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    """
+    Greedy longest-match (maximal munch) tokenization.
+
+    Args:
+        text: Input string
+        vocab: Dict mapping token string -> id (contains unk_token)
+        unk_token: Token used for text that no vocabulary entry matches
+        wordpiece: If True, split on whitespace and look up non-initial
+                   pieces of a word with a '##' prefix
+
+    Returns:
+        List of token ids
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Longest match wins',
+        input: 'tokenize("abcab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[4, 3]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Unknown character falls back to [UNK]',
+        input: 'tokenize("abxc", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[3, 0, 5]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Spaces are ordinary characters',
+        input: 'tokenize("the cab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[8, 7, 5, 3]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Greedy, not globally optimal',
+        input: 'tokenize("abcd", {\'[UNK]\': 0, \'ab\': 1, \'abc\': 2, \'cd\': 3, \'d\': 4, \'a\': 5, \'b\': 6, \'c\': 7})',
+        expected: '[2, 4]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'One [UNK] per unknown character',
+        input: 'tokenize("xyz", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[0, 0, 0]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Empty string',
+        input: 'tokenize("", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[]',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Custom unknown token',
+        input: 'tokenize("aXa", {\'<unk>\': 5, \'a\': 1}, unk_token=\'<unk>\')',
+        expected: '[1, 5, 1]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'WordPiece with ## continuations',
+        input: 'tokenize("unaffable playing plays", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[1, 2, 3, 4, 5, 4, 6]',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'WordPiece: an unmatched word becomes a single [UNK]',
+        input: 'tokenize("playx un aaa", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[0, 1, 9, 10, 10]',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'WordPiece ignores extra whitespace',
+        input: 'tokenize("  play   un  ", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[4, 1]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Precompute the longest token length, then at each position try candidate lengths from longest to shortest.',
+      "Python's `for ... else` is handy: the `else` branch runs when the loop finished without `break`, i.e. no token matched.",
+      'In WordPiece mode, build the lookup key as `word[i:end]` for the first piece and `"##" + word[i:end]` for the rest; on failure replace the whole word with the unknown id.',
+    ],
+    solution: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    unk_id = vocab[unk_token]
+    ids = []
+
+    if not wordpiece:
+        max_len = max(len(token) for token in vocab)
+        i = 0
+        while i < len(text):
+            # Try the longest candidate first
+            for length in range(min(max_len, len(text) - i), 0, -1):
+                piece = text[i:i + length]
+                if piece in vocab:
+                    ids.append(vocab[piece])
+                    i += length
+                    break
+            else:
+                ids.append(unk_id)  # no token starts here: one [UNK] per character
+                i += 1
+        return ids
+
+    # WordPiece: split on whitespace, '##' marks pieces that continue a word
+    for word in text.split():
+        pieces = []
+        i = 0
+        while i < len(word):
+            for end in range(len(word), i, -1):
+                piece = word[i:end] if i == 0 else '##' + word[i:end]
+                if piece in vocab:
+                    pieces.append(vocab[piece])
+                    i = end
+                    break
+            else:
+                pieces = [unk_id]  # the whole word becomes one [UNK]
+                break
+        ids.extend(pieces)
+    return ids
+`,
+  },
 ];

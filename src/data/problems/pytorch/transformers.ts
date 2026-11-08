@@ -94,7 +94,6 @@ def scaled_dot_product_attention(Q, K, V):
       'Return (weights @ V, weights)',
     ],
   },
-
   'multi-head-attention': {
     note: "Split heads with view/transpose and implement attention yourself. Don't use nn.MultiheadAttention or F.scaled_dot_product_attention.",
     starterCode: `import math
@@ -187,7 +186,6 @@ def multi_head_attention(Q, K, V, num_heads):
       'Transpose back and reshape to (seq_len, d_model)',
     ],
   },
-
   'positional-encoding': {
     note: 'Build the table with torch.arange, torch.exp, torch.sin/cos and strided slice assignment (PE[:, 0::2] = ...).',
     starterCode: `import math
@@ -260,7 +258,6 @@ def positional_encoding(max_len, d_model):
       'PE[:, 0::2] = torch.sin(position * div_term); PE[:, 1::2] = torch.cos(position * div_term)',
     ],
   },
-
   'layer-norm': {
     note: "Implement with mean and var(unbiased=False) over the last dim. Don't use F.layer_norm or nn.LayerNorm; a hidden test compares against F.layer_norm.",
     starterCode: `import torch
@@ -330,7 +327,6 @@ def layer_norm(X, gamma, beta, eps=1e-5):
       'Normalize, then gamma * X_norm + beta',
     ],
   },
-
   'causal-mask': {
     note: 'Use torch.triu / torch.full (or masked_fill). The mask is additive: 0 where attention is allowed, -inf above the diagonal.',
     starterCode: `import torch
@@ -485,7 +481,6 @@ def bpe_train(word_freqs, num_merges):
       },
     ],
   },
-
   'rope-embeddings': {
     note: "Implement the rotation with tensor ops (slicing, torch.stack). Complex-number tricks such as torch.view_as_complex aren't supported in the browser.",
     starterCode: `import torch
@@ -596,7 +591,6 @@ def apply_rope(Q, K):
       'Rotate: (even*cos - odd*sin, even*sin + odd*cos), then torch.stack(..., dim=-1).flatten(1) to interleave',
     ],
   },
-
   'grouped-query-attention': {
     note: "Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention (or its enable_gqa flag) or nn.MultiheadAttention.",
     starterCode: `import math
@@ -702,7 +696,6 @@ def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
       'Transpose back and reshape to (seq_len, num_q_heads * d_head)',
     ],
   },
-
   'sliding-window-attention': {
     starterCode: `import torch
 
@@ -780,6 +773,280 @@ def sliding_window_mask(seq_len, window_size):
       'rows = torch.arange(seq_len).unsqueeze(1), cols = torch.arange(seq_len).unsqueeze(0)',
       'allowed = (cols <= rows) & (rows - cols < window_size)',
       'torch.zeros(seq_len, seq_len).masked_fill(~allowed, float("-inf"))',
+    ],
+  },
+  'attention-backward': {
+    note: "Compute the gradients by hand with tensor ops: don't call .backward() or torch.autograd in your solution (the hidden tests use autograd as the reference), and don't use F.scaled_dot_product_attention.",
+    starterCode: `import math
+import torch
+
+def attention_forward(Q, K, V, causal=False):
+    """
+    Scaled dot-product attention.
+
+    Args:
+        Q: Queries (n, d)
+        K: Keys (m, d)
+        V: Values (m, d_v)
+        causal: If True, query i may only attend to keys j <= i (n == m)
+
+    Returns:
+        Out: tensor (n, d_v)
+    """
+    # Your code here
+    pass
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    """
+    Gradients of attention with respect to Q, K and V, computed by hand.
+
+    Args:
+        Q, K, V: As in attention_forward
+        dOut: Upstream gradient dL/dOut, tensor (n, d_v)
+        causal: Same flag as in the forward pass
+
+    Returns:
+        (dQ, dK, dV) tensors with the shapes of Q, K, V
+    """
+    # Your code here
+    pass
+`,
+    solution: `import math
+import torch
+
+def _probs(Q, K, causal):
+    d = Q.shape[-1]
+    S = Q @ K.T / math.sqrt(d)
+    if causal:
+        n, m = S.shape
+        future = torch.triu(torch.ones(n, m), diagonal=1).bool()
+        S = S.masked_fill(future, float('-inf'))
+    S = S - S.max(dim=-1, keepdim=True).values
+    P = torch.exp(S)
+    return P / P.sum(dim=-1, keepdim=True)
+
+def attention_forward(Q, K, V, causal=False):
+    return _probs(Q, K, causal) @ V
+
+def attention_backward(Q, K, V, dOut, causal=False):
+    d = Q.shape[-1]
+    P = _probs(Q, K, causal)                            # (n, m)
+    dV = P.T @ dOut                                     # (m, d_v)
+    dP = dOut @ V.T                                     # (n, m)
+    dS = P * (dP - (dP * P).sum(dim=-1, keepdim=True))
+    dQ = dS @ K / math.sqrt(d)                          # (n, d)
+    dK = dS.T @ Q / math.sqrt(d)                        # (m, d)
+    return dQ, dK, dV
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Forward: uniform attention averages V',
+        input: 'attention_forward(torch.zeros((2, 4)), torch.zeros((3, 4)), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])).tolist()',
+        expected: '[[3.0, 4.0], [3.0, 4.0]]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'dV for uniform attention',
+        input: '[[round(v, 4) for v in row] for row in attention_backward(torch.zeros((2, 4)), torch.zeros((3, 4)), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), torch.ones((2, 2)))[2].tolist()]',
+        expected: '[[0.6667, 0.6667], [0.6667, 0.6667], [0.6667, 0.6667]]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Gradient shapes',
+        input: 'tuple(tuple(g.shape) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float(), torch.from_numpy(np.random.randn(5, 4)).float(), torch.from_numpy(np.random.randn(5, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float()))',
+        expected: '((3, 4), (5, 4), (5, 2))',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Matches autograd (n != m)',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(3, 4)).float().requires_grad_(),
+    K := torch.from_numpy(np.random.randn(5, 4)).float().requires_grad_(),
+    V := torch.from_numpy(np.random.randn(5, 2)).float().requires_grad_(),
+    G := torch.from_numpy(np.random.randn(3, 2)).float(),
+    out := torch.nn.functional.softmax(Q @ K.T / 2.0, dim=-1) @ V,
+    _ := out.backward(G),
+    grads := attention_backward(Q.detach(), K.detach(), V.detach(), G),
+    bool(torch.allclose(grads[0], Q.grad, atol=1e-5)
+         and torch.allclose(grads[1], K.grad, atol=1e-5)
+         and torch.allclose(grads[2], V.grad, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Matches autograd with a causal mask',
+        input: `(lambda: (
+    Q := torch.from_numpy(np.random.randn(4, 4)).float().requires_grad_(),
+    K := torch.from_numpy(np.random.randn(4, 4)).float().requires_grad_(),
+    V := torch.from_numpy(np.random.randn(4, 3)).float().requires_grad_(),
+    G := torch.from_numpy(np.random.randn(4, 3)).float(),
+    S := (Q @ K.T / 2.0).masked_fill(torch.triu(torch.ones(4, 4), diagonal=1).bool(), float('-inf')),
+    out := torch.nn.functional.softmax(S, dim=-1) @ V,
+    _ := out.backward(G),
+    grads := attention_backward(Q.detach(), K.detach(), V.detach(), G, causal=True),
+    bool(torch.allclose(grads[0], Q.grad, atol=1e-5)
+         and torch.allclose(grads[1], K.grad, atol=1e-5)
+         and torch.allclose(grads[2], V.grad, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Causal: the first query only sees the first key',
+        input: '(lambda: (Q := torch.from_numpy(np.random.randn(4, 4)).float(), V := torch.from_numpy(np.random.randn(4, 3)).float(), bool(torch.allclose(attention_forward(Q, torch.from_numpy(np.random.randn(4, 4)).float(), V, causal=True)[0], V[0], atol=1e-6)))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Exact gradient values',
+        input: '(lambda: (Q := torch.from_numpy(np.random.randn(2, 4)).float(), K := torch.from_numpy(np.random.randn(3, 4)).float(), V := torch.from_numpy(np.random.randn(3, 2)).float(), G := torch.from_numpy(np.random.randn(2, 2)).float(), [[[round(v, 3) for v in row] for row in g.tolist()] for g in attention_backward(Q, K, V, G)])[-1])()',
+        expected: '[[[0.073, -0.027, 0.014, -0.101], [0.287, -0.113, 0.018, -0.422]], [[-0.389, 0.124, -0.203, -0.111], [-0.059, 0.072, -0.027, 0.079], [0.447, -0.196, 0.23, 0.032]], [[0.151, 0.027], [0.43, 0.333], [0.998, 0.921]]]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Large scores stay finite (stable softmax)',
+        input: 'bool(all(not (torch.isnan(g).any().item() or torch.isinf(g).any().item()) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float())))',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+  },
+  'longest-match-tokenizer': {
+    note: 'Tokenization is string processing: no tensors are involved, so this track is plain Python with the same function as the NumPy track.',
+    starterCode: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    """
+    Greedy longest-match (maximal munch) tokenization.
+
+    Args:
+        text: Input string
+        vocab: Dict mapping token string -> id (contains unk_token)
+        unk_token: Token used for text that no vocabulary entry matches
+        wordpiece: If True, split on whitespace and look up non-initial
+                   pieces of a word with a '##' prefix
+
+    Returns:
+        List of token ids
+    """
+    # Your code here
+    pass
+`,
+    solution: `def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    unk_id = vocab[unk_token]
+    ids = []
+
+    if not wordpiece:
+        max_len = max(len(token) for token in vocab)
+        i = 0
+        while i < len(text):
+            # Try the longest candidate first
+            for length in range(min(max_len, len(text) - i), 0, -1):
+                piece = text[i:i + length]
+                if piece in vocab:
+                    ids.append(vocab[piece])
+                    i += length
+                    break
+            else:
+                ids.append(unk_id)  # no token starts here: one [UNK] per character
+                i += 1
+        return ids
+
+    # WordPiece: split on whitespace, '##' marks pieces that continue a word
+    for word in text.split():
+        pieces = []
+        i = 0
+        while i < len(word):
+            for end in range(len(word), i, -1):
+                piece = word[i:end] if i == 0 else '##' + word[i:end]
+                if piece in vocab:
+                    pieces.append(vocab[piece])
+                    i = end
+                    break
+            else:
+                pieces = [unk_id]  # the whole word becomes one [UNK]
+                break
+        ids.extend(pieces)
+    return ids
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Longest match wins',
+        input: 'tokenize("abcab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[4, 3]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Unknown character falls back to [UNK]',
+        input: 'tokenize("abxc", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[3, 0, 5]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Spaces are ordinary characters',
+        input: 'tokenize("the cab", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[8, 7, 5, 3]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Greedy, not globally optimal',
+        input: 'tokenize("abcd", {\'[UNK]\': 0, \'ab\': 1, \'abc\': 2, \'cd\': 3, \'d\': 4, \'a\': 5, \'b\': 6, \'c\': 7})',
+        expected: '[2, 4]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'One [UNK] per unknown character',
+        input: 'tokenize("xyz", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[0, 0, 0]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Empty string',
+        input: 'tokenize("", {\'[UNK]\': 0, \'a\': 1, \'b\': 2, \'ab\': 3, \'abc\': 4, \'c\': 5, \'bc\': 6, \' \': 7, \'the\': 8, \'th\': 9, \'t\': 10, \'h\': 11, \'e\': 12})',
+        expected: '[]',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Custom unknown token',
+        input: 'tokenize("aXa", {\'<unk>\': 5, \'a\': 1}, unk_token=\'<unk>\')',
+        expected: '[1, 5, 1]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'WordPiece with ## continuations',
+        input: 'tokenize("unaffable playing plays", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[1, 2, 3, 4, 5, 4, 6]',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'WordPiece: an unmatched word becomes a single [UNK]',
+        input: 'tokenize("playx un aaa", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[0, 1, 9, 10, 10]',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'WordPiece ignores extra whitespace',
+        input: 'tokenize("  play   un  ", {\'[UNK]\': 0, \'un\': 1, \'##aff\': 2, \'##able\': 3, \'play\': 4, \'##ing\': 5, \'##s\': 6, \'u\': 7, \'##n\': 8, \'a\': 9, \'##a\': 10}, wordpiece=True)',
+        expected: '[4, 1]',
+        hidden: true,
+      },
     ],
   },
 };

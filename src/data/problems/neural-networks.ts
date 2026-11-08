@@ -642,4 +642,153 @@ def dropout_forward(X, keep_prob=0.5, training=True):
     return out, mask
 `,
   },
+  {
+    id: 'masked-label-smoothing-ce',
+    title: 'Masked Cross-Entropy with Label Smoothing',
+    section: 'neural-networks',
+    difficulty: 'medium',
+    description: `
+## Masked Cross-Entropy with Label Smoothing
+
+Language-model training computes a cross-entropy loss per token, but batches are padded to a common length and the padding tokens must not count. Most LM training recipes also use **label smoothing**. Implement token-level cross-entropy with both, matching PyTorch's \`F.cross_entropy(logits, targets, ignore_index=..., label_smoothing=...)\`.
+
+### Formula
+For a token with logits \`z\` (V classes) and target class \`y\`:
+\`\`\`
+log_p = z - logsumexp(z)                        # log-softmax, computed stably
+q_c   = (1 - eps) * [c == y] + eps / V          # smoothed target: eps spread over ALL V classes
+loss  = -sum_c q_c * log_p_c
+      = (1 - eps) * (-log_p_y) + eps * mean_c(-log_p_c)
+\`\`\`
+The final loss is the **mean over non-padded tokens only** (tokens whose target is \`ignore_index\`):
+\`\`\`
+L = sum_{tokens with y != ignore_index} loss / (number of such tokens)
+\`\`\`
+
+### Details
+- \`logits\` has shape \`(N, V)\` or \`(B, T, V)\`; \`targets\` has the matching shape \`(N,)\` or \`(B, T)\`. Flatten the leading dimensions.
+- \`ignore_index\` may be a value outside \`[0, V)\` (the default \`-100\`) or a real class id (e.g. a pad id of 0). Never use the target of an ignored token as an index.
+- If every token is ignored, return \`nan\` (that is what PyTorch's mean reduction gives).
+- With \`smoothing = 0\` this is the ordinary cross-entropy.
+
+### Expected Return Format
+Return the loss as a Python \`float\`.
+`,
+    examples: [
+      {
+        input: 'masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]))',
+        output: '0.2084',
+        explanation: 'The third token is padding, so the loss is the mean of the other three per-token losses (rounded here).',
+      },
+      {
+        input: 'masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]), smoothing=0.1)',
+        output: '0.3906',
+        explanation: 'Smoothing moves 10% of the target mass onto all classes, which raises the loss of confident correct predictions.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
+    """
+    Token-level cross-entropy with label smoothing and a padding mask.
+
+    Args:
+        logits: Unnormalized scores, array (N, V) or (B, T, V)
+        targets: Class ids, int array (N,) or (B, T); ignore_index marks padding
+        ignore_index: Target value whose tokens are excluded from the loss
+        smoothing: Label smoothing eps in [0, 1]
+
+    Returns:
+        Mean loss over non-ignored tokens (float); nan if every token is ignored
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'No smoothing, one token',
+        input: 'round(masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1]]), np.array([0])), 4)',
+        expected: '0.417',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Padding token is ignored',
+        input: 'round(masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2])), 4)',
+        expected: '0.2084',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Smoothing 0.1 with padding',
+        input: 'round(masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]), smoothing=0.1), 4)',
+        expected: '0.3906',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: '3-D logits (B, T, V), random padding, smoothing 0.2',
+        input: '(lambda: (L := np.random.randn(2, 6, 5) * 2, T := np.where(np.random.rand(2, 6) < 0.3, -100, np.random.randint(0, 5, size=(2, 6))), round(masked_label_smoothing_ce(L, T, smoothing=0.2), 4))[-1])()',
+        expected: '2.7471',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Pad id 0 used as ignore_index',
+        input: '(lambda: (L := np.random.randn(6, 4) * 3, round(masked_label_smoothing_ce(L, np.array([0, 3, 0, 1, 2, 0]), ignore_index=0, smoothing=0.25), 4))[-1])()',
+        expected: '3.8851',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Every token ignored gives nan',
+        input: 'bool(np.isnan(masked_label_smoothing_ce(np.random.randn(3, 4), np.array([-100, -100, -100]))))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Large logits stay finite',
+        input: 'round(masked_label_smoothing_ce(np.array([[1000.0, 0.0, -1000.0], [0.0, 500.0, 0.0]]), np.array([0, 2]), smoothing=0.1), 4)',
+        expected: '291.6667',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Padding does not change the loss of the real tokens',
+        input: '(lambda: (L := np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), a := masked_label_smoothing_ce(L, np.array([0, 1, -100, 2]), smoothing=0.3), b := masked_label_smoothing_ce(L[[0, 1, 3]], np.array([0, 1, 2]), smoothing=0.3), bool(abs(a - b) < 1e-9))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Flatten to (N, V) and (N,), build the mask `targets != ignore_index`, and select the kept rows before any indexing by target.',
+      'Stable log-softmax: `z - m - log(sum(exp(z - m)))` with `m` the row max.',
+      'The smoothed loss splits into two terms: `(1 - eps) * (-log_p[y]) + eps * mean(-log_p)` over all V classes.',
+    ],
+    solution: `import numpy as np
+
+def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
+    logits = np.asarray(logits, dtype=float)
+    targets = np.asarray(targets)
+    V = logits.shape[-1]
+    logits = logits.reshape(-1, V)
+    targets = targets.reshape(-1)
+
+    keep = targets != ignore_index
+    if not keep.any():
+        return float('nan')
+    z, y = logits[keep], targets[keep]
+
+    # Stable log-softmax
+    m = z.max(axis=-1, keepdims=True)
+    log_p = z - m - np.log(np.exp(z - m).sum(axis=-1, keepdims=True))
+
+    nll = -log_p[np.arange(len(y)), y]      # -log p_y
+    uniform = -log_p.mean(axis=-1)          # mean_c -log p_c
+    loss = (1 - smoothing) * nll + smoothing * uniform
+    return float(loss.mean())
+`,
+  },
 ];
