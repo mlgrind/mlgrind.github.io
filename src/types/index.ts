@@ -61,6 +61,11 @@ export interface Section {
   introduction: string;
   icon: string;
   problems: string[];
+  /**
+   * Track a problem opens in when the learner hasn't picked one with the
+   * NumPy | PyTorch toggle yet (default 'numpy').
+   */
+  defaultLanguage?: Language;
 }
 
 export interface ProblemProgress {

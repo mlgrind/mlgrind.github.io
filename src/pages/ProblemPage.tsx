@@ -35,9 +35,20 @@ export default function ProblemPage() {
   const activeProblemRef = useRef(problem?.id);
   activeProblemRef.current = problem?.id;
 
-  const [language, setLanguage] = useState<Language>(() =>
-    readStorage(LANGUAGE_KEY) === 'pytorch' ? 'pytorch' : 'numpy'
-  );
+  // The learner's explicit choice from the toggle, if they ever made one.
+  const [chosenLanguage, setChosenLanguage] = useState<Language | null>(() => {
+    const stored = readStorage(LANGUAGE_KEY);
+    return stored === 'pytorch' || stored === 'numpy' ? stored : null;
+  });
+  // Without a choice, the section decides (PyTorch Basics opens in PyTorch),
+  // unless the learner already has NumPy work on this problem.
+  const savedNumpyWork = (() => {
+    if (!problem || !sectionId) return false;
+    const saved = getProblemProgress(sectionId, problem.id);
+    return saved.code !== undefined || saved.solvedIn.includes('numpy');
+  })();
+  const language: Language =
+    chosenLanguage ?? (savedNumpyWork ? 'numpy' : section?.defaultLanguage ?? 'numpy');
   // Problems without a PyTorch track always use NumPy.
   const activeLanguage: Language = language === 'pytorch' && problem?.pytorch ? 'pytorch' : 'numpy';
   // Starter code, solution, tests and hints of the active track.
@@ -130,7 +141,7 @@ export default function ProblemPage() {
   const handleLanguageChange = useCallback((next: Language) => {
     if (next === activeLanguage || isRunning) return;
     writeStorage(LANGUAGE_KEY, next);
-    setLanguage(next);
+    setChosenLanguage(next);
   }, [activeLanguage, isRunning]);
 
   const handleReset = useCallback(() => {

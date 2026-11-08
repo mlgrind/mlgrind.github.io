@@ -136,12 +136,13 @@ Master einsum to write clean, efficient deep learning code!
   {
     id: 'pytorch-basics',
     title: 'PyTorch Basics',
-    description: 'Learn PyTorch patterns implemented in NumPy.',
+    description: 'Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.',
     icon: '🔥',
+    defaultLanguage: 'pytorch',
     introduction: `
 # PyTorch Basics
 
-Learn PyTorch patterns and concepts. Since Pyodide doesn't support PyTorch, we implement these concepts in NumPy.
+Learn PyTorch patterns and concepts. Problems in this section open in the **PyTorch** track, which runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build). Switch to **NumPy** with the toggle to implement the same ideas from scratch.
 
 ## Tensor Operations
 
@@ -171,7 +172,7 @@ y = x ** 2
 y.backward()  # dy/dx = 2x = 4
 \`\`\`
 
-We implement this manually to understand the math.
+In the NumPy track you implement this by hand to understand the math.
 
 ## Module Pattern
 \`\`\`python

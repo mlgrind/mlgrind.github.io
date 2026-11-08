@@ -1,9 +1,13 @@
 # PyTorch track
 
-Problems can be solved in **NumPy** (the original track) or, when a PyTorch
-track exists, in **PyTorch**. The learner picks one with the NumPy | PyTorch
-toggle on the problem page; the choice is remembered in localStorage
-(`ml-lab-language`).
+Every problem can be solved in **NumPy** (the original track) or in
+**PyTorch**. The learner picks one with the NumPy | PyTorch toggle on the
+problem page; the choice is remembered in localStorage (`ml-lab-language`).
+Until the learner picks one, a problem opens in its section's
+`defaultLanguage` (`src/data/sections.ts`), which is NumPy everywhere except
+**PyTorch Basics**: that section opens in PyTorch, unless the learner already
+has NumPy code (or a NumPy solve) saved for the problem. The default is not
+stored as a choice, so other sections keep opening in NumPy.
 
 Real PyTorch has no WebAssembly build, so it can't run in Pyodide. The browser
 runs a **NumPy-backed shim** that registers itself as `torch` and implements

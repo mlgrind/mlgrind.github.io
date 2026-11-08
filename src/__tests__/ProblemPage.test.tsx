@@ -189,3 +189,37 @@ describe("NumPy | PyTorch track toggle", () => {
   });
 });
 
+describe("section default track", () => {
+  const path = "/problem/pytorch-basics/tensor-creation";
+  const problem = getProblemById("tensor-creation")!;
+  const editor = () => screen.getByLabelText("Python code");
+
+  it("opens PyTorch Basics in PyTorch when no track was chosen", () => {
+    mount(path);
+    expect(screen.getByRole("button", { name: "PyTorch" })).toHaveAttribute("aria-pressed", "true");
+    expect(editor()).toHaveValue(problem.pytorch!.starterCode);
+    // The default isn't stored as a choice, so other sections stay on NumPy.
+    expect(localStorage.getItem("ml-lab-language")).toBeNull();
+  });
+
+  it("keeps an explicit NumPy choice", () => {
+    localStorage.setItem("ml-lab-language", "numpy");
+    mount(path);
+    expect(screen.getByRole("button", { name: "NumPy" })).toHaveAttribute("aria-pressed", "true");
+    expect(editor()).toHaveValue(problem.starterCode);
+  });
+
+  it("keeps NumPy for a problem with saved NumPy code", () => {
+    localStorage.setItem(
+      "ml-interview-progress",
+      JSON.stringify({
+        "pytorch-basics": {
+          "tensor-creation": { status: "in_progress", code: "numpy draft" },
+        },
+      }),
+    );
+    mount(path);
+    expect(screen.getByRole("button", { name: "NumPy" })).toHaveAttribute("aria-pressed", "true");
+    expect(editor()).toHaveValue("numpy draft");
+  });
+});
