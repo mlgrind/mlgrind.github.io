@@ -7,7 +7,7 @@ import { LanguageVariant } from '../../../types';
  */
 export const generativeModelsPyTorch: Record<string, LanguageVariant> = {
   'vae-reparameterization': {
-    note: "Sample eps with torch.randn_like. Don't use torch.distributions.Normal(...).rsample(), which does the trick for you. Hidden tests check that gradients flow to mu and log_var.",
+    note: 'Sample eps with torch.randn_like; don\'t use torch.distributions.Normal(...).rsample(), which does the trick for you. Hidden tests check that gradients reach mu and log_var.',
     starterCode: `import torch
 
 def reparameterize(mu, log_var):
@@ -74,14 +74,15 @@ def reparameterize(mu, log_var):
       },
     ],
     hints: [
-      'std = torch.exp(0.5 * log_var)',
-      'eps = torch.randn_like(std) is constant w.r.t. mu and log_var',
-      'z = mu + std * eps lets autograd differentiate through the sample',
+      'Autograd can differentiate through mu and log_var only if the random draw does not depend on them.',
+      'Turn log_var into a standard deviation, draw unit noise of the same shape, then shift and scale it.',
+      'std = torch.exp(0.5 * log_var); eps = torch.randn_like(std); return mu + std * eps.',
+      'Pitfall: don\'t wrap eps in requires_grad or detach mu; and torch.exp(log_var) is the variance, not the std.',
     ],
   },
 
   'vae-loss': {
-    note: 'F.mse_loss is fine for the reconstruction term; write the KL term yourself with tensor ops.',
+    note: 'F.mse_loss is fine for the reconstruction term; write the KL with tensor ops (no torch.distributions.kl_divergence). KL sums over latent dims and averages over the batch.',
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -96,7 +97,9 @@ def vae_loss(x, x_reconstructed, mu, log_var):
         log_var: Latent log variance (batch, latent_dim)
 
     Returns:
-        (total_loss, recon_loss, kl_loss) as Python floats rounded to 4 decimals
+        (total_loss, recon_loss, kl_loss): Python floats rounded to 4 decimals.
+        recon_loss is the MSE over all elements; kl_loss sums over latent dims
+        and averages over the batch; total_loss = recon_loss + kl_loss.
     """
     # Your code here
     pass
@@ -145,29 +148,29 @@ def vae_loss(x, x_reconstructed, mu, log_var):
       },
     ],
     hints: [
-      'Reconstruction: F.mse_loss(x_reconstructed, x) or ((x - x_reconstructed) ** 2).mean()',
-      'KL per sample: -0.5 * (1 + log_var - mu**2 - log_var.exp()).sum(dim=1)',
-      'Average the KL over the batch, then return Python floats with round(t.item(), 4)',
+      'Two terms: the reconstruction error of the decoder and the closed-form KL of each posterior from N(0, I).',
+      'Reconstruction is a mean over all elements; the KL is one number per example (summed over latent dims), then averaged over the batch.',
+      'F.mse_loss(x_reconstructed, x); (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean().',
+      'Pitfall: .mean() over the whole KL tensor also divides by latent_dim. Return Python floats: round(t.item(), 4).',
     ],
   },
 
   'diffusion-noise-schedule': {
-    note: 'Use torch.linspace and torch.cumprod.',
+    note: 'Use torch.linspace and torch.cumprod (dim=0).',
     starterCode: `import torch
 
 def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
     """
-    Create linear noise schedule for diffusion.
+    Create the linear DDPM noise schedule (0-indexed timesteps).
 
     Args:
-        T: Number of diffusion steps
-        beta_start: Starting beta value
-        beta_end: Ending beta value
+        T: Number of diffusion steps (int)
+        beta_start: beta_0
+        beta_end: beta_{T-1}
 
     Returns:
-        betas: Beta values (T,)
-        alphas: Alpha values (T,)
-        alpha_bars: Cumulative alpha product (T,)
+        (betas, alphas, alpha_bars): float tensors of shape (T,), where
+        alphas = 1 - betas and alpha_bars is the cumulative product of alphas
     """
     # Your code here
     pass
@@ -217,14 +220,15 @@ def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
       },
     ],
     hints: [
-      'torch.linspace(beta_start, beta_end, T) gives T evenly spaced betas',
-      'alphas = 1 - betas',
-      'torch.cumprod(alphas, dim=0) gives the running product',
+      'β grows linearly from beta_start to beta_end with both endpoints included; everything else derives from it.',
+      'Build betas, then alphas = 1 − betas, then the running product of alphas.',
+      'torch.linspace(beta_start, beta_end, T), 1 - betas, torch.cumprod(alphas, dim=0).',
+      'Pitfall: torch.arange with a float step drops the endpoint and drifts; torch.cumprod needs dim=0.',
     ],
   },
 
   'diffusion-forward': {
-    note: 'Sample the noise with torch.randn_like. Tests check the formula exactly, so return the same noise you used.',
+    note: 'Sample the noise with torch.randn_like after the seed in the starter. Tests check the formula against the noise you return, so return the same tensor you used.',
     starterCode: `import torch
 
 def diffusion_forward(x_0, t, alpha_bars):
@@ -305,14 +309,15 @@ def diffusion_forward(x_0, t, alpha_bars):
       },
     ],
     hints: [
-      'alpha_bar_t = alpha_bars[t]',
-      'noise = torch.randn_like(x_0)',
-      'x_t = torch.sqrt(alpha_bar_t) * x_0 + torch.sqrt(1 - alpha_bar_t) * noise',
+      'All the noise added up to step t is summarised by the single number alpha_bars[t]; no loop over steps.',
+      'Look up ᾱ_t, draw ε shaped like x_0, then mix signal and noise.',
+      'noise = torch.randn_like(x_0); x_t = torch.sqrt(ab) * x_0 + torch.sqrt(1 - ab) * noise.',
+      'Pitfall: the coefficients are square roots (ᾱ and 1 − ᾱ are variances).',
     ],
   },
 
   'vqvae-quantization': {
-    note: "Compute distances with tensor ops and pick codes with argmin. Don't use torch.cdist. For the losses, use .detach() as the stop-gradient.",
+    note: 'Compute distances with tensor ops and pick codes with argmin; don\'t use torch.cdist. Use .detach() as the stop-gradient sg[·] in the losses.',
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -325,8 +330,7 @@ def vq_quantize(z_e, codebook):
         codebook: Embedding vectors (num_embeddings, embedding_dim)
 
     Returns:
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        indices: Codebook indices used (batch, H, W), int64
+x; ties go to the lowest index
     """
     # Your code here
     pass
@@ -417,15 +421,15 @@ def vq_loss(z_e, z_q, beta=0.25):
       },
     ],
     hints: [
-      'Reshape z_e to (batch*H*W, D) to compute all distances at once',
-      'Distances: (z**2).sum(1, keepdim=True) + (codebook**2).sum(1) - 2 * z @ codebook.T',
-      'distances.argmin(dim=1) gives indices; codebook[indices] gives z_q',
-      'Losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach())',
+      'Quantization is a nearest-neighbour lookup of every encoder vector in the codebook.',
+      'Flatten z_e to (N, D), build an (N, K) squared-distance matrix, argmin per row, index the codebook, reshape back.',
+      '(z**2).sum(1, keepdim=True) - 2 * z @ codebook.T + (codebook**2).sum(1); distances.argmin(dim=1); codebook[idx].',
+      'Pitfall: put .detach() on the right side: F.mse_loss(z_q, z_e.detach()) trains the codes, beta * F.mse_loss(z_e, z_q.detach()) trains the encoder.',
     ],
   },
 
   'kl-divergence': {
-    note: 'Inputs are scalar tensors. Write the closed form with torch.log; return a Python float.',
+    note: 'Inputs are scalar tensors. Write the closed form with torch.log (no torch.distributions); return a Python float.',
     starterCode: `import torch
 
 def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
@@ -481,14 +485,15 @@ def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
       },
     ],
     hints: [
-      'KL = log(sigma_q / sigma_p) + (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2) - 0.5',
-      'torch.log works on scalar tensors',
-      'Return round(kl.item(), 4)',
+      'KL compares a width ratio and a mean gap, both measured relative to Q.',
+      'Three terms: a log ratio of standard deviations, a squared term over 2σ_q², and the constant −1/2.',
+      'torch.log(sigma_q / sigma_p) + (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2) - 0.5.',
+      'Pitfall: the sigmas are standard deviations, not variances. Return round(kl.item(), 4).',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
   'ddpm-sampling-step': {
-    note: 'Use torch.cumprod for ᾱ and torch.sqrt; t is a Python int. Return a tensor.',
+    note: 'Use torch.cumprod for ᾱ and torch.sqrt; t is a Python int. Return a tensor. The reference works in float64 so values match the NumPy track.',
     starterCode: `import torch
 
 def ddpm_step(x_t: torch.Tensor, eps_pred: torch.Tensor, t: int,
@@ -562,9 +567,10 @@ def ddpm_step(x_t: torch.Tensor, eps_pred: torch.Tensor, t: int,
       },
     ],
     hints: [
-      'alphas = 1 - betas; alpha_bar = torch.cumprod(alphas, dim=0)',
-      'mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * eps_pred) / torch.sqrt(alphas[t])',
-      'Return mean when t == 0, otherwise mean + torch.sqrt(betas[t]) * z',
+      'A deterministic mean that strips out the predicted noise, then fresh noise except at the final step.',
+      'Compute alphas and alpha_bar from betas, then the mean, then branch on t == 0.',
+      'alpha_bar = torch.cumprod(1 - betas, dim=0); mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * eps_pred) / torch.sqrt(1 - betas[t]).',
+      'Pitfall: the noise coefficient uses 1 − ᾱ_t (cumulative) but the outer division uses α_t; add torch.sqrt(betas[t]) * z only when t > 0.',
     ],
   },
   'classifier-free-guidance': {
@@ -654,9 +660,10 @@ def cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z):
       },
     ],
     hints: [
-      'guided = eps_uncond + w * (eps_cond - eps_uncond)',
-      'alphas = 1 - betas; alpha_bar = torch.cumprod(alphas, dim=0)',
-      'mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * guided) / torch.sqrt(alphas[t]); add torch.sqrt(betas[t]) * z only if t > 0',
+      'Guidance extrapolates from the unconditional prediction through the conditional one; check that w = 0 and w = 1 give the two inputs.',
+      'Write guided_noise first, then call it inside cfg_step and run the ordinary DDPM step.',
+      'eps_uncond + w * (eps_cond - eps_uncond); alpha_bar = torch.cumprod(1 - betas, dim=0).',
+      'Pitfall: add torch.sqrt(betas[t]) * z only when t > 0; w = 1 means no guidance.',
     ],
   },
   'flow-matching': {
@@ -768,10 +775,10 @@ def euler_sample(x0: torch.Tensor, velocity_fn, n_steps: int) -> torch.Tensor:
       },
     ],
     hints: [
-      'Reshape t with t.view(-1, *([1] * (x0.dim() - 1)))',
-      'x_t = (1 - t) * x0 + t * x1 and target = x1 - x0',
-      'loss = F.mse_loss(v_pred, target).item()',
-      'euler_sample: dt = 1 / n_steps; for i in range(n_steps): x = euler_step(x, velocity_fn(x, i * dt), dt)',
+      'On a straight line from x0 to x1, the velocity is constant in t.',
+      'flow_matching_loss: broadcast t, interpolate, form the target, MSE. euler_sample: loop over steps calling euler_step.',
+      't.view(-1, *([1] * (x0.dim() - 1))); (1 - t) * x0 + t * x1; target = x1 - x0; F.mse_loss(v_pred, target).item().',
+      'Pitfall: step i uses time i * dt (start of the interval); an un-reshaped (B,) t broadcasts against the last axis, not the batch.',
     ],
   },
 };

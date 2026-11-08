@@ -921,54 +921,80 @@ Lexical search finds rare exact terms (names, error codes) that embeddings blur;
   {
     id: 'generative-models',
     title: 'Generative Models',
-    description: 'Learn VAEs, diffusion models, and generative AI fundamentals.',
+    description: 'Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.',
     icon: '🎨',
     introduction: `
 # Generative Models
 
-Generative models learn to create new data similar to the training distribution.
+## Why it matters
+Image, audio and video generators (Stable Diffusion, Flux, Sora-style video models) are diffusion or flow-matching models; image and audio tokenizers are VQ-VAEs; and the VAE's KL regulariser reappears in RLHF and representation learning. Interviews for generative-AI roles ask you to derive these losses, explain the tricks that make them trainable, and write a sampling step without notes.
 
-## Key Concepts
+## Core ideas
 
-### Variational Autoencoders (VAEs)
-- **Encoder**: Maps input to latent distribution (μ, σ)
-- **Decoder**: Reconstructs input from latent sample
-- **Reparameterization trick**: Enable backprop through sampling
-- **Loss**: Reconstruction + KL divergence
+### KL divergence
+\`KL(P || Q)\` measures the extra nats paid for using Q in place of P. It is ≥ 0, zero only when P = Q, and **not symmetric**. For Gaussians it has a closed form:
 
-### VAE Loss (ELBO)
-\`\`\`
-L = Reconstruction Loss + KL Divergence
-L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
+\`\`\`text
+KL(N(μ_p, σ_p²) || N(μ_q, σ_q²)) = log(σ_q/σ_p) + (σ_p² + (μ_p − μ_q)²) / (2σ_q²) − 1/2
 \`\`\`
 
-### Diffusion Models
-- **Forward process**: Gradually add noise to data
-- **Reverse process**: Learn to denoise
-- **Noise schedule**: β_t controls noise at each step
+### Variational autoencoders
+An encoder maps \`x\` of shape \`(batch, features)\` to \`mu, log_var\` of shape \`(batch, latent_dim)\`; a decoder maps a sample \`z\` back to \`x\`. Training minimises the negative ELBO:
 
-### Key Formulas
+\`\`\`text
+z        = mu + exp(0.5·log_var) ⊙ ε,   ε ~ N(0, I)           # reparameterization trick
+KL_i     = −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij))
+loss     = mean((x − x_recon)²) + mean_i KL_i                  # KL: sum over latent dims, mean over batch
 \`\`\`
-x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-\`\`\`
 
-### KL Divergence
-- Measures difference between distributions
-- KL(P || Q) ≥ 0, equals 0 iff P = Q
-- Not symmetric
+The reparameterization trick moves the randomness into ε, so gradients flow to \`mu\` and \`log_var\`. **VQ-VAEs** swap the Gaussian latent for the nearest of K codebook vectors, trained with a codebook loss and a β-weighted commitment loss.
 
-### Interview Topics
-- Explain reparameterization trick
-- VAE loss components
-- Diffusion forward/reverse process
-- Compare GANs vs VAEs vs Diffusion
+### Diffusion (DDPM)
+Fix a schedule \`β_0 … β_{T−1}\`, with \`α_t = 1 − β_t\` and \`ᾱ_t = Π_{s≤t} α_s\` (0-indexed throughout this section).
 
-### Sampling, Guidance and Flow Matching
-- **DDPM sampling** runs the reverse process: start from noise and repeatedly subtract the predicted noise, adding a little fresh noise (σ_t² = β_t) until the last step
-- **Classifier-free guidance** combines conditional and unconditional predictions, \`ε = ε_u + w·(ε_c − ε_u)\`, so a guidance scale w > 1 trades diversity for prompt fidelity
-- **Flow matching / rectified flow** regresses a velocity field onto straight paths \`x_t = (1 − t)·x0 + t·x1\` with target \`x1 − x0\`, then samples by integrating the ODE with a few Euler steps
+| Piece | Formula |
+|-------|---------|
+| Forward (closed form) | \`x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε\` |
+| Training loss | \`mean((ε_θ(x_t, t) − ε)²)\` |
+| Reverse step | \`x_{t−1} = (x_t − β_t/sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t) + sqrt(β_t)·z\` (no z at t = 0) |
+| Classifier-free guidance | \`ε = ε_u + w·(ε_c − ε_u)\`; w = 1 is no guidance, w > 1 trades diversity for prompt fidelity |
 
-Let's implement generative models!
+### Flow matching
+Regress a velocity field onto straight paths \`x_t = (1 − t)·x0 + t·x1\` (t = 0 noise, t = 1 data) with the constant target \`x1 − x0\`, then sample by integrating \`dx/dt = v(x, t)\` with a few Euler steps.
+
+## Worked micro-example
+- **VAE KL** for one latent dim with \`mu = 1\`, \`log_var = log 0.25\` (σ = 0.5): \`−0.5·(1 + log 0.25 − 1 − 0.25) = 0.8181\`, the same as the Gaussian formula for \`KL(N(1, 0.5²) || N(0, 1))\`.
+- **Forward diffusion** with \`β = [0.1, 0.2, 0.3]\`: \`ᾱ = [0.9, 0.72, 0.504]\`. For \`x_0 = 1.0\`, \`t = 2\`, \`ε = 0.5\`: \`x_2 = sqrt(0.504)·1 + sqrt(0.496)·0.5 = 0.7099 + 0.3521 = 1.0621\`.
+- **CFG** with \`ε_u = 0.1\`, \`ε_c = 0.3\`, \`w = 7.5\`: \`0.1 + 7.5·0.2 = 1.6\`, far past the conditional prediction.
+
+## Common pitfalls
+- **std vs variance**: \`exp(log_var)\` is σ²; the sample needs \`σ = exp(0.5·log_var)\`.
+- **KL reduction**: \`mean\` over the whole \`(batch, latent_dim)\` array divides by \`latent_dim\` and under-weights the KL. Sum over latent dims, then average over the batch.
+- **Off-by-one in schedules**: decide whether \`t\` is 0- or 1-indexed and index \`betas\` and \`ᾱ\` consistently. Here t = 0 is the least noisy step.
+- **sqrt of the coefficients**: \`ᾱ_t\` and \`1 − ᾱ_t\` are variances; the forward process multiplies by their square roots.
+- **Noise at the last step**: the final reverse step returns the mean.
+- **Broadcasting per-example t**: reshape a \`(batch,)\` vector to \`(batch, 1, …, 1)\` before multiplying images.
+- **Stop-gradients in VQ**: the codebook and commitment losses have the same value but differ in where \`.detach()\` goes.
+
+## Interview angle
+- Derive the reparameterization trick and say why \`log_var\` is predicted instead of σ.
+- Why is the VAE KL analytic but diffusion trained with a simple ε-MSE? (The ε-MSE is a reweighted ELBO.)
+- Compare GANs, VAEs, diffusion and flow models on sample quality, diversity, likelihood and sampling speed.
+- Cost of sampling: T network evaluations for DDPM (×2 with CFG); DDIM and flow matching cut this to 10–50 steps.
+- VQ follow-ups: codebook collapse, EMA updates, the straight-through estimator, memory of the \`(N, K)\` distance matrix.
+
+## Problems in this section
+1. **KL Divergence (Gaussians)**: closed-form KL between two univariate Gaussians.
+2. **VAE Reparameterization Trick**: differentiable sampling \`z = μ + σ·ε\`.
+3. **VAE Loss Function**: MSE reconstruction plus the closed-form KL (sum over latent dims, mean over batch).
+4. **VQ-VAE Vector Quantization**: nearest-code lookup plus codebook and commitment losses.
+5. **Diffusion Noise Schedule**: linear β schedule, α and the cumulative ᾱ.
+6. **Diffusion Forward Process**: noise clean data to any step in one shot.
+7. **DDPM Reverse Sampling Step**: one denoising step with σ_t² = β_t.
+8. **Classifier-Free Guidance**: guided noise and a guided sampling step.
+9. **Flow Matching (Rectified Flow)**: straight-path targets, MSE loss and an Euler sampler.
+
+The capstones **E2E: Variational Autoencoder**, **E2E: VQ-VAE** and **E2E: Diffusion Model** in End-to-End Implementations assemble these pieces into full models.
     `,
     problems: ['kl-divergence', 'vae-reparameterization', 'vae-loss', 'vqvae-quantization', 'diffusion-noise-schedule', 'diffusion-forward', 'ddpm-sampling-step', 'classifier-free-guidance', 'flow-matching'],
   },

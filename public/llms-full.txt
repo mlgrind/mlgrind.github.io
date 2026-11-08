@@ -295,7 +295,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 18: Generative Models
 
 **URL**: /section/generative-models
-**Summary**: Learn VAEs, diffusion models, and generative AI fundamentals.
+**Summary**: Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.
 **Problems** (9):
 
 1. **KL Divergence (Gaussians)** (`/problem/generative-models/kl-divergence`) — easy
