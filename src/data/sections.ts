@@ -653,63 +653,100 @@ Related: **Batch Normalization** (Neural Networks), **Precision and Recall** (Mo
   {
     id: 'sequence-models',
     title: 'Sequence Models',
-    description: 'RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.',
+    description: 'Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.',
     icon: '🔁',
     introduction: `
 # Sequence Models
 
-Text, audio, time series and user sessions are all **sequences**: the order matters, and the length varies. Before transformers, recurrent networks were the standard way to model them. They still show up in streaming and on-device models, and modern state-space models (Mamba, RWKV) bring back the same recurrent idea.
-
-## The Recurrent Idea
-
-An RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the same weights at every step:
-
-\`\`\`
-h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)
-\`\`\`
-
-Training unrolls the loop over time and backpropagates through every step: **backpropagation through time (BPTT)**. The gradient reaching step 1 from step T is a product of T Jacobians:
-
-\`\`\`
-dh_T/dh_1 = prod_t  diag(1 - h_t^2) @ W_hh.T
-\`\`\`
-
-If the largest singular value of \`W_hh\` is below 1, this product **vanishes**; above 1, it can **explode**. Plain RNNs therefore struggle to learn dependencies longer than a few dozen steps (clipping helps with exploding gradients, but not with vanishing ones).
-
-## Gated Cells
-
-Gates are sigmoids in \`[0, 1]\` that decide, per dimension, how much information flows.
-
-| Cell | State | Gates | Key equation |
-|------|-------|-------|--------------|
-| **RNN** | \`h\` | none | \`h = tanh(W x + U h)\` |
-| **LSTM** | \`h\`, \`c\` | input \`i\`, forget \`f\`, output \`o\` (+ candidate \`g\`) | \`c = f*c + i*g\`, \`h = o*tanh(c)\` |
-| **GRU** | \`h\` | reset \`r\`, update \`z\` | \`h = (1-z)*n + z*h_prev\` |
-
-The LSTM's cell state is updated **additively**: when \`f ≈ 1\`, \`dc_t/dc_{t-1} ≈ 1\` and gradients can travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.
-
-## PyTorch Conventions (worth memorizing)
-
-| | LSTM (\`nn.LSTMCell\`) | GRU (\`nn.GRUCell\`) |
-|---|---|---|
-| Gate order in \`weight_ih\` / \`weight_hh\` | \`i, f, g, o\` | \`r, z, n\` |
-| Weight shapes | \`(4H, D)\`, \`(4H, H)\` | \`(3H, D)\`, \`(3H, H)\` |
-| Parameters (with both biases) | \`4(HD + H² + 2H)\` | \`3(HD + H² + 2H)\` |
-
-## RNNs vs Transformers
-
-| | RNN / LSTM | Transformer |
-|---|---|---|
-| Training | Sequential over time (slow) | Parallel over positions |
-| Inference per token | O(1) memory and compute | O(T) with a KV cache |
-| Long-range dependencies | Hard (bounded state) | Direct attention to any position |
-
 ## Why It Matters
 
-- **Interviews** ask you to write an LSTM step, explain vanishing gradients and how gating fixes them, or count the parameters of a GRU.
-- **In practice**, understanding recurrence makes state-space models, streaming ASR and RNN-style inference tricks easy to follow.
+Text, audio, time series and user sessions are all **sequences**: order matters and length varies. Before transformers, recurrent networks (RNN, LSTM, GRU) were the standard way to model them, and they still power streaming speech recognition, on-device keyboards and many forecasting systems. State-space models (Mamba, RWKV) bring the same recurrent idea back to LLMs, and interviewers still ask you to write an LSTM step or explain vanishing gradients.
 
-Let's build these cells from scratch!
+## Core Ideas
+
+### The recurrence
+An RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the **same weights at every step**:
+
+\`\`\`text
+h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        x_t: (N, D),  h_t: (N, H)
+\`\`\`
+
+All problems here are **batch first**: a batch of sequences is \`X\` of shape \`(N, T, D)\` = \`(batch, seq_len, features)\` and the stacked hidden states are \`(N, T, H)\`.
+
+### Backpropagation through time (BPTT)
+Training unrolls the loop and backpropagates through every step. The gradient reaching \`h_1\` from \`h_T\` is a product of \`T - 1\` Jacobians:
+
+\`\`\`text
+dh_T/dh_1 = prod over t = T..2 of  diag(1 - h_t^2) @ W_hh.T
+\`\`\`
+
+If the largest singular value of \`W_hh\` (times the tanh slope, at most 1) is below 1 the product **vanishes**; above 1 it can **explode**. Gradient clipping fixes explosions but not vanishing, so plain RNNs struggle beyond a few dozen steps.
+
+### Gated cells
+Gates are sigmoids in \`[0, 1]\` that decide, per dimension, how much information flows.
+
+| Cell | State | Gates | Update |
+|------|-------|-------|--------|
+| **RNN** | \`h\` | none | \`h = tanh(x W_xh + h W_hh + b)\` |
+| **LSTM** | \`h\`, \`c\` | input \`i\`, forget \`f\`, output \`o\` (+ candidate \`g\`) | \`c = f*c_prev + i*g\`, \`h = o*tanh(c)\` |
+| **GRU** | \`h\` | reset \`r\`, update \`z\` (+ candidate \`n\`) | \`h = (1-z)*n + z*h_prev\` |
+
+The LSTM's cell state is updated **additively**: when \`f ≈ 1\`, \`dc_t/dc_{t-1} ≈ 1\` and gradients travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.
+
+### Conventions used in this section (memorize them)
+
+| | Vanilla RNN problem | LSTM (\`nn.LSTMCell\`) | GRU (\`nn.GRUCell\`) |
+|---|---|---|---|
+| Weight layout | \`x @ W_xh\`, \`W_xh: (D, H)\`, \`W_hh: (H, H)\` | \`x @ W_ih.T\`, \`W_ih: (4H, D)\`, \`W_hh: (4H, H)\` | \`x @ W_ih.T\`, \`W_ih: (3H, D)\`, \`W_hh: (3H, H)\` |
+| Biases | one \`b: (H,)\` | \`b_ih\`, \`b_hh: (4H,)\` | \`b_ih\`, \`b_hh: (3H,)\` |
+| Gate order (row blocks of \`H\`) | none | **\`i, f, g, o\`** | **\`r, z, n\`** |
+| Parameters | \`DH + H^2 + H\` | \`4(HD + H^2 + 2H)\` | \`3(HD + H^2 + 2H)\` |
+
+Note the layout switch: the RNN problem uses \`(in, out)\` weights, the LSTM and GRU problems use PyTorch's \`(out, in)\` weights, hence the \`.T\`. TensorFlow/Keras orders LSTM gates \`i, f, c, o\` too, but stores kernels as \`(D, 4H)\`.
+
+## Worked Micro-Example
+
+**RNN**, scalar (\`D = H = 1\`), \`W_xh = 0.5\`, \`W_hh = 1\`, \`b = 0\`, \`h_0 = 0\`, input \`x_t = 1\` for 3 steps:
+
+\`\`\`text
+h_1 = tanh(0.5)            = 0.4621
+h_2 = tanh(0.5 + 0.4621)   = 0.7452
+h_3 = tanh(0.5 + 0.7452)   = 0.8469
+\`\`\`
+
+**LSTM**, one step with \`H = 1\`, \`c_prev = 1\` and gate pre-activations \`(i, f, g, o) = (0, 2, 1, 0)\`:
+
+\`\`\`text
+i = sigmoid(0) = 0.5,  f = sigmoid(2) = 0.8808,  g = tanh(1) = 0.7616,  o = 0.5
+c = 0.8808 * 1 + 0.5 * 0.7616 = 1.2616
+h = 0.5 * tanh(1.2616)       = 0.4258
+\`\`\`
+
+**Vanishing in numbers**: a per-step gradient factor of 0.5 over 20 steps leaves \`0.5^20 ≈ 9.5e-7\` of the signal; a factor of 1.1 over 50 steps blows it up to about 117.
+
+## Common Pitfalls
+
+- **Gate order**: splitting an LSTM's \`4H\` block as \`i, f, o, g\` (or a GRU's as \`z, r, n\`) runs without errors and gives wrong numbers. PyTorch is \`i, f, g, o\` and \`r, z, n\`.
+- **Weight orientation**: \`x @ W\` vs \`x @ W.T\`. Check the shape table before multiplying.
+- **GRU reset gate**: PyTorch applies \`r\` *after* the hidden matmul, to \`h_prev @ W_hn.T + b_hn\`; the original paper applies it to \`h_prev\` first. The numbers differ.
+- **GRU update gate**: in PyTorch \`z = 1\` **keeps** \`h_prev\`; some papers swap \`z\` and \`1 - z\`.
+- **BPTT**: weights are shared, so their gradients **accumulate** over time; the gradient into \`h_t\` has a direct part and a part from \`h_{t+1}\`.
+- **Batch vs time axis**: \`nn.RNN\` defaults to \`(T, N, D)\` unless \`batch_first=True\`. These problems are batch first.
+
+## Interview Angle
+
+- "Write an LSTM cell from scratch." Then: "count its parameters", "why does the cell state help gradients?", "why initialize the forget bias to 1?"
+- "Explain vanishing and exploding gradients in RNNs and the fixes": gating, clipping, orthogonal init, shorter truncated BPTT windows.
+- "LSTM vs GRU?" GRU has 3 weight blocks instead of 4 (25% fewer parameters) and no separate cell state; quality is usually similar.
+- "RNN vs Transformer?" RNN training is sequential in \`T\` but inference costs \`O(1)\` per token; attention trains in parallel but costs \`O(T)\` per token with a KV cache and \`O(T^2)\` for the full sequence.
+
+## Problems in This Section
+
+1. **Vanilla RNN: Forward & BPTT**: unroll \`h_t = tanh(x_t W_xh + h_{t-1} W_hh + b)\` over \`(N, T, D)\` inputs and backpropagate through time by hand.
+2. **LSTM Cell**: one step of \`nn.LSTMCell\` with gate order \`i, f, g, o\`.
+3. **GRU Cell**: one step of \`nn.GRUCell\` with gate order \`r, z, n\` and PyTorch's reset-gate placement.
+
+Related: **Gradient Clipping by Global Norm** (Optimization & Training) for exploding gradients, and **Scaled Dot-Product Attention** (Transformer Architecture), which replaced recurrence in most language models.
     `,
     problems: ['rnn-forward', 'lstm-cell', 'gru-cell'],
   },
