@@ -2308,7 +2308,8 @@ def unique_consecutive(input, return_inverse=False, return_counts=False, dim=Non
 def bincount(input, weights=None, minlength=0):
     A = _arr(input)
     w = None if weights is None else _arr(weights)
-    r = np.bincount(A, weights=w, minlength=minlength)
+    # np.bincount casts 'safe' to intp, which is int32 on wasm32 (Pyodide).
+    r = np.bincount(A.astype(np.intp), weights=w, minlength=minlength)
     return Tensor._wrap(r.astype(np.int64) if w is None else r.astype(w.dtype if _is_float(w.dtype) else np.float64))
 
 
@@ -2779,7 +2780,8 @@ def scatter_reduce(input, dim, index, src, reduce, include_self=True):
 def index_select(input, dim, index):
     x = _tens(input)
     A = x._data
-    idx = _arr(index).reshape(-1)
+    # intp, not int64: np.take casts indices 'safe' to intp, int32 on wasm32 (Pyodide).
+    idx = _arr(index).reshape(-1).astype(np.intp)
     d = _dim1(dim, A.ndim) if A.ndim else 0
     out = np.take(A, idx, axis=d) if A.ndim else A[idx]
 
@@ -2794,7 +2796,7 @@ def index_select(input, dim, index):
 def index_add(input, dim, index, source, alpha=1):
     x = _tens(input)
     d = _dim1(dim, x.ndim)
-    idx = _arr(index).reshape(-1)
+    idx = _arr(index).reshape(-1).astype(np.intp)  # see index_select
     src = _tens(source) * alpha if alpha != 1 else _tens(source)
     A = x._data
     out = A.copy()
@@ -2942,12 +2944,12 @@ def repeat_interleave(input, repeats=None, dim=None, output_size=None):
     x = _tens(input)
     if repeats is None:  # repeat_interleave(repeats_tensor)
         r = x._data
-        return Tensor._wrap(np.repeat(np.arange(len(r)), r).astype(np.int64))
+        return Tensor._wrap(np.repeat(np.arange(len(r)), r.astype(np.intp)).astype(np.int64))
     if dim is None:
         x = x.reshape(-1)
         dim = 0
     d = _dim1(dim, x._data.ndim)
-    rep = _arr(repeats) if isinstance(repeats, Tensor) else repeats
+    rep = _arr(repeats).astype(np.intp) if isinstance(repeats, Tensor) else repeats  # see index_select
     idx = np.repeat(np.arange(x._data.shape[d]), rep)
     return index_select(x, d, Tensor._wrap(idx.astype(np.int64)))
 

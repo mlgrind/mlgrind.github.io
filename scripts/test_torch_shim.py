@@ -1606,6 +1606,9 @@ def install_checks():
     """install() registers modules, is idempotent and never shadows a real torch."""
     if not selected('install'):
         return
+    if sys.platform == 'emscripten':  # Pyodide cannot start subprocesses
+        RESULTS['skip'] += 1
+        return
     import subprocess
     code = r'''
 import sys
