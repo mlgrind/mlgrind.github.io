@@ -228,7 +228,9 @@ For y = x² + 3x + 1:
 - dy/dx = 2x + 3
 
 ### Task
-Implement forward pass and gradient computation for simple functions.
+Implement two functions:
+1. \`compute_gradients(x)\`: forward pass and derivative of y = x² + 3x + 1. Return \`{'y': ..., 'grad': ...}\`
+2. \`linear_layer_gradients(X, W, b, grad_output)\`: backward pass of Y = X @ W + b. Return \`{'grad_W': X.T @ grad_output, 'grad_b': grad_output summed over the batch, 'grad_X': grad_output @ W.T}\`
     `,
     examples: [
       {

@@ -619,7 +619,7 @@ class VAE:
         Full forward pass.
 
         Returns:
-            Dictionary with mu, log_var, z, x_reconstructed
+            Dictionary with mu, log_var, z, x_recon
         """
         # Your code here
         pass
@@ -920,7 +920,7 @@ class VQVAE:
         Compute total VQ-VAE loss.
 
         Returns:
-            Dictionary with total_loss, recon_loss, vq_loss, commitment_loss
+            Dictionary with total_loss, recon_loss, codebook_loss, commitment_loss
         """
         # Your code here
         pass
@@ -1056,7 +1056,7 @@ class VQVAE:
 
         # Encode
         h = np.maximum(0, x_flat @ self.enc_w1 + self.enc_b1)  # ReLU
-        z_e = x_flat @ self.enc_w1[:, :self.embedding_dim] + self.enc_b1[:self.embedding_dim]
+        z_e = h @ self.enc_w2 + self.enc_b2  # (batch, embedding_dim)
 
         # Reshape to spatial format (batch, 2, 2, embedding_dim)
         z_e = z_e.reshape(batch, 1, 1, self.embedding_dim)
@@ -1617,8 +1617,6 @@ def test_cnn():
     cnn = CNN(input_shape=(1, 28, 28), num_classes=10)
     x = np.random.randn(4, 1, 28, 28)
     logits = cnn.forward(x)
-    print(f"Input shape: {x.shape}")
-    print(f"Output shape: {logits.shape}")
     return logits.shape == (4, 10)
 `,
   },

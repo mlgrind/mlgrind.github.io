@@ -244,7 +244,7 @@ np.log(Y_pred + 1e-15)
     examples: [
       {
         input: 'Y_pred = [[0.7, 0.2, 0.1], [0.1, 0.8, 0.1]], Y = [[1,0,0], [0,1,0]]',
-        output: '0.2231',
+        output: '0.2899',
         explanation: '-1/2 * (log(0.7) + log(0.8))',
       },
     ],

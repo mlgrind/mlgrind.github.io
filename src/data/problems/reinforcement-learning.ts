@@ -1079,7 +1079,7 @@ Where values has length T+1 (includes V(s_T+1), use 0 if terminal).
     examples: [
       {
         input: 'rewards=[1,1,1], values=[0,0,0,0], gamma=0.99, lambda=0.95',
-        output: 'advantages=[2.9, 1.95, 1.0]',
+        output: 'advantages=[2.83, 1.94, 1.0]',
         explanation: 'GAE combines TD errors with exponential decay',
       },
     ],
@@ -1112,7 +1112,7 @@ def compute_gae(rewards: np.ndarray, values: np.ndarray,
       {
         id: '1',
         description: 'Zero values baseline',
-        input: 'bool(np.allclose(compute_gae([1, 1, 1], [0, 0, 0, 0], 0.99, 0.95), [2.9, 1.95, 1.0], atol=0.1))',
+        input: 'bool(np.allclose(compute_gae([1, 1, 1], [0, 0, 0, 0], 0.99, 0.95), [2.825, 1.9405, 1.0], atol=0.01))',
         expected: 'True',
         hidden: false,
       },
@@ -1210,8 +1210,8 @@ def ppo_clip_objective(old_probs: np.ndarray, new_probs: np.ndarray,
     examples: [
       {
         input: 'old_probs=[0.5], new_probs=[0.6], advantages=[1.0], epsilon=0.2',
-        output: '1.0',
-        explanation: 'Ratio=1.2, clipped to 1.2, advantage positive: min(1.2, 1.2)*1=1.2, but capped at 1.0 example',
+        output: '1.2',
+        explanation: 'ratio = 1.2 is inside [0.8, 1.2], so min(1.2 * 1, clip(1.2) * 1) = 1.2',
       },
     ],
     starterCode: `import numpy as np
@@ -1602,7 +1602,7 @@ def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
     examples: [
       {
         input: 'logp_chosen=[-1], logp_rejected=[-2], ref_logp_chosen=[-1.5], ref_logp_rejected=[-1.5], beta=0.1',
-        output: '0.643',
+        output: '0.644',
         explanation: 'Policy prefers chosen over reference',
       },
     ],
@@ -1840,6 +1840,8 @@ def kl_penalty(logp_policy: np.ndarray, logp_reference: np.ndarray,
 
 Implement the full PPO-RLHF objective that combines the clipped surrogate, reward, and KL penalty.
 
+The KL penalty is applied through the reward (InstructGPT-style): \`advantage = reward - beta * KL\`, where \`KL = new_logp - ref_logp\`. The \`'objective'\` is the clipped surrogate computed with that advantage; \`'kl_penalty'\` reports \`beta * mean(KL)\` for monitoring.
+
 ### RLHF PPO Objective
 \`\`\`
 L = E[min(r_t * Â_t, clip(r_t, 1-ε, 1+ε) * Â_t) - β * KL]
@@ -1943,7 +1945,7 @@ def ppo_rlhf_objective(old_logp: np.ndarray, new_logp: np.ndarray,
       'Compute KL: new_logp - ref_logp',
       'Compute advantage: rewards - beta * KL',
       'Apply PPO clipping to ratio * advantage',
-      'Final objective: clipped_objective - beta * KL',
+      'The KL penalty is already inside the advantage, so the objective is the clipped surrogate (report beta * mean KL separately)',
     ],
     solution: `import numpy as np
 

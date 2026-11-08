@@ -510,7 +510,7 @@ Given a 1D array of 24 elements:
 1. Reshape to (4, 6)
 2. Reshape to (2, 3, 4)
 3. Transpose the 2D version
-4. Swap axes on the 3D version
+4. Reverse the axes of the 3D version (transpose(2, 1, 0))
 5. Flatten back to 1D
 
 ### Important Concepts

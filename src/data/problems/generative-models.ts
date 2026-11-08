@@ -133,7 +133,7 @@ Implement the VAE loss function: reconstruction loss + KL divergence.
 L = L_reconstruction + L_KL
 
 L_reconstruction = MSE(x, x_reconstructed)
-L_KL = -0.5 * sum(1 + log_var - mu² - exp(log_var))
+L_KL = -0.5 * sum(1 + log_var - mu² - exp(log_var))   # sum over latent dims, mean over batch
 \`\`\`
 
 ### Intuition
@@ -178,7 +178,7 @@ def vae_loss(x, x_reconstructed, mu, log_var):
       {
         id: '2',
         description: 'Non-zero KL',
-        input: 'bool(np.allclose(vae_loss(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2))), (0.5, 0.0, 0.5), atol=1e-4))',
+        input: 'bool(np.allclose(vae_loss(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2))), (1.0, 0.0, 1.0), atol=1e-4))',
         expected: 'True',
         hidden: true,
       },
@@ -209,8 +209,8 @@ def vae_loss(x, x_reconstructed, mu, log_var):
     ],
     hints: [
       'Reconstruction: np.mean((x - x_reconstructed)²)',
-      'KL: -0.5 * sum(1 + log_var - mu² - exp(log_var))',
-      'Average over batch',
+      'KL: -0.5 * sum(1 + log_var - mu² - exp(log_var)) over the latent dims',
+      'Average both terms over the batch',
     ],
     solution: `import numpy as np
 
@@ -219,7 +219,7 @@ def vae_loss(x, x_reconstructed, mu, log_var):
     recon_loss = np.mean((x - x_reconstructed) ** 2)
 
     # KL divergence
-    kl_loss = -0.5 * np.mean(1 + log_var - mu**2 - np.exp(log_var))
+    kl_loss = -0.5 * np.mean(np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1))
 
     total_loss = recon_loss + kl_loss
 
@@ -238,7 +238,7 @@ Implement a linear noise schedule for diffusion models.
 
 ### Linear Schedule
 \`\`\`
-β_t = β_start + t * (β_end - β_start) / T
+β_t = β_start + t * (β_end - β_start) / (T - 1)
 
 where t = 0, 1, ..., T-1
 \`\`\`
@@ -496,7 +496,7 @@ z_q = z_e + stop_gradient(z_q - z_e)
 
 ### VQ-VAE Loss Components
 \`\`\`
-L = reconstruction + β * ||sg[z_e] - e||² + ||z_e - sg[e]||²
+L = reconstruction + ||sg[z_e] - e||² + β * ||z_e - sg[e]||²
 \`\`\`
 - **Codebook loss**: Moves embeddings toward encoder outputs
 - **Commitment loss**: Commits encoder to embeddings
