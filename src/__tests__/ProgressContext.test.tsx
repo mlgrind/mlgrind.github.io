@@ -74,6 +74,35 @@ describe('ProgressContext', () => {
     expect(progress.status).toBe('in_progress');
   });
 
+  it('saves code per language and keeps NumPy code under code', () => {
+    const { result } = renderHook(() => useProgress(), { wrapper });
+
+    act(() => {
+      result.current.saveProblemCode('cnn', 'max-pool', 'numpy draft');
+      result.current.saveProblemCode('cnn', 'max-pool', 'torch draft', 'pytorch');
+    });
+
+    const progress = result.current.getProblemProgress('cnn', 'max-pool');
+    expect(progress.code).toBe('numpy draft');
+    expect(progress.codes).toEqual({ pytorch: 'torch draft' });
+    expect(result.current.progress.cnn['max-pool'].code).toBe('numpy draft');
+  });
+
+  it('records each track a problem was solved in', () => {
+    const { result } = renderHook(() => useProgress(), { wrapper });
+
+    act(() => {
+      result.current.updateProblemStatus('cnn', 'max-pool', 'completed', 'pytorch');
+      result.current.updateProblemStatus('cnn', 'max-pool', 'completed', 'pytorch');
+      result.current.updateProblemStatus('cnn', 'max-pool', 'completed', 'numpy');
+    });
+
+    const progress = result.current.getProblemProgress('cnn', 'max-pool');
+    expect(progress.status).toBe('completed');
+    expect(progress.solvedIn).toEqual(['numpy', 'pytorch']);
+    expect(result.current.getProblemProgress('cnn', 'other').solvedIn).toEqual([]);
+  });
+
   it('should calculate section progress', () => {
     const { result } = renderHook(() => useProgress(), { wrapper });
 

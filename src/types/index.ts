@@ -66,7 +66,12 @@ export interface Section {
 export interface ProblemProgress {
   status: ProblemStatus;
   lastAttempt?: string;
+  /** Saved NumPy-track code (kept under this name for backward compatibility). */
   code?: string;
+  /** Saved code for the other tracks, e.g. { pytorch: '...' }. */
+  codes?: { pytorch?: string };
+  /** Tracks the problem was solved in (absent for solves before tracks existed). */
+  solvedIn?: Language[];
 }
 
 export interface SectionProgress {

@@ -17,6 +17,23 @@ describe('existing deployment compatibility', () => {
     localStorage.setItem('ml-interview-progress', '{}'); readProgress();
     expect(localStorage.getItem('ml-interview-progress-backup-v1')).toBe(raw);
   });
+  it('loads PyTorch track fields and drops malformed ones', () => {
+    const stored = {
+      cnn: {
+        'max-pool': { status: 'completed', code: 'np', codes: { pytorch: 'torch', jax: 'x' }, solvedIn: ['pytorch', 'numpy', 'cobol'], lastAttempt: '2026-03-01T00:00:00Z' },
+        'flatten-layer': { status: 'in_progress', codes: { pytorch: 7 }, solvedIn: 'pytorch' },
+        'conv2d-forward': { status: 'in_progress', codes: null, solvedIn: [] },
+      },
+    };
+    localStorage.setItem('ml-interview-progress', JSON.stringify(stored));
+    expect(readProgress()).toEqual({
+      cnn: {
+        'max-pool': { status: 'completed', code: 'np', codes: { pytorch: 'torch' }, solvedIn: ['numpy', 'pytorch'], lastAttempt: '2026-03-01T00:00:00Z' },
+        'flatten-layer': { status: 'in_progress' },
+        'conv2d-forward': { status: 'in_progress' },
+      },
+    });
+  });
   it('backs up malformed historical data before recovery', () => {
     localStorage.setItem('ml-interview-progress', '{damaged');
     expect(readProgress()).toEqual({});

@@ -1,4 +1,21 @@
-import type { Progress, ProblemProgress } from "../types";
+import type { Language, Progress, ProblemProgress } from "../types";
+
+const LANGUAGES: readonly Language[] = ["numpy", "pytorch"];
+
+/** Valid per-track saved code, or undefined. Unknown keys are dropped. */
+export function sanitizeCodes(value: unknown): ProblemProgress["codes"] {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return undefined;
+  const pytorch = (value as Record<string, unknown>).pytorch;
+  return typeof pytorch === "string" ? { pytorch } : undefined;
+}
+
+/** Known languages in canonical order, or undefined when there are none. */
+export function sanitizeSolvedIn(value: unknown): Language[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const languages = LANGUAGES.filter((language) => value.includes(language));
+  return languages.length ? languages : undefined;
+}
 
 export function readStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -16,6 +33,18 @@ export function writeStorage(key: string, value: string): boolean {
     return false;
   }
 }
+function withTracks(
+  codes: unknown,
+  solvedIn: unknown,
+): Pick<ProblemProgress, "codes" | "solvedIn"> {
+  const validCodes = sanitizeCodes(codes);
+  const validSolvedIn = sanitizeSolvedIn(solvedIn);
+  return {
+    ...(validCodes ? { codes: validCodes } : {}),
+    ...(validSolvedIn ? { solvedIn: validSolvedIn } : {}),
+  };
+}
+
 export function readProgress(): Progress {
   try {
     const raw = readStorage("ml-interview-progress");
@@ -45,6 +74,7 @@ export function readProgress(): Progress {
           ...(typeof entry.lastAttempt === "string"
             ? { lastAttempt: entry.lastAttempt }
             : {}),
+          ...withTracks(entry.codes, entry.solvedIn),
         };
       }
       Object.defineProperty(progress, section, {
