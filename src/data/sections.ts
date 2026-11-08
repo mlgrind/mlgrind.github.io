@@ -189,9 +189,12 @@ class Linear(nn.Module):
 - MSELoss: Regression
 - BCELoss: Binary classification
 
+## The Training Loop & Minibatches
+Everything comes together in the loop: zero the gradients, forward pass, loss, backward pass, optimizer step, repeated over minibatches. A \`DataLoader\` shuffles the sample indices once per epoch (from a seeded generator, so runs are reproducible) and cuts them into batches. Forgetting \`zero_grad()\` makes gradients accumulate across steps, and it is the most common bug in hand-written loops.
+
 Learn these patterns to understand PyTorch!
     `,
-    problems: ['tensor-creation', 'tensor-operations', 'autograd-concepts', 'nn-modules', 'loss-functions', 'gelu-activation', 'leaky-relu-swish', 'softmax-temperature', 'rmsnorm', 'group-norm', 'adam-optimizer', 'sgd-momentum', 'lr-scheduling', 'gradient-accumulation', 'instance-norm', 'vit-patch-embeddings', 'cross-attention', 'depthwise-separable-conv', 'label-smoothing', 'lora-adapter', 'gradient-checkpointing'],
+    problems: ['tensor-creation', 'tensor-operations', 'autograd-concepts', 'nn-modules', 'loss-functions', 'gelu-activation', 'leaky-relu-swish', 'softmax-temperature', 'rmsnorm', 'group-norm', 'adam-optimizer', 'sgd-momentum', 'lr-scheduling', 'gradient-accumulation', 'instance-norm', 'vit-patch-embeddings', 'cross-attention', 'depthwise-separable-conv', 'label-smoothing', 'lora-adapter', 'gradient-checkpointing', 'training-loop', 'dataloader-batching'],
   },
 
   // ==========================================
@@ -223,6 +226,10 @@ Real-world data is messy. Before training any model, you need to clean and trans
 - **Label Encoding**: Map categories to integers
 - **When to use**: Tree-based models handle label encoding; others need one-hot
 
+### Splitting the Data
+- **Train / validation / test**: fit on train, tune on validation, report on test once
+- **Stratified split**: split each class separately so every split keeps the class proportions, which matters for rare classes
+
 ### Why It Matters
 Garbage in, garbage out. Proper preprocessing can:
 - Improve model accuracy by 10-30%
@@ -231,7 +238,7 @@ Garbage in, garbage out. Proper preprocessing can:
 
 Let's practice these essential skills!
     `,
-    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode'],
+    problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split'],
   },
 
   // ==========================================
@@ -272,6 +279,12 @@ Supervised learning is when you train a model on labeled data to make prediction
 - **Regularization**: L2 penalty on weights to maximize margin
 - **Key insight**: Only "support vectors" (points near the boundary) affect the decision boundary
 
+### Beyond Linear Models
+- **k-Nearest Neighbours**: no training; predict by majority vote of the k closest points
+- **Gaussian Naive Bayes**: Bayes' rule with per-class Gaussians, computed in log space with logsumexp
+- **Ridge & Lasso**: L2 shrinks weights smoothly (closed form); L1 sets some exactly to zero (coordinate descent)
+- **Gradient Boosting**: add weak learners (stumps) one at a time, each fit to the residuals of the current model
+
 ### The Interview Perspective
 Interviewers often ask you to:
 - Implement gradient descent from scratch
@@ -281,7 +294,7 @@ Interviewers often ask you to:
 
 Let's build these algorithms!
     `,
-    problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm'],
+    problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm', 'knn-classifier', 'naive-bayes', 'ridge-lasso', 'gradient-boosting'],
   },
   {
     id: 'unsupervised-learning',
@@ -311,9 +324,20 @@ Unsupervised learning finds patterns in unlabeled data.
   3. Find eigenvectors/eigenvalues
   4. Project onto top components
 
+### Gaussian Mixtures & EM
+- **Soft clustering**: each point gets a responsibility for every component
+- **EM**: E-step computes responsibilities (in log space), M-step re-fits weights, means and variances
+- **Guarantee**: the log-likelihood never decreases
+
+### DBSCAN
+- **Density-based**: clusters are dense regions; sparse points are labelled noise
+- **Core points** have at least min_samples neighbours within eps; only they grow clusters
+- **No K to choose**, and clusters can have any shape
+
 ### Why These Matter
 - **K-Means**: Customer segmentation, image compression
 - **PCA**: Feature reduction, visualization, noise removal
+- **GMM / DBSCAN**: Density estimation, anomaly detection, non-spherical clusters
 
 ### Interview Tips
 - Be ready to implement K-means from scratch
@@ -322,7 +346,7 @@ Unsupervised learning finds patterns in unlabeled data.
 
 Let's implement these algorithms!
     `,
-    problems: ['kmeans-clustering', 'pca-implementation'],
+    problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan'],
   },
   {
     id: 'model-evaluation',
@@ -353,6 +377,11 @@ Building a model is only half the job. You need to evaluate it properly.
 - **K-Fold**: Split data into K parts, rotate test set
 - **Stratified**: Maintain class distribution in folds
 
+### Ranking & Calibration
+- **ROC curve**: TPR vs FPR over every score threshold; tied scores form one diagonal step
+- **AUC**: probability a random positive outscores a random negative (ties count half)
+- **Calibration**: do 80%-confidence predictions come true 80% of the time? **ECE** averages the gap over confidence bins
+
 ### Interview Essentials
 - Know when to use each metric
 - Implement cross-validation from scratch
@@ -360,7 +389,7 @@ Building a model is only half the job. You need to evaluate it properly.
 
 Let's practice evaluation!
     `,
-    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix'],
+    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece'],
   },
 
   // ==========================================
@@ -479,6 +508,9 @@ output = (input - kernel + 2*padding) / stride + 1
 - **VGG**: Very deep, small kernels
 - **ResNet**: Skip connections
 
+### Residual Blocks
+A ResNet basic block computes \`ReLU(F(x) + shortcut(x))\` with \`F = conv-BN-ReLU-conv-BN\`. The shortcut is the identity, or a strided 1x1 conv + BN when the channels or resolution change. If the identity is optimal, the block only has to drive \`F\` to zero, which is what makes 100+ layer networks trainable.
+
 ### Object Detection
 - **IoU (Intersection over Union)**: Measures overlap between predicted and ground truth boxes
 - **Non-Maximum Suppression (NMS)**: Filters redundant detections by keeping only the highest-scoring box per object
@@ -492,7 +524,7 @@ output = (input - kernel + 2*padding) / stride + 1
 
 Let's implement CNN operations and detection/segmentation fundamentals!
     `,
-    problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics'],
+    problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics', 'resnet-block'],
   },
   {
     id: 'transformers',
@@ -675,9 +707,14 @@ x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
 - Diffusion forward/reverse process
 - Compare GANs vs VAEs vs Diffusion
 
+### Sampling, Guidance and Flow Matching
+- **DDPM sampling** runs the reverse process: start from noise and repeatedly subtract the predicted noise, adding a little fresh noise (σ_t² = β_t) until the last step
+- **Classifier-free guidance** combines conditional and unconditional predictions, \`ε = ε_u + w·(ε_c − ε_u)\`, so a guidance scale w > 1 trades diversity for prompt fidelity
+- **Flow matching / rectified flow** regresses a velocity field onto straight paths \`x_t = (1 − t)·x0 + t·x1\` with target \`x1 − x0\`, then samples by integrating the ODE with a few Euler steps
+
 Let's implement generative models!
     `,
-    problems: ['kl-divergence', 'vae-reparameterization', 'vae-loss', 'vqvae-quantization', 'diffusion-noise-schedule', 'diffusion-forward'],
+    problems: ['kl-divergence', 'vae-reparameterization', 'vae-loss', 'vqvae-quantization', 'diffusion-noise-schedule', 'diffusion-forward', 'ddpm-sampling-step', 'classifier-free-guidance', 'flow-matching'],
   },
 
   // ==========================================
@@ -818,8 +855,22 @@ Image classifier with:
 - Flatten + FC layers
 - Full forward pass
 
+### Mini GPT
+Character-level decoder-only Transformer with:
+- Token + position embeddings
+- Causal self-attention blocks
+- Next-token cross-entropy loss and training
+- Greedy generation
+
+### Tiny Vision Transformer
+Image classifier with:
+- Patch embeddings + [CLS] token
+- Position embeddings
+- A pre-norm encoder block
+- Classification from the CLS token
+
 Build these models to truly understand deep learning!
     `,
-    problems: ['e2e-mlp', 'e2e-transformer', 'e2e-vae', 'e2e-vqvae', 'e2e-diffusion', 'e2e-cnn'],
+    problems: ['e2e-mlp', 'e2e-transformer', 'e2e-vae', 'e2e-vqvae', 'e2e-diffusion', 'e2e-cnn', 'e2e-mini-gpt', 'e2e-vit-classifier'],
   },
 ];

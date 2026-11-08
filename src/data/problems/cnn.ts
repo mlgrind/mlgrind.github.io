@@ -1133,4 +1133,263 @@ def segmentation_metrics(prediction, target):
     }
 `,
   },
+  {
+    id: 'resnet-block',
+    title: 'ResNet Basic Block',
+    section: 'cnn',
+    difficulty: 'medium',
+    description: `
+## ResNet Basic Block
+
+Very deep plain CNNs train *worse* than shallower ones: optimization, not overfitting, is the problem. ResNet's fix is the **skip connection**: each block learns a residual \`F(x)\` and outputs \`ReLU(F(x) + x)\`. If the identity is the best a block can do, it only has to push \`F\` to zero, and gradients flow straight through the additions.
+
+Implement \`residual_block(x, params, stride=1)\`, the "basic block" of ResNet-18/34:
+\`\`\`
+x ──► conv3x3(stride) ─► BN ─► ReLU ─► conv3x3 ─► BN ──► (+) ─► ReLU ─► out
+│                                                         ▲
+└──────────────────────── shortcut ───────────────────────┘
+\`\`\`
+
+### Main path
+1. \`conv1\`: 3x3, stride \`stride\`, padding 1, \`C_in → C_out\`, then \`BN1\`, then ReLU
+2. \`conv2\`: 3x3, stride 1, padding 1, \`C_out → C_out\`, then \`BN2\` (**no** ReLU yet)
+
+### Shortcut
+- **Identity** when \`stride == 1\` and \`C_in == C_out\`: the shapes already match.
+- **Projection** otherwise: a 1x1 conv with stride \`stride\` (\`C_in → C_out\`) followed by its own BatchNorm.
+
+### Output
+\`\`\`
+out = ReLU(main + shortcut)          # the ReLU comes AFTER the addition
+\`\`\`
+The convs have no bias (BatchNorm's \`beta\` makes it redundant). The spatial size is \`H_out = (H - 1) // stride + 1\`.
+
+### Provided helpers (already in the starter code)
+- \`conv2d(x, w, stride, padding)\`: \`x (N, C_in, H, W)\`, \`w (C_out, C_in, k, k)\`
+- \`batch_norm2d(x, gamma, beta)\`: **training-mode** BatchNorm (per-channel batch statistics over \`N, H, W\`, biased variance, \`eps = 1e-5\`), like \`nn.BatchNorm2d\` in \`.train()\` mode
+- \`init_block_params(c_in, c_out, stride)\`: deterministic parameters
+
+### Expected \`params\` keys
+- \`'conv1_w'\` \`(C_out, C_in, 3, 3)\`, \`'bn1_gamma'\`, \`'bn1_beta'\` \`(C_out,)\`
+- \`'conv2_w'\` \`(C_out, C_out, 3, 3)\`, \`'bn2_gamma'\`, \`'bn2_beta'\` \`(C_out,)\`
+- Only for a projection: \`'proj_w'\` \`(C_out, C_in, 1, 1)\`, \`'proj_gamma'\`, \`'proj_beta'\` \`(C_out,)\`
+
+Return the output array of shape \`(N, C_out, H_out, W_out)\`.
+    `,
+    examples: [
+      {
+        input: 'x: (2, 4, 6, 6), params = init_block_params(4, 4, 1), stride = 1',
+        output: 'shape (2, 4, 6, 6)',
+        explanation: 'Identity shortcut: channels and spatial size are unchanged.',
+      },
+      {
+        input: 'x: (2, 3, 6, 6), params = init_block_params(3, 8, 2), stride = 2',
+        output: 'shape (2, 8, 3, 3)',
+        explanation: 'Channels change and the resolution halves, so the shortcut is a strided 1x1 conv + BN.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def conv2d(x, w, stride=1, padding=0):
+    """Convolution (cross-correlation), no bias. x: (N, C_in, H, W), w: (C_out, C_in, k, k)."""
+    N, C, H, W = x.shape
+    k = w.shape[2]
+    xp = np.pad(x, ((0, 0), (0, 0), (padding, padding), (padding, padding)))
+    H_out = (H + 2 * padding - k) // stride + 1
+    W_out = (W + 2 * padding - k) // stride + 1
+    out = np.zeros((N, w.shape[0], H_out, W_out))
+    for a in range(k):
+        for b in range(k):
+            patch = xp[:, :, a:a + stride * H_out:stride, b:b + stride * W_out:stride]
+            out += np.einsum('nchw,oc->nohw', patch, w[:, :, a, b])
+    return out
+
+
+def batch_norm2d(x, gamma, beta, eps=1e-5):
+    """Training-mode BatchNorm2d: normalize each channel with batch statistics over (N, H, W)."""
+    mu = x.mean(axis=(0, 2, 3), keepdims=True)
+    var = x.var(axis=(0, 2, 3), keepdims=True)
+    return gamma[None, :, None, None] * (x - mu) / np.sqrt(var + eps) + beta[None, :, None, None]
+
+
+def init_block_params(c_in, c_out, stride=1):
+    """Deterministic parameters for a basic block (proj_* only if a projection is needed)."""
+    def weight(shape, phase):
+        fan_in = shape[1] * shape[2] * shape[3]
+        return np.sin(np.arange(np.prod(shape)) * 1.3 + phase).reshape(shape) / np.sqrt(fan_in)
+
+    def affine(c, phase):
+        return 1 + 0.1 * np.cos(np.arange(c) + phase), 0.05 * np.sin(np.arange(c) + phase)
+
+    p = {'conv1_w': weight((c_out, c_in, 3, 3), 0.0), 'conv2_w': weight((c_out, c_out, 3, 3), 1.0)}
+    p['bn1_gamma'], p['bn1_beta'] = affine(c_out, 0.0)
+    p['bn2_gamma'], p['bn2_beta'] = affine(c_out, 2.0)
+    if stride != 1 or c_in != c_out:
+        p['proj_w'] = weight((c_out, c_in, 1, 1), 2.0)
+        p['proj_gamma'], p['proj_beta'] = affine(c_out, 4.0)
+    return p
+
+
+def residual_block(x, params, stride=1):
+    """
+    Basic residual block (training-mode BatchNorm).
+
+    main     = BN2(conv2(ReLU(BN1(conv1(x)))))      conv1: 3x3, stride, pad 1; conv2: 3x3, pad 1
+    shortcut = x                                   if stride == 1 and C_in == C_out
+             = BN_proj(conv1x1(x, stride))         otherwise
+    out      = ReLU(main + shortcut)
+
+    Args:
+        x: Input, shape (N, C_in, H, W)
+        params: dict from init_block_params(C_in, C_out, stride)
+        stride: Stride of conv1 (and of the projection)
+
+    Returns:
+        Output, shape (N, C_out, H_out, W_out) with H_out = (H - 1) // stride + 1
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Identity block keeps the shape',
+        input: 'residual_block(np.random.randn(2, 4, 6, 6), init_block_params(4, 4, 1), 1).shape',
+        expected: '(2, 4, 6, 6)',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Projection block with stride 2',
+        input: 'residual_block(np.random.randn(2, 3, 6, 6), init_block_params(3, 8, 2), 2).shape',
+        expected: '(2, 8, 3, 3)',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Output is non-negative (ReLU after the addition)',
+        input: '(lambda x: (lambda out: bool(out.min() >= 0 and (out == 0).any() and not np.allclose(out, np.maximum(x, 0))))(residual_block(x, init_block_params(4, 4, 1), 1)))(np.random.randn(2, 4, 5, 5))',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Zeroed convs: identity block reduces to ReLU(x + bn2_beta)',
+        input: `(lambda: (
+    x := np.random.randn(2, 4, 5, 5),
+    p := {**init_block_params(4, 4, 1), 'conv1_w': np.zeros((4, 4, 3, 3)), 'conv2_w': np.zeros((4, 4, 3, 3))},
+    bool(np.allclose(residual_block(x, p, 1), np.maximum(x + p['bn2_beta'][None, :, None, None], 0)))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Zeroed convs: projection shortcut gives ReLU(bn2_beta + proj_beta)',
+        input: `(lambda: (
+    p := {**init_block_params(3, 6, 2), 'conv1_w': np.zeros((6, 3, 3, 3)), 'conv2_w': np.zeros((6, 6, 3, 3)), 'proj_w': np.zeros((6, 3, 1, 1))},
+    out := residual_block(np.random.randn(2, 3, 4, 4), p, 2),
+    bool(out.shape == (2, 6, 2, 2) and np.allclose(out, np.maximum(p['bn2_beta'] + p['proj_beta'], 0)[None, :, None, None]))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Identity block values',
+        input: '(lambda out: (round(float(out.sum()), 4), np.round(out[1, 2, 1], 4).tolist()))(residual_block(np.cos(np.arange(2 * 4 * 5 * 5) * 0.37).reshape(2, 4, 5, 5), init_block_params(4, 4, 1), 1))',
+        expected: '(81.5228, [0.5662, 0.949, 1.2229, 0.0, 0.0])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Projection block values',
+        input: '(lambda out: (round(float(out.sum()), 4), np.round(out[0, :, 1, 2], 4).tolist()))(residual_block(np.cos(np.arange(2 * 3 * 6 * 6) * 0.37).reshape(2, 3, 6, 6), init_block_params(3, 8, 2), 2))',
+        expected: '(84.7368, [0.6048, 1.2406, 0.0, 1.5251, 0.0, 0.0, 0.5989, 0.0])',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Main path: conv2d(x, conv1_w, stride, padding=1) -> batch_norm2d -> ReLU -> conv2d(..., conv2_w, 1, 1) -> batch_norm2d.',
+      'Use a projection shortcut exactly when stride != 1 or C_in != C_out: batch_norm2d(conv2d(x, proj_w, stride=stride), proj_gamma, proj_beta).',
+      'The final ReLU is applied after adding the shortcut, not before.',
+    ],
+    solution: `import numpy as np
+
+def conv2d(x, w, stride=1, padding=0):
+    """Convolution (cross-correlation), no bias. x: (N, C_in, H, W), w: (C_out, C_in, k, k)."""
+    N, C, H, W = x.shape
+    k = w.shape[2]
+    xp = np.pad(x, ((0, 0), (0, 0), (padding, padding), (padding, padding)))
+    H_out = (H + 2 * padding - k) // stride + 1
+    W_out = (W + 2 * padding - k) // stride + 1
+    out = np.zeros((N, w.shape[0], H_out, W_out))
+    for a in range(k):
+        for b in range(k):
+            patch = xp[:, :, a:a + stride * H_out:stride, b:b + stride * W_out:stride]
+            out += np.einsum('nchw,oc->nohw', patch, w[:, :, a, b])
+    return out
+
+
+def batch_norm2d(x, gamma, beta, eps=1e-5):
+    """Training-mode BatchNorm2d: normalize each channel with batch statistics over (N, H, W)."""
+    mu = x.mean(axis=(0, 2, 3), keepdims=True)
+    var = x.var(axis=(0, 2, 3), keepdims=True)
+    return gamma[None, :, None, None] * (x - mu) / np.sqrt(var + eps) + beta[None, :, None, None]
+
+
+def init_block_params(c_in, c_out, stride=1):
+    """Deterministic parameters for a basic block (proj_* only if a projection is needed)."""
+    def weight(shape, phase):
+        fan_in = shape[1] * shape[2] * shape[3]
+        return np.sin(np.arange(np.prod(shape)) * 1.3 + phase).reshape(shape) / np.sqrt(fan_in)
+
+    def affine(c, phase):
+        return 1 + 0.1 * np.cos(np.arange(c) + phase), 0.05 * np.sin(np.arange(c) + phase)
+
+    p = {'conv1_w': weight((c_out, c_in, 3, 3), 0.0), 'conv2_w': weight((c_out, c_out, 3, 3), 1.0)}
+    p['bn1_gamma'], p['bn1_beta'] = affine(c_out, 0.0)
+    p['bn2_gamma'], p['bn2_beta'] = affine(c_out, 2.0)
+    if stride != 1 or c_in != c_out:
+        p['proj_w'] = weight((c_out, c_in, 1, 1), 2.0)
+        p['proj_gamma'], p['proj_beta'] = affine(c_out, 4.0)
+    return p
+
+
+def residual_block(x, params, stride=1):
+    """
+    Basic residual block (training-mode BatchNorm).
+
+    main     = BN2(conv2(ReLU(BN1(conv1(x)))))      conv1: 3x3, stride, pad 1; conv2: 3x3, pad 1
+    shortcut = x                                   if stride == 1 and C_in == C_out
+             = BN_proj(conv1x1(x, stride))         otherwise
+    out      = ReLU(main + shortcut)
+
+    Args:
+        x: Input, shape (N, C_in, H, W)
+        params: dict from init_block_params(C_in, C_out, stride)
+        stride: Stride of conv1 (and of the projection)
+
+    Returns:
+        Output, shape (N, C_out, H_out, W_out) with H_out = (H - 1) // stride + 1
+    """
+    p = params
+    c_in, c_out = x.shape[1], p['conv1_w'].shape[0]
+
+    # Main path: conv-BN-ReLU-conv-BN
+    out = conv2d(x, p['conv1_w'], stride=stride, padding=1)
+    out = np.maximum(batch_norm2d(out, p['bn1_gamma'], p['bn1_beta']), 0)
+    out = conv2d(out, p['conv2_w'], stride=1, padding=1)
+    out = batch_norm2d(out, p['bn2_gamma'], p['bn2_beta'])
+
+    # Shortcut: identity, or 1x1 projection when the shape changes
+    if stride != 1 or c_in != c_out:
+        shortcut = batch_norm2d(conv2d(x, p['proj_w'], stride=stride), p['proj_gamma'], p['proj_beta'])
+    else:
+        shortcut = x
+
+    # Add, THEN ReLU
+    return np.maximum(out + shortcut, 0)
+`,
+  },
 ];
