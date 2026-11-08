@@ -117,7 +117,7 @@ def rnn_backward(X, h0, W_xh, W_hh, H_all, dH):
       {
         id: '3',
         description: 'Last hidden state on random inputs (uses h0 and b)',
-        input: '(np.random.seed(0), np.round(rnn_forward(np.random.randn(2, 4, 3), np.random.randn(2, 3), np.random.randn(3, 3) * 0.5, np.random.randn(3, 3) * 0.5, np.random.randn(3) * 0.1)[:, -1], 5).tolist())[-1]',
+        input: 'np.round(rnn_forward(np.random.randn(2, 4, 3), np.random.randn(2, 3), np.random.randn(3, 3) * 0.5, np.random.randn(3, 3) * 0.5, np.random.randn(3) * 0.1)[:, -1], 5).tolist()',
         expected: '[[0.22011, 0.66738, -0.82641], [-0.83729, -0.60483, 0.65941]]',
         hidden: true,
       },
@@ -301,7 +301,7 @@ def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
       {
         id: '4',
         description: 'Random inputs and weights',
-        input: '(np.random.seed(0), tuple(np.round(a, 5).tolist() for a in lstm_cell(np.random.randn(2, 3), np.random.randn(2, 2), np.random.randn(2, 2), np.random.randn(8, 3) * 0.5, np.random.randn(8, 2) * 0.5, np.random.randn(8) * 0.1, np.random.randn(8) * 0.1)))[-1]',
+        input: 'tuple(np.round(a, 5).tolist() for a in lstm_cell(np.random.randn(2, 3), np.random.randn(2, 2), np.random.randn(2, 2), np.random.randn(8, 3) * 0.5, np.random.randn(8, 2) * 0.5, np.random.randn(8) * 0.1, np.random.randn(8) * 0.1))',
         expected: '([[-0.01003, 0.32941], [-0.0162, 0.33173]], [[-0.08157, 0.52188], [-0.26482, 0.59716]])',
         hidden: true,
       },
@@ -431,7 +431,7 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
       {
         id: '4',
         description: 'Random inputs and weights',
-        input: '(np.random.seed(0), np.round(gru_cell(np.random.randn(2, 3), np.random.randn(2, 2), np.random.randn(6, 3) * 0.5, np.random.randn(6, 2) * 0.5, np.random.randn(6) * 0.1, np.random.randn(6) * 0.1), 5).tolist())[-1]',
+        input: 'np.round(gru_cell(np.random.randn(2, 3), np.random.randn(2, 2), np.random.randn(6, 3) * 0.5, np.random.randn(6, 2) * 0.5, np.random.randn(6) * 0.1, np.random.randn(6) * 0.1), 5).tolist()',
         expected: '[[0.95395, -0.69198], [-0.29984, -0.87107]]',
         hidden: true,
       },

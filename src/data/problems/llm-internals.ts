@@ -148,7 +148,7 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
       {
         id: '8',
         description: 'Block output values',
-        input: '(np.random.seed(0), round(float(llama_mlp_block(np.random.randn(4, 8), np.linspace(0.5, 1.5, 8), np.random.randn(8, 16) * 0.3, np.random.randn(8, 16) * 0.3, np.random.randn(16, 8) * 0.3).sum()), 4))[-1]',
+        input: 'round(float(llama_mlp_block(np.random.randn(4, 8), np.linspace(0.5, 1.5, 8), np.random.randn(8, 16) * 0.3, np.random.randn(8, 16) * 0.3, np.random.randn(16, 8) * 0.3).sum()), 4)',
         expected: '13.7389',
         hidden: true,
       },
@@ -307,7 +307,7 @@ def online_attention(Q, K, V, block_size):
       {
         id: '7',
         description: 'Attention output values',
-        input: '(np.random.seed(0), round(float(online_attention(np.random.randn(4, 8) * 3, np.random.randn(9, 8) * 3, np.random.randn(9, 5), 4).sum()), 4))[-1]',
+        input: 'round(float(online_attention(np.random.randn(4, 8) * 3, np.random.randn(9, 8) * 3, np.random.randn(9, 5), 4).sum()), 4)',
         expected: '2.4803',
         hidden: true,
       },
@@ -448,7 +448,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
       {
         id: '4',
         description: 'Experts are chosen by descending router logit',
-        input: '(np.random.seed(0), moe_layer(np.random.randn(5, 4), np.random.randn(4, 6), np.random.randn(6, 4, 2), 3)[\'expert_indices\'].tolist())[-1]',
+        input: 'moe_layer(np.random.randn(5, 4), np.random.randn(4, 6), np.random.randn(6, 4, 2), 3)[\'expert_indices\'].tolist()',
         expected: '[[5, 4, 2], [4, 2, 1], [5, 0, 1], [4, 2, 5], [4, 2, 1]]',
         hidden: true,
       },
@@ -476,7 +476,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
       {
         id: '8',
         description: 'aux_loss value',
-        input: '(np.random.seed(0), round(moe_layer(np.random.randn(10, 4), np.random.randn(4, 4), np.random.randn(4, 4, 4), 2)[\'aux_loss\'], 4))[-1]',
+        input: 'round(moe_layer(np.random.randn(10, 4), np.random.randn(4, 4), np.random.randn(4, 4, 4), 2)[\'aux_loss\'], 4)',
         expected: '1.3995',
         hidden: true,
       },
@@ -626,7 +626,7 @@ def perplexity(logits, targets, mask=None):
       {
         id: '6',
         description: 'perplexity = exp(mean_nll), values',
-        input: '(np.random.seed(0), (lambda r: (round(r[\'mean_nll\'], 4), round(r[\'perplexity\'], 4)))(perplexity(np.random.randn(2, 5, 6) * 2, np.random.randint(0, 6, size=(2, 5)))))[-1]',
+        input: '(lambda r: (round(r[\'mean_nll\'], 4), round(r[\'perplexity\'], 4)))(perplexity(np.random.randn(2, 5, 6) * 2, np.random.randint(0, 6, size=(2, 5))))',
         expected: '(3.8495, 46.9708)',
         hidden: true,
       },

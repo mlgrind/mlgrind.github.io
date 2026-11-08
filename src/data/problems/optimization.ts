@@ -87,14 +87,14 @@ def clip_grad_norm(grads: list, max_norm: float, eps: float = 1e-6):
       {
         id: '4',
         description: 'Clipped norm equals max_norm; inputs untouched',
-        input: `(np.random.seed(0), (lambda: (
+        input: `(lambda: (
     gs := [np.random.randn(3, 4) * 5, np.random.randn(7), np.random.randn(2, 2, 2)],
     before := [g.copy() for g in gs],
     out := clip_grad_norm(gs, 0.5),
     round(float(np.sqrt(sum((c ** 2).sum() for c in out[0]))), 5),
     all(np.array_equal(a, b) for a, b in zip(gs, before)),
     round(float(out[1]), 4)
-)[-3:])())[-1]`,
+)[-3:])()`,
         expected: '(0.5, True, 21.0449)',
         hidden: true,
       },

@@ -308,11 +308,11 @@ def gmm_em(x, means, variances, weights, n_iters=10, reg_covar=1e-6):
       {
         id: '2',
         description: 'EM recovers two clusters',
-        input: `(np.random.seed(0), (lambda: (
+        input: `(lambda: (
     x := np.concatenate([np.random.randn(60) - 3, 0.5 * np.random.randn(40) + 3]),
     g := gmm_em(x, np.array([-1.0, 1.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]), 30),
     (np.round(g["means"], 1).tolist(), np.round(g["weights"], 1).tolist())
-)[-1])())[-1]`,
+)[-1])()`,
         expected: '([-2.9, 3.0], [0.6, 0.4])',
         hidden: false,
       },
@@ -492,10 +492,10 @@ def dbscan(X, eps, min_samples):
       {
         id: '6',
         description: 'Matches scikit-learn on random 2-D blobs',
-        input: `(np.random.seed(0), (lambda: (
+        input: `(lambda: (
     X := np.concatenate([np.random.randn(15, 2) * 0.4, np.random.randn(15, 2) * 0.4 + 3, np.random.rand(5, 2) * 8 - 2]),
     dbscan(X, 0.6, 4).tolist()
-)[-1])())[-1]`,
+)[-1])()`,
         expected: '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 0, -1, -1, -1]',
         hidden: true,
       },

@@ -930,11 +930,11 @@ def knn_predict(X_train, y_train, X_test, k=3):
       {
         id: '7',
         description: 'Predictions on a 3-class problem with k=5',
-        input: `(np.random.seed(0), (lambda: (
+        input: `(lambda: (
     Xtr := np.random.randn(30, 2),
     ytr := (Xtr[:, 0] > 0).astype(int) + (Xtr[:, 1] > 0.5).astype(int),
     knn_predict(Xtr, ytr, np.array([[1.0, 1.0], [-1.0, -1.0], [1.0, -1.0], [0.0, 0.4]]), 5).tolist()
-)[-1])())[-1]`,
+)[-1])()`,
         expected: '[2, 0, 1, 0]',
         hidden: true,
       },
@@ -1484,11 +1484,11 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
       {
         id: '7',
         description: 'Stumps chosen on random data',
-        input: `(np.random.seed(0), (lambda: (
+        input: `(lambda: (
     X := np.round(np.random.rand(12, 3), 2),
     y := 2 * X[:, 1] - X[:, 2] + 0.05 * np.random.randn(12),
     [(s[0], round(s[1], 6)) for s in gradient_boosting(X, y, 4, 0.5)["stumps"]]
-)[-1])())[-1]`,
+)[-1])()`,
         expected: '[[1, 0.49], [1, 0.22], [2, 0.275], [1, 0.22]]',
         hidden: true,
       },
