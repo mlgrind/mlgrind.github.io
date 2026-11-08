@@ -7,44 +7,64 @@ export const unsupervisedLearningProblems: Problem[] = [
     section: 'unsupervised-learning',
     difficulty: 'medium',
     description: `
-## K-Means: Assign Points to Nearest Centroid
+## K-Means: Assign Points to the Nearest Centroid
 
-Implement the assignment step of K-means clustering: given data points and centroids, assign each point to its nearest centroid.
+### What you'll build
+The **assignment step** of k-means: given data points and centroids, return the index of the nearest centroid for every point, without a Python loop over points.
 
-### Function Signature
-\`\`\`python
-def assign_clusters(X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
+### Background
+k-means alternates two steps: *assign* each point to its nearest centroid, then *update* each centroid to the mean of its points. The assignment step is where almost all of the compute goes, \`O(n * k * d)\` per iteration, so vectorising it is the main skill being tested. The same pairwise-distance pattern powers k-NN and vector search. (The full algorithm is **K-Means from Scratch** later in this section.)
+
+### Formula
+\`\`\`text
+d(i, j)  = sqrt( sum_f (X[i, f] - centroids[j, f])^2 )      # Euclidean distance
+label[i] = argmin_j d(i, j)
 \`\`\`
+The square root doesn't change which centroid is nearest, so comparing squared distances gives the same labels.
 
-### Args
-- X: Data points of shape (n_samples, n_features)
-- centroids: Cluster centers of shape (k, n_features)
+### Inputs
+- \`X\`: data points, shape \`(n_samples, n_features)\`
+- \`centroids\`: cluster centres, shape \`(k, n_features)\`
 
-### Returns
-- Array of cluster assignments (integers 0 to k-1)
+(Tests may pass nested Python lists; \`np.asarray\` them.)
 
-### Distance
-Use Euclidean distance: sqrt(sum((x - c)^2))
+### Expected return format
+An integer array of shape \`(n_samples,)\` with values in \`0 .. k-1\`.
+
+### Edge cases and conventions
+- **Ties**: a point equally far from several centroids goes to the **lowest centroid index** (what \`np.argmin\` returns).
+
+### Constraints
+- NumPy only, vectorised with broadcasting: \`X[:, None, :] - centroids[None, :, :]\` has shape \`(n, k, d)\`.
+
+### Follow-up
+- For large \`n\` and \`d\`, avoid the \`(n, k, d)\` intermediate with \`||x||^2 - 2 x.c + ||c||^2\` (one matrix multiply). What numerical issue can that introduce?
     `,
     examples: [
       {
-        input: 'X = [[0, 0], [1, 1], [10, 10]], centroids = [[0, 0], [10, 10]]',
+        input: 'assign_clusters(np.array([[0, 0], [1, 1], [10, 10]]), np.array([[0, 0], [10, 10]]))',
         output: '[0, 0, 1]',
-        explanation: 'First two points closer to centroid 0, last point closer to centroid 1',
+        explanation: '(1, 1) is at distance 1.41 from centroid 0 and 12.7 from centroid 1.',
+      },
+      {
+        input: 'assign_clusters(np.array([[5, 5]]), np.array([[0, 0], [10, 10]]))',
+        output: '[0]',
+        explanation: 'Equidistant from both centroids: the tie goes to the lower index.',
       },
     ],
     starterCode: `import numpy as np
 
 def assign_clusters(X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
     """
-    Assign each point to its nearest centroid.
+    Assign each point to its nearest centroid (Euclidean distance).
 
     Args:
-        X: Data points of shape (n_samples, n_features)
-        centroids: Cluster centers of shape (k, n_features)
+        X: Data points, shape (n_samples, n_features)
+        centroids: Cluster centres, shape (k, n_features)
 
     Returns:
-        Array of cluster assignments (shape: n_samples)
+        Int array of shape (n_samples,) with values in 0..k-1
+        (ties go to the lowest centroid index)
     """
     # Your code here
     pass
@@ -85,70 +105,97 @@ def assign_clusters(X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Matches a per-point loop on random data',
+        input: '(lambda: (X := np.random.randn(30, 4), C := np.random.randn(6, 4), ref := [int(np.argmin([np.sum((x - c) ** 2) for c in C])) for x in X], assign_clusters(X, C).tolist() == ref)[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Calculate distance from each point to each centroid.',
-      'Use np.linalg.norm() for Euclidean distance.',
-      'Use np.argmin() to find the closest centroid.',
+      'You need the distance from every point to every centroid: an (n, k) table. Then pick the smallest entry in each row.',
+      'Broadcasting builds all differences at once: X[:, None, :] has shape (n, 1, d) and centroids[None, :, :] has shape (1, k, d).',
+      'np.linalg.norm(diff, axis=2) (or (diff ** 2).sum(axis=2)) gives the (n, k) distances; np.argmin(..., axis=1) picks the closest centroid.',
+      'Reduce over the feature axis (axis=2), not the centroid axis; and argmin over axis=1 already breaks ties towards the lowest index.',
     ],
     solution: `import numpy as np
 
 def assign_clusters(X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
     """
-    Assign each point to its nearest centroid.
+    Assign each point to its nearest centroid (ties -> lowest index).
     """
-    # Calculate distances from each point to each centroid
-    # Using broadcasting: X[:, np.newaxis] has shape (n, 1, d)
-    # centroids has shape (k, d)
-    # Difference has shape (n, k, d)
-    distances = np.linalg.norm(X[:, np.newaxis] - centroids, axis=2)
+    X = np.asarray(X, dtype=float)
+    C = np.asarray(centroids, dtype=float)
 
-    # Return index of minimum distance for each point
-    return np.argmin(distances, axis=1)
+    # (n, 1, d) - (1, k, d) -> (n, k, d); squared distances are enough for argmin
+    d2 = ((X[:, None, :] - C[None, :, :]) ** 2).sum(axis=2)   # (n, k)
+    return np.argmin(d2, axis=1)                             # first minimum on ties
+
+# Time O(n * k * d), extra space O(n * k * d) for the broadcast.
 `,
   },
   {
     id: 'pca-implementation',
-    title: 'PCA: Center Data',
+    title: 'PCA Step 1: Center the Data',
     section: 'unsupervised-learning',
     difficulty: 'easy',
     description: `
-## PCA: Center the Data
+## PCA Step 1: Center the Data
 
-The first step in PCA is to center the data by subtracting the mean of each feature.
+### What you'll build
+The first step of Principal Component Analysis: subtract each feature's mean so every column of the data has mean 0.
 
-### Function Signature
-\`\`\`python
-def center_data(X: np.ndarray) -> np.ndarray:
+### Background
+PCA looks for the directions along which the data varies most, which are the eigenvectors of the covariance matrix \`Xc^T Xc / (n - 1)\`. That formula is only the covariance if \`Xc\` is **centred**. Skip this step and the first "principal component" points from the origin towards the data's mean instead of along its spread. scikit-learn's \`PCA\` centres automatically and stores the mean as \`mean_\`, which it reuses to transform new data.
+
+### Formula
+\`\`\`text
+mu[f]     = (1/n) * sum_i X[i, f]          # column means, shape (n_features,)
+Xc[i, f]  = X[i, f] - mu[f]
 \`\`\`
 
-### Args
-- X: Data matrix of shape (n_samples, n_features)
+### Inputs
+- \`X\`: data matrix of shape \`(n_samples, n_features)\`, ints or floats (tests may pass nested lists)
 
-### Returns
-- Centered data where each column has mean 0
+### Expected return format
+A float array with the same shape as \`X\`, whose column means are all 0 (up to floating-point error).
 
-### Why Center?
-Centering ensures PCA finds directions of maximum variance from the origin, not from an arbitrary point.
+### Edge cases and conventions
+- Means are taken **per column** (\`axis=0\`), not over the whole matrix.
+- Already-centred data comes back unchanged; a single column works the same way.
+- Don't modify the input; return a new array.
+
+### Constraints
+- NumPy only, no loops: broadcasting subtracts the \`(n_features,)\` mean from every row.
+
+### Follow-up
+- Finish PCA: compute the covariance, take \`np.linalg.eigh\`, sort the eigenvalues in descending order and project onto the top \`k\` eigenvectors. Why is the SVD of \`Xc\` often preferred?
+- At inference time, which mean do you subtract from a new sample?
     `,
     examples: [
       {
-        input: 'X = [[1, 2], [3, 4], [5, 6]]',
-        output: '[[-2, -2], [0, 0], [2, 2]]',
-        explanation: 'Column means are [3, 4], so we subtract them',
+        input: 'center_data(np.array([[1, 2], [3, 4], [5, 6]]))',
+        output: '[[-2.0, -2.0], [0.0, 0.0], [2.0, 2.0]]',
+        explanation: 'The column means are [3, 4]; subtracting them from every row centres each column.',
+      },
+      {
+        input: 'center_data(np.array([[10], [20], [30]]))',
+        output: '[[-10.0], [0.0], [10.0]]',
+        explanation: 'A single feature with mean 20.',
       },
     ],
     starterCode: `import numpy as np
 
 def center_data(X: np.ndarray) -> np.ndarray:
     """
-    Center the data by subtracting the mean of each feature.
+    Center the data by subtracting the mean of each feature (column).
 
     Args:
         X: Data matrix of shape (n_samples, n_features)
 
     Returns:
-        Centered data matrix of same shape
+        Float array of the same shape whose columns have mean 0
     """
     # Your code here
     pass
@@ -189,19 +236,31 @@ def center_data(X: np.ndarray) -> np.ndarray:
         expected: '(15, 7)',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Random matrix: equals X minus its column means',
+        input: '(lambda: (X := np.random.randn(8, 3) * [1.0, 10.0, 0.1] + [5.0, -2.0, 0.3], bool(np.allclose(center_data(X), X - X.mean(axis=0))))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Calculate the mean of each column using np.mean() with axis=0.',
-      'Subtract the mean from the data (broadcasting handles this).',
+      'Each feature (column) gets its own mean. Which axis do you average over?',
+      'Compute one mean per column, then subtract that row vector from every row.',
+      'np.mean(X, axis=0) has shape (n_features,), and X - mean broadcasts it over the rows.',
+      'axis=1 (row means) or a single global np.mean(X) gives the wrong answer; convert to float so integer input returns floats.',
     ],
     solution: `import numpy as np
 
 def center_data(X: np.ndarray) -> np.ndarray:
     """
-    Center the data by subtracting the mean of each feature.
+    Center the data by subtracting the mean of each feature (column).
     """
-    mean = np.mean(X, axis=0)
-    return X - mean
+    X = np.asarray(X, dtype=float)
+    mu = X.mean(axis=0)          # (n_features,): one mean per column
+    return X - mu                # broadcasts over the rows; returns a new array
+
+# Time and space O(n * d).
 `,
   },
   {
@@ -210,57 +269,72 @@ def center_data(X: np.ndarray) -> np.ndarray:
     section: 'unsupervised-learning',
     difficulty: 'hard',
     description: `
-## Gaussian Mixture Model with Expectation-Maximization (1D)
+## Gaussian Mixture Model with Expectation-Maximization (1-D)
 
-A Gaussian mixture models the density of \`x\` as a weighted sum of \`K\` Gaussians:
-\`\`\`
-p(x) = sum_k  pi_k * N(x | mu_k, var_k),     sum_k pi_k = 1
-\`\`\`
-EM alternates between softly assigning points to components (E-step) and re-estimating each component from its soft assignments (M-step). This problem uses **1-D data** (\`x\` has shape \`(n,)\`); each component has its own mean and variance. The initial parameters are passed in, so the result is deterministic.
+### What you'll build
+Two functions for a 1-D Gaussian mixture: a numerically stable **E-step** that computes responsibilities in log space, and the full **EM loop** that fits the weights, means and variances from given initial values.
 
-Implement two functions.
+### Background
+A Gaussian mixture models the density of \`x\` as a weighted sum of \`K\` Gaussians. It is "soft k-means": instead of a hard label, each point gets a probability (**responsibility**) for each component. EM alternates between computing responsibilities from the current parameters (E-step) and re-estimating the parameters from the responsibilities (M-step), and the log-likelihood never decreases. scikit-learn's \`GaussianMixture\` does the same with full covariance matrices in higher dimensions.
 
-### 1. \`gmm_e_step(x, means, variances, weights)\`: responsibilities in log space
-\`\`\`
+### Model
+\`\`\`text
+p(x) = sum_k  weights[k] * N(x | means[k], variances[k]),      sum_k weights[k] = 1
 log N(x | mu, var) = -0.5 * log(2*pi*var) - (x - mu)^2 / (2*var)
-log_joint[i, k]    = log(weights[k]) + log N(x_i | mu_k, var_k)        # (n, K)
-log_px[i]          = logsumexp_k log_joint[i, k]                       # log p(x_i)
-resp[i, k]         = exp(log_joint[i, k] - log_px[i])
-log_likelihood     = sum_i log_px[i]
 \`\`\`
-Working in log space matters: for a point far from every component, all the densities underflow to \`0.0\` and the naive \`pdf / pdf.sum()\` becomes \`0/0 = nan\`.
 
-Returns \`(resp, log_likelihood)\`, with \`resp\` of shape \`(n, K)\` (rows sum to 1) and \`log_likelihood\` a float.
+### 1. \`gmm_e_step(x, means, variances, weights)\`
+\`\`\`text
+log_joint[i, k] = log(weights[k]) + log N(x[i] | means[k], variances[k])     # (n, K)
+log_px[i]       = logsumexp_k log_joint[i, k]                               # log p(x_i)
+resp[i, k]      = exp(log_joint[i, k] - log_px[i])
+log_likelihood  = sum_i log_px[i]
+logsumexp(a)    = max(a) + log(sum(exp(a - max(a))))
+\`\`\`
 
 ### 2. \`gmm_em(x, means, variances, weights, n_iters, reg_covar=1e-6)\`
 Repeat \`n_iters\` times:
 1. **E-step** at the current parameters: \`resp, ll = gmm_e_step(...)\`; append \`ll\` to the history.
-2. **M-step**:
+2. **M-step**, with \`N_k = sum_i resp[i, k]\`:
+\`\`\`text
+weights[k]   = N_k / n
+means[k]     = sum_i resp[i, k] * x[i] / N_k
+variances[k] = sum_i resp[i, k] * (x[i] - means[k])^2 / N_k  +  reg_covar     # uses the NEW means
 \`\`\`
-N_k        = sum_i resp[i, k]
-weights_k  = N_k / n
-means_k    = sum_i resp[i, k] * x_i / N_k
-variances_k = sum_i resp[i, k] * (x_i - means_k)^2 / N_k  +  reg_covar
-\`\`\`
-(\`reg_covar\` stops a component from collapsing onto a single point; scikit-learn's \`GaussianMixture\` uses the same default.)
 
-EM never decreases the likelihood, so \`log_likelihoods\` is **non-decreasing**.
+### Inputs
+- \`x\`: 1-D float array, shape \`(n,)\`
+- \`means\`, \`variances\`, \`weights\`: initial parameters, each shape \`(K,)\`; variances \`> 0\`, weights sum to 1
+- \`n_iters\`: number of EM iterations (\`>= 1\`); \`reg_covar\`: small float added to every variance
 
 ### Expected Return Format
-\`gmm_em\` returns a dictionary with these keys:
-- \`'means'\`, \`'variances'\`, \`'weights'\`: final parameters, each of shape \`(K,)\`
-- \`'log_likelihoods'\`: list of \`n_iters\` floats; entry \`t\` is the log-likelihood of the parameters **before** the \`t\`-th M-step (so entry 0 is the initial parameters)
+- \`gmm_e_step\` returns a tuple \`(resp, log_likelihood)\`: \`resp\` has shape \`(n, K)\` with rows summing to 1, and \`log_likelihood\` is a Python float.
+- \`gmm_em\` returns a dictionary with these keys:
+  - \`'means'\`, \`'variances'\`, \`'weights'\`: final parameters, each shape \`(K,)\`
+  - \`'log_likelihoods'\`: list of \`n_iters\` floats; entry \`t\` is the log-likelihood **before** the \`t\`-th M-step (entry 0 belongs to the initial parameters)
+
+### Edge cases and conventions
+- **Underflow**: for a point far from every component all densities are \`0.0\` in floating point, and the naive \`pdf / pdf.sum()\` gives \`0/0 = nan\`. Log space with logsumexp avoids it.
+- \`reg_covar\` (default \`1e-6\`, as in scikit-learn) stops a component from collapsing onto a single point with variance 0.
+- The log-likelihood history is non-decreasing (up to floating-point error).
+
+### Constraints
+- NumPy only, vectorised over points and components.
+
+### Follow-up
+- How would you choose \`K\`? (BIC/AIC, held-out likelihood.)
+- Show that k-means is the limit of EM with equal, shared variances shrinking to 0.
     `,
     examples: [
       {
-        input: 'gmm_e_step(np.array([0.0, 4.0]), means=[0, 4], variances=[1, 1], weights=[0.5, 0.5])',
-        output: 'resp ≈ [[0.99966, 0.00034], [0.00034, 0.99966]], ll ≈ -3.2235',
-        explanation: 'Each point is almost entirely explained by the component centred on it.',
+        input: 'gmm_e_step(np.array([0.0, 4.0]), np.array([0.0, 4.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]))',
+        output: '(array([[0.999665, 0.000335], [0.000335, 0.999665]]), -3.223501)',
+        explanation: 'Each point is almost entirely explained by the component centred on it (values rounded to 6 decimals).',
       },
       {
-        input: 'gmm_em(x, means=[-1, 1], variances=[1, 1], weights=[0.5, 0.5], n_iters=20) on two clusters at -3 and 3',
-        output: 'means ≈ [-3, 3], log_likelihoods increasing',
-        explanation: 'Starting near the middle, EM pulls each component onto one cluster.',
+        input: 'gmm_em(x, np.array([-1.0, 1.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]), 30), where x has 60 points around -3 and 40 points around 3',
+        output: "means ≈ [-2.9, 3.0], weights ≈ [0.6, 0.4]",
+        explanation: 'Starting near the middle, EM pulls each component onto one cluster and the weights converge to the cluster fractions.',
       },
     ],
     starterCode: `import numpy as np
@@ -350,43 +424,52 @@ def gmm_em(x, means, variances, weights, n_iters=10, reg_covar=1e-6):
       },
     ],
     hints: [
-      'Broadcast x[:, None] (n, 1) against the (K,) parameter arrays to get (n, K) log densities.',
-      'logsumexp over components: m = max over k, then m + log(sum(exp(log_joint - m))). Responsibilities are exp(log_joint - log_px).',
-      'M-step: N_k = resp.sum(0); weights = N_k / n; means = (resp * x[:, None]).sum(0) / N_k; variances use the NEW means, plus reg_covar.',
-      'Record the log-likelihood from the E-step before updating the parameters.',
+      'Think of the E-step as Bayes rule per point: prior weight times likelihood, normalised over components. Do it with logs.',
+      'Broadcast x[:, None] (n, 1) against the (K,) parameter arrays to get the (n, K) log-joint table; the M-step is then three weighted averages over axis 0.',
+      'logsumexp: m = log_joint.max(axis=1, keepdims=True); log_px = m + np.log(np.exp(log_joint - m).sum(axis=1, keepdims=True)); resp = np.exp(log_joint - log_px).',
+      'Record the log-likelihood before updating the parameters, compute the variances with the NEW means, and add reg_covar.',
     ],
     solution: `import numpy as np
 
 def gmm_e_step(x, means, variances, weights):
+    """
+    Returns (resp (n, K), log_likelihood float), computed in log space.
+    """
     x = np.asarray(x, dtype=float)[:, None]                    # (n, 1)
     means, variances, weights = (np.asarray(a, dtype=float) for a in (means, variances, weights))
 
     log_pdf = -0.5 * np.log(2 * np.pi * variances) - (x - means) ** 2 / (2 * variances)
     log_joint = np.log(weights) + log_pdf                      # (n, K)
 
+    # logsumexp over components: subtract the row max so exp never overflows
     m = log_joint.max(axis=1, keepdims=True)
-    log_px = m + np.log(np.exp(log_joint - m).sum(axis=1, keepdims=True))   # logsumexp
+    log_px = m + np.log(np.exp(log_joint - m).sum(axis=1, keepdims=True))
     resp = np.exp(log_joint - log_px)
     return resp, float(log_px.sum())
 
 
 def gmm_em(x, means, variances, weights, n_iters=10, reg_covar=1e-6):
+    """
+    Returns dict with 'means', 'variances', 'weights' (K,) and 'log_likelihoods' (list).
+    """
     x = np.asarray(x, dtype=float)
     means, variances, weights = (np.array(a, dtype=float) for a in (means, variances, weights))
     history = []
 
     for _ in range(n_iters):
-        # E-step
+        # E-step at the current parameters
         resp, ll = gmm_e_step(x, means, variances, weights)
         history.append(ll)
 
-        # M-step
+        # M-step: responsibility-weighted averages
         Nk = resp.sum(axis=0)                                  # (K,)
         weights = Nk / len(x)
         means = (resp * x[:, None]).sum(axis=0) / Nk
         variances = (resp * (x[:, None] - means) ** 2).sum(axis=0) / Nk + reg_covar
 
     return {'means': means, 'variances': variances, 'weights': weights, 'log_likelihoods': history}
+
+# Each iteration costs O(n * K) time and space.
 `,
   },
   {
@@ -395,59 +478,82 @@ def gmm_em(x, means, variances, weights, n_iters=10, reg_covar=1e-6):
     section: 'unsupervised-learning',
     difficulty: 'medium',
     description: `
-## DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+## DBSCAN Clustering
 
-DBSCAN finds clusters of any shape as regions of high point density, and marks points in sparse regions as **noise**. Unlike k-means, you don't choose the number of clusters.
+### What you'll build
+\`dbscan(X, eps, min_samples)\`: density-based clustering that returns a cluster id for every point, or \`-1\` for noise, with the same labels as scikit-learn's \`DBSCAN(eps=eps, min_samples=min_samples)\` (Euclidean metric).
 
-Implement \`dbscan(X, eps, min_samples)\` with the same semantics as scikit-learn's \`DBSCAN(eps, min_samples)\` (Euclidean metric).
+### Background
+DBSCAN (Density-Based Spatial Clustering of Applications with Noise) finds clusters of any shape as regions where points are packed densely, and labels points in sparse regions as noise. Unlike k-means you don't choose the number of clusters, and outliers don't drag centroids around. It is a common choice for anomaly detection and geospatial data.
 
 ### Definitions
 - The **eps-neighbourhood** of point \`p\`: all points \`q\` with \`||p - q|| <= eps\`, **including \`p\` itself**.
-- \`p\` is a **core point** if its neighbourhood has **at least \`min_samples\`** points (counting \`p\`).
+- \`p\` is a **core point** if its neighbourhood has **at least \`min_samples\`** points (counting \`p\`), as in scikit-learn.
 - A **border point** is not core but lies in the neighbourhood of some core point.
 - Everything else is **noise** (label \`-1\`).
 
-### Algorithm (cluster ids in order of discovery)
-\`\`\`
+### Algorithm
+\`\`\`text
 labels = [-1] * n;  cluster = 0
-for p in 0 .. n-1:                       # scan in index order
+for p in 0 .. n-1:                        # scan in index order
     if labels[p] != -1 or p is not core:  continue
     labels[p] = cluster;  queue = [p]
     while queue:
-        q = queue.pop(0)
-        for each neighbour r of q (only expand from CORE points q):
+        q = queue.pop(0)                  # q is always a core point
+        for each neighbour r of q:
             if labels[r] == -1:
                 labels[r] = cluster
                 if r is core: queue.append(r)
     cluster += 1
 \`\`\`
-- Only **core** points expand a cluster; border points join a cluster but don't spread it.
-- A border point within reach of two clusters keeps the label of the **first cluster that reached it** (the one discovered earlier in the index-order scan). It is never reassigned.
-- So cluster \`0\` contains the lowest-indexed core point, cluster \`1\` the lowest-indexed core point not in cluster \`0\`, and so on.
+1. Only **core** points expand a cluster; border points join a cluster but don't spread it.
+2. Clusters are numbered in order of discovery: cluster \`0\` contains the lowest-indexed core point, cluster \`1\` the lowest-indexed core point not in cluster \`0\`, and so on.
+
+### Inputs
+- \`X\`: data, shape \`(n, d)\`
+- \`eps\`: neighbourhood radius (\`> 0\`); a distance exactly equal to \`eps\` counts
+- \`min_samples\`: minimum neighbourhood size (point included) for a core point, \`>= 1\`
 
 ### Expected Return Format
-- An int array of shape \`(n,)\`: \`-1\` for noise, otherwise the cluster id \`0, 1, 2, ...\`.
+An int array of shape \`(n,)\`: \`-1\` for noise, otherwise the cluster id \`0, 1, 2, ...\`.
+
+### Edge cases and conventions
+- A **border point within reach of two clusters** keeps the label of the first cluster that reached it (the one discovered earlier) and is never reassigned. This is also what scikit-learn does; it is the one order-dependent part of DBSCAN.
+- \`min_samples = 1\`: every point is core, so isolated points become singleton clusters and nothing is noise.
+- If no point is core, every label is \`-1\`.
+
+### Constraints
+- NumPy only (no sklearn). Vectorise the distance matrix; the cluster expansion is a plain loop.
+
+### Follow-up
+- How would you pick \`eps\`? (Plot each point's distance to its \`min_samples\`-th neighbour, sorted, and look for the knee.)
+- The distance matrix is \`O(n^2)\` memory. How do spatial indexes (k-d trees, ball trees) help?
     `,
     examples: [
       {
-        input: 'X = [[0], [0.3], [0.6], [1.4], [2.2], [2.5], [2.8], [10]], eps=0.9, min_samples=4',
+        input: 'dbscan(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [10.0, 10.0], [10.0, 11.0], [11.0, 10.0], [50.0, 50.0]]), 1.5, 3)',
+        output: '[0, 0, 0, 1, 1, 1, -1]',
+        explanation: 'Each corner triangle has 3 points within 1.5 of each other, so all are core; (50, 50) has only itself and is noise.',
+      },
+      {
+        input: 'dbscan(np.array([[0.0], [0.3], [0.6], [1.4], [2.2], [2.5], [2.8], [10.0]]), 0.9, 4)',
         output: '[0, 0, 0, 0, 1, 1, 1, -1]',
-        explanation: 'Core points are 0.6 and 2.2 (4 neighbours each, counting themselves). 1.4 is a border point of both; cluster 0 reaches it first. 10 is noise.',
+        explanation: 'Only 0.6 and 2.2 are core (4 neighbours each, counting themselves). 1.4 is a border point of both and stays in cluster 0, which reaches it first.',
       },
     ],
     starterCode: `import numpy as np
 
 def dbscan(X, eps, min_samples):
     """
-    DBSCAN clustering (Euclidean distance, same semantics as sklearn).
+    DBSCAN clustering (Euclidean distance, same labels as sklearn).
 
     Args:
         X: Data, shape (n, d)
-        eps: Neighbourhood radius (distance <= eps counts, point itself included)
+        eps: Neighbourhood radius (distance <= eps counts, the point itself included)
         min_samples: Minimum neighbourhood size for a core point
 
     Returns:
-        Int labels of shape (n,): -1 for noise, clusters numbered 0, 1, ...
+        Int array of shape (n,): -1 for noise, clusters numbered 0, 1, ...
         in order of discovery when scanning points by index
     """
     # Your code here
@@ -508,13 +614,17 @@ def dbscan(X, eps, min_samples):
       },
     ],
     hints: [
-      'Precompute all pairwise distances with broadcasting and the list of neighbours of each point (D[i] <= eps, which includes i itself).',
-      'A point is core if len(neighbours[i]) >= min_samples.',
-      'Scan p = 0..n-1; start a new cluster only at an unlabeled core point, then grow it with a queue, adding neighbours that are still unlabeled and enqueueing only those that are core.',
+      'Split the work in two: decide which points are core (a pure function of the distances), then grow clusters outward from core points.',
+      'Precompute the (n, n) distance matrix with broadcasting, each point\'s neighbour list (D[i] <= eps, which includes i) and an is_core mask (len(neighbours) >= min_samples).',
+      'Scan p = 0..n-1; start a new cluster only at an unlabelled core point and grow it with a queue (a list or collections.deque): label unlabelled neighbours, and enqueue only the ones that are core.',
+      'Pitfalls: forgetting that a point is its own neighbour, using < eps instead of <= eps, letting border points expand the cluster, or relabelling a border point that another cluster already claimed.',
     ],
     solution: `import numpy as np
 
 def dbscan(X, eps, min_samples):
+    """
+    Returns int labels (n,): -1 for noise, clusters 0, 1, ... in discovery order.
+    """
     X = np.asarray(X, dtype=float)
     n = len(X)
 
@@ -531,14 +641,16 @@ def dbscan(X, eps, min_samples):
         labels[p] = cluster
         queue = [p]
         while queue:
-            q = queue.pop(0)            # q is always a core point
+            q = queue.pop(0)            # only core points are ever enqueued
             for r in neighbours[q]:
-                if labels[r] == -1:
+                if labels[r] == -1:     # first cluster to reach a point keeps it
                     labels[r] = cluster
                     if is_core[r]:
                         queue.append(r)
         cluster += 1
     return labels
+
+# Time and memory O(n^2) for the distance matrix; the expansion is O(n^2) worst case.
 `,
   },
   {
@@ -549,35 +661,48 @@ def dbscan(X, eps, min_samples):
     description: `
 ## K-Means from Scratch
 
-Implement the complete k-means algorithm (Lloyd's algorithm): seeding with **k-means++**, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty.
-
-You write two functions:
+### What you'll build
+The complete k-means algorithm (Lloyd's algorithm): **k-means++** seeding, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty. Two functions:
 - \`kmeans_pp_init(X, k, seed=0)\`: k-means++ seeding, returns the \`(k, d)\` initial centroids
 - \`kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0)\`: the full algorithm
+
+### Background
+k-means minimises the inertia \`sum_i ||x_i - C[label_i]||^2\`. Each assignment step and each update step can only lower it, so the algorithm converges, but only to a local minimum: initialisation matters. k-means++ spreads the initial centroids out by sampling each new one with probability proportional to its squared distance from the centroids chosen so far, which gives an \`O(log k)\` approximation guarantee in expectation.
 
 ### k-means++ seeding (follow exactly, so results are reproducible)
 Create one generator \`rng = np.random.default_rng(seed)\` and draw every random number with \`u = rng.random()\`:
 1. First centroid: the point at index \`floor(u * n)\`.
-2. Each further centroid: compute \`D2[i]\`, the squared distance from point \`i\` to its **nearest already chosen** centroid, and \`cdf = cumsum(D2)\`. Pick the **first** index \`i\` with \`cdf[i] > u * cdf[-1]\`. This samples a point with probability proportional to \`D2\`.
-3. If \`cdf[-1] == 0\` (every point coincides with a chosen centroid), pick index \`floor(u * n)\` instead.
+2. Each further centroid: compute \`D2[i]\`, the squared distance from point \`i\` to its **nearest already chosen** centroid, and \`cdf = np.cumsum(D2)\`. Draw \`u\` and pick the **first** index \`i\` with \`cdf[i] > u * cdf[-1]\`.
+3. If \`cdf[-1] == 0\` (every point coincides with a chosen centroid), pick index \`floor(u * n)\` instead (using the \`u\` already drawn for this centroid).
 
 ### Lloyd iterations
-Starting from the initial centroids \`C\` (k-means++ when \`init == 'k-means++'\`, otherwise \`init\` is a \`(k, d)\` array), repeat for \`it = 1, 2, ..., max_iter\`:
-1. **Assign**: each point goes to its nearest centroid (squared Euclidean distance); ties go to the lowest centroid index.
+Start from the initial centroids \`C\` (k-means++ when \`init == 'k-means++'\`, otherwise \`init\` is a \`(k, d)\` array). For \`it = 1, 2, ..., max_iter\`:
+1. **Assign**: each point goes to its nearest centroid by squared Euclidean distance; ties go to the lowest centroid index.
 2. **Update**: each non-empty cluster's centroid becomes the mean of its points.
-3. **Empty clusters**: a cluster with no points is moved onto the point that is **farthest from its assigned centroid** in this iteration's assignment (largest squared distance; ties go to the lowest point index). If several clusters are empty, handle them in increasing cluster index, and a point can be used only once.
+3. **Empty clusters**: a cluster with no points is moved onto the point **farthest from its assigned centroid** in this iteration's assignment (largest squared distance; ties go to the lowest point index). Handle several empty clusters in increasing cluster index; each point can be used only once.
 4. **Stop** if the labels did not change since the previous iteration, or if the largest centroid shift \`max_j ||C_new[j] - C[j]||\` is below \`tol\`.
 
-\`\`\`
-inertia = sum_i ||x_i - C[label_i]||^2
-\`\`\`
+### Inputs
+- \`X\`: data, shape \`(n, d)\`; \`k\`: number of clusters, \`1 <= k <= n\`
+- \`init\`: \`'k-means++'\` or a \`(k, d)\` array of initial centroids
+- \`max_iter\` (int \`>= 1\`), \`tol\` (absolute shift threshold), \`seed\` (int, used only by k-means++)
 
 ### Expected Return Format
-\`kmeans\` returns a dictionary with these keys:
+\`kmeans_pp_init\` returns a \`(k, d)\` float array. \`kmeans\` returns a dictionary with these keys:
 - \`'centroids'\`: \`(k, d)\` float array, the centroids after the last update
 - \`'labels'\`: \`(n,)\` int array, each point's nearest **returned** centroid (one final assignment step against the returned centroids)
-- \`'inertia'\`: Python float, computed from those labels and centroids
+- \`'inertia'\`: Python float, \`sum_i ||x_i - centroids[labels_i]||^2\` for those labels
 - \`'n_iter'\`: int, the number of assign/update iterations performed (\`1 <= n_iter <= max_iter\`)
+
+### Differences from scikit-learn's \`KMeans\`
+scikit-learn's k-means++ tries several candidates per step and keeps the best ("greedy k-means++"), scales \`tol\` by the data variance, and runs several initialisations (\`n_init\`). This problem uses the plain version so every number is reproducible.
+
+### Constraints
+- NumPy only; vectorise the distance computations.
+
+### Follow-up
+- How do you choose \`k\`? (Elbow on inertia, silhouette score.)
+- What is mini-batch k-means, and when would you use it?
 `,
     examples: [
       {
@@ -692,10 +817,10 @@ def kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0):
       },
     ],
     hints: [
-      'Compute all point-to-centroid squared distances at once with broadcasting: `((X[:, None, :] - C[None, :, :]) ** 2).sum(-1)` has shape (n, k).',
-      'For the k-means++ draw, `np.sum(cdf <= u * cdf[-1])` is the first index whose cumulative weight exceeds `u * cdf[-1]`.',
-      'Keep the previous labels to detect "no change", and compute the centroid shift before overwriting C.',
-      'After the loop, run one more assignment so labels and inertia match the centroids you return.',
+      'Structure the code as: initial centroids, then a loop of assign -> update -> fix empty clusters -> check convergence, then one final assignment for the returned labels and inertia.',
+      'All point-to-centroid squared distances at once: ((X[:, None, :] - C[None, :, :]) ** 2).sum(-1) has shape (n, k); argmin over axis 1 assigns, and d2.min(axis=1) gives the k-means++ D2.',
+      'For the k-means++ draw, int(np.sum(cdf <= u * cdf[-1])) is the first index whose cumulative weight exceeds u * cdf[-1].',
+      'Pitfalls: draw exactly one u per centroid from a single generator, compute the centroid shift before overwriting C, and mark a point as used (e.g. set its distance to -1) after moving an empty cluster onto it.',
     ],
     solution: `import numpy as np
 
@@ -757,6 +882,8 @@ def kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0):
     labels, d2 = _assign(X, C)
     inertia = float(d2[np.arange(n), labels].sum())
     return {'centroids': C, 'labels': labels, 'inertia': inertia, 'n_iter': n_iter}
+
+# Each iteration costs O(n * k * d) time; the broadcast uses O(n * k * d) memory.
 `,
   },
 ];

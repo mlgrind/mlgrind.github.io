@@ -343,52 +343,97 @@ Let's build these algorithms!
   {
     id: 'unsupervised-learning',
     title: 'Unsupervised Learning',
-    description: 'Implement clustering and dimensionality reduction algorithms.',
+    description: 'Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.',
     icon: '🔍',
     introduction: `
 # Unsupervised Learning
 
-Unsupervised learning finds patterns in unlabeled data.
+## Why it matters
 
-## Key Concepts
+Most data has no labels. Unsupervised methods find structure anyway: customer segments, compressed representations, anomalies, or the initial clusters a labelling team starts from. k-means and PCA are among the most frequently asked "implement it from scratch" interview questions, and the ideas behind them (alternating optimisation, EM, eigen-decompositions) come back in deep learning.
 
-### K-Means Clustering
-- **Goal**: Group data into K clusters
-- **Algorithm**:
-  1. Initialize K centroids randomly
-  2. Assign points to nearest centroid
-  3. Update centroids as cluster means
-  4. Repeat until convergence
+## Core ideas
 
-### Principal Component Analysis (PCA)
-- **Goal**: Reduce dimensionality while preserving variance
-- **Steps**:
-  1. Center the data (subtract mean)
-  2. Compute covariance matrix
-  3. Find eigenvectors/eigenvalues
-  4. Project onto top components
+Data is a matrix \`X\` of shape \`(n_samples, n_features)\`; \`k\` (or \`K\`) is the number of clusters or components.
 
-### Gaussian Mixtures & EM
-- **Soft clustering**: each point gets a responsibility for every component
-- **EM**: E-step computes responsibilities (in log space), M-step re-fits weights, means and variances
-- **Guarantee**: the log-likelihood never decreases
+### k-means (Lloyd's algorithm)
+
+Minimise the **inertia** (within-cluster sum of squares) by alternating two steps that each can only lower it:
+
+\`\`\`text
+assign:  label_i = argmin_j ||x_i - c_j||^2
+update:  c_j     = mean of the points with label j
+inertia = sum_i ||x_i - c_{label_i}||^2
+\`\`\`
+
+It converges to a local minimum, so initialisation matters: **k-means++** picks each new centroid with probability proportional to its squared distance from the centroids chosen so far. Distances for all pairs come from broadcasting \`X[:, None, :] - C[None, :, :]\`, shape \`(n, k, d)\`.
+
+### PCA
+
+Find orthogonal directions of maximum variance. **Centre** the data first, then take the eigenvectors of the covariance matrix (or the SVD of the centred data):
+
+\`\`\`text
+Xc  = X - X.mean(axis=0)               # (n, d)
+Cov = Xc.T @ Xc / (n - 1)              # (d, d)
+Cov = V diag(lambda) V^T               # eigenvalues sorted descending
+Z   = Xc @ V[:, :k]                    # (n, k) projection
+explained variance ratio = lambda_i / sum(lambda)
+\`\`\`
+
+Without centring, the first "component" points at the mean of the data instead of the direction of greatest spread.
+
+### Gaussian mixtures and EM
+
+A soft version of k-means: each point gets a **responsibility** for each component. The E-step computes responsibilities (in log space, with logsumexp); the M-step re-fits weights, means and variances from them. The log-likelihood never decreases.
 
 ### DBSCAN
-- **Density-based**: clusters are dense regions; sparse points are labelled noise
-- **Core points** have at least min_samples neighbours within eps; only they grow clusters
-- **No K to choose**, and clusters can have any shape
 
-### Why These Matter
-- **K-Means**: Customer segmentation, image compression
-- **PCA**: Feature reduction, visualization, noise removal
-- **GMM / DBSCAN**: Density estimation, anomaly detection, non-spherical clusters
+Density-based: a **core point** has at least \`min_samples\` points (itself included) within \`eps\`. Clusters grow from core points; points not reachable from any core point are **noise** (\`-1\`). No \`k\` to choose, and clusters can have any shape.
 
-### Interview Tips
-- Be ready to implement K-means from scratch
-- Explain variance explained by components
-- Discuss limitations (K-means assumes spherical clusters)
+| Method | Cluster shape | Needs \`k\`? | Soft? | Handles noise? |
+|--------|---------------|------------|-------|----------------|
+| k-means | spherical, similar size | yes | no | no |
+| GMM | ellipsoidal | yes | yes | partly (low likelihood) |
+| DBSCAN | arbitrary | no (\`eps\`, \`min_samples\`) | no | yes |
 
-Let's implement these algorithms!
+## Worked micro-example
+
+k-means on 1-D points \`[1, 2, 3, 10, 11, 12]\` with initial centroids \`[1, 2]\`:
+
+\`\`\`text
+iter 1  assign: 1 -> c0;  2, 3, 10, 11, 12 -> c1     update: c = [1.0, 7.6]
+iter 2  assign: 1, 2, 3 -> c0;  10, 11, 12 -> c1      update: c = [2.0, 11.0]
+iter 3  labels unchanged -> stop.  inertia = (1 + 0 + 1) + (1 + 0 + 1) = 4
+\`\`\`
+
+PCA on \`X = [[1, 2], [2, 1], [3, 4], [4, 3]]\`: the mean is \`[2.5, 2.5]\`, the covariance is \`[[1.667, 1], [1, 1.667]]\`, with eigenvalues \`2.667\` and \`0.667\`. The first component \`[1, 1] / sqrt(2)\` explains \`2.667 / 3.333 = 80%\` of the variance.
+
+## Common pitfalls
+
+- **Unscaled features**: every method here uses distances or variances, so a feature in large units dominates. Standardise first.
+- **Forgetting to centre** before PCA, or centring the test set with its own mean instead of the training mean.
+- **Empty clusters** in k-means: a centroid that wins no points has no mean; you need a rule (re-seed it on a far point).
+- **Underflow in EM**: products of Gaussian densities hit \`0.0\`; work with log-densities and logsumexp.
+- **Ties**: \`argmin\` returns the first minimum, so state the tie-breaking rule and keep it.
+- **Memory**: the \`(n, k, d)\` broadcast is fine for small data; for large \`n\` use \`||x||^2 - 2 x.c + ||c||^2\`.
+
+## Interview angle
+
+- Implement k-means in 15 minutes, vectorised; each iteration costs \`O(n * k * d)\`.
+- "How do you choose \`k\`?" (elbow on inertia, silhouette score, BIC for GMMs) and "Why can k-means fail?" (non-spherical clusters, different densities, outliers, bad initialisation).
+- PCA: eigen-decomposition vs SVD (SVD is more stable and avoids forming \`X^T X\`), the cost \`O(n d^2 + d^3)\`, and what "explained variance" means.
+- k-means as a special case of EM with hard assignments and equal spherical variances.
+- DBSCAN: how to choose \`eps\` (the k-distance plot) and why it struggles with clusters of different densities.
+
+## Problems in this section
+
+1. **K-Means: Assign to Nearest Centroid**: the vectorised assignment step.
+2. **PCA Step 1: Center the Data**: subtract the column means, the first step of PCA.
+3. **Gaussian Mixture Model (EM)**: a log-space E-step and the full EM loop for a 1-D mixture.
+4. **DBSCAN Clustering**: core points, border points and noise, matching scikit-learn's labels.
+5. **K-Means from Scratch**: k-means++ seeding, Lloyd iterations, a convergence test and empty-cluster handling.
+
+Related: **Data Preprocessing** (scale features before clustering), and the k-NN classifier in **Supervised Learning**, which uses the same distance computations.
     `,
     problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan', 'kmeans-full'],
   },
