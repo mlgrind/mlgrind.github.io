@@ -23,7 +23,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 ## Complete Curriculum
 
-21 sections, 141 problems.
+21 sections, 149 problems.
 
 ### Section 01: NumPy Fundamentals
 
@@ -101,12 +101,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/data-preprocessing
 **Summary**: Learn essential data cleaning and transformation techniques.
-**Problems** (4):
+**Problems** (5):
 
 1. **Normalize Features** (`/problem/data-preprocessing/normalize-features`) — easy
 2. **Handle Missing Data** (`/problem/data-preprocessing/handle-missing-data`) — medium
 3. **One-Hot Encoding** (`/problem/data-preprocessing/one-hot-encode`) — medium
 4. **Stratified Train/Val/Test Split** (`/problem/data-preprocessing/stratified-split`) — medium
+5. **Leakage-Safe Imputation and Scaling** (`/problem/data-preprocessing/leakage-safe-imputation`) — medium
 
 ---
 
@@ -114,7 +115,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/supervised-learning
 **Summary**: Implement core supervised learning algorithms from scratch.
-**Problems** (11):
+**Problems** (12):
 
 1. **Sigmoid Function** (`/problem/supervised-learning/logistic-regression`) — easy
 2. **Binary Cross-Entropy Loss** (`/problem/supervised-learning/binary-cross-entropy`) — easy
@@ -127,6 +128,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 9. **Gaussian Naive Bayes** (`/problem/supervised-learning/naive-bayes`) — medium
 10. **Ridge & Lasso Regression** (`/problem/supervised-learning/ridge-lasso`) — hard
 11. **Gradient Boosting with Stumps** (`/problem/supervised-learning/gradient-boosting`) — hard
+12. **Decision Tree Classifier with Bagging** (`/problem/supervised-learning/decision-tree-bagging`) — hard
 
 ---
 
@@ -134,12 +136,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/unsupervised-learning
 **Summary**: Implement clustering and dimensionality reduction algorithms.
-**Problems** (4):
+**Problems** (5):
 
 1. **K-Means: Assign to Nearest Centroid** (`/problem/unsupervised-learning/kmeans-clustering`) — medium
 2. **PCA: Center Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
 3. **Gaussian Mixture Model (EM)** (`/problem/unsupervised-learning/gmm-em`) — hard
 4. **DBSCAN Clustering** (`/problem/unsupervised-learning/dbscan`) — medium
+5. **K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)** (`/problem/unsupervised-learning/kmeans-full`) — hard
 
 ---
 
@@ -147,13 +150,14 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/model-evaluation
 **Summary**: Learn metrics and techniques to evaluate ML models properly.
-**Problems** (5):
+**Problems** (6):
 
 1. **Precision and Recall** (`/problem/model-evaluation/precision-recall-f1`) — medium
 2. **K-Fold Split Indices** (`/problem/model-evaluation/cross-validation`) — medium
 3. **Accuracy Score** (`/problem/model-evaluation/confusion-matrix`) — easy
 4. **ROC Curve & AUC (with Ties)** (`/problem/model-evaluation/roc-auc`) — medium
 5. **Expected Calibration Error** (`/problem/model-evaluation/calibration-ece`) — medium
+6. **Precision-Recall Curve and Best-F1 Threshold** (`/problem/model-evaluation/pr-curve-thresholds`) — medium
 
 ---
 
@@ -173,13 +177,14 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/neural-networks
 **Summary**: Build neural networks from scratch with forward and backward passes.
-**Problems** (5):
+**Problems** (6):
 
 1. **Cross-Entropy Loss** (`/problem/neural-networks/cross-entropy-loss`) — easy
 2. **MLP Forward & Backward Pass** (`/problem/neural-networks/mlp-forward-backward`) — hard
 3. **Xavier/He Weight Initialization** (`/problem/neural-networks/weight-init`) — medium
 4. **Batch Normalization** (`/problem/neural-networks/batch-norm`) — medium
 5. **Dropout** (`/problem/neural-networks/dropout`) — easy
+6. **Masked Cross-Entropy with Label Smoothing** (`/problem/neural-networks/masked-label-smoothing-ce`) — medium
 
 ---
 
@@ -230,7 +235,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/transformers
 **Summary**: Master attention, positional encoding, and modern LLM architecture.
-**Problems** (9):
+**Problems** (11):
 
 1. **Scaled Dot-Product Attention** (`/problem/transformers/scaled-dot-product-attention`) — medium
 2. **Multi-Head Attention** (`/problem/transformers/multi-head-attention`) — hard
@@ -241,6 +246,8 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 7. **Rotary Positional Embeddings (RoPE)** (`/problem/transformers/rope-embeddings`) — medium
 8. **Grouped Query Attention (GQA)** (`/problem/transformers/grouped-query-attention`) — medium
 9. **Sliding Window Attention** (`/problem/transformers/sliding-window-attention`) — easy
+10. **Attention Backward Pass (dQ, dK, dV)** (`/problem/transformers/attention-backward`) — hard
+11. **Greedy Longest-Match Tokenizer** (`/problem/transformers/longest-match-tokenizer`) — medium
 
 ---
 
@@ -342,7 +349,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 
 **URL**: /section/e2e-implementations
 **Summary**: Build complete ML models from scratch.
-**Problems** (8):
+**Problems** (9):
 
 1. **E2E: 2-Layer MLP with Backprop** (`/problem/e2e-implementations/e2e-mlp`) — hard
 2. **E2E: Transformer Encoder** (`/problem/e2e-implementations/e2e-transformer`) — hard
@@ -352,6 +359,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 6. **E2E: Convolutional Neural Network** (`/problem/e2e-implementations/e2e-cnn`) — hard
 7. **Mini GPT (Character-Level Language Model)** (`/problem/e2e-implementations/e2e-mini-gpt`) — hard
 8. **E2E: Tiny Vision Transformer** (`/problem/e2e-implementations/e2e-vit-classifier`) — hard
+9. **Transformer Bug Hunt: Fix a Broken Mini-GPT** (`/problem/e2e-implementations/transformer-bug-hunt`) — hard
 
 ---
 
