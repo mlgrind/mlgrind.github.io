@@ -601,4 +601,168 @@ def expected_calibration_error(probs, labels, n_bins=10):
     return {'ece': ece, 'bin_acc': bin_acc, 'bin_conf': bin_conf, 'bin_count': count}
 `,
   },
+  {
+    id: 'pr-curve-thresholds',
+    title: 'Precision-Recall Curve and Best-F1 Threshold',
+    section: 'model-evaluation',
+    difficulty: 'medium',
+    description: `
+## Precision-Recall Curve and Best-F1 Threshold
+
+A classifier outputs a score per sample; turning scores into labels needs a threshold. Compute **precision, recall and F1 at every distinct score threshold**, and find the threshold with the best F1.
+
+### Definitions
+For a threshold \`t\`, predict positive when \`score >= t\`:
+\`\`\`
+TP(t) = #{score >= t and y = 1}      FP(t) = #{score >= t and y = 0}
+P     = #{y = 1}                     FN(t) = P - TP(t)
+
+precision(t) = TP / (TP + FP)
+recall(t)    = TP / P
+F1(t)        = 2 * TP / (2 * TP + FP + FN)    (= 2PR / (P + R))
+\`\`\`
+
+### Conventions
+- **Thresholds** are the distinct score values, in **descending** order. Tied scores enter together: a threshold equal to a tied score counts every sample with that score.
+- Every threshold is an observed score, so \`TP + FP >= 1\` and precision is always defined.
+- **No positive labels** (\`P = 0\`): recall is set to \`1.0\` at every threshold, as scikit-learn's \`precision_recall_curve\` does, and F1 is then 0 (it is 0 whenever \`TP = 0\`).
+- **Best threshold**: the one with the highest F1; ties go to the **higher** threshold (the first one in the descending list).
+- Differences from scikit-learn's \`precision_recall_curve\`: we list thresholds in descending order and don't append its final \`(precision=1, recall=0)\` point.
+
+### Expected Return Format
+Return a dictionary with these keys:
+- \`'thresholds'\`: list of floats, distinct scores in descending order
+- \`'precision'\`, \`'recall'\`, \`'f1'\`: lists of floats, one per threshold
+- \`'best_threshold'\`: float, the threshold with the highest F1
+- \`'best_f1'\`: float, that F1
+`,
+    examples: [
+      {
+        input: 'pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))',
+        output: "{'thresholds': [0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.1], 'precision': [1.0, 0.5, 0.5, 0.6, 0.5, 0.5714, 0.5], 'recall': [0.25, 0.25, 0.5, 0.75, 0.75, 1.0, 1.0], 'f1': [0.4, 0.3333, 0.5, 0.6667, 0.6, 0.7273, 0.6667], 'best_threshold': 0.3, 'best_f1': 0.7273}",
+        explanation: 'At t = 0.7 both tied samples (one positive, one negative) become positive at once. Values are shown rounded to 4 decimals.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def pr_curve(y_true, scores):
+    """
+    Precision, recall and F1 at every distinct score threshold.
+
+    Args:
+        y_true: Binary labels (0/1), array (n,)
+        scores: Classifier scores, array (n,); predict positive when score >= threshold
+
+    Returns:
+        dict with 'thresholds' (descending), 'precision', 'recall', 'f1' (lists of floats),
+        'best_threshold' (float) and 'best_f1' (float)
+    """
+    # Your code here
+    pass
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Distinct thresholds, descending',
+        input: 'pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["thresholds"]',
+        expected: '[0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.1]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Precision at each threshold',
+        input: '[round(v, 4) for v in pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["precision"]]',
+        expected: '[1.0, 0.5, 0.5, 0.6, 0.5, 0.5714, 0.5]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Recall at each threshold',
+        input: '[round(v, 4) for v in pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["recall"]]',
+        expected: '[0.25, 0.25, 0.5, 0.75, 0.75, 1.0, 1.0]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'F1 at each threshold',
+        input: '[round(v, 4) for v in pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1]))["f1"]]',
+        expected: '[0.4, 0.3333, 0.5, 0.6667, 0.6, 0.7273, 0.6667]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Best threshold and F1',
+        input: '(lambda: (r := pr_curve(np.array([1, 0, 1, 0, 1, 0, 1, 0]), np.array([0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.3, 0.1])), (r["best_threshold"], round(r["best_f1"], 4)))[-1])()',
+        expected: '(0.3, 0.7273)',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'All scores tied: one threshold',
+        input: '(lambda: (r := pr_curve(np.array([1, 0, 0, 1, 0]), np.array([0.5, 0.5, 0.5, 0.5, 0.5])), (r["thresholds"], r["precision"], r["recall"]))[-1])()',
+        expected: '([0.5], [0.4], [1.0])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'No positives: recall 1.0, F1 0.0, highest threshold wins',
+        input: '(lambda: (r := pr_curve(np.array([0, 0, 0]), np.array([0.2, 0.9, 0.5])), (r["recall"], r["f1"], r["best_threshold"]))[-1])()',
+        expected: '([1.0, 1.0, 1.0], [0.0, 0.0, 0.0], 0.9)',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'F1 ties go to the higher threshold',
+        input: '(lambda: (r := pr_curve(np.array([1, 0, 1, 0, 0, 1]), np.array([0.9, 0.8, 0.7, 0.6, 0.5, 0.4])), (r["best_threshold"], round(r["best_f1"], 4)))[-1])()',
+        expected: '(0.7, 0.6667)',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Random scores with many ties',
+        input: '(lambda: (y := (np.random.rand(50) < 0.4).astype(int), s := np.round(np.random.rand(50), 1), r := pr_curve(y, s), (len(r["thresholds"]), round(r["best_threshold"], 1), round(r["best_f1"], 4)))[-1])()',
+        expected: '(11, 0.2, 0.4706)',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Sort by score descending; `np.cumsum(y)` then gives TP for "predict the first i+1 samples positive".',
+      'Ties: only keep the cumulative counts at the last index of each run of equal scores (`np.diff(s) != 0` marks the run ends).',
+      'Use the count form `2*TP / (2*TP + FP + FN)` for F1: it avoids a 0/0 when precision and recall are both 0.',
+      '`np.argmax` returns the first maximum, which is the highest threshold in a descending list.',
+    ],
+    solution: `import numpy as np
+
+def pr_curve(y_true, scores):
+    y = np.asarray(y_true).astype(int)
+    s = np.asarray(scores, dtype=float)
+
+    # Sort by score, descending; cumulative counts give TP/FP for "score >= s[i]"
+    order = np.argsort(-s, kind='stable')
+    y, s = y[order], s[order]
+    tps = np.cumsum(y)
+    fps = np.cumsum(1 - y)
+
+    # Keep the last position of each run of tied scores
+    last = np.r_[np.where(np.diff(s) != 0)[0], len(s) - 1]
+    thresholds = s[last]
+    tp, fp = tps[last], fps[last]
+    n_pos = y.sum()
+    fn = n_pos - tp
+
+    precision = tp / (tp + fp)
+    recall = tp / n_pos if n_pos > 0 else np.ones(len(tp))
+    f1 = 2 * tp / (2 * tp + fp + fn)
+
+    best = int(np.argmax(f1))  # first maximum = highest threshold
+    return {
+        'thresholds': thresholds.tolist(),
+        'precision': precision.tolist(),
+        'recall': recall.tolist(),
+        'f1': f1.tolist(),
+        'best_threshold': float(thresholds[best]),
+        'best_f1': float(f1[best]),
+    }
+`,
+  },
 ];

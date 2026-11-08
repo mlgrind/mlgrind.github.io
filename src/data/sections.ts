@@ -389,7 +389,7 @@ Building a model is only half the job. You need to evaluate it properly.
 
 Let's practice evaluation!
     `,
-    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece'],
+    problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece', 'pr-curve-thresholds'],
   },
 
   // ==========================================
