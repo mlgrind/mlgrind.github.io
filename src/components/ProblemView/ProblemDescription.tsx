@@ -1,28 +1,22 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Problem } from '../../types';
+import { stripRepeatedTitle } from '../../lib/problemTitle';
+import DifficultyBadge from './DifficultyBadge';
 
 interface ProblemDescriptionProps {
   problem: Problem;
+  /** The page shows the title (and difficulty) itself; skip them here. */
+  hideTitle?: boolean;
 }
 
-export default function ProblemDescription({ problem }: ProblemDescriptionProps) {
+export default function ProblemDescription({ problem, hideTitle = false }: ProblemDescriptionProps) {
   return (
     <div className="prose prose-sm max-w-none overflow-hidden">
-      <div className="flex items-center gap-3 mb-4">
+      {!hideTitle && <div className="flex items-center gap-3 mb-4">
         <h1 className="text-xl font-bold text-gray-900 dark:text-dark-100 m-0">{problem.title}</h1>
-        <span
-          className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
-            problem.difficulty === 'easy'
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : problem.difficulty === 'medium'
-              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-          }`}
-        >
-          {problem.difficulty}
-        </span>
-      </div>
+        <DifficultyBadge difficulty={problem.difficulty} />
+      </div>}
 
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -91,7 +85,7 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
           ),
         }}
       >
-        {problem.description}
+        {stripRepeatedTitle(problem.description, problem.title)}
       </ReactMarkdown>
     </div>
   );
