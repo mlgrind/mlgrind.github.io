@@ -483,41 +483,81 @@ Next, **Neural Networks** chains these into a full MLP with a hand-written backw
   {
     id: 'neural-networks',
     title: 'Neural Networks',
-    description: 'Build neural networks from scratch with forward and backward passes.',
+    description: 'Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.',
     icon: '🧠',
     introduction: `
 # Neural Networks
 
-Neural networks are the foundation of deep learning. Understanding the math behind them is essential for ML interviews.
+This section turns the building blocks from Deep Learning Basics into a network you can **train**: a loss to minimise, a hand-written backward pass, and the three techniques that make deep networks train reliably (initialization, batch normalization, dropout). "Implement the forward and backward pass of an MLP in NumPy" is one of the most common ML coding interview questions, and every framework bug you will debug later is easier once you have written backprop yourself.
 
-## Key Concepts
+## Core Ideas
 
-### Multi-Layer Perceptron (MLP)
-- **Architecture**: Input → Hidden layers → Output
-- **Forward pass**: Compute activations layer by layer
-- **Activation functions**: ReLU, Sigmoid, Tanh, Softmax
+### The training loop in one picture
 
-### Backpropagation
-- **Chain rule**: Compute gradients layer by layer
-- **Weight updates**: Gradient descent on all parameters
-- **Key insight**: Errors propagate backwards through the network
+\`\`\`text
+forward:   X -> Z1 = X @ W1 + b1 -> A1 = relu(Z1) -> Z2 = A1 @ W2 + b2 -> p = softmax(Z2) -> L
+backward:  dW1, db1 <- dZ1 = dA1 * (Z1 > 0) <- dA1 = dZ2 @ W2.T <- dZ2 = (p - Y) / m <- L
+update:    W -= lr * dW        (for every parameter)
+\`\`\`
 
-### Training Techniques
-- **Weight Initialization**: Xavier, He initialization
-- **Batch Normalization**: Normalize activations for stable training
-- **Dropout**: Randomly drop neurons to prevent overfitting
+Shapes: \`X (m, n_features)\`, \`W1 (n_features, n_hidden)\`, \`W2 (n_hidden, n_classes)\`, \`Y\` one-hot \`(m, n_classes)\`. Every gradient has the same shape as its parameter.
 
-### Loss Functions
-- **Cross-entropy**: For classification
-- **MSE**: For regression
+### Cross-entropy and the \`p - y\` gradient
+For one-hot labels, cross-entropy is the negative log-probability of the correct class, averaged over the batch: \`L = -(1/m) * sum(Y * log(p))\`. Combined with softmax, the gradient with respect to the logits collapses to \`(p - Y) / m\`, which is why frameworks fuse them (\`nn.CrossEntropyLoss\` takes logits). For token-level LM losses you also mask padding and often smooth the labels: \`q = (1 - eps) * onehot + eps / V\`.
 
-### Common Interview Topics
-- Implement forward/backward pass from scratch
-- Explain vanishing/exploding gradients
-- Discuss initialization strategies
-- Implement regularization techniques
+### Backprop is the chain rule with matrix shapes
+For \`Z = A @ W + b\`: \`dW = A.T @ dZ\`, \`db = dZ.sum(axis=0)\`, \`dA = dZ @ W.T\`. For an element-wise activation: \`dZ = dA * f'(Z)\`, with \`relu'(Z) = (Z > 0)\`. That is all an MLP needs.
 
-Let's build neural networks from scratch!
+### Making deep networks trainable
+
+| Technique | Formula | What it fixes |
+|-----------|---------|---------------|
+| Xavier init | \`W ~ N(0, 2 / (n_in + n_out))\` | Keeps activation variance stable with tanh/sigmoid |
+| He init | \`W ~ N(0, 2 / n_in)\` | Same for ReLU, which zeroes half its inputs |
+| BatchNorm | \`gamma * (x - mu_B) / sqrt(var_B + eps) + beta\` | Unstable activation scales; allows larger learning rates |
+| Dropout | \`x * mask / keep_prob\`, \`mask ~ Bernoulli(keep_prob)\` | Overfitting (co-adapted units) |
+
+## Worked Micro-Example
+
+Logits \`z = [2.0, 1.0, 0.1]\` for one example whose true class is 0:
+
+\`\`\`text
+p    = softmax(z)       = [0.659, 0.2424, 0.0986]
+L    = -log(p[0])       = 0.417
+dL/dz = p - y           = [-0.341, 0.2424, 0.0986]    # push the true logit up, the others down
+with label smoothing eps = 0.1:
+L    = 0.9 * 0.417 + 0.1 * mean(-log p) = 0.5137
+\`\`\`
+
+The gradient entries sum to 0: raising every logit by the same amount changes nothing (softmax is shift-invariant).
+
+## Common Pitfalls
+
+- **Unstable losses**: \`log(softmax(z))\` can give \`-inf\`; work from logits with \`logsumexp\`, or add a small eps when the input really is probabilities.
+- **Forgetting \`1/m\`**: gradients of a mean loss are divided by the batch size; mixing sum and mean silently changes the effective learning rate.
+- **Transposes**: \`dA1 = dZ2 @ W2.T\`, not \`dZ2 @ W2\`. Check every gradient shape against its parameter.
+- **BatchNorm**: use the biased variance in training, put \`eps\` inside the square root, reduce over the batch axis (\`axis=0\`), and remember train vs eval mode (batch statistics vs running averages).
+- **Dropout**: \`keep_prob\` is not the drop probability \`p\` that \`nn.Dropout(p)\` takes; inverted dropout scales at train time so inference is the identity.
+- **Padding in sequence losses**: average over real tokens only, and never index with \`ignore_index = -100\`.
+
+## Interview Angle
+
+- Derive \`dL/dz = p - y\` for softmax + cross-entropy, then write the full MLP backward pass. Follow-up: verify it with a finite-difference gradient check.
+- "Why not initialise all weights to zero?" Every unit in a layer gets the same gradient, so symmetry is never broken. "Why He for ReLU?"
+- BatchNorm: what changes at inference, why it interacts badly with small batches, and how LayerNorm differs.
+- Dropout: why scale by \`1/keep_prob\`, and what the backward pass is (\`dX = dout * mask\`).
+- Complexity: a forward or backward pass of a dense layer costs \`O(m * n_in * n_out)\`; backprop costs about twice the forward pass.
+
+## Problems in This Section
+
+1. **Cross-Entropy Loss**: the mean classification loss from probabilities and one-hot labels.
+2. **MLP Forward & Backward Pass**: a 2-layer ReLU/softmax network with hand-derived gradients.
+3. **Xavier/He Weight Initialization**: sample weights at the right scale and measure their std.
+4. **Batch Normalization**: the training-mode forward pass with its cache.
+5. **Dropout**: inverted dropout with its mask, plus inference mode.
+6. **Masked Cross-Entropy with Label Smoothing**: the token-level LM loss, matching \`F.cross_entropy\`.
+
+Related: Layer Norm and RMSNorm are in **Transformers** and **PyTorch Basics**; optimizers, gradient clipping and loss scaling are in **Optimization & Training**; the full train-from-scratch MLP is in **E2E Implementations**.
     `,
     problems: ['cross-entropy-loss', 'mlp-forward-backward', 'weight-init', 'batch-norm', 'dropout', 'masked-label-smoothing-ce'],
   },

@@ -152,14 +152,14 @@ def mlp_backward(Y, output, cache):
       },
     ],
     hints: [
-      'Forward: Z1 = X @ W1 + b1, A1 = relu(Z1), Z2 = A1 @ W2 + b2, output = softmax(Z2)',
-      'Backward: dZ2 = output - Y; dW2 = A1.T @ dZ2 / m; db2 = dZ2.sum(dim=0) / m',
-      'ReLU derivative as a float mask: (Z1 > 0).float()',
-      'You can check your result yourself: build the loss from output, call loss.backward(), and compare with W1.grad',
+      'Forward is four lines: affine, ReLU, affine, softmax. Save exactly (X, Z1, A1, Z2, W1, W2) in the cache, in that order.',
+      'Backward runs in reverse: output layer (dZ2, dW2, db2), then through W2 and the ReLU (dA1, dZ1), then the first layer (dW1, db1).',
+      'dZ2 = output - Y; dW2 = A1.T @ dZ2 / m; db2 = dZ2.sum(dim=0) / m; dZ1 = (dZ2 @ W2.T) * (Z1 > 0).float(); dW1 = X.T @ dZ1 / m; db1 = dZ1.sum(dim=0) / m.',
+      'Check yourself with autograd: build the mean cross-entropy from output, call loss.backward() and compare with W1.grad. Forgetting the 1/m or the transpose on W2 are the usual bugs.',
     ],
   },
   'cross-entropy-loss': {
-    note: "Implement with tensor ops (torch.log, sum). Don't use F.cross_entropy, F.nll_loss or nn.CrossEntropyLoss.",
+    note: "Implement with tensor ops (torch.log, sum). Don't use F.cross_entropy, F.nll_loss or nn.CrossEntropyLoss: they take logits or log-probabilities, while this function takes probabilities.",
     starterCode: `import torch
 
 def cross_entropy_loss(Y_pred, Y_true):
@@ -219,11 +219,19 @@ def cross_entropy_loss(Y_pred, Y_true):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Zero probability on the true class uses eps = 1e-15',
+        input: 'cross_entropy_loss(torch.tensor([[0.0, 1.0], [0.5, 0.5]], dtype=torch.float64), torch.tensor([[1.0, 0.0], [1.0, 0.0]], dtype=torch.float64))',
+        expected: '17.616',
+        hidden: true,
+      },
     ],
     hints: [
-      'torch.log(Y_pred + 1e-15) avoids log(0)',
-      'Multiply element-wise by Y_true, sum, negate and divide by the batch size',
-      'Return a Python float: round(loss.item(), 4)',
+      'Only the true class of each example contributes, because Y_true is 0 everywhere else.',
+      'Take the log of the predictions, multiply element-wise by the labels, sum, negate and divide by the batch size m.',
+      'torch.log(Y_pred + 1e-15), then -(Y_true * log_probs).sum() / Y_pred.shape[0]; return round(loss.item(), 4).',
+      'Divide by m (rows), not by the number of elements, so .mean() over the whole tensor is wrong. Without eps, a 0 probability gives inf.',
     ],
   },
   'weight-init': {
@@ -293,9 +301,10 @@ def initialize_weights(n_in, n_out, method='xavier'):
       },
     ],
     hints: [
-      'torch.randn(n_in, n_out) samples from N(0, 1)',
-      'Xavier: multiply by sqrt(2 / (n_in + n_out)); He: multiply by sqrt(2 / n_in)',
-      'Return W.std().item() rounded to 4 decimals',
+      'Both methods draw from a standard normal and only differ in the scale they multiply by.',
+      'Pick the std from the method, sample W = torch.randn(n_in, n_out) * std, then measure W.std().',
+      'Xavier: math.sqrt(2 / (n_in + n_out)); He: math.sqrt(2 / n_in). Return round(W.std().item(), 4).',
+      "Return the empirical std of the sampled weights, not the theoretical value. Note that nn.init reads fan_in from dim 1 of a (out, in) weight, the opposite of the (n_in, n_out) layout here.",
     ],
   },
   'batch-norm': {
@@ -369,11 +378,19 @@ def batch_norm_forward(X, gamma, beta, eps=1e-5):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Gamma and beta applied per feature',
+        input: '[[round(v, 4) for v in row] for row in batch_norm_forward(torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), torch.tensor([2.0, 2.0]), torch.tensor([0.5, -1.0]))[0].tolist()]',
+        expected: '[[-1.9495, -3.4495], [0.5, -1.0], [2.9495, 1.4495]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Use X.mean(dim=0) and X.var(dim=0, unbiased=False): BatchNorm uses the biased variance',
-      'Normalize: (X - mu) / torch.sqrt(var + eps)',
-      'Scale and shift: gamma * X_norm + beta',
+      'Each feature (column) gets its own mean and variance, computed over the batch dimension.',
+      'Four steps: batch mean, batch variance, normalise, then scale by gamma and shift by beta. Keep the intermediates for the cache.',
+      'mu = X.mean(dim=0); var = X.var(dim=0, unbiased=False); X_norm = (X - mu) / torch.sqrt(var + eps); out = gamma * X_norm + beta.',
+      "torch's var is unbiased by default: pass unbiased=False (BatchNorm uses the biased variance). Put eps inside the sqrt and reduce over dim=0, not dim=1 (that would be LayerNorm).",
     ],
   },
   'dropout': {
@@ -457,11 +474,19 @@ def dropout_forward(X: torch.Tensor, keep_prob: float = 0.5, training: bool = Tr
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'keep_prob = 1 keeps every unit unchanged',
+        input: '(lambda: (X := torch.randn(3, 4), bool(torch.allclose(dropout_forward(X, 1.0, True)[0], X)))[-1])()',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'In training: mask = (torch.rand_like(X) < keep_prob).float()',
-      'Scale the mask by 1 / keep_prob (inverted dropout), then out = X * mask',
-      'In inference: return X, None',
+      'Handle inference first: dropout does nothing there. In training, each unit needs its own independent coin flip.',
+      'Build a mask of the same shape as X, scale it so the expected value is unchanged, then multiply.',
+      'mask = (torch.rand_like(X) < keep_prob).float() / keep_prob; out = X * mask. Inference: return X, None.',
+      'keep_prob is the probability of keeping (F.dropout and nn.Dropout take the drop probability p = 1 - keep_prob). Forgetting the 1/keep_prob scale shrinks activations at train time only.',
     ],
   },
   'masked-label-smoothing-ce': {
@@ -565,6 +590,12 @@ def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0)
         expected: '291.6667',
         hidden: true,
       },
+    ],
+    hints: [
+      'Reduce the problem to a flat list of tokens: reshape logits to (N, V) and targets to (N,), then decide which tokens count.',
+      'Build keep = targets != ignore_index and select the kept rows before any indexing by target; then compute a stable log-softmax of those rows.',
+      'log_p = z - torch.logsumexp(z, dim=-1, keepdim=True); nll = -log_p[torch.arange(n), y]; the smoothed loss is (1 - eps) * nll + eps * (-log_p).mean(dim=-1). Return loss.mean().item().',
+      'Pitfalls: indexing with -100 fails (or wraps around in NumPy); spreading eps over V - 1 classes instead of V (PyTorch uses V); and averaging over all tokens instead of only the kept ones.',
     ],
   },
 };
