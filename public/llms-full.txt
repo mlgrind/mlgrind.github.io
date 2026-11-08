@@ -404,6 +404,7 @@ Tests can be:
 - `GET /` - Home page with section overview
 - `GET /scratchpad` - Python playground
 - `GET /flashcards` - Spaced-repetition review
+- `GET /companies` - Problems reported in interviews, grouped by company
 - `GET /section/:sectionId` - Section intro + problem list
 - `GET /problem/:sectionId/:problemId` - Coding interface
 - `GET /ml-cheatsheet.html` - Static formula reference

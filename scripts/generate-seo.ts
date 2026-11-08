@@ -26,6 +26,7 @@ const entries: Entry[] = [
   { loc: '/', changefreq: 'weekly', priority: '1.0' },
   { loc: '/scratchpad', changefreq: 'monthly', priority: '0.7' },
   { loc: '/flashcards', changefreq: 'weekly', priority: '0.7' },
+  { loc: '/companies', changefreq: 'monthly', priority: '0.6' },
   { loc: '/ml-cheatsheet.html', changefreq: 'monthly', priority: '0.6' },
   { loc: '/terms', changefreq: 'yearly', priority: '0.3' },
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
@@ -124,6 +125,7 @@ ${allPaths.map(path => `- [${path.title}](${ORIGIN}${path.id === 'seven-day-chal
 - Home: ${ORIGIN}/
 - Scratchpad: ${ORIGIN}/scratchpad
 - Flash cards: ${ORIGIN}/flashcards
+- Problems by company: ${ORIGIN}/companies
 - Cheat sheet: ${ORIGIN}/ml-cheatsheet.html
 - Sections: ${ORIGIN}/section/{section-id}
 - Problems: ${ORIGIN}/problem/{section-id}/{problem-id}
@@ -273,6 +275,7 @@ Tests can be:
 - \`GET /\` - Home page with section overview
 - \`GET /scratchpad\` - Python playground
 - \`GET /flashcards\` - Spaced-repetition review
+- \`GET /companies\` - Problems reported in interviews, grouped by company
 - \`GET /section/:sectionId\` - Section intro + problem list
 - \`GET /problem/:sectionId/:problemId\` - Coding interface
 - \`GET /ml-cheatsheet.html\` - Static formula reference

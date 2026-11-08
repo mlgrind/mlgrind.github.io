@@ -1,8 +1,18 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import CompanyTags, { CompanyLogo, CompanyLogoStack, formatTagDate } from '../components/CompanyTags/CompanyTags';
-import { getCompanies, getCompanyTags } from '../data/companyTags';
+import CompaniesPage from '../pages/CompaniesPage';
+import { ProgressProvider } from '../context/ProgressContext';
+import { getCompanies, getCompanyIndex, getCompanyTags } from '../data/companyTags';
+import { getProblemById } from '../data/problems';
+
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
+vi.mock('../lib/firestoreSync', () => ({
+  loadProgressFromFirestore: vi.fn(),
+  saveProgressToFirestore: vi.fn(),
+}));
 
 afterEach(cleanup);
 
@@ -83,5 +93,54 @@ describe('CompanyLogoStack', () => {
   it('renders nothing without tags', () => {
     const { container } = render(<CompanyLogoStack problemId="numpy-array-sum" />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('CompaniesPage', () => {
+  function Location() {
+    return <div data-testid="location">{useLocation().search}</div>;
+  }
+  const mount = (path = '/companies') =>
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <ProgressProvider>
+            <Routes>
+              <Route path="/companies" element={<><CompaniesPage /><Location /></>} />
+            </Routes>
+          </ProgressProvider>
+        </MemoryRouter>
+      </HelmetProvider>
+    );
+
+  it('lists every company and filters with toggle buttons', () => {
+    mount();
+    const index = getCompanyIndex();
+    const group = screen.getByRole('group', { name: 'Filter by company' });
+    expect(within(group).getAllByRole('button')).toHaveLength(index.length + 1);
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(index.length);
+
+    const uber = index.find(e => e.company === 'Uber')!;
+    fireEvent.click(within(group).getByRole('button', { name: /^Uber/ }));
+    expect(within(group).getByRole('button', { name: /^Uber/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('location')).toHaveTextContent('?company=uber');
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+    for (const id of uber.problemIds) {
+      const problem = getProblemById(id)!;
+      expect(screen.getByRole('link', { name: new RegExp(problem.title.replace(/[()]/g, '\\$&')) })).toHaveAttribute(
+        'href',
+        `/problem/${problem.section}/${problem.id}`
+      );
+    }
+    expect(screen.getByRole('status')).toHaveTextContent(`reported at Uber`);
+
+    fireEvent.click(within(group).getByRole('button', { name: 'All companies' }));
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(index.length);
+  });
+
+  it('reads the filter from the URL', () => {
+    mount('/companies?company=nvidia');
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('NVIDIA');
   });
 });

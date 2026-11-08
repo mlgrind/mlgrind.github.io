@@ -5,11 +5,13 @@ import remarkGfm from "remark-gfm";
 import { allProblems } from "../../data/problems";
 import { sections } from "../../data/sections";
 import { allPaths, problemHref } from "../../data/learningPaths";
+import { getCompanyIndex } from "../../data/companyTags";
 
 export const staticRoutes = [
   "/",
   "/scratchpad",
   "/flashcards",
+  "/companies",
   "/terms",
   "/privacy",
   "/challenge",
@@ -59,6 +61,11 @@ export function routeContent(path: string) {
       title: "ML Flashcards",
       description:
         "Review machine learning concepts with interactive flashcards.",
+    },
+    "/companies": {
+      title: "Problems by Company",
+      description:
+        "ML coding problems reported in interviews at specific companies, with links to the public interview reports.",
     },
     "/privacy": {
       title: "Privacy Policy",
@@ -213,6 +220,27 @@ export function StaticContent({ path }: { path: string }) {
               ))}
             </ol>
           </>
+        )}
+        {path === "/companies" &&
+          getCompanyIndex().map((entry) => (
+            <section key={entry.slug}>
+              <h2 className="text-2xl">{entry.company}</h2>
+              <ul>
+                {entry.problemIds.map((id) => (
+                  <li key={id}>
+                    <a href={problemHref(id)}>
+                      {allProblems.find((p) => p.id === id)!.title} →
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        {path === "/companies" && (
+          <p>
+            Based on public interview reports; logos are trademarks of their
+            owners and don&apos;t imply endorsement.
+          </p>
         )}
         {(path === "/scratchpad" || path === "/flashcards") && (
           <p>
