@@ -1380,4 +1380,217 @@ def test_cnn():
       'Flatten: x.reshape(x.shape[0], -1); FC layers: nn.Linear',
     ],
   },
+  'transformer-bug-hunt': {
+    note: "Fix the 4 bugs in gpt_forward; don't replace the attention with F.scaled_dot_product_attention or nn.MultiheadAttention. The bugs are the same as in the NumPy track.",
+    starterCode: `import math
+import numpy as np
+import torch
+
+def init_params(vocab_size=11, d_model=8, max_len=8, seed=0):
+    """Deterministic random weights for a 1-layer, single-head model. (Correct.)"""
+    rng = np.random.default_rng(seed)
+    def w(*shape, scale=0.5):
+        return torch.from_numpy(rng.standard_normal(shape) * scale).float()
+    d = d_model
+    return {
+        'wte': w(vocab_size, d), 'wpe': w(max_len, d),
+        'ln1_g': 1 + w(d, scale=0.1), 'ln1_b': w(d, scale=0.1),
+        'W_q': w(d, d), 'W_k': w(d, d), 'W_v': w(d, d), 'W_o': w(d, d),
+        'ln2_g': 1 + w(d, scale=0.1), 'ln2_b': w(d, scale=0.1),
+        'W_1': w(d, 4 * d), 'b_1': w(4 * d, scale=0.1),
+        'W_2': w(4 * d, d), 'b_2': w(d, scale=0.1),
+        'lnf_g': 1 + w(d, scale=0.1), 'lnf_b': w(d, scale=0.1),
+    }
+
+def layer_norm(x, g, b, eps=1e-5):
+    """(Correct.)"""
+    mu = x.mean(dim=-1, keepdim=True)
+    var = x.var(dim=-1, keepdim=True, unbiased=False)
+    return g * (x - mu) / torch.sqrt(var + eps) + b
+
+def softmax(x):
+    """Row-wise softmax over the last dim. (Correct.)"""
+    e = torch.exp(x - x.max(dim=-1, keepdim=True).values)
+    return e / e.sum(dim=-1, keepdim=True)
+
+def gelu(x):
+    """GELU, tanh approximation. (Correct.)"""
+    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * x ** 3)))
+
+def gpt_forward(tokens, params):
+    """
+    Forward pass of a 1-layer, single-head, pre-LayerNorm GPT.
+
+    Args:
+        tokens: List (or int64 tensor) of T token ids (T <= max_len)
+        params: Dict from init_params
+
+    Returns:
+        logits: tensor (T, vocab_size)
+        att: tensor (T, T) attention probabilities (row i = how query i attends)
+    """
+    p = params
+    tokens = torch.as_tensor(tokens, dtype=torch.long)
+    T = len(tokens)
+    d = p['wte'].shape[1]
+
+    # Token + position embeddings
+    x = p['wte'][tokens] + p['wpe'][1:T + 1]
+
+    # Causal self-attention block
+    h = layer_norm(x, p['ln1_g'], p['ln1_b'])
+    q, k, v = h @ p['W_q'], h @ p['W_k'], h @ p['W_v']
+    scores = q @ k.T
+    att = softmax(scores)
+    mask = torch.tril(torch.ones(T, T))
+    att = att * mask
+    x = x + (att @ v) @ p['W_o']
+
+    # MLP block
+    h = layer_norm(x, p['ln2_g'], p['ln2_b'])
+    x = h + gelu(h @ p['W_1'] + p['b_1']) @ p['W_2'] + p['b_2']
+
+    # Final LayerNorm and tied LM head
+    x = layer_norm(x, p['lnf_g'], p['lnf_b'])
+    logits = x @ p['wte'].T
+    return logits, att
+`,
+    solution: `import math
+import numpy as np
+import torch
+
+def init_params(vocab_size=11, d_model=8, max_len=8, seed=0):
+    """Deterministic random weights for a 1-layer, single-head model. (Correct.)"""
+    rng = np.random.default_rng(seed)
+    def w(*shape, scale=0.5):
+        return torch.from_numpy(rng.standard_normal(shape) * scale).float()
+    d = d_model
+    return {
+        'wte': w(vocab_size, d), 'wpe': w(max_len, d),
+        'ln1_g': 1 + w(d, scale=0.1), 'ln1_b': w(d, scale=0.1),
+        'W_q': w(d, d), 'W_k': w(d, d), 'W_v': w(d, d), 'W_o': w(d, d),
+        'ln2_g': 1 + w(d, scale=0.1), 'ln2_b': w(d, scale=0.1),
+        'W_1': w(d, 4 * d), 'b_1': w(4 * d, scale=0.1),
+        'W_2': w(4 * d, d), 'b_2': w(d, scale=0.1),
+        'lnf_g': 1 + w(d, scale=0.1), 'lnf_b': w(d, scale=0.1),
+    }
+
+def layer_norm(x, g, b, eps=1e-5):
+    """(Correct.)"""
+    mu = x.mean(dim=-1, keepdim=True)
+    var = x.var(dim=-1, keepdim=True, unbiased=False)
+    return g * (x - mu) / torch.sqrt(var + eps) + b
+
+def softmax(x):
+    """Row-wise softmax over the last dim. (Correct.)"""
+    e = torch.exp(x - x.max(dim=-1, keepdim=True).values)
+    return e / e.sum(dim=-1, keepdim=True)
+
+def gelu(x):
+    """GELU, tanh approximation. (Correct.)"""
+    return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * x ** 3)))
+
+def gpt_forward(tokens, params):
+    p = params
+    tokens = torch.as_tensor(tokens, dtype=torch.long)
+    T = len(tokens)
+    d = p['wte'].shape[1]
+
+    # Token + position embeddings: position t uses wpe[t], starting at 0
+    # (bug 1 was wpe[1:T + 1])
+    x = p['wte'][tokens] + p['wpe'][:T]
+
+    # Causal self-attention block
+    h = layer_norm(x, p['ln1_g'], p['ln1_b'])
+    q, k, v = h @ p['W_q'], h @ p['W_k'], h @ p['W_v']
+    # Scale by 1/sqrt(d) (bug 2: the scaling was missing)
+    scores = q @ k.T / math.sqrt(d)
+    # Mask the future with -inf BEFORE the softmax (bug 3: the mask zeroed
+    # probabilities after the softmax, so rows no longer summed to 1)
+    future = torch.triu(torch.ones(T, T), diagonal=1).bool()
+    scores = scores.masked_fill(future, float('-inf'))
+    att = softmax(scores)
+    x = x + (att @ v) @ p['W_o']
+
+    # MLP block: the residual adds to the block input x, not to LN(x)
+    # (bug 4 was x = h + ...)
+    h = layer_norm(x, p['ln2_g'], p['ln2_b'])
+    x = x + gelu(h @ p['W_1'] + p['b_1']) @ p['W_2'] + p['b_2']
+
+    # Final LayerNorm and tied LM head
+    x = layer_norm(x, p['lnf_g'], p['lnf_b'])
+    logits = x @ p['wte'].T
+    return logits, att
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Attention rows sum to 1',
+        input: '(lambda: (att := gpt_forward([3, 1, 4, 1, 5], init_params())[1], bool(torch.allclose(att.sum(dim=-1), torch.ones(5), atol=1e-5)))[-1])()',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Causal: future tokens do not change earlier logits',
+        input: '(lambda: (p := init_params(), a := gpt_forward([3, 1, 4, 1, 5], p)[0], b := gpt_forward([3, 1, 4, 9, 2], p)[0], bool(torch.allclose(a[:3], b[:3], atol=1e-5) and not torch.allclose(a[3:], b[3:], atol=1e-5)))[-1])()',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Logits at the last position',
+        input: '[round(v, 3) for v in gpt_forward([3, 1, 4, 1, 5], init_params())[0][-1].tolist()]',
+        expected: '[0.98, 1.795, 1.493, -0.874, 0.547, 0.955, -1.353, -0.577, -1.043, 0.056, 0.419]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Attention matrix values',
+        input: '[[round(v, 3) for v in row] for row in gpt_forward([3, 1, 4, 1, 5], init_params())[1].tolist()]',
+        expected: '[[1.0, 0.0, 0.0, 0.0, 0.0], [0.99, 0.01, 0.0, 0.0, 0.0], [0.909, 0.05, 0.041, 0.0, 0.0], [0.194, 0.108, 0.683, 0.015, 0.0], [0.008, 0.221, 0.418, 0.342, 0.01]]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Blocks switched off: logits = LN_f(wte[tok] + wpe[pos]) @ wte.T',
+        input: `(lambda: (
+    p := init_params(seed=1),
+    p.update(W_o=torch.zeros(8, 8), W_2=torch.zeros(32, 8), b_2=torch.zeros(8)),
+    x := p['wte'][torch.tensor([2, 7, 7])] + p['wpe'][:3],
+    ref := ((x - x.mean(-1, keepdim=True)) / torch.sqrt(x.var(-1, keepdim=True, unbiased=False) + 1e-5) * p['lnf_g'] + p['lnf_b']) @ p['wte'].T,
+    bool(torch.allclose(gpt_forward([2, 7, 7], p)[0], ref, atol=1e-5))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Single token: attention is [[1.0]]',
+        input: '(lambda: (r := gpt_forward([6], init_params(seed=3)), (r[1].tolist(), [round(v, 3) for v in r[0][0].tolist()]))[-1])()',
+        expected: '([[1.0]], [0.406, 0.193, 0.571, -0.44, -0.783, 0.91, 1.932, -2.515, -3.461, 2.953, 0.386])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Full-length sequence (T = max_len), another seed',
+        input: '(lambda: (r := gpt_forward([0, 10, 5, 5, 2, 8, 1, 9], init_params(seed=2)), [round(r[0][t].sum().item(), 3) for t in range(8)])[-1])()',
+        expected: '[12.428, 10.718, -0.13, 8.755, -4.63, 7.422, 5.306, 8.624]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Logits for every position',
+        input: '[[round(v, 2) for v in row] for row in gpt_forward([10, 9, 8, 7], init_params(seed=4))[0].tolist()]',
+        expected: '[[-1.97, 1.63, -0.21, -1.28, 0.27, 0.04, -0.28, 1.06, -0.17, 0.6, 0.18], [-2.43, -0.21, -0.15, 1.81, -0.82, 1.4, 1.21, -0.22, -0.38, -1.63, -3.17], [-2.02, 0.93, -0.26, -1.1, 0.15, 0.94, 0.56, 0.68, 0.46, 1.35, -0.08], [-3.44, -0.25, 0.04, 0.73, 0.44, 0.0, -0.37, 1.48, 1.5, -1.13, -1.96]]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Check the shape-preserving steps against the reference line by line: embeddings, scores, masking, softmax, residuals.',
+      'Print `att.sum(dim=-1)` for the starter: a correct softmax gives all ones. Masking is done with `masked_fill(..., float("-inf"))` before the softmax.',
+      'Positions start at 0. Which rows of `wpe` does a length-T sequence use?',
+      'In a pre-LN block the residual stream carries `x`; LayerNorm is applied only to the sublayer input.',
+    ],
+  },
 };

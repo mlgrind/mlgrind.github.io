@@ -2212,4 +2212,264 @@ class TinyViT:
         return loss
 `,
   },
+  {
+    id: 'transformer-bug-hunt',
+    title: 'Transformer Bug Hunt: Fix a Broken Mini-GPT',
+    section: 'e2e-implementations',
+    difficulty: 'hard',
+    description: `
+## Transformer Bug Hunt: Fix a Broken Mini-GPT
+
+The starter code is a tiny GPT-style language model: token and position embeddings, one causal self-attention block, one MLP block, a final LayerNorm and an LM head. It runs without errors on short inputs, but its outputs are wrong.
+
+**There are exactly 4 bugs, all inside \`gpt_forward\`.** The helpers \`init_params\`, \`layer_norm\`, \`softmax\` and \`gelu\` are correct. Find and fix the bugs; you shouldn't need to rewrite the model.
+
+### Reference architecture (what the code should compute)
+For token ids \`tokens\` of length \`T\` (positions \`t = 0 .. T-1\`), with \`d = d_model\`:
+\`\`\`
+x   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0
+
+h   = LN1(x)
+q, k, v = h @ W_q, h @ W_k, h @ W_v
+S   = q @ k.T / sqrt(d)
+S[i, j] = -inf  for j > i                                # causal mask, applied BEFORE the softmax
+att = softmax(S)                                         # row-wise, each row sums to 1
+x   = x + (att @ v) @ W_o                                # residual 1
+
+x   = x + GELU(LN2(x) @ W_1 + b_1) @ W_2 + b_2           # residual 2 (pre-LN)
+
+logits = LN_f(x) @ wte.T                                 # tied LM head
+\`\`\`
+\`LN(x) = g * (x - mean) / sqrt(var + 1e-5) + b\` over the last axis (population variance), and GELU uses the tanh approximation.
+
+### Expected Return Format
+\`gpt_forward(tokens, params)\` returns a tuple \`(logits, att)\`:
+- \`logits\`: \`(T, vocab_size)\` array
+- \`att\`: \`(T, T)\` attention probabilities, row \`i\` holds query \`i\`'s weights
+
+### How it is tested
+The tests check properties every correct decoder must have (causality, attention rows summing to 1), compare against an independent reference computation with the attention and MLP outputs switched off, and check exact logits and attention values for fixed \`init_params\` weights.
+
+### Debugging tips
+Write small experiments in the editor: inspect \`att\`, try a single token, zero out \`W_o\` or \`W_2\`, compare positions.
+`,
+    examples: [
+      {
+        input: 'logits, att = gpt_forward([3, 1, 4, 1, 5], init_params())',
+        output: 'logits.shape == (5, 11), att.shape == (5, 5)',
+        explanation: 'In the fixed model every row of att sums to 1 and att is lower-triangular.',
+      },
+      {
+        input: 'gpt_forward([6], init_params(seed=3))[1]',
+        output: 'array([[1.]])',
+        explanation: 'A single token can only attend to itself.',
+      },
+    ],
+    starterCode: `import numpy as np
+
+def init_params(vocab_size=11, d_model=8, max_len=8, seed=0):
+    """Deterministic random weights for a 1-layer, single-head model. (Correct.)"""
+    rng = np.random.default_rng(seed)
+    def w(*shape, scale=0.5):
+        return rng.standard_normal(shape) * scale
+    d = d_model
+    return {
+        'wte': w(vocab_size, d), 'wpe': w(max_len, d),
+        'ln1_g': 1 + w(d, scale=0.1), 'ln1_b': w(d, scale=0.1),
+        'W_q': w(d, d), 'W_k': w(d, d), 'W_v': w(d, d), 'W_o': w(d, d),
+        'ln2_g': 1 + w(d, scale=0.1), 'ln2_b': w(d, scale=0.1),
+        'W_1': w(d, 4 * d), 'b_1': w(4 * d, scale=0.1),
+        'W_2': w(4 * d, d), 'b_2': w(d, scale=0.1),
+        'lnf_g': 1 + w(d, scale=0.1), 'lnf_b': w(d, scale=0.1),
+    }
+
+def layer_norm(x, g, b, eps=1e-5):
+    """(Correct.)"""
+    mu = x.mean(axis=-1, keepdims=True)
+    var = x.var(axis=-1, keepdims=True)
+    return g * (x - mu) / np.sqrt(var + eps) + b
+
+def softmax(x):
+    """Row-wise softmax over the last axis. (Correct.)"""
+    e = np.exp(x - x.max(axis=-1, keepdims=True))
+    return e / e.sum(axis=-1, keepdims=True)
+
+def gelu(x):
+    """GELU, tanh approximation. (Correct.)"""
+    return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3)))
+
+def gpt_forward(tokens, params):
+    """
+    Forward pass of a 1-layer, single-head, pre-LayerNorm GPT.
+
+    Args:
+        tokens: List of T token ids (T <= max_len)
+        params: Dict from init_params
+
+    Returns:
+        logits: (T, vocab_size)
+        att: (T, T) attention probabilities (row i = how query i attends)
+    """
+    p = params
+    tokens = np.asarray(tokens)
+    T = len(tokens)
+    d = p['wte'].shape[1]
+
+    # Token + position embeddings
+    x = p['wte'][tokens] + p['wpe'][1:T + 1]
+
+    # Causal self-attention block
+    h = layer_norm(x, p['ln1_g'], p['ln1_b'])
+    q, k, v = h @ p['W_q'], h @ p['W_k'], h @ p['W_v']
+    scores = q @ k.T
+    att = softmax(scores)
+    mask = np.tril(np.ones((T, T)))
+    att = att * mask
+    x = x + (att @ v) @ p['W_o']
+
+    # MLP block
+    h = layer_norm(x, p['ln2_g'], p['ln2_b'])
+    x = h + gelu(h @ p['W_1'] + p['b_1']) @ p['W_2'] + p['b_2']
+
+    # Final LayerNorm and tied LM head
+    x = layer_norm(x, p['lnf_g'], p['lnf_b'])
+    logits = x @ p['wte'].T
+    return logits, att
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Attention rows sum to 1',
+        input: '(lambda: (att := gpt_forward([3, 1, 4, 1, 5], init_params())[1], bool(np.allclose(att.sum(axis=-1), 1.0)))[-1])()',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Causal: future tokens do not change earlier logits',
+        input: '(lambda: (p := init_params(), a := gpt_forward([3, 1, 4, 1, 5], p)[0], b := gpt_forward([3, 1, 4, 9, 2], p)[0], bool(np.allclose(a[:3], b[:3]) and not np.allclose(a[3:], b[3:])))[-1])()',
+        expected: 'True',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Logits at the last position',
+        input: 'np.round(gpt_forward([3, 1, 4, 1, 5], init_params())[0][-1], 4).tolist()',
+        expected: '[0.9804, 1.7947, 1.4926, -0.8742, 0.5473, 0.9547, -1.353, -0.5766, -1.0425, 0.0565, 0.4188]',
+        hidden: false,
+      },
+      {
+        id: '4',
+        description: 'Attention matrix values',
+        input: 'np.round(gpt_forward([3, 1, 4, 1, 5], init_params())[1], 4).tolist()',
+        expected: '[[1.0, 0.0, 0.0, 0.0, 0.0], [0.9902, 0.0098, 0.0, 0.0, 0.0], [0.9094, 0.0496, 0.041, 0.0, 0.0], [0.1944, 0.1077, 0.683, 0.0149, 0.0], [0.0085, 0.2214, 0.4181, 0.3425, 0.0095]]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Blocks switched off: logits = LN_f(wte[tok] + wpe[pos]) @ wte.T',
+        input: `(lambda: (
+    p := init_params(seed=1),
+    p.update(W_o=np.zeros((8, 8)), W_2=np.zeros((32, 8)), b_2=np.zeros(8)),
+    x := p['wte'][[2, 7, 7]] + p['wpe'][:3],
+    ref := ((x - x.mean(-1, keepdims=True)) / np.sqrt(x.var(-1, keepdims=True) + 1e-5) * p['lnf_g'] + p['lnf_b']) @ p['wte'].T,
+    bool(np.allclose(gpt_forward([2, 7, 7], p)[0], ref))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Single token: attention is [[1.0]]',
+        input: '(lambda: (r := gpt_forward([6], init_params(seed=3)), (r[1].tolist(), np.round(r[0][0], 4).tolist()))[-1])()',
+        expected: '([[1.0]], [0.4063, 0.193, 0.5711, -0.4405, -0.7826, 0.9105, 1.9319, -2.5145, -3.4605, 2.9529, 0.3863])',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Full-length sequence (T = max_len), another seed',
+        input: '(lambda: (r := gpt_forward([0, 10, 5, 5, 2, 8, 1, 9], init_params(seed=2)), [round(float(r[0][t].sum()), 4) for t in range(8)])[-1])()',
+        expected: '[12.4282, 10.718, -0.1298, 8.7555, -4.6297, 7.4221, 5.3064, 8.6238]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Logits for every position',
+        input: 'np.round(gpt_forward([10, 9, 8, 7], init_params(seed=4))[0], 3).tolist()',
+        expected: '[[-1.969, 1.632, -0.206, -1.279, 0.272, 0.039, -0.283, 1.057, -0.17, 0.604, 0.178], [-2.429, -0.206, -0.147, 1.808, -0.819, 1.405, 1.213, -0.222, -0.38, -1.632, -3.174], [-2.019, 0.926, -0.257, -1.104, 0.154, 0.941, 0.565, 0.681, 0.462, 1.348, -0.084], [-3.442, -0.246, 0.035, 0.732, 0.437, 0.005, -0.368, 1.483, 1.503, -1.133, -1.956]]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Check the shape-preserving steps against the reference line by line: embeddings, scores, masking, softmax, residuals.',
+      'Print `att.sum(axis=-1)` for the starter: a correct softmax gives all ones. What does masking after the softmax do to that?',
+      'Positions start at 0. Which rows of `wpe` does a length-T sequence use?',
+      'In a pre-LN block the residual stream carries `x`; LayerNorm is applied only to the sublayer input.',
+    ],
+    solution: `import numpy as np
+
+def init_params(vocab_size=11, d_model=8, max_len=8, seed=0):
+    """Deterministic random weights for a 1-layer, single-head model. (Correct.)"""
+    rng = np.random.default_rng(seed)
+    def w(*shape, scale=0.5):
+        return rng.standard_normal(shape) * scale
+    d = d_model
+    return {
+        'wte': w(vocab_size, d), 'wpe': w(max_len, d),
+        'ln1_g': 1 + w(d, scale=0.1), 'ln1_b': w(d, scale=0.1),
+        'W_q': w(d, d), 'W_k': w(d, d), 'W_v': w(d, d), 'W_o': w(d, d),
+        'ln2_g': 1 + w(d, scale=0.1), 'ln2_b': w(d, scale=0.1),
+        'W_1': w(d, 4 * d), 'b_1': w(4 * d, scale=0.1),
+        'W_2': w(4 * d, d), 'b_2': w(d, scale=0.1),
+        'lnf_g': 1 + w(d, scale=0.1), 'lnf_b': w(d, scale=0.1),
+    }
+
+def layer_norm(x, g, b, eps=1e-5):
+    """(Correct.)"""
+    mu = x.mean(axis=-1, keepdims=True)
+    var = x.var(axis=-1, keepdims=True)
+    return g * (x - mu) / np.sqrt(var + eps) + b
+
+def softmax(x):
+    """Row-wise softmax over the last axis. (Correct.)"""
+    e = np.exp(x - x.max(axis=-1, keepdims=True))
+    return e / e.sum(axis=-1, keepdims=True)
+
+def gelu(x):
+    """GELU, tanh approximation. (Correct.)"""
+    return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3)))
+
+def gpt_forward(tokens, params):
+    p = params
+    tokens = np.asarray(tokens)
+    T = len(tokens)
+    d = p['wte'].shape[1]
+
+    # Token + position embeddings: position t uses wpe[t], starting at 0
+    # (bug 1 was wpe[1:T + 1])
+    x = p['wte'][tokens] + p['wpe'][:T]
+
+    # Causal self-attention block
+    h = layer_norm(x, p['ln1_g'], p['ln1_b'])
+    q, k, v = h @ p['W_q'], h @ p['W_k'], h @ p['W_v']
+    # Scale by 1/sqrt(d) (bug 2: the scaling was missing)
+    scores = q @ k.T / np.sqrt(d)
+    # Mask the future with -inf BEFORE the softmax (bug 3: the mask zeroed
+    # probabilities after the softmax, so rows no longer summed to 1)
+    mask = np.tril(np.ones((T, T), dtype=bool))
+    scores = np.where(mask, scores, -np.inf)
+    att = softmax(scores)
+    x = x + (att @ v) @ p['W_o']
+
+    # MLP block: the residual adds to the block input x, not to LN(x)
+    # (bug 4 was x = h + ...)
+    h = layer_norm(x, p['ln2_g'], p['ln2_b'])
+    x = x + gelu(h @ p['W_1'] + p['b_1']) @ p['W_2'] + p['b_2']
+
+    # Final LayerNorm and tied LM head
+    x = layer_norm(x, p['lnf_g'], p['lnf_b'])
+    logits = x @ p['wte'].T
+    return logits, att
+`,
+  },
 ];
