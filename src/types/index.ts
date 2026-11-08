@@ -25,6 +25,20 @@ export interface TestResult {
   hidden: boolean;
 }
 
+export type Language = 'numpy' | 'pytorch';
+
+/** A solution track for a problem in another framework (PyTorch). */
+export interface LanguageVariant {
+  starterCode: string;
+  solution: string;
+  /** Expression-based tests only (they must call the function explicitly). */
+  testCases: TestCase[];
+  /** Framework-specific hints; falls back to the problem's hints. */
+  hints?: string[];
+  /** Short note shown above the editor, e.g. which torch APIs to avoid. */
+  note?: string;
+}
+
 export interface Problem {
   id: string;
   title: string;
@@ -36,6 +50,8 @@ export interface Problem {
   testCases: TestCase[];
   hints: string[];
   solution: string;
+  /** PyTorch track, attached from src/data/problems/pytorch/. */
+  pytorch?: LanguageVariant;
 }
 
 export interface Section {

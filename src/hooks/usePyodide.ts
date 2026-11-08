@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { TestCase, TestResult } from "../types";
+import type { Language, TestCase, TestResult } from "../types";
 import { testProgram } from "../lib/pythonProgram";
 import { formatPythonError } from "../lib/pythonError";
 export { formatPythonError } from "../lib/pythonError";
@@ -116,7 +116,11 @@ export function usePyodide() {
   );
 
   const execute = useCallback(
-    (program: string, tests = false): Promise<string> => {
+    (
+      program: string,
+      tests = false,
+      language: Language = "numpy",
+    ): Promise<string> => {
       if (!worker.current || !isReady)
         return Promise.reject(new Error("Python is not ready."));
       if (pending.current)
@@ -129,7 +133,7 @@ export function usePyodide() {
           EXECUTION_TIMEOUT_MS,
         );
         pending.current = { resolve, reject, timer };
-        worker.current!.postMessage({ id, program, tests });
+        worker.current!.postMessage({ id, program, tests, language });
       });
     },
     [isReady, clearOutput, stop],
@@ -155,10 +159,15 @@ export function usePyodide() {
       code: string,
       tests: TestCase[],
       functionName: string,
+      language: Language = "numpy",
     ): Promise<TestResult[]> => {
       try {
         const results: TestResult[] = JSON.parse(
-          await execute(testProgram(code, tests, functionName), true),
+          await execute(
+            testProgram(code, tests, functionName, language),
+            true,
+            language,
+          ),
         );
         results.forEach((result) =>
           appendOutput(

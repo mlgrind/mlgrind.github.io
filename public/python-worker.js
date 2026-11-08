@@ -22,10 +22,32 @@ const ready = loadPyodide({
 ready.catch((error) =>
   self.postMessage({ type: "error", error: error.message }),
 );
+// The PyTorch track runs on a NumPy-backed torch shim. Fetch and install it
+// on first use only, so NumPy-only visitors never download it.
+let torchReady = null;
+function ensureTorch(python) {
+  torchReady ??= fetch(new URL("py/torch_shim.py", self.location.href))
+    .then((response) => {
+      if (!response.ok)
+        throw new Error(`Could not load PyTorch (HTTP ${response.status}).`);
+      return response.text();
+    })
+    .then((source) => {
+      python.FS.writeFile("/home/pyodide/torch_shim.py", source);
+      return python.runPythonAsync(
+        "import sys\nif '/home/pyodide' not in sys.path: sys.path.insert(0, '/home/pyodide')\nimport torch_shim\ntorch_shim.install()\nNone",
+      );
+    });
+  torchReady.catch(() => {
+    torchReady = null; // let the next run retry
+  });
+  return torchReady;
+}
 self.onmessage = async ({ data }) => {
   try {
     outputLines = 0;
     const python = await ready;
+    if (data.language === "pytorch") await ensureTorch(python);
     // Scratchpad runs also get a fresh namespace to avoid leaking stale state.
     const result = data.tests
       ? await python.runPythonAsync(data.program)
