@@ -79,6 +79,10 @@ export default function HomePage() {
           <p className="mt-2 text-sm text-gray-500 dark:text-dark-200">{path.description}</p>
           <p className="mt-3 text-xs text-primary-500">{path.minutes} min · {path.prerequisites}</p>
         </Link>)}</div>
+        <p className="mt-4 text-sm text-gray-500 dark:text-dark-200">
+          Preparing for a specific company?{' '}
+          <Link to="/companies" className="text-primary-600 dark:text-primary-300 hover:underline">Browse problems reported in interviews →</Link>
+        </p>
       </section>
       {/* Curriculum Label */}
       <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 mb-6 font-mono">

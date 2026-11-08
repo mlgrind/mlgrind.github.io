@@ -59,6 +59,7 @@ The platform covers 21 learning sections with 149 problems:
 - Home: https://mlgrind.github.io/
 - Scratchpad: https://mlgrind.github.io/scratchpad
 - Flash cards: https://mlgrind.github.io/flashcards
+- Problems by company: https://mlgrind.github.io/companies
 - Cheat sheet: https://mlgrind.github.io/ml-cheatsheet.html
 - Sections: https://mlgrind.github.io/section/{section-id}
 - Problems: https://mlgrind.github.io/problem/{section-id}/{problem-id}

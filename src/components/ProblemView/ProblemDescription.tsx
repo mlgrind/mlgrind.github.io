@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Problem } from '../../types';
+import CompanyTags from '../CompanyTags/CompanyTags';
 
 interface ProblemDescriptionProps {
   problem: Problem;
@@ -23,6 +24,7 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
           {problem.difficulty}
         </span>
       </div>
+      <CompanyTags key={problem.id} problemId={problem.id} />
 
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}

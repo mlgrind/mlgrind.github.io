@@ -9,6 +9,7 @@ import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import FlashCardsPage from './pages/FlashCardsPage'
 import NotFoundPage from './pages/NotFoundPage'
+import CompaniesPage from './pages/CompaniesPage'
 import { getProblemById } from './data/problems'
 
 /**
@@ -36,6 +37,7 @@ function App() {
         <Route path="/problem/:problemId" element={<LegacyProblemRedirect />} />
         <Route path="/scratchpad" element={<ScratchpadPage />} />
         <Route path="/flashcards" element={<FlashCardsPage />} />
+        <Route path="/companies" element={<CompaniesPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFoundPage />} />
