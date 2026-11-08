@@ -28,11 +28,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 01: NumPy Fundamentals
 
 **URL**: /section/numpy-fundamentals
-**Summary**: Master NumPy array operations essential for ML development.
+**Summary**: Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on.
 **Problems** (5):
 
 1. **Array Creation Methods** (`/problem/numpy-fundamentals/numpy-array-creation`) — easy
-2. **Advanced Indexing** (`/problem/numpy-fundamentals/numpy-indexing`) — medium
+2. **Indexing and Slicing** (`/problem/numpy-fundamentals/numpy-indexing`) — medium
 3. **Broadcasting Operations** (`/problem/numpy-fundamentals/numpy-broadcasting`) — medium
 4. **Aggregation Functions** (`/problem/numpy-fundamentals/numpy-aggregations`) — easy
 5. **Reshape and Transpose** (`/problem/numpy-fundamentals/numpy-reshape-transpose`) — medium
@@ -42,7 +42,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 02: Python Basics for ML
 
 **URL**: /section/python-basics
-**Summary**: Master NumPy arrays and essential Python operations for machine learning.
+**Summary**: Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows.
 **Problems** (3):
 
 1. **Array Sum** (`/problem/python-basics/numpy-array-sum`) — easy
@@ -54,13 +54,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 03: Einstein Summation (Einsum)
 
 **URL**: /section/einsum
-**Summary**: Master einsum for elegant tensor operations.
+**Summary**: Write sums, matrix products and batched multi-head attention as einsum index strings.
 **Problems** (5):
 
 1. **Einsum Fundamentals** (`/problem/einsum/einsum-basics`) — easy
 2. **Matrix Operations with Einsum** (`/problem/einsum/einsum-matrix-ops`) — medium
 3. **Batch Operations with Einsum** (`/problem/einsum/einsum-batch-ops`) — medium
-4. **Advanced Einsum Patterns** (`/problem/einsum/einsum-advanced`) — hard
+4. **Multi-Head Attention with Einsum** (`/problem/einsum/einsum-advanced`) — hard
 5. **Einsum vs Traditional Operations** (`/problem/einsum/einsum-vs-matmul`) — easy
 
 ---
