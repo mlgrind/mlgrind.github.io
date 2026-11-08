@@ -74,6 +74,7 @@ src/
 │   └── mergeProgress.ts     # Local + cloud progress merge algorithm
 ├── data/
 │   ├── sections.ts          # Section definitions with intros (21 sections)
+│   ├── curriculum.ts        # Groups the sections into the 6 parts shown in the sidebar and on the home page
 │   └── problems/            # Problem definitions by section (141 problems)
 │       ├── pytorch/         # PyTorch tracks, one file per section (Record<problemId, LanguageVariant>)
 │       ├── index.ts         # Exports all problems (attaches PyTorch tracks as problem.pytorch)
@@ -419,6 +420,8 @@ This ensures users know exactly what to store and in what order, which is critic
 
 4. **Update test expectations** in `src/__tests__/problems.test.ts` (currently 21):
    - Update sections count: `expect(sections.length).toBe(N)` where N is new total
+
+4b. **Add the section to a group** in `src/data/curriculum.ts` (`curriculumGroups`), in section order. `src/__tests__/curriculum.test.ts` fails if a section is in no group, in two, or out of order
 
 5. **Verify markdown rendering**:
    - Run `npm run dev` and navigate to the new section
