@@ -80,13 +80,13 @@
     </script>
     <style>#boot-splash{z-index:9999;background:#f9fafb;justify-content:center;align-items:center;transition:opacity .2s;animation:.3s 8s forwards boot-hide;display:flex;position:fixed;inset:0}html.dark #boot-splash{background:#0c0f14}#boot-splash span{border:3px solid #6c5ce740;border-top-color:#6c5ce7;border-radius:50%;width:28px;height:28px;animation:.8s linear infinite boot-spin}@keyframes boot-spin{to{transform:rotate(360deg)}}@keyframes boot-hide{to{opacity:0;visibility:hidden}}</style>
     <noscript><style>#boot-splash{display:none}</style></noscript>
-    <script type="module" crossorigin src="/assets/index-PZ6G1LUj.js"></script>
+    <script type="module" crossorigin src="/assets/index-BsAIXug_.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CsUdQhFB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-C3oFuvJ6.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CNUOlbra.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D4sdfPxD.css">
   <title>Supervised Learning | ML Grind</title>
 <meta name="description" content="Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.dev/section/supervised-learning" data-rh="true" />
@@ -102,7 +102,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Supervised Learning","description":"Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.","url":"https://mlgrind.dev/section/supervised-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="boot-splash" aria-hidden="true"><span></span></div>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.</p><div class="prose dark:prose-invert max-w-none"><h2>Supervised Learning</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.</p><p><a href="https://www.youtube.com/watch?v=2epyHwFLmcs">Watch the animated Supervised Learning lecture (3 min) →</a></p><div class="prose dark:prose-invert max-w-none"><h2>Supervised Learning</h2>
 <p>Supervised learning fits a function <code>f(x) ≈ y</code> from labelled examples <code>(x_i, y_i)</code>. Linear and logistic models, trees and their ensembles still power most tabular ML in production (fraud scoring, ranking features, demand forecasting), and they are the standard warm-up in ML coding interviews: &quot;implement logistic regression from scratch&quot; tests your calculus, your NumPy and your feel for numerical stability in one go.</p>
 <h2>Core ideas</h2>
 <p>Almost every model here follows one recipe: pick a <strong>model family</strong>, a <strong>loss</strong> that measures how wrong it is, and an <strong>optimiser</strong> that reduces the loss.</p>
