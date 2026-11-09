@@ -42,10 +42,10 @@ The platform covers 21 learning sections with 149 problems:
 - **15 LLM Generation & Decoding** (`/section/llm-generation`) — Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding. _(7 problems)_
 - **16 LLM Internals** (`/section/llm-internals`) — SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured. _(4 problems)_
 - **17 Representation Learning & Retrieval** (`/section/representation-learning`) — Contrastive learning, embedding search and retrieval for RAG. _(3 problems)_
-- **18 Generative Models** (`/section/generative-models`) — Learn VAEs, diffusion models, and generative AI fundamentals. _(9 problems)_
+- **18 Generative Models** (`/section/generative-models`) — Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step. _(9 problems)_
 - **19 Reinforcement Learning** (`/section/reinforcement-learning`) — From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs. _(15 problems)_
 - **20 Post-training & Efficiency** (`/section/post-training`) — GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve. _(2 problems)_
-- **21 End-to-End Implementations** (`/section/e2e-implementations`) — Build complete ML models from scratch. _(9 problems)_
+- **21 End-to-End Implementations** (`/section/e2e-implementations`) — Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt. _(9 problems)_
 
 ## Learning Paths
 
