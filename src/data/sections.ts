@@ -1490,62 +1490,96 @@ Let's implement generative models!
   {
     id: 'reinforcement-learning',
     title: 'Reinforcement Learning',
-    description: 'Master RL fundamentals from Q-learning to policy gradients.',
+    description: 'From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.',
     icon: '🎮',
     introduction: `
 # Reinforcement Learning
 
-Reinforcement learning (RL) trains agents to make decisions by learning from rewards and punishments through trial and error.
+## Why it matters
+Reinforcement learning (RL) trains an agent by trial and error to maximize reward instead of imitating labels. It powers game-playing agents, robotics, recommendation and, most visibly today, the post-training of LLMs (RLHF, DPO, GRPO). Interviews test both layers: the tabular basics (Bellman equations, Q-learning vs SARSA) and the policy-gradient machinery behind PPO and RLHF.
 
-## Key Concepts
+## Core ideas
+An agent in state \`s\` picks action \`a\` from its policy \`π(a|s)\`, receives reward \`r\` and lands in \`s'\`. It wants to maximize the **discounted return**:
 
-### The RL Framework
-- **Agent**: The learner/decision-maker
-- **Environment**: What the agent interacts with
-- **State (s)**: Current situation
-- **Action (a)**: What the agent can do
-- **Reward (r)**: Feedback signal
-- **Policy (π)**: Strategy for choosing actions
-
-### Value Functions
-- **State Value V(s)**: Expected return starting from state s
-- **Action Value Q(s,a)**: Expected return taking action a in state s
-
-### Bellman Equations
-\`\`\`python
-V(s) = E[r + γ * V(s')]
-Q(s,a) = E[r + γ * max_a' Q(s',a')]
+\`\`\`text
+G_t = r_t + γ·r_{t+1} + γ²·r_{t+2} + ...  =  r_t + γ·G_{t+1}        (0 ≤ γ ≤ 1)
 \`\`\`
 
-### Key Algorithms
+**Value functions** predict that return: \`V(s)\` from a state, \`Q(s, a)\` after taking \`a\`. They satisfy the Bellman equations:
 
-| Algorithm | Type | Policy |
-|-----------|------|--------|
-| Q-Learning | Value-based | Off-policy |
-| SARSA | Value-based | On-policy |
-| REINFORCE | Policy-based | On-policy |
-| Actor-Critic | Hybrid | On-policy |
-| PPO | Policy-based | On-policy |
+\`\`\`text
+V(s)    = E[ r + γ·V(s') ]                      expectation: evaluate a policy
+Q*(s,a) = E[ r + γ·max_a' Q*(s', a') ]          optimality: find the best policy
+\`\`\`
 
-### Exploration vs Exploitation
-- **Exploration**: Try new actions to discover better strategies
-- **Exploitation**: Use known good actions to maximize reward
-- **ε-greedy**: Simple balance (random with probability ε)
+Most algorithms solve these equations, exactly or from samples:
 
-### RL for LLMs (RLHF)
-- **Reward Modeling**: Learn preferences from human feedback
-- **PPO for LLMs**: Fine-tune with KL constraints
-- **DPO**: Direct preference optimization without reward model
-- **GRPO**: Group-relative advantages without a critic (see Post-training & Efficiency)
+| Family | Learns | Update target | Examples |
+|---|---|---|---|
+| Dynamic programming | V with a known model | full expectation over s' | value iteration |
+| TD, value-based | V or Q from samples | r + γ·(estimate at s') | TD(0), SARSA, Q-learning, DQN |
+| Policy gradient | the policy π_θ directly | return or advantage × ∇ log π | REINFORCE, PPO |
+| Actor-critic | π_θ and a critic V | advantage A = Q - V, e.g. from GAE | A2C, PPO with GAE |
 
-### Interview Essentials
-- Implement Q-learning and SARSA from scratch
-- Explain on-policy vs off-policy
-- Understand policy gradients and REINFORCE
-- Know GAE and PPO for modern deep RL
-- **RLHF**: Reward modeling, KL penalties, DPO
+Key distinctions:
+- **On-policy vs off-policy.** SARSA bootstraps from the next action it actually takes (on-policy). Q-learning bootstraps from the greedy action whatever it does next (off-policy).
+- **Bias vs variance.** Monte Carlo returns are unbiased but noisy. TD targets use the critic's estimate: biased, but low variance. n-step returns and GAE's λ interpolate between the two.
+- **Exploration.** ε-greedy acts randomly with probability ε so that better actions can still be found.
+- **Policy gradient.** \`∇J = E[ A_t · ∇ log π(a_t|s_t) ]\`. PPO clips the ratio \`π_θ / π_old\` to \`[1-ε, 1+ε]\` so that several gradient steps on one batch stay safe.
 
-Master these concepts for ML interviews at top companies!
+## RL for language models
+For an LLM, the state is the prompt plus the tokens so far, an action is the next token, and the reward usually comes once per response.
+- **Reward model:** learn a scalar score from human preference pairs with the Bradley–Terry loss \`-log σ(r_chosen - r_rejected)\`.
+- **KL penalty:** keep π_θ close to the frozen reference model, \`reward - β·KL(π_θ ‖ π_ref)\`, so it doesn't reward-hack.
+- **PPO-RLHF:** the clipped surrogate, with the KL folded into the reward.
+- **DPO:** skip the reward model and the RL loop: \`-log σ(β·(Δ_chosen - Δ_rejected))\` on policy-vs-reference log-ratios.
+
+## Worked micro-example
+Discounted return of rewards \`[1, 1, 1, 1]\` with γ = 0.9:
+
+\`\`\`text
+G_0 = 1 + 0.9 + 0.81 + 0.729 = 3.439
+\`\`\`
+
+One Q-learning step with \`Q(s, a) = 1\`, \`r = 5\`, \`Q(s', ·) = [3, 4]\`, γ = 0.9, α = 0.5:
+
+\`\`\`text
+target  = 5 + 0.9 · max(3, 4) = 8.6
+δ       = 8.6 - 1 = 7.6
+Q(s, a) = 1 + 0.5 · 7.6 = 4.8
+\`\`\`
+
+SARSA with next action \`a' = 0\` uses \`Q(s', 0) = 3\` instead: target 7.7, new value 4.35.
+
+## Common pitfalls
+- **Terminal states:** a terminal next state has value 0, so don't bootstrap through \`done\`. A truncated (time-limit) episode is different: it still bootstraps from \`V(s_T)\`.
+- **Off-by-one in returns:** the first reward has discount γ⁰; \`values\` for GAE has length T + 1.
+- **In-place updates:** a synchronous value-iteration sweep reads the old V only. Copy Q-tables instead of mutating the caller's array.
+- **Wrong sign:** policy gradients and PPO objectives are maximized; the training loss is their negative.
+- **Unstable log-sigmoid:** \`log(sigmoid(x))\` underflows and \`log(p + 1e-10)\` caps the loss. Use \`-logaddexp(0, -x)\` (NumPy) or \`F.logsigmoid\` (PyTorch).
+- **Double-counting KL:** in PPO-RLHF, put the KL either in the reward or in the loss, never both.
+
+## Interview angle
+Expect to derive the Q-learning and SARSA updates, explain why Q-learning overestimates (the max of noisy estimates; Double DQN fixes it) and contrast on- and off-policy learning. For policy gradients: derive \`∇ log π\` for a softmax, say why a baseline reduces variance without adding bias, and walk through how PPO's min and clip behave for positive and negative advantages. For RLHF: why the KL penalty is there, how DPO's implicit reward \`β·log(π_θ/π_ref)\` arises, and what changes in GRPO. Complexity: a value-iteration sweep is O(|S|²·|A|); a TD update is O(1) and GAE is O(T) per trajectory.
+
+## Problems in this section
+1. **Discounted Return**: vectorized G_0 with a discount vector.
+2. **Epsilon-Greedy Policy**: explore or exploit, with deterministic tie-breaking.
+3. **Bellman Expectation (State Value)**: a one-state expected backup.
+4. **Q-Learning Update**: off-policy TD control with a max over next actions.
+5. **SARSA Update**: on-policy TD control with the action actually taken.
+6. **TD(0) Value Prediction**: bootstrapped value learning with terminal handling.
+7. **Value Iteration Step**: a synchronous Bellman optimality sweep over a known MDP.
+8. **N-Step Return**: n real rewards plus a bootstrap, with truncation.
+9. **REINFORCE Policy Gradient**: the Monte Carlo policy gradient for a softmax policy.
+10. **Advantage Estimation (GAE)**: the backward GAE(γ, λ) recursion.
+11. **PPO Clipped Objective**: the clipped surrogate.
+12. **RLHF Reward Model Loss**: the Bradley–Terry pairwise loss, computed stably.
+13. **Direct Preference Optimization (DPO)**: preference learning without a reward model.
+14. **KL Divergence Penalty (RLHF)**: the sampled k1 KL estimate.
+15. **PPO-RLHF Objective**: the clipped surrogate with a KL-shaped reward.
+
+Next, **Post-training & Efficiency** builds GRPO (PPO without a critic, with a k3 KL term) and int8 quantization. Softmax and cross-entropy, which policy gradients rely on, are practiced in **Neural Networks**.
     `,
     problems: [
       'rl-discounted-return',
@@ -1569,40 +1603,73 @@ Master these concepts for ML interviews at top companies!
   {
     id: 'post-training',
     title: 'Post-training & Efficiency',
-    description: 'GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.',
+    description: 'GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve.',
     icon: '🎯',
     introduction: `
 # Post-training & Efficiency
 
-A pretrained language model predicts text. Post-training turns it into an assistant that follows instructions and reflects human preferences, and efficiency techniques make it affordable to train and serve.
+## Why it matters
+A pretrained language model predicts text. **Post-training** turns it into an assistant that follows instructions, reasons and reflects human preferences, and **efficiency** techniques make it affordable to fine-tune and serve. Labs ask about both: how GRPO and DPO differ from PPO-RLHF, and how quantization trades accuracy for memory.
 
-## Preference learning
-| Method | Idea | Loss |
-|--------|------|------|
-| Reward model | Learn a scalar score from pairwise human preferences (Bradley–Terry) | \`-log σ(r_chosen - r_rejected)\` |
-| PPO-RLHF | Maximize reward with a KL penalty that keeps the policy near the reference model | clipped surrogate with \`A = r - β·KL\` |
-| DPO | Skip the reward model: optimize preferences directly through log-probability ratios | \`-log σ(β·(Δ_chosen - Δ_rejected))\` |
-| GRPO | Drop PPO's value network: sample a group of responses per prompt and use each reward relative to the group as the advantage | clipped surrogate with \`A = (r - mean) / std\` and a k3 KL term |
+## Core ideas: preference and reward optimization
+| Method | Idea | Objective (maximize) or loss (minimize) | Practiced in |
+|---|---|---|---|
+| Reward model | Score responses, trained on human preference pairs (Bradley–Terry) | loss \`-log σ(r_chosen - r_rejected)\` | Reinforcement Learning |
+| PPO-RLHF | Maximize reward with PPO; a KL term keeps π_θ near the reference model | clipped surrogate with \`A = r - β·KL\` | Reinforcement Learning |
+| DPO | No reward model and no sampling: optimize preferences through log-ratios | loss \`-log σ(β·(Δ_chosen - Δ_rejected))\` | Reinforcement Learning |
+| GRPO | PPO without a value network: the group of samples for a prompt is the baseline | clipped surrogate with \`A = (r - mean) / std\`, minus \`β·KL_k3\` | this section |
 
-## Why the KL penalty?
-Without it, the policy drifts toward outputs that fool the reward model ("reward hacking") and forgets how to write fluent text. The KL term measures how far the policy has moved from the frozen reference model.
+**Why a KL term?** Without it the policy drifts toward outputs that fool the reward model ("reward hacking") and forgets how to write fluent text. The KL is estimated from the sampled tokens' log-probs, with \`kl_t = log π_θ(y_t) - log π_ref(y_t)\`:
 
-## GRPO and verifiable rewards
-GRPO (DeepSeekMath) is popular for reasoning models trained on **verifiable** rewards: a math answer checker or unit tests give 1 for correct and 0 for wrong. With G samples per prompt, the group mean is the baseline, so no critic has to be trained, and a prompt where every sample gets the same reward contributes no gradient.
+| Estimator | Per token | Unbiased | Always ≥ 0 | Used by |
+|---|---|---|---|---|
+| k1 | \`kl_t\` | yes | no | InstructGPT-style KL-shaped reward |
+| k3 | \`exp(-kl_t) + kl_t - 1\` | yes | yes | GRPO |
 
-## Efficiency
-Fine-tuning and serving large models is dominated by memory. Low-rank adapters (LoRA) train a tiny fraction of the weights, and quantization stores weights in fewer bits.
+**GRPO and verifiable rewards.** GRPO (DeepSeekMath, 2024) is popular for reasoning models trained on **verifiable** rewards: an answer checker or unit tests give 1 for correct and 0 for wrong. For each prompt, sample G responses. The group mean replaces the critic, and dividing by the group std puts the advantages on a common scale. A prompt where every sample gets the same reward has zero advantage everywhere, so it contributes no gradient.
+
+## Core ideas: efficiency
+Training and serving large models is dominated by memory. LoRA trains a small low-rank update instead of the full weights, and quantization stores weights in fewer bits.
 
 | Technique | Idea | Saves |
-|-----------|------|-------|
-| Int8 absmax quantization | \`scale = max(abs(w)) / 127\`, store \`round(w / scale)\` as int8; one scale per output channel limits the damage from outliers | 4× weight memory vs float32, faster int8 matmuls |
+|---|---|---|
+| LoRA | \`W + (α/r)·A·B\` with rank r ≪ d; only A and B are trained | optimizer state and gradients for the frozen W |
+| Int8 absmax quantization | \`scale = max abs(w) / 127\`, store \`round(w / scale)\` as int8, one scale per output row | 4× weight memory vs float32, fast int8 matmuls |
 
-## Problems in This Section
+One scale per output channel (row) limits the damage from outliers. A single huge weight only coarsens its own row.
 
-- **GRPO: Group-Relative Advantages & Objective**
-- **Int8 Weight Quantization (absmax)**
+## Worked micro-example
+**GRPO advantages.** Four samples for one prompt, verifier rewards \`[1, 0, 0, 1]\`: mean 0.5, population std 0.5, so the advantages are \`[+1, -1, -1, +1]\`. With rewards \`[1, 0, 0, 0]\` (std 0.433), the one correct answer gets \`+1.732\` and each wrong one \`-0.577\`. A rare success earns a larger push.
 
-The reward-model loss, KL penalty, PPO-RLHF objective and DPO are practiced in **Reinforcement Learning**, and the LoRA adapter in **PyTorch Basics**.
+**Int8 absmax.** Row \`[0.7, -1.2, 0.3]\`:
+
+\`\`\`text
+scale = 1.2 / 127 = 0.009449
+w_q   = round([0.7, -1.2, 0.3] / scale) = [74, -127, 32]
+w_hat = w_q · scale = [0.6992, -1.2, 0.3024]      max error 0.0024 ≤ scale / 2
+\`\`\`
+
+Quantize \`[[0.01, -0.02, 0.013], [5.0, -3.0, 1.7]]\` with a **single** scale (5 / 127) and the first row becomes \`[0, -1, 0]\`: it is almost erased. Per-row scales keep it.
+
+## Common pitfalls
+- **GRPO std:** use the population std (\`ddof=0\`, PyTorch \`unbiased=False\`) and add eps, so identical rewards give 0 instead of NaN.
+- **Masking:** average token terms over real tokens only. Padding must not dilute a response's mean.
+- **KL counted twice:** in PPO-RLHF the KL goes either into the reward or into the loss, never both.
+- **Sign conventions:** objectives J are maximized; report and minimize \`loss = -J\`.
+- **Quantization:** clip to [-127, 127] and guard all-zero rows (\`max(absmax, 1e-8)\`). Accumulate int8 products in int32, or they overflow.
+
+## Interview angle
+- Why does GRPO not need a critic, and what does it cost? (G samples per prompt; variance from small groups.)
+- What does the per-response 1/|o_i| normalization do to long vs short answers? (Dr. GRPO argues it biases length.)
+- Compare DPO, which is offline, with PPO and GRPO, which are online and sample from the current policy.
+- When does per-channel quantization beat per-tensor, and why do activation outliers (LLM.int8()) need special handling?
+- Complexity: an int8 matmul costs the same O(n·d_in·d_out) as float, but moves 4× fewer weight bytes. On memory-bound decoding, that is where the speedup comes from.
+
+## Problems in this section
+1. **GRPO: Group-Relative Advantages & Objective**: group-normalized advantages, then the clipped, masked, k3-penalized GRPO objective.
+2. **Int8 Weight Quantization (absmax)**: per-channel and per-tensor quantization, dequantization and an int8 matmul with int32 accumulation.
+
+The reward-model loss, the KL penalty, the PPO-RLHF objective and DPO are practiced in **Reinforcement Learning** (start with **PPO Clipped Objective** and **KL Divergence Penalty (RLHF)**, which GRPO builds on). The LoRA adapter is in **PyTorch Basics**.
     `,
     problems: ['grpo-advantages', 'int8-quantization'],
   },

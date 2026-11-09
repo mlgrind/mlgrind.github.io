@@ -8,7 +8,7 @@ import { LanguageVariant } from '../../../types';
 export const postTrainingPyTorch: Record<string, LanguageVariant> = {
   // Ported with the new problems from the ML Coding Lab fork.
   'grpo-advantages': {
-    note: "Pure tensor ops. Use the population std (r.std(dim=1, unbiased=False, keepdim=True)); torch's default std is unbiased and gives different advantages. Return Python floats for the scalars.",
+    note: "Pure tensor ops, no loops. Use the population std (r.std(dim=1, unbiased=False, keepdim=True)): torch's default std is unbiased and gives different advantages. Return the advantages as a tensor and the scalars as Python floats (.item()).",
     starterCode: `import torch
 
 def group_advantages(rewards: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
@@ -40,7 +40,9 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         eps: std epsilon for the advantages
 
     Returns:
-        dict with 'advantages' (B, G) tensor, 'objective', 'loss', 'mean_kl' (Python floats)
+        dict with 'advantages' (B, G) tensor, and 'objective', 'loss' (= -objective)
+        and 'mean_kl' as Python floats; token terms are averaged over each
+        response's valid tokens, then over all responses
     """
     # Your code here
     pass
@@ -71,6 +73,7 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
 
     per_token = surr - beta * kl
 
+    # Masked mean over each response's valid tokens, then mean over all responses
     lengths = mask.sum(dim=-1)
     objective = ((per_token * mask).sum(dim=-1) / lengths).mean()
     mean_kl = ((kl * mask).sum(dim=-1) / lengths).mean()
@@ -135,32 +138,71 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         expected: '0.1',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Values at padded positions are ignored',
+        input: `(lambda: (
+    lp := torch.tensor([[[-1.0, -0.5, 0.0], [-0.3, -1.2, 0.0]]]),
+    old := torch.tensor([[[-1.1, -0.4, 0.0], [-0.4, -1.0, 0.0]]]),
+    ref := torch.tensor([[[-1.2, -0.7, 0.0], [-0.3, -1.1, 0.0]]]),
+    m := torch.tensor([[[1, 1, 0], [1, 1, 0]]]),
+    a := grpo_objective(lp, old, ref, torch.tensor([[1.0, 0.0]]), m, beta=0.1),
+    junk := torch.tensor([[[0.0, 0.0, 5.0], [0.0, 0.0, -7.0]]]),
+    b := grpo_objective(lp + junk, old - junk, ref + 2 * junk, torch.tensor([[1.0, 0.0]]), m, beta=0.1),
+    bool(abs(a['objective'] - b['objective']) < 1e-6 and abs(a['mean_kl'] - b['mean_kl']) < 1e-6 and abs(a['objective']) > 1e-4)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Advantages: (r - r.mean(dim=1, keepdim=True)) / (r.std(dim=1, unbiased=False, keepdim=True) + eps)',
-      'adv.unsqueeze(-1) broadcasts the per-response advantage over tokens',
-      'k3 KL: d = ref_logp - logp; kl = torch.exp(d) - d - 1',
-      'Per response: (x * mask).sum(-1) / mask.sum(-1), then .mean(); return .item() for the scalars',
+      'Two separate pieces: a per-prompt normalization of rewards, then a PPO-style token objective where padding must not count.',
+      'Advantages: (r - r.mean(dim=1, keepdim=True)) / (r.std(dim=1, unbiased=False, keepdim=True) + eps); adv.unsqueeze(-1) broadcasts them over tokens.',
+      'ratio = torch.exp(logp - old_logp); surr = torch.minimum(ratio * A, torch.clamp(ratio, 1 - epsilon, 1 + epsilon) * A); d = ref_logp - logp; kl = torch.exp(d) - d - 1.',
+      'Per response: (x * mask).sum(-1) / mask.sum(-1), then .mean(). Forgetting unbiased=False, or dividing by T instead of each response\'s length, gives wrong values.',
     ],
   },
   'int8-quantization': {
-    note: 'Use torch.round, torch.clamp and .to(torch.int8). Accumulate the int8 matmul in an integer dtype (.long()) and rescale afterwards.',
+    note: 'Use torch.round (half-to-even), torch.clamp and .to(torch.int8). Accumulate the int8 matmul in a wide integer dtype (.long()) and rescale afterwards; int8 products overflow.',
     starterCode: `import torch
 
 def quantize_per_channel(W: torch.Tensor):
-    """Returns (W_q int8 (d_out, d_in), scales (d_out,)) with one scale per row."""
+    """
+    Absmax-quantize each row of W with its own scale.
+
+    Args:
+        W: (d_out, d_in) float weights
+
+    Returns:
+        (W_q, scales): W_q int8 (d_out, d_in), scales float (d_out,)
+        with scales = max(row absmax, 1e-8) / 127
+    """
     # Your code here
     pass
 
 
 def quantize_per_tensor(W: torch.Tensor):
-    """Returns (W_q int8, scale float) with one scale for the whole matrix."""
+    """
+    Absmax-quantize all of W with one scale.
+
+    Returns:
+        (W_q, scale): W_q int8 with W's shape, scale a Python float
+    """
     # Your code here
     pass
 
 
 def dequantize(W_q: torch.Tensor, scales):
-    """W_q * scale; scales is a (d_out,) tensor (per row) or a Python float."""
+    """
+    Map int8 values back to floats.
+
+    Args:
+        W_q: (d_out, d_in) int8 tensor
+        scales: (d_out,) per-row scales tensor, or a single Python float
+
+    Returns:
+        (d_out, d_in) float tensor W_q * scale
+    """
     # Your code here
     pass
 
@@ -182,7 +224,7 @@ def int8_matmul(x: torch.Tensor, W_q: torch.Tensor, w_scales: torch.Tensor) -> t
 
 
 def quantization_report(W: torch.Tensor) -> dict:
-    """Returns {'per_channel_error': float, 'per_tensor_error': float}."""
+    """Returns {'per_channel_error': float, 'per_tensor_error': float} (max abs errors)."""
     # Your code here
     pass
 `,
@@ -190,7 +232,7 @@ def quantization_report(W: torch.Tensor) -> dict:
 
 def _absmax_quantize_rows(M):
     absmax = M.abs().max(dim=1).values
-    scales = torch.clamp(absmax, min=1e-8) / 127.0
+    scales = torch.clamp(absmax, min=1e-8) / 127.0       # floor avoids 0-division
     M_q = torch.clamp(torch.round(M / scales.unsqueeze(1)), -127, 127).to(torch.int8)
     return M_q, scales
 
@@ -282,11 +324,26 @@ def quantization_report(W):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'All-zero row stays 0 (no NaN); 63.5 rounds half-to-even to 64',
+        input: 'quantize_per_channel(torch.tensor([[0.0, 0.0], [1.0, -2.0]]))[0].tolist()',
+        expected: '[[0, 0], [64, -127]]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'dequantize accepts a Python float scale',
+        input: 'dequantize(torch.tensor([[1, -2], [127, 0]], dtype=torch.int8), 0.5).tolist()',
+        expected: '[[0.5, -1.0], [63.5, 0.0]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Per-row absmax: W.abs().max(dim=1).values; scales = torch.clamp(absmax, min=1e-8) / 127',
-      'torch.clamp(torch.round(W / scales.unsqueeze(1)), -127, 127).to(torch.int8)',
-      'int8_matmul: quantize x per row, then x_q.long() @ W_q.long().T, and multiply by both scales',
+      'Every scheme is the same operation (divide by a scale, round, clamp, cast) applied to different groups: weight rows, the whole matrix, or activation rows.',
+      'Per-row absmax: W.abs().max(dim=1).values; scales = torch.clamp(absmax, min=1e-8) / 127. Reuse one row helper for weights and activations.',
+      'torch.clamp(torch.round(W / scales.unsqueeze(1)), -127, 127).to(torch.int8); dequantize with torch.as_tensor(scales, dtype=torch.float64).reshape(-1, 1) so a float also works.',
+      'int8_matmul: quantize x per row, compute x_q.long() @ W_q.long().T (never multiply in int8), then multiply by x_scales.unsqueeze(1) * w_scales.unsqueeze(0).',
     ],
   },
 };
