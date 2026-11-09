@@ -202,7 +202,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 12: CNNs & Computer Vision
 
 **URL**: /section/cnn
-**Summary**: Implement convolutions, pooling, object detection, and segmentation.
+**Summary**: Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.
 **Problems** (11):
 
 1. **Convolution Output Size** (`/problem/cnn/conv-output-size`) — easy
@@ -222,7 +222,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 13: Sequence Models
 
 **URL**: /section/sequence-models
-**Summary**: RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.
+**Summary**: Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.
 **Problems** (3):
 
 1. **Vanilla RNN: Forward & BPTT** (`/problem/sequence-models/rnn-forward`) — hard
