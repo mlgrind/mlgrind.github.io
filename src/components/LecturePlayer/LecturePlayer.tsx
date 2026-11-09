@@ -13,6 +13,7 @@ interface Props {
 /**
  * Click-to-load YouTube lecture. Nothing is requested from YouTube until the
  * learner presses play (or a chapter); the embed then uses youtube-nocookie.
+ * Captions are burned into the video, so YouTube captions stay off by default.
  */
 export default function LecturePlayer({ lecture, title }: Props) {
   const [start, setStart] = useState<number | null>(null);
@@ -20,7 +21,7 @@ export default function LecturePlayer({ lecture, title }: Props) {
   const src =
     start === null
       ? null
-      : `https://www.youtube-nocookie.com/embed/${lecture.videoId}?autoplay=1&rel=0&modestbranding=1&start=${start}`;
+      : `https://www.youtube-nocookie.com/embed/${lecture.videoId}?autoplay=1&rel=0&modestbranding=1&cc_load_policy=0&start=${start}`;
 
   return (
     <section
