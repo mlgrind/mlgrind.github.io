@@ -22,12 +22,9 @@ const escape = (text: string) =>
       ]!,
   );
 const template = readFileSync("dist/index.html", "utf8");
-const card = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="630" fill="#10111b"/><circle cx="1100" cy="70" r="260" fill="#282042"/><text x="80" y="105" fill="#a79bff" font-family="sans-serif" font-weight="bold" font-size="36">ML GRIND</text><text x="80" y="250" fill="#ffffff" font-family="sans-serif" font-size="60" font-weight="bold">Learn machine learning</text><text x="80" y="330" fill="#a79bff" font-family="sans-serif" font-size="60">by building.</text><text x="80" y="450" fill="#c4c7d4" font-family="sans-serif" font-size="30">Real Python. Instant feedback. No setup.</text><text x="80" y="550" fill="#c4c7d4" font-family="sans-serif" font-size="26">mlgrind.dev</text></svg>`;
-await sharp(Buffer.from(card)).png().toFile("dist/og-image.png");
-await sharp(Buffer.from(card))
-  .resize(480, 252)
-  .png()
-  .toFile("dist/preview.png");
+// Social card: public/og-card.png (rendered from the brand design, copied to
+// dist/ by Vite). preview.png is a small copy of it.
+await sharp("public/og-card.png").resize(480, 252).png().toFile("dist/preview.png");
 for (const path of staticRoutes) {
   const content = routeContent(path);
   const title = path === "/" ? content.title : `${content.title} | ML Grind`;
@@ -38,12 +35,12 @@ for (const path of staticRoutes) {
 <meta property="og:title" content="${escape(title)}" data-rh="true" />
 <meta property="og:description" content="${escape(content.description)}" data-rh="true" />
 <meta property="og:url" content="${canonical}" data-rh="true" />
-<meta property="og:image" content="${origin}/og-image.png" />
+<meta property="og:image" content="${origin}/og-card.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${escape(title)}" data-rh="true" />
 <meta name="twitter:description" content="${escape(content.description)}" data-rh="true" />
-<meta name="twitter:image" content="${origin}/og-image.png" />`;
+<meta name="twitter:image" content="${origin}/og-card.png" />`;
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/g, "")
     .replace(

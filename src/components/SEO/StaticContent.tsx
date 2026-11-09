@@ -50,7 +50,7 @@ export function routeContent(path: string) {
     };
   const pages: Record<string, { title: string; description: string }> = {
     "/": {
-      title: "ML Grind - Learn Machine Learning by Building",
+      title: "ML Grind - Learn Machine Learning by Building It",
       description:
         "Free hands-on ML coding practice. Implement NumPy, neural networks, attention, and transformers in your browser. No setup or signup required.",
     },

@@ -4,7 +4,7 @@ Practice machine learning by implementing algorithms in real Python, directly in
 
 **[Solve your first problem](https://mlgrind.dev/problem/python-basics/numpy-array-sum)** · **[Seven-day challenge](https://mlgrind.dev/challenge)** · **[Live curriculum](https://mlgrind.dev/)**
 
-![ML Grind: real Python, instant feedback, no setup](https://mlgrind.dev/og-image.png)
+![ML Grind: real Python, instant feedback, no setup](https://mlgrind.dev/og-card.png)
 
 The curriculum contains **149 exercises across 21 sections**, covering NumPy, einsum, classical ML, neural networks, optimization, computer vision, sequence models, transformers, LLM decoding and internals, retrieval, generative models, reinforcement learning, post-training, and end-to-end implementations. Every problem can also be solved in PyTorch: a NumPy | PyTorch toggle swaps in a PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build; see [docs/TORCH_TRACK.md](docs/TORCH_TRACK.md)).
 

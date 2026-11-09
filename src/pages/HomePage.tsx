@@ -30,7 +30,7 @@ export default function HomePage() {
             {totalProblems} problems &middot; NumPy or PyTorch &middot; Runs in your browser
           </p>
           <h1 className="font-display text-[clamp(2.25rem,5.5vw,4rem)] font-normal leading-[1.05] tracking-tight text-gray-900 dark:text-dark-100 animate-fade-up [animation-delay:0.1s]">
-            Learn Machine Learning by <em className="text-primary-400 dark:text-primary-300">Building</em>
+            Learn machine learning<br className="hidden sm:inline" /> by <em className="text-accent-600 dark:text-accent-300">building it.</em>
           </h1>
           <p className="mt-4 max-w-[560px] text-base sm:text-lg text-gray-500 dark:text-dark-200 font-light leading-relaxed animate-fade-up [animation-delay:0.2s]">
             Implement algorithms from scratch — NumPy, neural networks, transformers,

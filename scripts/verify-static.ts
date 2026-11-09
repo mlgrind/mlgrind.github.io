@@ -18,14 +18,14 @@ for (const route of staticRoutes) {
     `Missing sitemap entry: ${route}`,
   );
   assert(html.includes("<h1"), `Missing static text: ${route}`);
-  assert(html.includes("og-image.png"), `Missing social card: ${route}`);
+  assert(html.includes("og-card.png"), `Missing social card: ${route}`);
   assert(
     !html.includes('name="robots" content="noindex'),
     `Known route is noindex: ${route}`,
   );
   assert(routeContent(route).title !== "Page Not Found");
 }
-assert(existsSync("dist/og-image.png"));
+assert(existsSync("dist/og-card.png"));
 assert(readFileSync("dist/404.html", "utf8").includes("noindex"));
 console.log(
   `Verified ${staticRoutes.length} route files, canonicals, sitemap entries, static headings, and social cards.`,
