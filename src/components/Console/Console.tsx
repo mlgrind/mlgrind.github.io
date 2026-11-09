@@ -142,12 +142,12 @@ export default function Console({
 
   return (
     <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-500 rounded-lg h-full flex flex-col">
-      <div className="flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-900">
-        <div className="flex">
+      <div className="flex items-center justify-between gap-2 px-2 py-1 border-b border-gray-200 dark:border-dark-500 bg-gray-50 dark:bg-dark-900">
+        <div className="flex min-w-0 overflow-x-auto overflow-y-hidden">
           {showTestsTab && (
             <button
               onClick={() => setActiveTab('tests')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
                 activeTab === 'tests'
                   ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
                   : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
@@ -158,7 +158,7 @@ export default function Console({
           )}
           <button
             onClick={() => setActiveTab('output')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
               activeTab === 'output'
                 ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
                 : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
@@ -169,7 +169,7 @@ export default function Console({
           {testResults && testResults.length > 0 && (
             <button
               onClick={() => setActiveTab('results')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-t transition-colors ${
                 activeTab === 'results'
                   ? 'text-primary-600 dark:text-primary-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
                   : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
@@ -186,13 +186,13 @@ export default function Console({
                   onRequestAIFeedback();
                 }
               }}
-              className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors flex items-center gap-1.5 ${
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium rounded-t transition-colors flex items-center gap-1.5 ${
                 activeTab === 'ai-feedback'
                   ? 'text-purple-600 dark:text-purple-300 bg-white dark:bg-dark-800 border-t border-l border-r border-gray-200 dark:border-dark-500 -mb-px'
                   : 'text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100'
               }`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               AI Feedback
@@ -203,7 +203,7 @@ export default function Console({
           )}
         </div>
         {isLoading && (
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
             <span className="text-xs text-gray-500 dark:text-dark-200">Running...</span>
           </div>

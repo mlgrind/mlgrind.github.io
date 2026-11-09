@@ -84,12 +84,13 @@ afterEach(() => {
 describe("problem editor persistence", () => {
   it("keeps code and the chosen tab through progress writes, then persists resets", () => {
     const view = mount();
-    fireEvent.click(screen.getByRole("button", { name: "Examples" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Examples" }));
     fireEvent.change(screen.getByLabelText("Python code"), {
       target: { value: "def array_sum(arr): return 0" },
     });
+    expect(screen.getByRole("tab", { name: "Examples" })).toHaveAttribute("aria-selected", "true");
     expect(
-      screen.getByRole("button", { name: "Examples" }).className,
+      screen.getByRole("tab", { name: "Examples" }).className,
     ).toContain("border-primary-500");
     fireEvent.click(screen.getByRole("button", { name: "More actions" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Reset code" }));

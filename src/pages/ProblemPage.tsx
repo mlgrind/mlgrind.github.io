@@ -369,6 +369,23 @@ export default function ProblemPage() {
       {isRunning ? 'Running...' : 'Run Tests'}
     </button>
   );
+  // Stop sits next to Run in the action bar, so a run doesn't shift the layout.
+  const runControls = (
+    <>
+      {runButton}
+      {isRunning && (
+        <button
+          type="button"
+          onClick={() => stop()}
+          aria-label="Stop execution"
+          title="Stop execution (runs stop automatically after 30 seconds)"
+          className="whitespace-nowrap px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
+        >
+          Stop
+        </button>
+      )}
+    </>
+  );
 
   const nextAfterPass = allPassed && nextProblemId ? (
     <Link
@@ -382,7 +399,7 @@ export default function ProblemPage() {
   const actionBar = (withMaximize: boolean) => (
     <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
       {languageToggle}
-      {runButton}
+      {runControls}
       <div className="flex-1" />
       {pythonStatus}
       {nextAfterPass}
@@ -402,7 +419,6 @@ export default function ProblemPage() {
       {syncError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Cloud progress could not load. Cloud writes are paused to protect your saved work. Your edits remain on this device; refresh to retry.</p>}
       {storageError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your browser could not save your code. Keep a copy before leaving this page.</p>}
       {error && <div role="alert" className="p-3 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
-      {isRunning && <div className="p-2 bg-gray-100 dark:bg-dark-800"><button onClick={() => stop()} className="px-4 py-2 rounded bg-red-600 text-white">Stop execution</button><span className="ml-3 text-sm text-gray-600 dark:text-dark-200">30-second time limit</span></div>}
       {/* Mobile Layout */}
       {isMobile ? (
         <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-dark-800">
@@ -446,6 +462,10 @@ export default function ProblemPage() {
                   key={`${problem.id}-${activeLanguage}`}
                   hints={variantHints}
                   solution={variant.solution}
+                  onLoadToEditor={solution => {
+                    handleCodeChange(solution);
+                    setMobileTab('code');
+                  }}
                 />
               </div>
               {/* Sticky bottom bar */}
@@ -467,7 +487,7 @@ export default function ProblemPage() {
               {/* Action Bar */}
               <div className="flex flex-wrap items-center gap-2 px-4 py-2 mt-3 bg-gray-50 dark:bg-dark-900 border-y border-gray-200 dark:border-dark-500">
                 {languageToggle}
-                {runButton}
+                {runControls}
                 <div className="flex-1" />
                 {pythonStatus}
                 {allPassed && nextProblemId && (
@@ -543,6 +563,10 @@ export default function ProblemPage() {
                 problemId={problemId}
                 resetKey={resetKey}
                 testResults={testResults}
+                aiFeedback={aiFeedback}
+                aiFeedbackLoading={aiFeedbackLoading}
+                aiFeedbackError={aiFeedbackError}
+                onRequestAIFeedback={handleRequestAIFeedback}
               />
             </div>
           </Split>
@@ -564,8 +588,11 @@ export default function ProblemPage() {
               <CompanyTags key={problem.id} problemId={problem.id} />
             </div>
             {/* Tab Bar */}
-            <div className="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 px-4 shrink-0">
+            <div role="tablist" aria-label="Problem details" className="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 px-4 shrink-0">
               <button
+                type="button"
+                role="tab"
+                aria-selected={descriptionTab === 'description'}
                 onClick={() => setDescriptionTab('description')}
                 className={`whitespace-nowrap shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'description'
@@ -576,6 +603,9 @@ export default function ProblemPage() {
                 Description
               </button>
               <button
+                type="button"
+                role="tab"
+                aria-selected={descriptionTab === 'examples'}
                 onClick={() => setDescriptionTab('examples')}
                 className={`whitespace-nowrap shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'examples'
@@ -586,6 +616,9 @@ export default function ProblemPage() {
                 Examples
               </button>
               <button
+                type="button"
+                role="tab"
+                aria-selected={descriptionTab === 'hints'}
                 onClick={() => setDescriptionTab('hints')}
                 className={`whitespace-nowrap shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   descriptionTab === 'hints'
