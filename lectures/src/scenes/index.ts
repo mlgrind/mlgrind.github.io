@@ -2,6 +2,7 @@ import type React from 'react';
 import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
+import { OptimizationScenes } from './optimization';
 import { CnnScenes } from './cnn';
 
 export interface SceneProps {
@@ -22,5 +23,6 @@ export type SceneComponent = React.FC<SceneProps>;
  */
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
+  optimization: OptimizationScenes,
   cnn: CnnScenes,
 };
