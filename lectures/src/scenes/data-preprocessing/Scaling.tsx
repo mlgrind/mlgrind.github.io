@@ -241,7 +241,7 @@ export const ScalingScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =
           <div style={{ position: 'absolute', right: 34, top: 26, textAlign: 'right', opacity: distP * (1 - s2) }}>
             <Label size={24} color={C.muted}>income's share of the distance²</Label>
             <div style={{ fontFamily: F.mono, fontSize: 44, color: s1 < 0.5 ? C.rose : C.teal, marginTop: 6 }}>
-              {s1 < 0.5 ? (share * 100).toFixed(4) : (share * 100).toFixed(1)}%
+              {s1 < 0.5 ? (share * 100).toFixed(5) : (share * 100).toFixed(1)}%
             </div>
           </div>
           <div style={{ position: 'absolute', right: 34, top: 26, textAlign: 'right', opacity: ease(frame, zDoneAt, 16) }}>

@@ -19,12 +19,11 @@ export const OneHotScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =>
   const codesAt = cues.at('coded as zero');
   const twiceAt = cues.at('blue is twice green');
   const halfAt = cues.at('green sits halfway');
-  const ohAt = cues.at('One-hot encoding removes');
   const vecAt = cues.at('Each label becomes');
   const trickAt = cues.at('A neat trick');
   const chipAt = cues.at("That's the One-Hot");
 
-  const lineO = windowed(frame, codesAt + 10, ohAt + 10, 14);
+  const lineO = windowed(frame, codesAt + 10, vecAt + 6, 14);
   const eyeO = ease(frame, trickAt, 16);
   // which label is being looked up right now (trick phase)
   const stepDur = 22;
