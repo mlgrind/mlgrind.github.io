@@ -4,6 +4,7 @@ import type { LectureManifest, ManifestChapter, ManifestSentence } from '../type
 import { TransformersScenes } from './transformers';
 import { DeepLearningScenes } from './deep-learning';
 import { NeuralNetworksScenes } from './neural-networks';
+import { ModelEvaluationScenes } from './model-evaluation';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -25,4 +26,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'deep-learning': DeepLearningScenes,
   'neural-networks': NeuralNetworksScenes,
+  'model-evaluation': ModelEvaluationScenes,
 };
