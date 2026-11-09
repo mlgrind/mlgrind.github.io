@@ -7,129 +7,252 @@ export const sections: Section[] = [
   {
     id: 'numpy-fundamentals',
     title: 'NumPy Fundamentals',
-    description: 'Master NumPy array operations essential for ML development.',
+    description: 'Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on.',
     icon: '🔢',
     introduction: `
 # NumPy Fundamentals
 
-NumPy is the backbone of scientific computing in Python. Every ML library builds on it.
+## Why it matters
+Every ML system speaks arrays. A batch of images is a \`(batch, height, width, channels)\` array, a linear layer's weights are a \`(d_in, d_out)\` matrix, and PyTorch tensors copy NumPy's API almost name for name. Interviewers use NumPy questions to check that you think in whole arrays instead of Python loops, and most "the model trains but the numbers are wrong" bugs turn out to be shape or axis mistakes.
 
-## Key Concepts
+## Core ideas
 
-### Array Creation
-- \`np.array()\`: Create from lists
-- \`np.zeros()\`, \`np.ones()\`: Initialize with values
-- \`np.arange()\`, \`np.linspace()\`: Numeric ranges
-- \`np.eye()\`: Identity matrix
+### An array is a buffer plus a shape
+An \`ndarray\` is one flat block of memory plus metadata: a \`dtype\` (\`float64\`, \`int64\`, ...), a \`shape\` and \`strides\` (how many bytes to jump per axis). Many operations only rewrite the metadata, so they are O(1) and return a **view** that shares memory with the original:
 
-### Indexing & Slicing
-- Basic: \`arr[0]\`, \`arr[1:5]\`
-- Advanced: \`arr[[0, 2, 4]]\`, \`arr[arr > 0]\`
-- Multi-dimensional: \`arr[1, :]\`, \`arr[:, 2:4]\`
+| Operation | Returns | Cost |
+|-----------|---------|------|
+| Basic slice \`a[1:3, ::2]\` | view | O(1) |
+| \`reshape\` (contiguous input), \`.T\`, \`transpose\` | view | O(1) |
+| Fancy index \`a[[0, 2]]\`, boolean mask \`a[a > 0]\` | copy | O(k) |
+| \`flatten()\`, arithmetic, reductions | new array | O(n) |
+
+### Creation
+\`np.zeros(shape)\`, \`np.ones(shape)\` and \`np.eye(n)\` take sizes; \`np.arange(stop)\` (half-open, excludes \`stop\`) and \`np.linspace(start, stop, num)\` (closed, includes \`stop\`) take ranges.
+
+### Axes and reductions
+\`arr.sum(axis=k)\` removes axis \`k\`. For a \`(n_rows, n_cols)\` array, \`axis=0\` gives one value per column and \`axis=1\` one value per row. \`keepdims=True\` keeps the reduced axis with size 1, which is what you want when you subtract the result back from the array.
 
 ### Broadcasting
-Arrays of different shapes can be combined:
-- (3, 4) + (4,) → broadcasts to (3, 4)
-- (3, 1) * (1, 4) → broadcasts to (3, 4)
+Two shapes are compatible when, compared **from the right**, each pair of dimensions is equal or one of them is 1 (missing leading dimensions count as 1). Size-1 dimensions are stretched without copying:
 
-### Aggregations
-- \`sum()\`, \`mean()\`, \`std()\` - with axis parameter
-- \`argmax()\`, \`argmin()\` - find indices
+| Left | Right | Result |
+|------|-------|--------|
+| \`(batch, d)\` | \`(d,)\` | \`(batch, d)\`: a bias added to every row |
+| \`(batch, d)\` | \`(batch, 1)\` | \`(batch, d)\`: a per-row scale |
+| \`(n, 1)\` | \`(1, m)\` | \`(n, m)\`: an outer operation |
+| \`(3, 4)\` | \`(3,)\` | error: 4 and 3 don't match |
 
-### Shape Manipulation
-- \`reshape()\`: Change dimensions
-- \`transpose()\`, \`.T\`: Swap axes
-- \`flatten()\`, \`ravel()\`: To 1D
+### Reshape versus transpose
+Arrays are stored in row-major (C) order, so the last axis changes fastest. \`reshape\` keeps that order and regroups it: entry \`[i, j]\` of a \`(4, 6)\` reshape is element \`6*i + j\` of the vector. \`transpose\` keeps the data and reorders the axes: \`a.T[j, i] = a[i, j]\`. Both can produce a \`(6, 4)\` array from a \`(4, 6)\` one, with different values.
 
-Master these operations to write efficient ML code!
+## Worked example: standardising features
+Standardisation turns each column into mean 0 and standard deviation 1, using one reduction and one broadcast:
+
+\`\`\`python
+X = np.array([[1., 10.],
+              [2., 20.],
+              [3., 30.]])          # (n_samples=3, n_features=2)
+mu = X.mean(axis=0)                # [ 2., 20.]        shape (2,)
+sigma = X.std(axis=0)              # [0.8165, 8.165]   shape (2,), population std
+Z = (X - mu) / sigma               # (3, 2) - (2,) broadcasts over rows
+# Z = [[-1.2247, -1.2247],
+#      [ 0.    ,  0.    ],
+#      [ 1.2247,  1.2247]]
+\`\`\`
+
+Both columns end up identical because the second column is just 10 times the first: standardisation removes scale.
+
+## Common pitfalls
+- **\`(n,)\` versus \`(n, 1)\`**: a 1D array lines up with the *last* axis. \`X - X.mean(axis=1)\` fails for non-square \`X\` and, worse, silently subtracts along the wrong axis when \`X\` is square. Use \`keepdims=True\`.
+- **Views alias memory**: \`b = a[0]; b[:] = 0\` zeroes a row of \`a\`. Call \`.copy()\` when you need independence.
+- **Integer dtypes truncate**: assigning \`0.7\` into an \`int64\` array stores \`0\`. Create float arrays when you'll store floats.
+- **\`ddof\`**: \`np.std\` divides by \`N\` (\`ddof=0\`); \`torch.std\` and pandas divide by \`N - 1\` by default.
+- **Float equality**: compare with \`np.allclose\`, never \`==\`.
+- **Accidental huge broadcasts**: \`(n, 1, d) - (1, m, d)\` builds an \`(n, m, d)\` array. That's fine for pairwise distances on small data, and an out-of-memory error at scale.
+
+## Interview angle
+- "Vectorise this loop" is the classic opener: replace per-element Python with one array expression, then explain why it's faster (no interpreter overhead per element, contiguous memory, SIMD).
+- Expect "what shape comes out?" questions about broadcasting, \`axis=\` and \`keepdims\`, and be ready to state the broadcasting rule from memory.
+- Complexity: elementwise ops and reductions are O(n); reshape, transpose and slicing are O(1) views; fancy indexing copies.
+- Follow-ups: views versus copies, contiguity (why PyTorch's \`.view\` fails after a transpose), and the memory cost of broadcasting.
+
+## Problems in this section
+1. **Array Creation Methods**: build zeros, ones, \`arange\`, \`linspace\` and identity arrays and learn which take shapes and which take ranges.
+2. **Indexing and Slicing**: extract rows, columns, sub-blocks, the diagonal and reversed rows, with half-open slices.
+3. **Broadcasting Operations**: centre rows and columns, add a bias and scale rows without loops.
+4. **Aggregation Functions**: global, per-row and per-column statistics plus a 2D \`argmax\`/\`argmin\`.
+5. **Reshape and Transpose**: regroup a vector into 2D and 3D arrays, permute axes and flatten back.
+
+Next: **Python Basics for ML** for quick vectorisation warm-ups, **Einstein Summation** for a single notation covering all of these operations, and **Normalize Features** in Data Preprocessing, which reuses the standardisation above.
     `,
     problems: ['numpy-array-creation', 'numpy-indexing', 'numpy-broadcasting', 'numpy-aggregations', 'numpy-reshape-transpose'],
   },
   {
     id: 'python-basics',
     title: 'Python Basics for ML',
-    description: 'Master NumPy arrays and essential Python operations for machine learning.',
+    description: 'Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows.',
     icon: '🐍',
     introduction: `
-# Python Basics for Machine Learning
+# Python Basics for ML
 
-NumPy is the foundation of nearly all machine learning in Python. Before diving into complex algorithms, you need to master array operations.
+## Why it matters
+ML code runs on arrays, and the single biggest habit to build is **vectorisation**: expressing a computation as one operation on whole arrays instead of a Python loop over elements. Summing a million floats with a Python loop takes about a hundred times longer than \`arr.sum()\`. Every forward pass, loss and gradient you write later is built from the three operations in this section: reductions, matrix multiplication and broadcasting.
 
-## Key Concepts
+## Core ideas
 
-### NumPy Arrays
-- **Creation**: \`np.array()\`, \`np.zeros()\`, \`np.ones()\`, \`np.arange()\`
-- **Shape manipulation**: \`reshape()\`, \`flatten()\`, \`transpose()\`
-- **Indexing**: Slicing, boolean indexing, fancy indexing
+### Vectorise, don't loop
+A Python loop pays interpreter overhead for every element. A NumPy call runs one compiled loop over contiguous memory, often with SIMD instructions. Rule of thumb: if you are writing \`for i in range(len(arr))\`, there is almost always an array expression that does the same thing.
 
-### Essential Operations
-- **Element-wise**: Addition, multiplication, mathematical functions
-- **Aggregations**: \`sum()\`, \`mean()\`, \`std()\`, \`min()\`, \`max()\`
-- **Broadcasting**: Automatic expansion of arrays for operations
+### Reductions
+A reduction collapses values into fewer values: \`arr.sum()\`, \`arr.mean()\`, \`arr.max()\`. With no \`axis\` it reduces everything to a scalar; \`axis=0\` reduces down the rows (one result per column) and \`axis=1\` across the columns (one result per row).
 
-### Why It Matters
-Every ML algorithm processes data as arrays. Understanding these operations lets you:
-- Prepare data efficiently
-- Debug model issues
-- Optimize performance
+### Matrix multiplication
+For \`A\` of shape \`(m, n)\` and \`B\` of shape \`(n, p)\`:
 
-Let's practice with hands-on problems!
+\`\`\`text
+C[i, j] = sum over k of A[i, k] * B[k, j]        C has shape (m, p)
+\`\`\`
+
+The inner dimensions (\`n\`) must match and disappear. It costs \`m * n * p\` multiply-adds. Three spellings:
+
+| Call | 2D inputs | Batched 3D inputs |
+|------|-----------|-------------------|
+| \`A @ B\` / \`np.matmul(A, B)\` | matrix product | batched product, \`(b, m, n) @ (b, n, p) -> (b, m, p)\` |
+| \`np.dot(A, B)\` | matrix product | a different contraction: \`(2, 3, 4)\` dot \`(2, 4, 5)\` gives \`(2, 3, 2, 5)\` |
+| \`A * B\` | **elementwise** product, not matmul | elementwise |
+
+Prefer \`@\`: it reads like the maths and does the right thing for batches.
+
+### Broadcasting
+When shapes differ, NumPy compares them from the right; dimensions must be equal or 1, and size-1 (or missing) dimensions are stretched. That is how a bias vector of shape \`(n,)\` is added to every row of an \`(m, n)\` matrix without copying it \`m\` times.
+
+## Worked example: a linear layer by hand
+A linear layer computes \`y = x @ W + b\`. With a batch of 2 samples, 2 input features and 2 outputs:
+
+\`\`\`python
+x = np.array([[1, 2],
+              [3, 4]])           # (batch=2, d_in=2)
+W = np.array([[5, 6],
+              [7, 8]])           # (d_in=2, d_out=2)
+b = np.array([10, 20])           # (d_out,)
+
+x @ W        # [[19, 22], [43, 50]]   e.g. 19 = 1*5 + 2*7
+x @ W + b    # [[29, 42], [53, 70]]   b broadcasts over the batch
+(x @ W).sum()  # 134                  a reduction to one number
+\`\`\`
+
+All three operations of this section show up in one line of a neural network.
+
+## Common pitfalls
+- **\`*\` is not matrix multiplication**: \`A * B\` multiplies elementwise (and broadcasts), so it can silently "work" with the wrong meaning.
+- **Shape mismatches**: \`(2, 3) @ (2, 3)\` raises a \`ValueError\` (3 vs 2 in the inner dimension). Transpose the operand you meant: \`A @ B.T\`.
+- **1D vectors are neither rows nor columns**: \`v @ A\` treats \`v\` as a row and \`A @ v\` as a column, and both return 1D. Reshape to \`(n, 1)\` when you need an explicit column.
+- **Integer overflow**: small integer dtypes wrap around (two \`int8\` values of 100 add up to -56). Use float arrays for numeric work.
+- **Floats aren't exact**: \`0.1 + 0.2 == 0.3\` is \`False\`. Compare floats with a tolerance (\`np.isclose\`, \`np.allclose\`).
+
+## Interview angle
+- "Implement matrix multiply" usually means: state the shape rule, write \`A @ B\`, then possibly the triple loop, and give its O(m·n·p) cost.
+- Follow-ups: why is the vectorised version faster; what's the difference between \`np.dot\`, \`np.matmul\` and \`*\`; how would you multiply a batch of matrices; what happens with mismatched shapes.
+- Be ready to say how broadcasting adds a bias to a batch, and what shape the result has.
+
+## Problems in this section
+1. **Array Sum**: reduce an array to a single number with \`np.sum\`.
+2. **Matrix Multiplication**: multiply \`(m, n)\` by \`(n, p)\` with \`@\`, and check the shape rule.
+3. **Broadcasting Addition**: add a vector to every row of a matrix with one \`+\`.
+
+For deeper practice, see **NumPy Fundamentals** (indexing, axes, reshape) and **Einstein Summation**, which writes matrix products as index expressions like \`'ik,kj->ij'\`.
     `,
     problems: ['numpy-array-sum', 'numpy-matrix-multiply', 'numpy-broadcast-add'],
   },
   {
     id: 'einsum',
     title: 'Einstein Summation (Einsum)',
-    description: 'Master einsum for elegant tensor operations.',
+    description: 'Write sums, matrix products and batched multi-head attention as einsum index strings.',
     icon: '∑',
     introduction: `
 # Einstein Summation (Einsum)
 
-Einsum is a powerful notation for expressing tensor operations concisely.
+## Why it matters
+Einsum describes a tensor operation by **naming its axes**: \`'bqd,bkd->bqk'\` says "for every batch \`b\`, query \`q\` and key \`k\`, sum over \`d\`", which is exactly attention's score computation. Research code for transformers, mixture-of-experts layers and bilinear models uses einsum because the subscripts document the shapes. In interviews it's a fast way to show you understand which axes are kept, broadcast or contracted, and the same strings work in \`np.einsum\` and \`torch.einsum\`.
 
-## Why Einsum?
-- Express complex operations in one line
-- Often faster than chained operations
-- Essential for attention mechanisms
+## Core ideas
 
-## Syntax
+### The rules
+In \`np.einsum('<inputs>-><output>', *operands)\`, each operand gets one letter per axis.
+1. A letter that appears in the **output** is kept, in the order written after \`->\`.
+2. A letter that appears in the inputs but **not** in the output is summed over (contracted).
+3. A letter shared by several operands pairs those axes up; their sizes must match.
+4. A letter repeated **within one operand** (\`'ii'\`) walks its diagonal.
+
+Mentally, einsum is a nested loop over every distinct letter that multiplies the matching entries and accumulates them into the output slot:
+
 \`\`\`python
-np.einsum('subscripts', operands)
+# C = np.einsum('ik,kj->ij', A, B)
+for i in range(m):
+    for j in range(n):
+        for k in range(K):             # k is missing from the output: summed
+            C[i, j] += A[i, k] * B[k, j]
 \`\`\`
 
-## Common Patterns
+The cost of a two-operand einsum is the product of the sizes of all distinct letters: \`m * K * n\` here.
 
-### Basic Operations
-\`\`\`
-'ij->'      Sum all elements
-'ij->i'     Sum along axis 1 (row sums)
-'ij->j'     Sum along axis 0 (column sums)
-'ij->ji'    Transpose
-'ii->i'     Extract diagonal
-'ii->'      Trace (sum of diagonal)
+### Common patterns
+| Subscripts | Meaning | Equivalent |
+|------------|---------|------------|
+| \`'ij->'\` | sum of all entries | \`A.sum()\` |
+| \`'ij->i'\` / \`'ij->j'\` | row sums / column sums | \`A.sum(axis=1)\` / \`A.sum(axis=0)\` |
+| \`'ij->ji'\` | transpose | \`A.T\` |
+| \`'ii->i'\` / \`'ii->'\` | diagonal / trace | \`np.diag(A)\` / \`np.trace(A)\` |
+| \`'i,i->'\` | dot product | \`u @ v\` |
+| \`'i,j->ij'\` | outer product | \`np.outer(u, v)\` |
+| \`'ij,j->i'\` | matrix-vector | \`A @ v\` |
+| \`'ik,kj->ij'\` | matrix multiply | \`A @ B\` |
+| \`'ij,ij->ij'\` / \`'ij,ij->'\` | Hadamard product / Frobenius inner product | \`A * B\` / \`(A * B).sum()\` |
+| \`'bij,bjk->bik'\` | batched matmul | \`A @ B\` on 3D arrays |
+| \`'bqd,bkd->bqk'\` | attention scores, \`(batch, seq_q, d) x (batch, seq_k, d)\` | \`Q @ K.transpose(0, 2, 1)\` |
+| \`'bhqk,bhkd->bhqd'\` | multi-head weighted sum of values | \`A @ V\` on 4D arrays |
+
+## Worked example
+\`\`\`python
+A = np.array([[1, 2],
+              [3, 4]])
+B = np.array([[5, 6],
+              [7, 8]])
+np.einsum('ik,kj->ij', A, B)   # [[19, 22], [43, 50]]   C[0, 0] = 1*5 + 2*7 = 19
+np.einsum('ii->', A)           # 5                      1 + 4
+np.einsum('ij,ij->', A, A)     # 30                     1 + 4 + 9 + 16
+
+Q = np.array([[[1., 0.], [0., 1.]]])               # (batch=1, seq_q=2, d=2)
+K = np.array([[[1., 1.], [2., 0.], [0., 3.]]])     # (batch=1, seq_k=3, d=2)
+np.einsum('bqd,bkd->bqk', Q, K)                    # (1, 2, 3)
+# [[[1., 2., 0.],      query 0 picks feature 0 of each key
+#   [1., 0., 3.]]]     query 1 picks feature 1 of each key
 \`\`\`
 
-### Matrix Operations
-\`\`\`
-'ik,kj->ij'   Matrix multiplication (A @ B)
-'ij,ij->ij'   Element-wise product (A * B)
-'ij,ij->'     Frobenius inner product
-'i,j->ij'     Outer product
-'i,i->'       Dot product
-\`\`\`
+Divide those scores by \`sqrt(d) = 1.414\` and softmax each row, and query 0's attention weights over the three keys are \`[0.284, 0.576, 0.140]\`.
 
-### Batch Operations
-\`\`\`
-'bij,bjk->bik'   Batch matrix multiply
-'bqd,bkd->bqk'   Attention scores (Q @ K.T)
-'bhqk,bhkd->bhqd' Multi-head attention output
-\`\`\`
+## Common pitfalls
+- **A dropped letter is summed, silently**: \`'bij,bjk->ik'\` sums over the batch as well as \`j\`. Check that every axis you want to keep appears after \`->\`.
+- **Output order matters**: \`'ij->ji'\` transposes; \`'bqk'\` versus \`'bkq'\` gives scores of a different layout.
+- **Implicit mode surprises**: without \`->\`, the output letters are sorted alphabetically, so \`np.einsum('ji', A)\` returns \`A.T\`. Always write the arrow.
+- **Repeated letters need equal sizes**: \`'ii->i'\` on a \`(2, 3)\` array raises an error; check for squareness first.
+- **Integer inputs stay integer**: einsum of int arrays returns ints. Convert to float before dividing by \`sqrt(d)\` or taking a softmax.
+- **Many operands can be slow**: \`np.einsum\` doesn't optimise the contraction order by default; pass \`optimize=True\` for three or more operands.
 
-## Key Insight
-Letters that appear on both sides are kept.
-Letters that disappear are summed over (contracted).
+## Interview angle
+- "Write attention with einsum" is common: name the axes, write \`'bqd,bkd->bqk'\` and \`'bqk,bkd->bqd'\`, and state the cost, \`O(batch * seq_q * seq_k * d)\`.
+- Expect to translate between einsum and \`@\`/\`transpose\`/\`sum\` in both directions, and to explain which letters are contracted.
+- Follow-ups: multi-head attention without explicit transposes (\`'bqhd,bkhd->bhqk'\`), a bilinear form \`x^T W y\` as \`'bi,ij,bj->b'\`, and when einsum is slower than a hand-written \`@\`.
 
-Master einsum to write clean, efficient deep learning code!
+## Problems in this section
+1. **Einsum Fundamentals**: sums, transpose and diagonal of one matrix.
+2. **Matrix Operations with Einsum**: matmul, matrix-vector, outer, Hadamard, Frobenius and trace.
+3. **Batch Operations with Einsum**: batched attention scores, softmax weights and the weighted sum of values.
+4. **Multi-Head Attention with Einsum**: split heads, attend per head and merge, without transposes.
+5. **Einsum vs Traditional Operations**: check each einsum against its NumPy equivalent.
+
+The attention problems lead straight into **Scaled Dot-Product Attention** and **Multi-Head Attention** in the Transformers section.
     `,
     problems: ['einsum-basics', 'einsum-matrix-ops', 'einsum-batch-ops', 'einsum-advanced', 'einsum-vs-matmul'],
   },
