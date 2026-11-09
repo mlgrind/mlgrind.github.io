@@ -4132,7 +4132,10 @@ def _F_binary_cross_entropy_with_logits(input, target, weight=None, size_average
     if tgt.shape != x.shape:
         raise ValueError(f"Target size ({tgt.shape}) must be the same as input size ({x.shape})")
     tgt = tgt.to(x.dtype)
-    sp = _F_softplus(-x.abs(), 1.0, 1e30) + clamp(-x, min=0)  # log(1 + exp(-x)) computed stably
+    # log(1 + exp(-x)) computed stably. softplus switches to the identity above
+    # the threshold, so it never overflows, and its gradient (-sigmoid(-x)) is
+    # correct everywhere, including x == 0, where abs/clamp formulations give 0.
+    sp = _F_softplus(-x, 1.0, 20.0)
     if pos_weight is None:
         loss = (1 - tgt) * x + sp
     else:

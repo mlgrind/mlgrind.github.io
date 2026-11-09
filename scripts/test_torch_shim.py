@@ -960,6 +960,11 @@ def functional_ops():
          (U(6), C(np.array([0, 1, 1, 0, 1, 0], dtype=np.float32)))),
         ('F.bce_with_logits', lambda L, x, t: L.nn.functional.binary_cross_entropy_with_logits(x, t),
          (R(6), C(np.array([0, 1, 1, 0, 1, 0], dtype=np.float32)))),
+        # Regression: logits exactly 0 (logistic regression from zero weights) and
+        # extreme logits; the gradient used to vanish at 0.
+        ('F.bce_with_logits at 0 and extremes', lambda L, x, t: L.nn.functional.binary_cross_entropy_with_logits(x, t),
+         (C(np.array([0.0, 0.0, 0.0, 0.0, 100.0, -100.0, 25.0, -25.0], dtype=np.float32), grad=True),
+          C(np.array([0, 1, 0, 1, 1, 0, 0, 1], dtype=np.float32)), 'nofd')),
         ('F.bce_with_logits pos_weight', lambda L, x, t: L.nn.functional.binary_cross_entropy_with_logits(
             x, t, pos_weight=L.tensor([2.0, 0.5, 1.0])), (R(2, 3), C(np.array([[0, 1, 1], [1, 0, 1]], dtype=np.float32)))),
         ('F.kl_div', lambda L, a, b: (L.nn.functional.kl_div(a.log_softmax(-1), b.softmax(-1), reduction='batchmean'),
