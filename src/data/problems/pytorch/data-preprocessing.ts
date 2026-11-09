@@ -7,18 +7,19 @@ import { LanguageVariant } from '../../../types';
  */
 export const dataPreprocessingPyTorch: Record<string, LanguageVariant> = {
   'normalize-features': {
-    note: 'Use tensor reductions (arr.min(), arr.max()) and broadcasting.',
+    note: 'Use tensor reductions (arr.min(), arr.max()) and broadcasting; return all zeros for constant input.',
     starterCode: `import torch
 
 def normalize(arr: torch.Tensor) -> torch.Tensor:
     """
-    Apply min-max normalization to scale values to [0, 1].
+    Min-max scale a 1-D tensor to [0, 1].
 
     Args:
-        arr: Input tensor of numbers
+        arr: 1-D float tensor, shape (n,)
 
     Returns:
-        Normalized tensor with values in [0, 1]
+        Float tensor of shape (n,): (arr - min) / (max - min),
+        or all zeros if every value is the same
     """
     # Your code here
     pass
@@ -27,11 +28,13 @@ def normalize(arr: torch.Tensor) -> torch.Tensor:
 
 def normalize(arr: torch.Tensor) -> torch.Tensor:
     """
-    Apply min-max normalization to scale values to [0, 1].
+    Min-max scale a 1-D tensor to [0, 1] (all zeros for constant input).
     """
-    arr_min = arr.min()
-    arr_max = arr.max()
-    return (arr - arr_min) / (arr_max - arr_min)
+    arr = arr.float()
+    lo, hi = arr.min(), arr.max()      # 0-d tensors broadcast against arr
+    if hi == lo:                       # constant input: avoid 0 / 0
+        return torch.zeros_like(arr)
+    return (arr - lo) / (hi - lo)
 `,
     testCases: [
       {
@@ -62,25 +65,35 @@ def normalize(arr: torch.Tensor) -> torch.Tensor:
         expected: '[0.5, 0.0, 1.0, 0.25]',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Constant input returns zeros',
+        input: 'normalize(torch.tensor([4.0, 4.0, 4.0])).tolist()',
+        expected: '[0.0, 0.0, 0.0]',
+        hidden: true,
+      },
     ],
     hints: [
+      'You need the minimum and the range of the whole tensor before transforming any element.',
       'arr.min() and arr.max() return 0-d tensors that broadcast against arr.',
-      'Apply the formula: (x - min) / (max - min)',
+      '(arr - lo) / (hi - lo), after converting to float with arr.float().',
+      'Guard the constant case: if hi == lo, return torch.zeros_like(arr) instead of dividing by zero.',
     ],
   },
   'handle-missing-data': {
-    note: 'Use torch.isnan and boolean-mask indexing. Clone the input so it is not modified in place.',
+    note: 'Use torch.isnan and a boolean mask; return a new tensor (torch.where, or clone before assigning) so the input is not modified.',
     starterCode: `import torch
 
 def fill_missing_with_mean(arr: torch.Tensor) -> torch.Tensor:
     """
-    Replace NaN values with the mean of non-NaN values.
+    Replace NaN values with the mean of the non-NaN values.
 
     Args:
-        arr: Float tensor that may contain NaN values
+        arr: 1-D float tensor of shape (n,), at least one value not NaN
 
     Returns:
-        Tensor with NaN values replaced by the mean
+        New float tensor of shape (n,) with every NaN replaced by the mean
+        (the input tensor is left unchanged)
     """
     # Your code here
     pass
@@ -89,13 +102,11 @@ def fill_missing_with_mean(arr: torch.Tensor) -> torch.Tensor:
 
 def fill_missing_with_mean(arr: torch.Tensor) -> torch.Tensor:
     """
-    Replace NaN values with the mean of non-NaN values.
+    Replace NaN values with the mean of the non-NaN values (returns a new tensor).
     """
     mask = torch.isnan(arr)
-    mean_val = arr[~mask].mean()
-    out = arr.clone()  # don't modify the original
-    out[mask] = mean_val
-    return out
+    fill = arr[~mask].mean()             # mean of the observed values only
+    return torch.where(mask, fill, arr)  # new tensor; the input is untouched
 `,
     testCases: [
       {
@@ -126,28 +137,36 @@ def fill_missing_with_mean(arr: torch.Tensor) -> torch.Tensor:
         expected: '[1.5, -2.0, 0.5]',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'The input tensor is not modified',
+        input: '(lambda: (a := torch.tensor([1.0, float("nan"), 4.0]), out := fill_missing_with_mean(a), (int(torch.isnan(a).sum().item()), out.tolist()))[-1])()',
+        expected: '(1, [1.0, 2.5, 4.0])',
+        hidden: true,
+      },
     ],
     hints: [
-      'torch.isnan(arr) gives a boolean mask of the missing values.',
-      'arr[~mask].mean() is the mean of the values that are present.',
-      'out[mask] = value assigns through a boolean mask.',
+      'Two steps: compute the fill value from the values that are present, then write it into the gaps.',
+      'torch.isnan(arr) gives a boolean mask of the missing values; reuse it for both steps.',
+      'arr[~mask].mean() is the fill; torch.where(mask, fill, arr) builds the result.',
+      "arr.mean() is NaN if any value is NaN. And don't assign into arr itself: use torch.where or arr.clone() first.",
     ],
   },
   'one-hot-encode': {
-    note: 'F.one_hot is the built-in; indexing torch.eye(num_classes) with the labels also works. Return an integer tensor.',
+    note: 'F.one_hot(labels, num_classes) is the built-in and is fine here; indexing torch.eye(num_classes) also works. Return an integer (int64) tensor.',
     starterCode: `import torch
 import torch.nn.functional as F
 
 def one_hot_encode(labels: torch.Tensor, num_classes: int) -> torch.Tensor:
     """
-    Convert integer labels to one-hot encoded format.
+    Convert integer labels to a one-hot matrix.
 
     Args:
-        labels: 1D int64 tensor of labels
-        num_classes: Total number of classes
+        labels: 1-D int64 tensor of shape (n,), values in [0, num_classes - 1]
+        num_classes: Number of columns in the output
 
     Returns:
-        2D integer tensor of shape (len(labels), num_classes)
+        Int64 tensor of shape (n, num_classes); row i has a 1 in column labels[i]
     """
     # Your code here
     pass
@@ -194,11 +213,19 @@ def one_hot_encode(labels: torch.Tensor, num_classes: int) -> torch.Tensor:
         expected: '[1, 1, 1, 1, 1]',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Unordered labels round-trip through argmax',
+        input: '(lambda: (y := torch.tensor([4, 1, 3, 1, 0]), out := one_hot_encode(y, 6), (tuple(out.shape), out.argmax(dim=1).tolist()))[-1])()',
+        expected: '((5, 6), [4, 1, 3, 1, 0])',
+        hidden: true,
+      },
     ],
     hints: [
-      'F.one_hot(labels, num_classes) does it in one call.',
-      'Or: torch.eye(num_classes)[labels] picks one identity row per label.',
-      'Convert to integers with .long() if you build it from a float tensor.',
+      'Each output row is a row of the identity matrix: which one?',
+      'F.one_hot(labels, num_classes) does it in one call and returns int64.',
+      'Or torch.eye(num_classes)[labels].long() picks one identity row per label.',
+      'Pass num_classes explicitly: without it F.one_hot uses labels.max() + 1, so unseen classes lose their column.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
@@ -292,9 +319,10 @@ def stratified_split(y, val_frac=0.15, test_frac=0.15, seed=0):
       },
     ],
     hints: [
-      'torch.unique(y) is sorted; torch.nonzero(y == c).flatten() gives the indices of class c.',
-      'Shuffle with idx_c[torch.randperm(len(idx_c))] after a single torch.manual_seed(seed).',
-      'Round half up with math.floor(v + 0.5) and finish with torch.sort(torch.cat(parts)).values.',
+      'Treat each class as its own small dataset: decide how many of its samples go to test, val and train, then pick which ones at random.',
+      'Call torch.manual_seed(seed) once, loop over torch.unique(y) (sorted), get the indices with torch.nonzero(y == c).flatten() and shuffle with idx_c[torch.randperm(len(idx_c))].',
+      'Counts: math.floor(n_c * frac + 0.5) for half-up rounding; slice the permutation into test, val, train; finish with torch.sort(torch.cat(parts)).values.',
+      "Pitfalls: Python's round(2.5) == 2 (banker's rounding), and n_test + n_val must never exceed the class size.",
     ],
   },
   'leakage-safe-imputation': {
@@ -353,6 +381,12 @@ def fit_transform_train_test(X_train, X_test, strategy='median'):
         'std': std,
     }
 `,
+    hints: [
+      'Order matters: everything you compute must come from X_train; X_test is only ever transformed.',
+      'Three stages: fill values per column, then mean and std of the imputed training data, then (X - mean) / scale for both splits.',
+      'X_train[~torch.isnan(X_train[:, j]), j] gives the observed values of column j; torch.where(torch.isnan(X), fill, X) imputes; train.std(dim=0, unbiased=False) is the population std.',
+      "Pitfalls: torch.median returns the lower middle value for an even count (sort and average the two middle values instead); std == 0 needs a scale of 1; don't fill NaNs in place.",
+    ],
     testCases: [
       {
         id: '1',

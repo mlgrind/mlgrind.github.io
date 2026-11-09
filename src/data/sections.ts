@@ -375,40 +375,83 @@ Related sections: **Neural Networks** (backprop, batch norm), **Optimization & T
   {
     id: 'data-preprocessing',
     title: 'Data Preprocessing',
-    description: 'Learn essential data cleaning and transformation techniques.',
+    description: 'Scale, impute, encode and split data without leaking the test set into training.',
     icon: '🧹',
     introduction: `
 # Data Preprocessing
 
-Real-world data is messy. Before training any model, you need to clean and transform your data.
+## Why it matters
 
-## Key Concepts
+Every production model sits behind a preprocessing pipeline: missing values are filled, features are scaled, categories are encoded and the data is split before any training happens. Bugs here are silent. The model still trains, but it learns from leaked or distorted data, and the offline score stops predicting what happens in production. Interviewers like this topic because it separates people who have shipped models from people who have only called \`fit\`.
 
-### Handling Missing Data
-- **Detection**: \`np.isnan()\`, \`pd.isnull()\`
-- **Strategies**: Remove, fill with mean/median/mode, interpolate
+## Core ideas
 
-### Feature Scaling
-- **Normalization**: Scale to [0, 1] range using min-max scaling
-- **Standardization**: Transform to zero mean, unit variance (z-score)
-- **When to use**: Most algorithms need scaled features
+Throughout, \`X\` has shape \`(n_samples, n_features)\`; statistics such as a mean or a median are computed **per column** (\`axis=0\`).
 
-### Encoding Categorical Data
-- **One-Hot Encoding**: Convert categories to binary vectors
-- **Label Encoding**: Map categories to integers
-- **When to use**: Tree-based models handle label encoding; others need one-hot
+### Feature scaling
 
-### Splitting the Data
-- **Train / validation / test**: fit on train, tune on validation, report on test once
-- **Stratified split**: split each class separately so every split keeps the class proportions, which matters for rare classes
+Distance-based models (k-NN, k-means, SVMs) and gradient descent are sensitive to the scale of each feature: a feature measured in thousands dominates one measured in fractions.
 
-### Why It Matters
-Garbage in, garbage out. Proper preprocessing can:
-- Improve model accuracy by 10-30%
-- Prevent training failures
-- Reduce overfitting
+| Method | Formula | Result | Sensitive to outliers? |
+|--------|---------|--------|------------------------|
+| Min-max | \`(x - min) / (max - min)\` | values in \`[0, 1]\` | Very: one extreme value sets the range |
+| Standardisation (z-score) | \`(x - mean) / std\` | mean 0, std 1 | Less, but the mean and std still move |
 
-Let's practice these essential skills!
+Tree-based models (decision trees, random forests, gradient boosting) only compare a feature with thresholds, so they don't need scaling.
+
+### Missing values
+
+Detect with \`np.isnan\`. Simple strategies are dropping rows, or filling (imputing) with the column **mean** (fine for symmetric data) or **median** (robust to outliers and skew). Adding a "was missing" indicator column often helps, because missingness itself can carry signal.
+
+### Categorical features
+
+**One-hot encoding** turns a category \`c\` out of \`K\` into a length-\`K\` vector with a single 1 at index \`c\`, so the model doesn't read an order into the labels. **Label encoding** (category to integer) is fine for trees but implies a false order for linear models.
+
+### Splitting the data
+
+Fit on **train**, tune hyperparameters on **validation**, and report on **test** once. A **stratified** split splits each class separately, so a rare class keeps its proportion in every split instead of disappearing from the test set by chance.
+
+### The golden rule: fit on train only
+
+Every statistic (min, max, mean, std, median, the category list) is **learned** from the training split and then **applied** unchanged to validation and test. Computing it on the full dataset leaks test information into training.
+
+## Worked micro-example
+
+One feature with an outlier: \`x = [2, 4, 6, 8, 100]\`.
+
+\`\`\`text
+min-max:  (x - 2) / 98       -> [0.000, 0.020, 0.041, 0.061, 1.000]
+z-score:  mean = 24, std = 38.05
+          (x - 24) / 38.05   -> [-0.578, -0.526, -0.473, -0.420, 1.997]
+\`\`\`
+
+Min-max squashes the four normal values into \`[0, 0.06]\` because the outlier sets the range. Now leakage: with train \`[1, 2, 3, NaN]\` the median fill is \`2.0\`; if you (wrongly) include a test value of \`100\` before imputing, the fill becomes \`2.5\`, so the test set has changed the training data.
+
+## Common pitfalls
+
+- **Train/test leakage**: scaling, imputing or selecting features on the whole dataset before splitting.
+- **Division by zero**: a constant column has \`max - min = 0\` and \`std = 0\`. Decide on a convention (scikit-learn leaves such a column at 0).
+- **\`np.mean\` on NaNs** returns \`nan\`; use \`np.nanmean\` / \`np.nanmedian\` or a mask.
+- **Modifying inputs in place**: \`arr[mask] = v\` changes the caller's array; copy first.
+- **Banker's rounding**: Python's \`round(2.5) == 2\`, which matters when you turn fractions into counts.
+- **Population vs sample std**: NumPy's \`std\` uses \`ddof=0\`, which is also what \`StandardScaler\` uses.
+
+## Interview angle
+
+- "Why must the scaler be fit on train only?" and "How would you catch leakage?" (a validation score that is too good to be true, or a feature that is only available after the label).
+- "Mean or median imputation?" (median for skewed data; mention indicator features).
+- "When does one-hot encoding break down?" (high cardinality: use hashing, target encoding with out-of-fold statistics, or embeddings).
+- "Why stratify?" (rare classes and stable metric estimates). All of these transforms are \`O(n * d)\`.
+
+## Problems in this section
+
+1. **Normalize Features**: min-max scale a 1-D array to \`[0, 1]\`, with a convention for constant input.
+2. **Handle Missing Data**: replace NaNs with the mean of the observed values without touching the input.
+3. **One-Hot Encoding**: turn integer labels into a \`(n, num_classes)\` indicator matrix.
+4. **Stratified Train/Val/Test Split**: reproducible per-class splitting with an explicit rounding rule.
+5. **Leakage-Safe Imputation and Scaling**: fit the imputer and scaler on train only, then transform both splits.
+
+Related: the cross-validation and evaluation problems in **Model Evaluation**, and the distance-based models in **Supervised Learning** and **Unsupervised Learning**, which depend on well-scaled features.
     `,
     problems: ['normalize-features', 'handle-missing-data', 'one-hot-encode', 'stratified-split', 'leakage-safe-imputation'],
   },
@@ -471,95 +514,186 @@ Let's build these algorithms!
   {
     id: 'unsupervised-learning',
     title: 'Unsupervised Learning',
-    description: 'Implement clustering and dimensionality reduction algorithms.',
+    description: 'Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.',
     icon: '🔍',
     introduction: `
 # Unsupervised Learning
 
-Unsupervised learning finds patterns in unlabeled data.
+## Why it matters
 
-## Key Concepts
+Most data has no labels. Unsupervised methods find structure anyway: customer segments, compressed representations, anomalies, or the initial clusters a labelling team starts from. k-means and PCA are among the most frequently asked "implement it from scratch" interview questions, and the ideas behind them (alternating optimisation, EM, eigen-decompositions) come back in deep learning.
 
-### K-Means Clustering
-- **Goal**: Group data into K clusters
-- **Algorithm**:
-  1. Initialize K centroids randomly
-  2. Assign points to nearest centroid
-  3. Update centroids as cluster means
-  4. Repeat until convergence
+## Core ideas
 
-### Principal Component Analysis (PCA)
-- **Goal**: Reduce dimensionality while preserving variance
-- **Steps**:
-  1. Center the data (subtract mean)
-  2. Compute covariance matrix
-  3. Find eigenvectors/eigenvalues
-  4. Project onto top components
+Data is a matrix \`X\` of shape \`(n_samples, n_features)\`; \`k\` (or \`K\`) is the number of clusters or components.
 
-### Gaussian Mixtures & EM
-- **Soft clustering**: each point gets a responsibility for every component
-- **EM**: E-step computes responsibilities (in log space), M-step re-fits weights, means and variances
-- **Guarantee**: the log-likelihood never decreases
+### k-means (Lloyd's algorithm)
+
+Minimise the **inertia** (within-cluster sum of squares) by alternating two steps that each can only lower it:
+
+\`\`\`text
+assign:  label_i = argmin_j ||x_i - c_j||^2
+update:  c_j     = mean of the points with label j
+inertia = sum_i ||x_i - c_{label_i}||^2
+\`\`\`
+
+It converges to a local minimum, so initialisation matters: **k-means++** picks each new centroid with probability proportional to its squared distance from the centroids chosen so far. Distances for all pairs come from broadcasting \`X[:, None, :] - C[None, :, :]\`, shape \`(n, k, d)\`.
+
+### PCA
+
+Find orthogonal directions of maximum variance. **Centre** the data first, then take the eigenvectors of the covariance matrix (or the SVD of the centred data):
+
+\`\`\`text
+Xc  = X - X.mean(axis=0)               # (n, d)
+Cov = Xc.T @ Xc / (n - 1)              # (d, d)
+Cov = V diag(lambda) V^T               # eigenvalues sorted descending
+Z   = Xc @ V[:, :k]                    # (n, k) projection
+explained variance ratio = lambda_i / sum(lambda)
+\`\`\`
+
+Without centring, the first "component" points at the mean of the data instead of the direction of greatest spread.
+
+### Gaussian mixtures and EM
+
+A soft version of k-means: each point gets a **responsibility** for each component. The E-step computes responsibilities (in log space, with logsumexp); the M-step re-fits weights, means and variances from them. The log-likelihood never decreases.
 
 ### DBSCAN
-- **Density-based**: clusters are dense regions; sparse points are labelled noise
-- **Core points** have at least min_samples neighbours within eps; only they grow clusters
-- **No K to choose**, and clusters can have any shape
 
-### Why These Matter
-- **K-Means**: Customer segmentation, image compression
-- **PCA**: Feature reduction, visualization, noise removal
-- **GMM / DBSCAN**: Density estimation, anomaly detection, non-spherical clusters
+Density-based: a **core point** has at least \`min_samples\` points (itself included) within \`eps\`. Clusters grow from core points; points not reachable from any core point are **noise** (\`-1\`). No \`k\` to choose, and clusters can have any shape.
 
-### Interview Tips
-- Be ready to implement K-means from scratch
-- Explain variance explained by components
-- Discuss limitations (K-means assumes spherical clusters)
+| Method | Cluster shape | Needs \`k\`? | Soft? | Handles noise? |
+|--------|---------------|------------|-------|----------------|
+| k-means | spherical, similar size | yes | no | no |
+| GMM | ellipsoidal | yes | yes | partly (low likelihood) |
+| DBSCAN | arbitrary | no (\`eps\`, \`min_samples\`) | no | yes |
 
-Let's implement these algorithms!
+## Worked micro-example
+
+k-means on 1-D points \`[1, 2, 3, 10, 11, 12]\` with initial centroids \`[1, 2]\`:
+
+\`\`\`text
+iter 1  assign: 1 -> c0;  2, 3, 10, 11, 12 -> c1     update: c = [1.0, 7.6]
+iter 2  assign: 1, 2, 3 -> c0;  10, 11, 12 -> c1      update: c = [2.0, 11.0]
+iter 3  labels unchanged -> stop.  inertia = (1 + 0 + 1) + (1 + 0 + 1) = 4
+\`\`\`
+
+PCA on \`X = [[1, 2], [2, 1], [3, 4], [4, 3]]\`: the mean is \`[2.5, 2.5]\`, the covariance is \`[[1.667, 1], [1, 1.667]]\`, with eigenvalues \`2.667\` and \`0.667\`. The first component \`[1, 1] / sqrt(2)\` explains \`2.667 / 3.333 = 80%\` of the variance.
+
+## Common pitfalls
+
+- **Unscaled features**: every method here uses distances or variances, so a feature in large units dominates. Standardise first.
+- **Forgetting to centre** before PCA, or centring the test set with its own mean instead of the training mean.
+- **Empty clusters** in k-means: a centroid that wins no points has no mean; you need a rule (re-seed it on a far point).
+- **Underflow in EM**: products of Gaussian densities hit \`0.0\`; work with log-densities and logsumexp.
+- **Ties**: \`argmin\` returns the first minimum, so state the tie-breaking rule and keep it.
+- **Memory**: the \`(n, k, d)\` broadcast is fine for small data; for large \`n\` use \`||x||^2 - 2 x.c + ||c||^2\`.
+
+## Interview angle
+
+- Implement k-means in 15 minutes, vectorised; each iteration costs \`O(n * k * d)\`.
+- "How do you choose \`k\`?" (elbow on inertia, silhouette score, BIC for GMMs) and "Why can k-means fail?" (non-spherical clusters, different densities, outliers, bad initialisation).
+- PCA: eigen-decomposition vs SVD (SVD is more stable and avoids forming \`X^T X\`), the cost \`O(n d^2 + d^3)\`, and what "explained variance" means.
+- k-means as a special case of EM with hard assignments and equal spherical variances.
+- DBSCAN: how to choose \`eps\` (the k-distance plot) and why it struggles with clusters of different densities.
+
+## Problems in this section
+
+1. **K-Means: Assign to Nearest Centroid**: the vectorised assignment step.
+2. **PCA Step 1: Center the Data**: subtract the column means, the first step of PCA.
+3. **Gaussian Mixture Model (EM)**: a log-space E-step and the full EM loop for a 1-D mixture.
+4. **DBSCAN Clustering**: core points, border points and noise, matching scikit-learn's labels.
+5. **K-Means from Scratch**: k-means++ seeding, Lloyd iterations, a convergence test and empty-cluster handling.
+
+Related: **Data Preprocessing** (scale features before clustering), and the k-NN classifier in **Supervised Learning**, which uses the same distance computations.
     `,
     problems: ['kmeans-clustering', 'pca-implementation', 'gmm-em', 'dbscan', 'kmeans-full'],
   },
   {
     id: 'model-evaluation',
     title: 'Model Evaluation',
-    description: 'Learn metrics and techniques to evaluate ML models properly.',
+    description: 'Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right.',
     icon: '📈',
     introduction: `
 # Model Evaluation
 
-Building a model is only half the job. You need to evaluate it properly.
+## Why it matters
 
-## Key Concepts
+A model is only as good as the number you use to judge it. Choosing the wrong metric (accuracy on a 1%-positive fraud dataset), the wrong threshold, or a leaky validation scheme ships models that look great offline and fail in production. Interviewers probe this constantly: "Which metric would you use, and why?" is part of almost every ML system design round.
 
-### Classification Metrics
-- **Accuracy**: Correct / Total (can be misleading!)
-- **Precision**: TP / (TP + FP) - "Of positive predictions, how many correct?"
-- **Recall**: TP / (TP + FN) - "Of actual positives, how many found?"
-- **F1 Score**: Harmonic mean of precision and recall
+## Core ideas
 
-### Regression Metrics
-- **MSE**: Mean Squared Error
-- **RMSE**: Root MSE (same units as target)
-- **MAE**: Mean Absolute Error (robust to outliers)
-- **R²**: Proportion of variance explained
+### The confusion matrix
 
-### Cross-Validation
-- **Why**: Single train/test split is unreliable
-- **K-Fold**: Split data into K parts, rotate test set
-- **Stratified**: Maintain class distribution in folds
+For binary labels (positive = 1), every prediction falls into one cell:
 
-### Ranking & Calibration
-- **ROC curve**: TPR vs FPR over every score threshold; tied scores form one diagonal step
-- **AUC**: probability a random positive outscores a random negative (ties count half)
-- **Calibration**: do 80%-confidence predictions come true 80% of the time? **ECE** averages the gap over confidence bins
+| | Predicted 1 | Predicted 0 |
+|---|---|---|
+| **Actual 1** | TP (true positive) | FN (false negative) |
+| **Actual 0** | FP (false positive) | TN (true negative) |
 
-### Interview Essentials
-- Know when to use each metric
-- Implement cross-validation from scratch
-- Discuss precision-recall trade-offs
+\`\`\`text
+accuracy  = (TP + TN) / n               # the diagonal over the total
+precision = TP / (TP + FP)              # of the predicted positives, how many are right?
+recall    = TP / (TP + FN)              # of the actual positives, how many did we find? (= TPR)
+F1        = 2 * P * R / (P + R) = 2TP / (2TP + FP + FN)
+FPR       = FP / (FP + TN)
+\`\`\`
 
-Let's practice evaluation!
+### Thresholds, ROC and PR curves
+
+Most classifiers output a score; a threshold \`t\` turns it into a label (\`score >= t\`). Sweeping \`t\` over every distinct score traces:
+
+- the **ROC curve** (FPR on x, TPR on y). Its area, **AUC**, is the probability that a random positive scores higher than a random negative (ties count one half). It ignores the class balance.
+- the **precision-recall curve**, which focuses on the positive class and is more informative when positives are rare.
+
+### Calibration
+
+A model is calibrated if its 0.8-confidence predictions are right 80% of the time. **Expected calibration error (ECE)** bins predictions by confidence and averages \`|accuracy - confidence|\`, weighted by bin size. A model can rank perfectly (AUC 1) and still be badly calibrated.
+
+### Cross-validation
+
+A single split gives a noisy estimate. **K-fold** cross-validation splits the data into \`k\` folds, trains on \`k - 1\` and validates on the remaining one, rotating so that every sample is validated exactly once, and averages the \`k\` scores. Use stratified folds for imbalanced classes and grouped folds when rows from one user or session are correlated.
+
+## Worked micro-example
+
+Ten samples with 4 positives; the model predicts 5 positives, 3 of them correct: \`TP = 3, FN = 1, FP = 2, TN = 4\`.
+
+\`\`\`text
+accuracy  = (3 + 4) / 10        = 0.70
+precision = 3 / (3 + 2)         = 0.60
+recall    = 3 / (3 + 1)         = 0.75
+F1        = 6 / (6 + 2 + 1)     = 0.6667
+\`\`\`
+
+Ranking: with labels \`[0, 0, 1, 1]\` and scores \`[0.1, 0.4, 0.35, 0.8]\` there are \`2 x 2 = 4\` positive/negative pairs. Three are ordered correctly (\`0.8 > 0.1\`, \`0.8 > 0.4\`, \`0.35 > 0.1\`) and one is not (\`0.35 < 0.4\`), so AUC = \`3 / 4 = 0.75\`.
+
+## Common pitfalls
+
+- **Accuracy on imbalanced data**: always predicting the majority class gets 99% when positives are 1%.
+- **Zero division**: precision is undefined with no predicted positives and recall with no actual positives; pick a convention (scikit-learn's \`zero_division\` parameter defaults to returning 0 with a warning) and state it.
+- **Ties in scores**: tied scores must cross a threshold together; sorting and breaking ties by index changes the AUC.
+- **Tuning the threshold on the test set**: choose it on validation data, then report on test.
+- **Leakage across folds**: preprocessing fitted before splitting, or the same user in train and validation folds.
+- **Threshold-dependent vs ranking metrics**: F1 changes with the threshold, AUC doesn't.
+
+## Interview angle
+
+- "Precision or recall?" Depends on the costs: spam filtering favours precision, cancer screening favours recall. Know F-beta.
+- "ROC-AUC or PR-AUC for a 0.1%-positive problem?" PR-AUC: ROC-AUC can look excellent while precision is tiny.
+- "Explain AUC to a product manager", and why it is equivalent to the Mann-Whitney U statistic. Sorting makes it \`O(n log n)\`.
+- "How do you pick the operating threshold?" (maximise F1 or expected value on validation data, or meet a precision/recall constraint).
+- "Your model says 90% confident: can you trust that?" (calibration, temperature scaling, Platt scaling).
+
+## Problems in this section
+
+1. **Precision and Recall**: count TP, FP and FN, the building blocks of F1, with a zero-division convention.
+2. **K-Fold Cross-Validation Indices**: generate contiguous train/validation index folds like \`KFold(shuffle=False)\`.
+3. **Accuracy from the Confusion Matrix**: the fraction of correct predictions, binary or multi-class.
+4. **ROC Curve & AUC (with Ties)**: the full ROC curve over distinct thresholds and the trapezoidal AUC, matching \`roc_auc_score\`.
+5. **Expected Calibration Error**: equal-width confidence bins with a precise edge convention.
+6. **Precision-Recall Curve and Best-F1 Threshold**: precision, recall and F1 at every threshold, and the best operating point.
+
+Related: the stratified split and leakage-safe preprocessing in **Data Preprocessing**, and the classifiers in **Supervised Learning** whose scores these metrics evaluate.
     `,
     problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece', 'pr-curve-thresholds'],
   },

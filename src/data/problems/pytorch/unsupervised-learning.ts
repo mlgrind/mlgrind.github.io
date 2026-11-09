@@ -7,19 +7,20 @@ import { LanguageVariant } from '../../../types';
  */
 export const unsupervisedLearningPyTorch: Record<string, LanguageVariant> = {
   'kmeans-clustering': {
-    note: 'Broadcast with unsqueeze to get all point-centroid differences at once, then take the norm over the feature dim and argmin over centroids.',
+    note: 'Practise the broadcasting pattern (unsqueeze, then reduce over the feature dim); torch.cdist would hide it. Return the int64 result of argmin.',
     starterCode: `import torch
 
 def assign_clusters(X: torch.Tensor, centroids: torch.Tensor) -> torch.Tensor:
     """
-    Assign each point to its nearest centroid.
+    Assign each point to its nearest centroid (Euclidean distance).
 
     Args:
-        X: Float data points of shape (n_samples, n_features)
-        centroids: Float cluster centers of shape (k, n_features)
+        X: Float data points, shape (n_samples, n_features)
+        centroids: Float cluster centres, shape (k, n_features)
 
     Returns:
-        int64 tensor of cluster assignments (shape: n_samples)
+        int64 tensor of shape (n_samples,) with values in 0..k-1
+        (ties go to the lowest centroid index)
     """
     # Your code here
     pass
@@ -75,24 +76,25 @@ def assign_clusters(X: torch.Tensor, centroids: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'X.unsqueeze(1) has shape (n, 1, d); centroids.unsqueeze(0) has shape (1, k, d).',
-      'diffs.norm(dim=2) gives the (n, k) Euclidean distances.',
-      'distances.argmin(dim=1) picks the closest centroid.',
+      'You need an (n, k) table of point-to-centroid distances, then the smallest entry in each row.',
+      'X.unsqueeze(1) has shape (n, 1, d) and centroids.unsqueeze(0) has shape (1, k, d); their difference broadcasts to (n, k, d).',
+      'diffs.norm(dim=2) (or (diffs ** 2).sum(dim=2)) gives the distances; .argmin(dim=1) picks the closest centroid.',
+      'Reduce over the feature dim (dim=2), not the centroid dim; argmin already returns the first index on ties.',
     ],
   },
   'pca-implementation': {
-    note: 'Use X.mean(dim=0) and broadcasting.',
+    note: "Use X.mean(dim=0) and broadcasting. Don't use torch.pca_lowrank or a library PCA: this step is only the centring.",
     starterCode: `import torch
 
 def center_data(X: torch.Tensor) -> torch.Tensor:
     """
-    Center the data by subtracting the mean of each feature.
+    Center the data by subtracting the mean of each feature (column).
 
     Args:
         X: Float data matrix of shape (n_samples, n_features)
 
     Returns:
-        Centered data matrix of same shape
+        Float tensor of the same shape whose columns have mean 0
     """
     # Your code here
     pass
@@ -135,10 +137,19 @@ def center_data(X: torch.Tensor) -> torch.Tensor:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Values on a 4x3 matrix',
+        input: '(lambda: (X := torch.tensor([[1.0, 4.0, -2.0], [3.0, 0.0, 5.0], [8.0, 2.0, 1.0], [0.0, 6.0, 0.0]]), center_data(X).tolist())[-1])()',
+        expected: '[[-2.0, 1.0, -3.0], [0.0, -3.0, 4.0], [5.0, -1.0, 0.0], [-3.0, 3.0, -1.0]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'X.mean(dim=0) gives the mean of each column.',
-      'Subtract it from X; broadcasting handles the rows.',
+      'Each feature (column) gets its own mean. Which dim do you average over?',
+      'X.mean(dim=0) has shape (n_features,).',
+      'X - X.mean(dim=0) broadcasts the mean over the rows and returns a new tensor.',
+      'dim=1 (row means) or a global X.mean() gives the wrong answer.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
@@ -247,9 +258,10 @@ def gmm_em(x, means, variances, weights, n_iters=10, reg_covar=1e-6):
       },
     ],
     hints: [
-      'x.unsqueeze(1) has shape (n, 1) and broadcasts against (K,) parameters.',
-      'log_px = torch.logsumexp(log_joint, dim=1, keepdim=True); resp = torch.exp(log_joint - log_px).',
-      'M-step: Nk = resp.sum(0), then weights, means, and variances (with the new means) + reg_covar.',
+      'Think of the E-step as Bayes rule per point: prior weight times likelihood, normalised over components. Do it with logs.',
+      'x.unsqueeze(1) has shape (n, 1) and broadcasts against the (K,) parameters to give the (n, K) log-joint table.',
+      'log_px = torch.logsumexp(log_joint, dim=1, keepdim=True); resp = torch.exp(log_joint - log_px); return log_px.sum().item().',
+      'M-step: Nk = resp.sum(0), then weights, means, and variances computed with the NEW means, plus reg_covar. Record the log-likelihood before updating.',
     ],
   },
   'dbscan': {
@@ -349,13 +361,14 @@ def dbscan(X, eps, min_samples):
       },
     ],
     hints: [
-      'adj = distances <= eps gives the boolean neighbourhood matrix (diagonal included).',
-      'is_core = adj.sum(dim=1) >= min_samples',
-      'Convert neighbour lists to Python lists with .tolist() and run the queue-based expansion in plain Python.',
+      'Split the work in two: decide which points are core (a function of the distances only), then grow clusters outward from core points.',
+      'adj = distances <= eps gives the boolean neighbourhood matrix (diagonal included); is_core = adj.sum(dim=1) >= min_samples.',
+      'Convert each row of adj to a Python list of indices (torch.nonzero(adj[i]).flatten().tolist()) and run the queue-based expansion in plain Python.',
+      'Pitfalls: a point is its own neighbour, use <= eps, only core points expand a cluster, and never relabel a point another cluster already claimed.',
     ],
   },
   'kmeans-full': {
-    note: "Use broadcasting for distances (torch.cdist isn't supported in the browser). The k-means++ draws come from np.random.default_rng(seed) in both tracks, so results match the NumPy track.",
+    note: "Use broadcasting (or torch.cdist) for the distances. The k-means++ draws come from np.random.default_rng(seed) in both tracks, so results match the NumPy track. Don't use sklearn.",
     starterCode: `import numpy as np
 import torch
 
@@ -451,6 +464,12 @@ def kmeans(X, k, init='k-means++', max_iter=100, tol=1e-4, seed=0):
     inertia = d2[torch.arange(n), labels].sum().item()
     return {'centroids': C, 'labels': labels, 'inertia': inertia, 'n_iter': n_iter}
 `,
+    hints: [
+      'Structure: initial centroids, then a loop of assign -> update -> fix empty clusters -> check convergence, then one final assignment for the returned labels and inertia.',
+      '((X.unsqueeze(1) - C.unsqueeze(0)) ** 2).sum(dim=-1) is the (n, k) squared-distance table; .argmin(dim=1) assigns and .min(dim=1).values gives the k-means++ D2.',
+      'k-means++ draw: cdf = torch.cumsum(d2, dim=0); int((cdf <= u * cdf[-1]).sum()) is the first index whose cumulative weight exceeds u * cdf[-1].',
+      'Pitfalls: draw exactly one u per centroid from a single NumPy generator, compute the centroid shift before overwriting C, and use each point at most once for empty clusters.',
+    ],
     testCases: [
       {
         id: '1',
