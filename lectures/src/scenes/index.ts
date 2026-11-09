@@ -5,6 +5,7 @@ import { TransformersScenes } from './transformers';
 import { LlmGenerationScenes } from './llm-generation';
 import { LlmInternalsScenes } from './llm-internals';
 import { RepresentationLearningScenes } from './representation-learning';
+import { GenerativeModelsScenes } from './generative-models';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -27,4 +28,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   'llm-generation': LlmGenerationScenes,
   'llm-internals': LlmInternalsScenes,
   'representation-learning': RepresentationLearningScenes,
+  'generative-models': GenerativeModelsScenes,
 };
