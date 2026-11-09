@@ -81,24 +81,30 @@ export default function SectionPage() {
 
       {/* Introduction */}
       <div className="bg-white dark:bg-dark-800 rounded-xl p-6 mb-8 border border-gray-200 dark:border-dark-500">
-        <button
-          onClick={toggleIntro}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-dark-100">Introduction</h2>
-          <svg
-            className={`w-5 h-5 text-gray-500 dark:text-dark-200 transition-transform duration-200 ${
-              isIntroCollapsed ? '' : 'rotate-180'
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-dark-100">
+          <button
+            type="button"
+            onClick={toggleIntro}
+            aria-expanded={!isIntroCollapsed}
+            aria-controls="section-intro"
+            className="w-full flex items-center justify-between text-left rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+            Introduction
+            <svg
+              className={`w-5 h-5 text-gray-500 dark:text-dark-200 transition-transform duration-200 ${
+                isIntroCollapsed ? '' : 'rotate-180'
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </h2>
         {!isIntroCollapsed && (
-          <div className="prose prose-sm max-w-none mt-4">
+          <div id="section-intro" className="prose prose-sm max-w-none mt-4">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{

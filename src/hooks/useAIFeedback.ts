@@ -53,15 +53,23 @@ export function useAIFeedback(): UseAIFeedbackReturn {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get feedback');
+        throw new Error(data.error || 'AI feedback is unavailable right now. Please try again later.');
       }
 
       setFeedback(data.feedback);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get AI feedback');
+      // fetch rejects with a bare TypeError ("Failed to fetch") when the
+      // service can't be reached; say so in plain words.
+      setError(
+        err instanceof TypeError
+          ? "Couldn't reach the AI feedback service. Check your connection and try again."
+          : err instanceof Error
+            ? err.message
+            : 'Failed to get AI feedback',
+      );
     } finally {
       setIsLoading(false);
     }

@@ -66,7 +66,6 @@ export default function ScratchpadPage() {
         keywords="Python playground, online Python, NumPy, code sandbox, ML practice, browser Python"
       />
       {error && <div role="alert" className="p-3 text-red-600">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
-      {isRunning && <button onClick={() => stop()} className="p-3 bg-red-600 text-white">Stop execution (30-second limit)</button>}
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
         <div className="flex items-center gap-3">
@@ -77,7 +76,7 @@ export default function ScratchpadPage() {
             Home
           </Link>
           <span className="text-gray-300 dark:text-dark-500">/</span>
-          <span className="text-gray-900 dark:text-dark-100 font-medium">Python Scratchpad</span>
+          <h1 className="text-base text-gray-900 dark:text-dark-100 font-medium">Python Scratchpad</h1>
         </div>
 
         <div className="flex items-center gap-3">
@@ -99,29 +98,40 @@ export default function ScratchpadPage() {
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden bg-white dark:bg-dark-800">
         {/* Action Bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleRunCode}
               disabled={!isReady || isRunning}
-              className="px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isRunning ? 'Running...' : 'Run Code'}
             </button>
+            {isRunning && (
+              <button
+                type="button"
+                onClick={() => stop()}
+                aria-label="Stop execution"
+                title="Stop execution (runs stop automatically after 30 seconds)"
+                className="whitespace-nowrap px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Stop
+              </button>
+            )}
             <button
               onClick={handleReset}
-              className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
+              className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
               Reset
             </button>
             <button
               onClick={clearOutput}
-              className="px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
+              className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
               Clear Output
             </button>
           </div>
-          <span className="text-gray-400 dark:text-dark-300 text-sm">Code is auto-saved</span>
+          <span className="hidden sm:inline text-gray-500 dark:text-dark-300 text-sm">Code is auto-saved</span>
         </div>
 
         {/* Editor and Console */}
