@@ -5,6 +5,7 @@ import { TransformersScenes } from './transformers';
 import { NumpyFundamentalsScenes } from './numpy-fundamentals';
 import { PythonBasicsScenes } from './python-basics';
 import { EinsumScenes } from './einsum';
+import { PytorchBasicsScenes } from './pytorch-basics';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -27,4 +28,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   'numpy-fundamentals': NumpyFundamentalsScenes,
   'python-basics': PythonBasicsScenes,
   einsum: EinsumScenes,
+  'pytorch-basics': PytorchBasicsScenes,
 };
