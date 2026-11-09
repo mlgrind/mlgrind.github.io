@@ -2,8 +2,9 @@ import type React from 'react';
 import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
-import { PostTrainingScenes } from './post-training';
 import { ReinforcementLearningScenes } from './reinforcement-learning';
+import { PostTrainingScenes } from './post-training';
+import { E2EScenes } from './e2e-implementations';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -23,6 +24,7 @@ export type SceneComponent = React.FC<SceneProps>;
  */
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
-  'post-training': PostTrainingScenes,
   'reinforcement-learning': ReinforcementLearningScenes,
+  'post-training': PostTrainingScenes,
+  'e2e-implementations': E2EScenes,
 };
