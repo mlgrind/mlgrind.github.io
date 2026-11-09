@@ -7,19 +7,19 @@ import { LanguageVariant } from '../../../types';
  */
 export const reinforcementLearningPyTorch: Record<string, LanguageVariant> = {
   'rl-discounted-return': {
-    note: 'Vectorize with torch.arange: no Python loop needed. Inputs are tensors; return a Python float.',
+    note: 'Vectorize with torch.arange (no Python loop needed). Inputs are tensors; return a Python float rounded to 3 decimals.',
     starterCode: `import torch
 
 def discounted_return(rewards: torch.Tensor, gamma: float) -> float:
     """
-    Calculate the discounted cumulative return.
+    Calculate the discounted return G_0.
 
     Args:
-        rewards: Tensor of rewards [r_0, r_1, ..., r_T]
-        gamma: Discount factor (0 <= gamma <= 1)
+        rewards: (T,) tensor of rewards [r_0, r_1, ..., r_{T-1}]
+        gamma: discount factor in [0, 1]
 
     Returns:
-        Total discounted return G_0 as a Python float (rounded to 3 decimals)
+        G_0 = sum_k gamma**k * r_k as a Python float, rounded to 3 decimals
     """
     rewards = rewards.double()
     # Your code here
@@ -31,11 +31,13 @@ def discounted_return(rewards: torch.Tensor, gamma: float) -> float:
     rewards = rewards.double()
     T = rewards.shape[0]
 
-    # Discount factors: [gamma^0, gamma^1, gamma^2, ...]
+    # Discount weights [gamma^0, gamma^1, ..., gamma^(T-1)]
     discounts = gamma ** torch.arange(T, dtype=torch.float64)
 
     G = (rewards * discounts).sum()
     return round(G.item(), 3)
+
+# Time O(T), space O(T)
 `,
     testCases: [
       {
@@ -54,14 +56,14 @@ def discounted_return(rewards: torch.Tensor, gamma: float) -> float:
       },
       {
         id: '3',
-        description: 'No discount',
+        description: 'No discount (gamma = 1) is the plain sum',
         input: 'discounted_return(torch.tensor([1.0, 2.0, 3.0, 4.0]), 1.0)',
         expected: '10.0',
         hidden: false,
       },
       {
         id: '4',
-        description: 'Only immediate',
+        description: 'gamma = 0 keeps only the immediate reward',
         input: 'discounted_return(torch.tensor([5.0, 10.0, 15.0]), 0.0)',
         expected: '5.0',
         hidden: true,
@@ -75,25 +77,26 @@ def discounted_return(rewards: torch.Tensor, gamma: float) -> float:
       },
     ],
     hints: [
-      'gamma ** torch.arange(T, dtype=torch.float64) gives [γ⁰, γ¹, γ², ...]',
-      'Multiply element-wise with rewards and .sum()',
-      'Return round(G.item(), 3)',
+      'Each reward is weighted by gamma raised to how many steps in the future it arrives.',
+      'Build one weight per timestep, multiply element-wise with the rewards, and sum.',
+      'gamma ** torch.arange(T, dtype=torch.float64) gives [γ⁰, γ¹, ...]; then (rewards * discounts).sum().item().',
+      'The first reward has exponent 0, and return a Python float (use .item()), rounded to 3 decimals.',
     ],
   },
 
   'rl-epsilon-greedy': {
-    note: 'Use torch.argmax for the greedy action and return a Python int.',
+    note: 'Use torch.argmax for the greedy action and return a Python int (not a 0-d tensor).',
     starterCode: `import torch
 
 def epsilon_greedy(q_values: torch.Tensor, epsilon: float,
                    random_value: float) -> int:
     """
-    Select action using epsilon-greedy policy.
+    Select an action with the epsilon-greedy policy.
 
     Args:
-        q_values: Q-values for each action [Q(a_0), Q(a_1), ...] (tensor)
-        epsilon: Exploration probability (0 <= epsilon <= 1)
-        random_value: Pre-generated random number for deterministic testing
+        q_values: (n_actions,) tensor of Q-values
+        epsilon: exploration probability in [0, 1]
+        random_value: pre-drawn uniform number in [0, 1), for deterministic tests
 
     Returns:
         Selected action index (Python int)
@@ -101,8 +104,6 @@ def epsilon_greedy(q_values: torch.Tensor, epsilon: float,
     n_actions = q_values.shape[0]
 
     # Your code here
-    # If random_value < epsilon: explore (return floor(random_value * n_actions))
-    # Else: exploit (return argmax of q_values)
     pass
 `,
     solution: `import torch
@@ -112,7 +113,7 @@ def epsilon_greedy(q_values: torch.Tensor, epsilon: float,
     n_actions = q_values.shape[0]
 
     if random_value < epsilon:
-        # Explore: random action
+        # Explore: map the uniform draw to an action index
         return int(random_value * n_actions)
     # Exploit: greedy action
     return int(torch.argmax(q_values).item())
@@ -134,14 +135,14 @@ def epsilon_greedy(q_values: torch.Tensor, epsilon: float,
       },
       {
         id: '3',
-        description: 'Always exploit (epsilon=0)',
+        description: 'Always exploit (epsilon = 0)',
         input: 'epsilon_greedy(torch.tensor([5.0, 2.0, 8.0, 1.0]), 0.0, 0.99)',
         expected: '2',
         hidden: false,
       },
       {
         id: '4',
-        description: 'Explore with low random',
+        description: 'Explore with a low random value',
         input: 'epsilon_greedy(torch.tensor([1.0, 2.0, 3.0, 4.0]), 0.5, 0.2)',
         expected: '0',
         hidden: true,
@@ -153,30 +154,38 @@ def epsilon_greedy(q_values: torch.Tensor, epsilon: float,
         expected: '3',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'random_value == epsilon exploits',
+        input: 'epsilon_greedy(torch.tensor([2.0, 5.0, 1.0]), 0.4, 0.4)',
+        expected: '1',
+        hidden: true,
+      },
     ],
     hints: [
-      'Compare random_value to epsilon to decide explore vs exploit',
-      'For exploration, compute int(random_value * n_actions)',
-      'For exploitation, use int(torch.argmax(q_values))',
+      'There are only two branches: explore or exploit. What decides which one runs?',
+      'Compare random_value with epsilon first, then compute the action for that branch.',
+      'Explore: int(random_value * n_actions). Exploit: int(torch.argmax(q_values).item()).',
+      'Return a plain int, not a tensor, and use a strict < so random_value == epsilon exploits.',
     ],
   },
 
   'rl-bellman-value': {
-    note: 'Gather V(s\') with tensor indexing and take the probability-weighted sum. Return a Python float.',
+    note: "Gather V(s') with tensor indexing (next_values[next_states]) and take the probability-weighted sum. Return a Python float rounded to 2 decimals.",
     starterCode: `import torch
 
 def bellman_value(transitions: list, gamma: float,
                   next_values: torch.Tensor) -> float:
     """
-    Compute state value using Bellman expectation equation.
+    Compute V(s) with the Bellman expectation equation.
 
     Args:
-        transitions: List of (probability, reward, next_state_index) tuples
-        gamma: Discount factor
-        next_values: Tensor of values V(s') for each state
+        transitions: list of (probability, reward, next_state_index) tuples
+        gamma: discount factor
+        next_values: (n_states,) tensor of current estimates V(s')
 
     Returns:
-        Value V(s) for the current state (Python float, rounded to 2 decimals)
+        V(s) = sum_i p_i * (r_i + gamma * V[s'_i]) as a Python float, rounded to 2 decimals
     """
     next_values = next_values.double()
     # Your code here
@@ -192,7 +201,7 @@ def bellman_value(transitions: list, gamma: float,
     rewards = torch.tensor([float(r) for _, r, _ in transitions], dtype=torch.float64)
     next_states = torch.tensor([s for _, _, s in transitions])
 
-    # V(s) = sum_s' P(s'|s) * [R + gamma * V(s')]
+    # V(s) = sum_i p_i * (r_i + gamma * V(s'_i))
     value = (probs * (rewards + gamma * next_values[next_states])).sum()
     return round(value.item(), 2)
 `,
@@ -220,21 +229,29 @@ def bellman_value(transitions: list, gamma: float,
       },
       {
         id: '4',
-        description: 'Repeated next state',
+        description: 'Repeated next state with different rewards',
         input: 'bellman_value([(0.25, 4, 1), (0.75, -1, 1)], 0.5, torch.tensor([100.0, 2.0]))',
         expected: '1.25',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'gamma = 0 gives the expected immediate reward',
+        input: 'bellman_value([(0.5, 3, 0), (0.5, 7, 1)], 0.0, torch.tensor([100.0, 200.0]))',
+        expected: '5.0',
+        hidden: true,
+      },
     ],
     hints: [
-      'Build tensors of probabilities, rewards and next-state indices from the transitions',
-      'next_values[next_states] gathers V(s\') for every transition',
-      'Return round((probs * (rewards + gamma * v_next)).sum().item(), 2)',
+      'V(s) is an expectation: a probability-weighted average over the possible outcomes.',
+      'Turn the list of tuples into three tensors: probabilities, rewards and next-state indices.',
+      'next_values[next_states] gathers V(s\') for every outcome; then (probs * (rewards + gamma * v_next)).sum().item().',
+      'Discount only V(s\'), not the reward, and keep the index tensor an integer dtype so it can index.',
     ],
   },
 
   'rl-q-learning-update': {
-    note: "Index the Q-table tensor directly. Don't modify the input: work on Q.clone(). Return the updated Q-table tensor.",
+    note: "Index the Q-table tensor directly. Don't modify the input: work on Q.clone(). Return the updated tensor; tests compare with a tolerance, so rounding is optional here.",
     starterCode: `import torch
 
 def q_learning_update(Q: torch.Tensor, state: int, action: int,
@@ -244,16 +261,16 @@ def q_learning_update(Q: torch.Tensor, state: int, action: int,
     Perform one Q-learning update.
 
     Args:
-        Q: Q-table tensor of shape (n_states, n_actions)
-        state: Current state index
-        action: Action taken
-        reward: Reward received
-        next_state: Next state index
-        alpha: Learning rate
-        gamma: Discount factor
+        Q: (n_states, n_actions) Q-table tensor
+        state: current state index s
+        action: action taken a
+        reward: reward received r
+        next_state: next state index s'
+        alpha: learning rate
+        gamma: discount factor
 
     Returns:
-        Updated Q-table (new tensor; the input is left unchanged)
+        Updated (n_states, n_actions) Q-table (a new tensor; the input is unchanged)
     """
     Q = Q.clone().float()
     # Your code here
@@ -264,9 +281,9 @@ def q_learning_update(Q: torch.Tensor, state: int, action: int,
 def q_learning_update(Q: torch.Tensor, state: int, action: int,
                       reward: float, next_state: int,
                       alpha: float, gamma: float) -> torch.Tensor:
-    Q = Q.clone().float()
+    Q = Q.clone().float()  # never mutate the caller's table
 
-    # Bellman optimality target uses the best next action
+    # Bellman optimality target: bootstrap from the best next action (off-policy)
     td_target = reward + gamma * Q[next_state].max()
     td_error = td_target - Q[state, action]
     Q[state, action] += alpha * td_error
@@ -296,7 +313,7 @@ def q_learning_update(Q: torch.Tensor, state: int, action: int,
       },
       {
         id: '4',
-        description: 'Terminal state (no future)',
+        description: 'Terminal transition modelled with gamma = 0',
         input: 'bool(torch.allclose(q_learning_update(torch.zeros(2, 2), 0, 0, 10.0, 1, 1.0, 0.0), torch.tensor([[10.0, 0.0], [0.0, 0.0]])))',
         expected: 'True',
         hidden: true,
@@ -308,16 +325,24 @@ def q_learning_update(Q: torch.Tensor, state: int, action: int,
         expected: '[[0.0, 0.0], [0.0, 0.0]]',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Max over a next row of negative values',
+        input: 'round(q_learning_update(torch.tensor([[0.0, 0.0], [-1.0, -3.0]]), 0, 0, 2.0, 1, 0.5, 1.0)[0, 0].item(), 4)',
+        expected: '0.5',
+        hidden: true,
+      },
     ],
     hints: [
-      'Best next value: Q[next_state].max()',
-      'TD target: reward + gamma * max_next_Q; TD error: target - Q[state, action]',
-      'Update: Q[state, action] += alpha * td_error (on a clone)',
+      'The update nudges one table entry toward a better estimate of its value. What is that better estimate?',
+      'Compute the target from the reward and the best next-state value, then the TD error, then the step.',
+      'Q[next_state].max() is the best next value; Q[state, action] += alpha * (reward + gamma * best - Q[state, action]).',
+      'Clone first so the caller\'s tensor is untouched, and take the max over Q[next_state] (that row only).',
     ],
   },
 
   'rl-sarsa-update': {
-    note: 'Like Q-learning, but bootstrap from Q[next_state, next_action]. Work on Q.clone() and return the updated tensor.',
+    note: 'Like Q-learning, but bootstrap from Q[next_state, next_action]. Work on Q.clone() and return the updated tensor; rounding is optional (tests use a tolerance).',
     starterCode: `import torch
 
 def sarsa_update(Q: torch.Tensor, state: int, action: int, reward: float,
@@ -327,17 +352,17 @@ def sarsa_update(Q: torch.Tensor, state: int, action: int, reward: float,
     Perform one SARSA update.
 
     Args:
-        Q: Q-table tensor of shape (n_states, n_actions)
-        state: Current state s
-        action: Action taken a
-        reward: Reward received r
-        next_state: Next state s'
-        next_action: Next action a' (will be taken)
-        alpha: Learning rate
-        gamma: Discount factor
+        Q: (n_states, n_actions) Q-table tensor
+        state: current state s
+        action: action taken a
+        reward: reward received r
+        next_state: next state s'
+        next_action: next action a' (the one that will actually be taken)
+        alpha: learning rate
+        gamma: discount factor
 
     Returns:
-        Updated Q-table (new tensor; the input is left unchanged)
+        Updated (n_states, n_actions) Q-table (a new tensor; the input is unchanged)
     """
     Q = Q.clone().float()
     # Your code here
@@ -350,7 +375,7 @@ def sarsa_update(Q: torch.Tensor, state: int, action: int, reward: float,
                  alpha: float, gamma: float) -> torch.Tensor:
     Q = Q.clone().float()
 
-    # SARSA bootstraps from the action actually taken next (on-policy)
+    # On-policy target: bootstrap from the action actually taken next
     td_target = reward + gamma * Q[next_state, next_action]
     td_error = td_target - Q[state, action]
     Q[state, action] += alpha * td_error
@@ -387,14 +412,15 @@ def sarsa_update(Q: torch.Tensor, state: int, action: int, reward: float,
       },
     ],
     hints: [
-      'The key difference from Q-learning: use Q[next_state, next_action] not the max',
-      'TD target: reward + gamma * Q[next_state, next_action]',
-      'Update: Q[state, action] += alpha * (target - Q[state, action])',
+      'This is Q-learning with one change: which next-state value do you bootstrap from?',
+      'Read Q at (next_state, next_action), build the target, then take a step of size alpha toward it.',
+      'Q[state, action] += alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action]) on a clone.',
+      'Don\'t call .max() on the next row (that is Q-learning).',
     ],
   },
 
   'rl-td0-prediction': {
-    note: 'Index the value tensor directly. Work on V.clone() and return the updated tensor.',
+    note: 'Index the value tensor directly. Work on V.clone() and return the updated tensor; rounding is optional (tests use a tolerance).',
     starterCode: `import torch
 
 def td0_update(V: torch.Tensor, state: int, reward: float,
@@ -404,16 +430,16 @@ def td0_update(V: torch.Tensor, state: int, reward: float,
     Perform one TD(0) value update.
 
     Args:
-        V: Value function tensor V(s) for each state
-        state: Current state s
-        reward: Reward received r
-        next_state: Next state s'
-        alpha: Learning rate
-        gamma: Discount factor
-        done: Whether next_state is terminal
+        V: (n_states,) tensor of value estimates
+        state: current state s
+        reward: reward received r
+        next_state: next state s'
+        alpha: learning rate
+        gamma: discount factor
+        done: True if next_state is terminal (its value counts as 0)
 
     Returns:
-        Updated value function (new tensor)
+        Updated (n_states,) values (a new tensor)
     """
     V = V.clone().float()
     # Your code here
@@ -426,7 +452,7 @@ def td0_update(V: torch.Tensor, state: int, reward: float,
                done: bool = False) -> torch.Tensor:
     V = V.clone().float()
 
-    # Terminal next state has value 0
+    # A terminal next state contributes no future value
     next_value = 0.0 if done else V[next_state]
     td_error = reward + gamma * next_value - V[state]
     V[state] += alpha * td_error
@@ -442,7 +468,7 @@ def td0_update(V: torch.Tensor, state: int, reward: float,
       },
       {
         id: '2',
-        description: 'Terminal state',
+        description: 'Terminal transition',
         input: 'td0_update(torch.zeros(3), 0, 10.0, 1, 0.5, 0.9, True).tolist()',
         expected: '[5.0, 0.0, 0.0]',
         hidden: false,
@@ -456,35 +482,37 @@ def td0_update(V: torch.Tensor, state: int, reward: float,
       },
       {
         id: '4',
-        description: 'done=True ignores V(s\')',
+        description: 'done=True ignores the stored V(s\')',
         input: 'round(td0_update(torch.tensor([0.0, 100.0]), 0, 1.0, 1, 1.0, 0.9, True)[0].item(), 4)',
         expected: '1.0',
         hidden: true,
       },
     ],
     hints: [
-      'If done=True, the next state value is 0 (terminal)',
-      'TD error: reward + gamma * V[next_state] - V[state]',
-      'Update: V[state] += alpha * td_error (on a clone)',
+      'TD(0) compares what you predicted for s with a one-step look-ahead estimate of it.',
+      'Decide the next-state value first (0 when done), then form the target, the TD error, and the step.',
+      'next_v = 0.0 if done else V[next_state]; V[state] += alpha * (reward + gamma * next_v - V[state]).',
+      'When done is True, don\'t read V[next_state] at all; and clone V so the input is unchanged.',
     ],
   },
 
   'rl-value-iteration': {
-    note: 'Compute each action value with tensor ops and take the max with torch.stack(...).max(). Return the new value tensor.',
+    note: 'Compute each action value with tensor ops and take the max with torch.stack(...).max(). Read the old V, write a new tensor; rounding is optional (tests use a tolerance).',
     starterCode: `import torch
 
 def value_iteration_step(V: torch.Tensor, transitions: dict,
                          gamma: float) -> torch.Tensor:
     """
-    Perform one step of value iteration.
+    Perform one synchronous sweep of value iteration.
 
     Args:
-        V: Current value function tensor V(s) for each state
-        transitions: Dict where transitions[s][a] = [(prob, reward, next_state), ...]
-        gamma: Discount factor
+        V: (n_states,) tensor of current values
+        transitions: transitions[s][a] = [(prob, reward, next_state), ...]
+        gamma: discount factor
 
     Returns:
-        Updated value function (tensor)
+        (n_states,) tensor of new values, V_new[s] = max_a Q(s, a)
+        (states without transitions are terminal and get 0)
     """
     V = V.float()
     n_states = V.shape[0]
@@ -499,7 +527,7 @@ def value_iteration_step(V: torch.Tensor, transitions: dict,
                          gamma: float) -> torch.Tensor:
     V = V.float()
     n_states = V.shape[0]
-    V_new = torch.zeros(n_states)
+    V_new = torch.zeros(n_states)  # terminal states stay 0
 
     for s in range(n_states):
         if s not in transitions:
@@ -510,11 +538,11 @@ def value_iteration_step(V: torch.Tensor, transitions: dict,
             probs = torch.tensor([float(p) for p, _, _ in outcomes])
             rewards = torch.tensor([float(r) for _, r, _ in outcomes])
             next_states = torch.tensor([s2 for _, _, s2 in outcomes])
+            # Q(s, a) always reads the OLD values V (synchronous sweep)
             q_values.append((probs * (rewards + gamma * V[next_states])).sum())
 
         # Bellman optimality: V(s) = max_a Q(s, a)
-        if q_values:
-            V_new[s] = torch.stack(q_values).max()
+        V_new[s] = torch.stack(q_values).max()
 
     return V_new
 `,
@@ -540,38 +568,43 @@ def value_iteration_step(V: torch.Tensor, transitions: dict,
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Terminal state (no transitions) gets 0; backups read the old V',
+        input: `bool(torch.allclose(value_iteration_step(torch.tensor([0.2, 2.0, 7.0]), {0: {0: [(0.8, 1.0, 1), (0.2, 0.0, 0)], 1: [(1.0, 0.0, 2)]}, 1: {0: [(1.0, 2.0, 0)]}}, 0.9), torch.tensor([6.3, 2.18, 0.0]), atol=1e-4))`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'For each state, compute Q(s, a) = sum over outcomes of prob * (reward + gamma * V[next])',
-      'Take the max over actions: torch.stack(q_values).max()',
-      'Read from the old V, write into V_new',
+      'Value iteration is the Bellman expectation backup with a max over actions on top.',
+      'For each state with transitions: one expected value per action, then keep the largest. Other states stay 0.',
+      'Per action: (probs * (rewards + gamma * V[next_states])).sum(); per state: torch.stack(q_values).max().',
+      'Read only from the old V and write only into V_new; writing into V mixes old and new values within one sweep.',
     ],
   },
 
   'rl-policy-gradient': {
-    note: 'Let autograd compute the gradient: build the REINFORCE objective sum_t G_t * log π(a_t|s_t) with F.log_softmax and call .backward() on a copy of theta that requires grad. (Deriving one_hot(a) - π by hand also works.)',
+    note: "Let autograd compute the gradient: build sum_t G_t * log π(a_t|s_t) with F.log_softmax and call .backward() on a copy of theta that requires grad. Don't modify the input theta. (Deriving one_hot(a) - π by hand also works.)",
     starterCode: `import torch
 import torch.nn.functional as F
 
 def reinforce_gradient(theta: torch.Tensor, episode: list,
                        gamma: float) -> torch.Tensor:
     """
-    Compute REINFORCE policy gradient for a tabular softmax policy.
+    Compute the REINFORCE policy gradient for a tabular softmax policy.
 
     Args:
-        theta: Policy parameters (n_states, n_actions)
-        episode: List of (state, action, reward) tuples
-        gamma: Discount factor
+        theta: (n_states, n_actions) policy logits
+        episode: list of (state, action, reward) tuples
+        gamma: discount factor
 
     Returns:
-        Gradient of sum_t G_t * log π(a_t|s_t) w.r.t. theta, same shape as theta
+        (n_states, n_actions) gradient of sum_t G_t * log pi(a_t|s_t) w.r.t. theta
     """
     theta = theta.detach().clone().float().requires_grad_(True)
 
     # Your code here
-    # 1. Compute returns G_t for each timestep
-    # 2. Objective = sum_t G_t * log softmax(theta[s_t])[a_t]
-    # 3. objective.backward() and return theta.grad
     pass
 `,
     solution: `import torch
@@ -588,21 +621,23 @@ def reinforce_gradient(theta: torch.Tensor, episode: list,
     states = torch.tensor([s for s, _, _ in episode])
     actions = torch.tensor([a for _, a, _ in episode])
 
-    # Returns G_t, computed backwards
+    # Returns G_t, computed backwards (constants: no gradient flows through them)
     returns = torch.zeros(T)
     G = 0.0
     for t in range(T - 1, -1, -1):
         G = episode[t][2] + gamma * G
         returns[t] = G
 
-    # log π(a_t | s_t) for the actions actually taken
+    # log pi(a_t | s_t) for the actions actually taken
     log_probs = F.log_softmax(theta[states], dim=-1)
     chosen = log_probs[torch.arange(T), actions]
 
-    # ∇ sum_t G_t log π(a_t|s_t) = sum_t G_t (one_hot(a_t) - π(.|s_t))
+    # grad of sum_t G_t log pi(a_t|s_t) = sum_t G_t (one_hot(a_t) - pi(.|s_t))
     objective = (returns * chosen).sum()
     objective.backward()
     return theta.grad
+
+# Time O(T * n_actions)
 `,
     testCases: [
       {
@@ -639,17 +674,24 @@ def reinforce_gradient(theta: torch.Tensor, episode: list,
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Empty episode returns a zero gradient of theta\'s shape',
+        input: 'reinforce_gradient(torch.zeros(3, 2), [], 0.9).tolist()',
+        expected: '[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Compute returns backwards: G_t = r_t + gamma * G_{t+1}',
-      'F.log_softmax(theta[states], dim=-1)[torch.arange(T), actions] gives log π(a_t|s_t)',
-      'objective = (returns * log_probs).sum(); objective.backward(); return theta.grad',
-      'By hand instead: theta.grad[s] += G_t * (one_hot(a) - softmax(theta[s]))',
+      'Policy gradient = the gradient of Σ_t G_t · log π(a_t|s_t), with the returns G_t treated as constants.',
+      'Compute the returns backwards in a plain loop, gather the log-probs of the taken actions, form the weighted sum, and backprop.',
+      'F.log_softmax(theta[states], dim=-1)[torch.arange(T), actions] gives log π(a_t|s_t); then (returns * chosen).sum().backward() and return theta.grad.',
+      'Work on theta.detach().clone().requires_grad_(True) so the caller\'s tensor gets no .grad, and return zeros for an empty episode (there is nothing to backprop).',
     ],
   },
 
   'rl-advantage-estimation': {
-    note: 'A backward loop over timesteps with tensor indexing. Return the advantages as a tensor.',
+    note: 'Compute all TD errors with slicing, then one backward loop for the recursion. Return the advantages as a tensor; rounding is optional (tests use a tolerance).',
     starterCode: `import torch
 
 def compute_gae(rewards: torch.Tensor, values: torch.Tensor,
@@ -658,14 +700,14 @@ def compute_gae(rewards: torch.Tensor, values: torch.Tensor,
     Compute Generalized Advantage Estimation.
 
     Args:
-        rewards: Rewards r_0, r_1, ..., r_{T-1} (length T)
-        values: Values V(s_0), V(s_1), ..., V(s_T) (length T+1)
-                Last value is V(s_T) or 0 if terminal
-        gamma: Discount factor
-        lam: GAE lambda parameter
+        rewards: (T,) rewards r_0 ... r_{T-1}
+        values: (T+1,) values V(s_0) ... V(s_T); the last entry is the
+                bootstrap value (0 if the episode terminated)
+        gamma: discount factor
+        lam: GAE lambda
 
     Returns:
-        Advantages Â_0, Â_1, ..., Â_{T-1} (tensor of length T)
+        (T,) tensor of advantages A_0 ... A_{T-1}
     """
     rewards = rewards.float()
     values = values.float()
@@ -684,15 +726,18 @@ def compute_gae(rewards: torch.Tensor, values: torch.Tensor,
     T = rewards.shape[0]
     advantages = torch.zeros(T)
 
-    gae = 0.0
+    # All TD errors at once: delta_t = r_t + gamma * V(s_{t+1}) - V(s_t)
+    deltas = rewards + gamma * values[1:] - values[:-1]
+
+    gae = 0.0  # A_T = 0
     for t in range(T - 1, -1, -1):
-        # TD error: δ_t = r_t + γ V(s_{t+1}) - V(s_t)
-        delta = rewards[t] + gamma * values[t + 1] - values[t]
-        # Â_t = δ_t + γλ Â_{t+1}
-        gae = delta + gamma * lam * gae
+        # A_t = delta_t + gamma * lambda * A_{t+1}
+        gae = deltas[t] + gamma * lam * gae
         advantages[t] = gae
 
     return advantages
+
+# Time O(T)
 `,
     testCases: [
       {
@@ -727,31 +772,40 @@ def compute_gae(rewards: torch.Tensor, values: torch.Tensor,
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Truncated trajectory bootstraps from the last value',
+        input: 'bool(torch.allclose(compute_gae(torch.tensor([0.0, 0.0, 1.0]), torch.tensor([0.5, 0.5, 0.5, 2.0]), 0.9, 0.8), torch.tensor([1.10632, 1.606, 2.3]), atol=1e-4))',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'TD errors: δ_t = r_t + γ*V(s_{t+1}) - V(s_t)',
-      'Work backwards from the last timestep: Â_t = δ_t + γλ*Â_{t+1}',
-      'Store each Â_t with advantages[t] = gae',
+      'An advantage is a discounted sum of future TD errors, and sums of the future are easiest to build from the end.',
+      'All TD errors can be computed at once with slicing; only the recursion needs a loop.',
+      'deltas = rewards + gamma * values[1:] - values[:-1]; then backwards gae = deltas[t] + gamma * lam * gae; advantages[t] = gae.',
+      'values has T+1 entries: values[1:] are the next-state values (the last is the bootstrap value). Start the recursion with gae = 0.',
     ],
   },
 
   'rl-ppo-clip': {
-    note: 'Use torch.clamp and torch.minimum. Return the objective as a Python float.',
+    note: 'Use torch.clamp and torch.minimum. Return the objective as a Python float rounded to 2 decimals.',
     starterCode: `import torch
 
 def ppo_clip_objective(old_probs: torch.Tensor, new_probs: torch.Tensor,
                        advantages: torch.Tensor, epsilon: float) -> float:
     """
-    Compute PPO clipped surrogate objective.
+    Compute the PPO clipped surrogate objective.
 
     Args:
-        old_probs: π_old(a|s) probabilities for taken actions
-        new_probs: π_new(a|s) probabilities for taken actions
-        advantages: Advantage estimates A_t
-        epsilon: Clipping parameter (e.g., 0.2)
+        old_probs: (N,) pi_old(a|s) of the taken actions
+        new_probs: (N,) pi_theta(a|s) of the taken actions
+        advantages: (N,) advantage estimates A_t
+        epsilon: clipping parameter (e.g. 0.2)
 
     Returns:
-        PPO clipped objective (Python float rounded to 2 decimals, should be maximized)
+        mean_t min(ratio_t * A_t, clip(ratio_t, 1-eps, 1+eps) * A_t)
+        as a Python float (to maximize), rounded to 2 decimals
     """
     old_probs = old_probs.double()
     new_probs = new_probs.double()
@@ -771,28 +825,28 @@ def ppo_clip_objective(old_probs: torch.Tensor, new_probs: torch.Tensor,
     ratios = new_probs / (old_probs + 1e-8)
     clipped_ratios = torch.clamp(ratios, 1 - epsilon, 1 + epsilon)
 
-    # Pessimistic (minimum) of the unclipped and clipped surrogates
+    # Pessimistic bound: element-wise min of the unclipped and clipped surrogates
     objective = torch.minimum(ratios * advantages, clipped_ratios * advantages).mean()
     return round(objective.item(), 2)
 `,
     testCases: [
       {
         id: '1',
-        description: 'No clipping needed',
+        description: 'No change in policy: objective is the mean advantage',
         input: 'ppo_clip_objective(torch.tensor([0.5, 0.5]), torch.tensor([0.5, 0.5]), torch.tensor([1.0, -1.0]), 0.2)',
         expected: '0.0',
         hidden: false,
       },
       {
         id: '2',
-        description: 'Positive advantage, ratio > 1',
+        description: 'Positive advantage, ratio > 1 + epsilon is clipped',
         input: 'ppo_clip_objective(torch.tensor([0.5]), torch.tensor([0.7]), torch.tensor([1.0]), 0.2)',
         expected: '1.2',
         hidden: false,
       },
       {
         id: '3',
-        description: 'Negative advantage, ratio > 1',
+        description: 'Negative advantage, ratio > 1 keeps the unclipped term',
         input: 'ppo_clip_objective(torch.tensor([0.5]), torch.tensor([0.7]), torch.tensor([-1.0]), 0.2)',
         expected: '-1.4',
         hidden: false,
@@ -811,32 +865,41 @@ def ppo_clip_objective(old_probs: torch.Tensor, new_probs: torch.Tensor,
         expected: '-0.3',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Positive advantage, ratio < 1 - epsilon is not clipped',
+        input: 'ppo_clip_objective(torch.tensor([0.5]), torch.tensor([0.2]), torch.tensor([1.0]), 0.2)',
+        expected: '0.4',
+        hidden: true,
+      },
     ],
     hints: [
-      'ratios = new_probs / old_probs',
-      'clipped = torch.clamp(ratios, 1 - epsilon, 1 + epsilon)',
-      'objective = torch.minimum(ratios * A, clipped * A).mean()',
+      'The objective is an importance-weighted advantage, made pessimistic so that large policy changes are never rewarded.',
+      'Compute the ratio, a clipped copy of it, both surrogate terms, then the element-wise minimum and the mean.',
+      'ratios = new_probs / (old_probs + 1e-8); clipped = torch.clamp(ratios, 1 - epsilon, 1 + epsilon); torch.minimum(ratios * A, clipped * A).mean().item().',
+      'Take the min of the two products, not min(ratio, clipped) times A: with a negative advantage those differ.',
     ],
   },
 
   'rl-n-step-return': {
-    note: 'Inputs are tensors; return a Python float.',
+    note: 'Slice the rewards and use torch.arange for the discounts. Inputs are tensors; return a Python float rounded to 2 decimals.',
     starterCode: `import torch
 
 def n_step_return(rewards: torch.Tensor, values: torch.Tensor,
                   t: int, n: int, gamma: float) -> float:
     """
-    Compute n-step return from timestep t.
+    Compute the n-step return from timestep t.
 
     Args:
-        rewards: All rewards [r_0, r_1, ..., r_{T-1}]
-        values: All values [V(s_0), ..., V(s_T)]
-        t: Starting timestep
-        n: Number of steps
-        gamma: Discount factor
+        rewards: (T,) rewards [r_0, ..., r_{T-1}]
+        values: (T+1,) values [V(s_0), ..., V(s_T)]
+        t: starting timestep
+        n: number of steps
+        gamma: discount factor
 
     Returns:
-        N-step return G_t^(n) (Python float rounded to 2 decimals)
+        G_t^(n) as a Python float, rounded to 2 decimals (no bootstrap if the
+        episode ends before t + n)
     """
     rewards = rewards.double()
     values = values.double()
@@ -853,16 +916,18 @@ def n_step_return(rewards: torch.Tensor, values: torch.Tensor,
     values = values.double()
     T = rewards.shape[0]
 
-    # Discounted rewards r_t ... r_{t+n-1} (truncated at the end of the episode)
+    # Real rewards r_t ... r_{t+n-1}, truncated at the end of the episode
     end = min(t + n, T)
     discounts = gamma ** torch.arange(end - t, dtype=torch.float64)
     G = (discounts * rewards[t:end]).sum().item()
 
-    # Bootstrap from V(s_{t+n}) if it exists
+    # Bootstrap from V(s_{t+n}) only if that state exists
     if t + n < values.shape[0]:
         G += (gamma ** n) * values[t + n].item()
 
     return round(G, 2)
+
+# Time O(n)
 `,
     testCases: [
       {
@@ -893,45 +958,55 @@ def n_step_return(rewards: torch.Tensor, values: torch.Tensor,
         expected: '3.5',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Mid-episode with bootstrap (t + n = T)',
+        input: 'n_step_return(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([0.0, 1.0, 2.0, 3.0, 10.0]), 2, 2, 0.9)',
+        expected: '14.7',
+        hidden: true,
+      },
     ],
     hints: [
-      'Sum gamma**k * rewards[t + k] for k < n while t + k < T',
-      'Bootstrap with gamma**n * values[t + n] if t + n < len(values)',
-      'Return round(G, 2) as a Python float',
+      'Count real rewards for up to n steps, then let the critic estimate everything after.',
+      'Slice rewards[t:end] with end = min(t + n, T), weight them, then decide whether a bootstrap value exists.',
+      '(gamma ** torch.arange(end - t, dtype=torch.float64) * rewards[t:end]).sum(); add gamma**n * values[t + n] if t + n < len(values).',
+      'The bootstrap is discounted by gamma**n, not gamma**(n-1), and is skipped when the episode ends before step t + n.',
     ],
   },
 
   'rl-reward-modeling': {
-    note: "Use torch.sigmoid and torch.log. Don't use F.binary_cross_entropy_with_logits (it computes exactly this loss when the target is 1); a hidden test uses it as the reference.",
+    note: "Use F.logsigmoid for a stable log σ. Don't use F.binary_cross_entropy_with_logits (it computes exactly this loss with target 1); a hidden test uses it as the reference.",
     starterCode: `import torch
+import torch.nn.functional as F
 
 def reward_model_loss(r_chosen: torch.Tensor, r_rejected: torch.Tensor) -> float:
     """
-    Compute RLHF reward model loss (Bradley-Terry).
+    Compute the Bradley-Terry reward model loss.
 
     Args:
-        r_chosen: Reward scores for preferred/chosen responses
-        r_rejected: Reward scores for rejected responses
+        r_chosen: (N,) scores of the preferred responses
+        r_rejected: (N,) scores of the rejected responses
 
     Returns:
-        Average negative log-likelihood loss (Python float rounded to 3 decimals)
+        mean of -log sigmoid(r_chosen - r_rejected) as a Python float,
+        rounded to 3 decimals
     """
     r_chosen = r_chosen.double()
     r_rejected = r_rejected.double()
 
     # Your code here
-    # Loss = -E[log σ(r_chosen - r_rejected)]
     pass
 `,
     solution: `import torch
+import torch.nn.functional as F
 
 def reward_model_loss(r_chosen: torch.Tensor, r_rejected: torch.Tensor) -> float:
     r_chosen = r_chosen.double()
     r_rejected = r_rejected.double()
 
-    # P(chosen > rejected) = σ(r_chosen - r_rejected)
-    logits = r_chosen - r_rejected
-    loss = -torch.log(torch.sigmoid(logits)).mean()
+    # P(chosen > rejected) = sigmoid(margin); logsigmoid is stable for large |margin|
+    margins = r_chosen - r_rejected
+    loss = -F.logsigmoid(margins).mean()
     return round(loss.item(), 3)
 `,
     testCases: [
@@ -966,33 +1041,43 @@ def reward_model_loss(r_chosen: torch.Tensor, r_rejected: torch.Tensor) -> float
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Badly wrong ranking: exact loss, not capped by an eps',
+        input: 'reward_model_loss(torch.tensor([-50.0]), torch.tensor([50.0]))',
+        expected: '100.0',
+        hidden: true,
+      },
     ],
     hints: [
-      'Compute the difference: r_chosen - r_rejected',
-      'torch.sigmoid gives the preference probability',
-      'Loss: -torch.log(probs).mean()',
+      'The model turns a score difference into a probability that the human picked the chosen response; the loss is that probability\'s negative log.',
+      'Compute the margins r_chosen - r_rejected, map them to log-probabilities, and average the negatives.',
+      'loss = -F.logsigmoid(r_chosen - r_rejected).mean(); return round(loss.item(), 3).',
+      'torch.log(torch.sigmoid(x)) underflows to -inf for very negative x, and an eps inside the log caps the loss; F.logsigmoid avoids both.',
     ],
   },
 
   'rl-dpo-loss': {
-    note: 'Pure tensor arithmetic with torch.sigmoid and torch.log. Return a Python float.',
+    note: 'Pure tensor arithmetic; use F.logsigmoid for a stable log σ. Return a Python float rounded to 3 decimals.',
     starterCode: `import torch
+import torch.nn.functional as F
 
 def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
              ref_logp_chosen: torch.Tensor, ref_logp_rejected: torch.Tensor,
              beta: float) -> float:
     """
-    Compute Direct Preference Optimization (DPO) loss.
+    Compute the Direct Preference Optimization (DPO) loss.
 
     Args:
-        logp_chosen: Log prob of chosen response under policy π_θ
-        logp_rejected: Log prob of rejected response under policy π_θ
-        ref_logp_chosen: Log prob of chosen under reference π_ref
-        ref_logp_rejected: Log prob of rejected under reference π_ref
-        beta: Temperature parameter
+        logp_chosen: (N,) log pi_theta(y_w|x), sequence log-probs
+        logp_rejected: (N,) log pi_theta(y_l|x)
+        ref_logp_chosen: (N,) log pi_ref(y_w|x)
+        ref_logp_rejected: (N,) log pi_ref(y_l|x)
+        beta: KL-strength / temperature parameter
 
     Returns:
-        DPO loss (Python float rounded to 3 decimals)
+        mean of -log sigmoid(beta * (delta_chosen - delta_rejected)) as a
+        Python float, rounded to 3 decimals
     """
     logp_chosen = logp_chosen.double()
     logp_rejected = logp_rejected.double()
@@ -1003,6 +1088,7 @@ def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
     pass
 `,
     solution: `import torch
+import torch.nn.functional as F
 
 def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
              ref_logp_chosen: torch.Tensor, ref_logp_rejected: torch.Tensor,
@@ -1012,12 +1098,12 @@ def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
     ref_logp_chosen = ref_logp_chosen.double()
     ref_logp_rejected = ref_logp_rejected.double()
 
-    # Log-ratios of policy vs reference
+    # Implicit rewards (up to beta): log-ratios of policy vs reference
     chosen_logratios = logp_chosen - ref_logp_chosen
     rejected_logratios = logp_rejected - ref_logp_rejected
 
     logits = beta * (chosen_logratios - rejected_logratios)
-    loss = -torch.log(torch.sigmoid(logits)).mean()
+    loss = -F.logsigmoid(logits).mean()
     return round(loss.item(), 3)
 `,
     testCases: [
@@ -1030,7 +1116,7 @@ def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
       },
       {
         id: '2',
-        description: 'Equal preferences',
+        description: 'Policy equals reference: loss is log 2',
         input: 'dpo_loss(torch.tensor([-1.0, -1.0]), torch.tensor([-1.0, -1.0]), torch.tensor([-1.0, -1.0]), torch.tensor([-1.0, -1.0]), 0.5)',
         expected: '0.693',
         hidden: false,
@@ -1049,30 +1135,39 @@ def dpo_loss(logp_chosen: torch.Tensor, logp_rejected: torch.Tensor,
         expected: '1.144',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Large negative logit: exact loss (stable log-sigmoid)',
+        input: 'dpo_loss(torch.tensor([-400.0]), torch.tensor([-10.0]), torch.tensor([-20.0]), torch.tensor([-20.0]), 1.0)',
+        expected: '390.0',
+        hidden: true,
+      },
     ],
     hints: [
-      'Δ_w = logp_chosen - ref_logp_chosen, Δ_l = logp_rejected - ref_logp_rejected',
-      'logits = beta * (Δ_w - Δ_l)',
-      'Loss: -torch.log(torch.sigmoid(logits)).mean()',
+      'DPO is the reward-model loss where each response\'s "reward" is β times how much more likely the policy makes it than the reference.',
+      'Compute the two log-ratios (policy minus reference), their difference, scale by beta, then apply -log σ and average.',
+      'logits = beta * ((logp_chosen - ref_logp_chosen) - (logp_rejected - ref_logp_rejected)); loss = -F.logsigmoid(logits).mean().',
+      'Mind the signs inside each log-ratio, and prefer F.logsigmoid over torch.log(torch.sigmoid(...)), which returns -inf for very negative logits.',
     ],
   },
 
   'rl-kl-penalty': {
-    note: 'One line of tensor arithmetic. Return a Python float.',
+    note: 'One line of tensor arithmetic. Keep the sign of the estimate (no abs or clamp). Return a Python float rounded to 2 decimals.',
     starterCode: `import torch
 
 def kl_penalty(logp_policy: torch.Tensor, logp_reference: torch.Tensor,
                beta: float) -> float:
     """
-    Compute KL divergence penalty for RLHF.
+    Compute the sampled KL penalty for RLHF.
 
     Args:
-        logp_policy: Log probs from current policy π_θ
-        logp_reference: Log probs from reference policy π_ref
+        logp_policy: (T,) log-probs of the sampled tokens under pi_theta
+        logp_reference: (T,) log-probs of the same tokens under pi_ref
         beta: KL penalty coefficient
 
     Returns:
-        KL penalty = β * mean(KL divergence) (Python float rounded to 2 decimals)
+        beta * mean(logp_policy - logp_reference) as a Python float,
+        rounded to 2 decimals
     """
     logp_policy = logp_policy.double()
     logp_reference = logp_reference.double()
@@ -1087,7 +1182,7 @@ def kl_penalty(logp_policy: torch.Tensor, logp_reference: torch.Tensor,
     logp_policy = logp_policy.double()
     logp_reference = logp_reference.double()
 
-    # Per-token KL estimate: log π_θ - log π_ref
+    # Per-token log-ratio: unbiased KL estimate for tokens sampled from pi_theta
     mean_kl = (logp_policy - logp_reference).mean()
     return round((beta * mean_kl).item(), 2)
 `,
@@ -1115,39 +1210,50 @@ def kl_penalty(logp_policy: torch.Tensor, logp_reference: torch.Tensor,
       },
       {
         id: '4',
-        description: 'Mean over tokens of mixed-sign differences',
+        description: 'Mean over tokens of mixed-sign log-ratios',
         input: 'kl_penalty(torch.tensor([-1.0, -3.0, -0.5, -2.0]), torch.tensor([-2.0, -2.0, -1.5, -2.6]), 1.0)',
         expected: '0.4',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Policy less likely than reference gives a negative estimate',
+        input: 'kl_penalty(torch.tensor([-2.0, -3.0]), torch.tensor([-1.0, -1.0]), 1.0)',
+        expected: '-1.5',
+        hidden: true,
+      },
     ],
     hints: [
-      'Per-token KL: logp_policy - logp_reference',
-      'Take the mean over tokens and multiply by beta',
-      'Return round(penalty.item(), 2)',
+      'KL(π_θ ‖ π_ref) is the expected log-ratio under π_θ, and your tokens are already samples from π_θ.',
+      'Compute the per-token log-ratio, average it, and scale by beta.',
+      'round((beta * (logp_policy - logp_reference).mean()).item(), 2).',
+      'Keep the order policy minus reference, and don\'t take abs or clamp at 0: a negative sampled estimate is expected.',
     ],
   },
 
   'rl-ppo-llm-objective': {
-    note: 'Use torch.exp, torch.clamp and torch.minimum. Return a dict of Python floats.',
+    note: "Use torch.exp, torch.clamp and torch.minimum. The KL is folded into the advantage, so don't subtract it from the objective again. Return a dict of Python floats rounded to 2 decimals.",
     starterCode: `import torch
 
 def ppo_rlhf_objective(old_logp: torch.Tensor, new_logp: torch.Tensor,
                        ref_logp: torch.Tensor, rewards: torch.Tensor,
                        epsilon: float, beta: float) -> dict:
     """
-    Compute PPO-RLHF objective for LLM fine-tuning.
+    Compute the PPO-RLHF objective with the KL penalty folded into the advantage.
 
     Args:
-        old_logp: Log probs from old policy (before update)
-        new_logp: Log probs from current policy
-        ref_logp: Log probs from reference (pretrained) model
-        rewards: Rewards from reward model
+        old_logp: (N,) log-probs under the policy that sampled the data
+        new_logp: (N,) log-probs under the current policy
+        ref_logp: (N,) log-probs under the frozen reference model
+        rewards: (N,) reward-model scores
         epsilon: PPO clipping parameter
         beta: KL penalty coefficient
 
     Returns:
-        Dictionary with 'objective', 'policy_loss', 'kl_penalty' (Python floats rounded to 2 decimals)
+        dict of Python floats rounded to 2 decimals:
+            'objective':   clipped surrogate with A = rewards - beta * (new_logp - ref_logp)
+            'policy_loss': the same clipped-surrogate value
+            'kl_penalty':  beta * mean(new_logp - ref_logp), for monitoring
     """
     old_logp = old_logp.double()
     new_logp = new_logp.double()
@@ -1167,33 +1273,31 @@ def ppo_rlhf_objective(old_logp: torch.Tensor, new_logp: torch.Tensor,
     ref_logp = ref_logp.double()
     rewards = rewards.double()
 
-    # Probability ratio π_θ / π_old from log probs
+    # Probability ratio pi_theta / pi_old from log-probs
     ratio = torch.exp(new_logp - old_logp)
 
-    # KL from the reference model, and the penalty
+    # Sampled per-token KL to the reference, folded into the advantage
     kl = new_logp - ref_logp
-    kl_penalty = beta * kl.mean()
-
-    # RLHF advantage: reward minus per-token KL penalty
     advantage = rewards - beta * kl
 
     clipped_ratio = torch.clamp(ratio, 1 - epsilon, 1 + epsilon)
-    policy_loss = torch.minimum(ratio * advantage, clipped_ratio * advantage).mean()
+    policy_term = torch.minimum(ratio * advantage, clipped_ratio * advantage).mean()
 
-    objective = policy_loss
+    # The KL is already inside the advantage, so it is not subtracted again
+    objective = policy_term
 
     return {
         'objective': round(objective.item(), 2),
-        'policy_loss': round(policy_loss.item(), 2),
-        'kl_penalty': round(kl_penalty.item(), 2),
+        'policy_loss': round(policy_term.item(), 2),
+        'kl_penalty': round((beta * kl.mean()).item(), 2),  # monitoring only
     }
 `,
     testCases: [
       {
         id: '1',
-        description: 'Positive reward, small update',
-        input: `(lambda r: bool(abs(r['objective'] - 1.18) < 0.1 and abs(r['kl_penalty'] - 0.02) < 0.01))(ppo_rlhf_objective(torch.tensor([-2.0]), torch.tensor([-1.8]), torch.tensor([-2.0]), torch.tensor([1.0]), 0.2, 0.1))`,
-        expected: 'True',
+        description: 'Positive reward, small update (clipped ratio)',
+        input: `(lambda r: (round(r['objective'], 2), round(r['policy_loss'], 2), round(r['kl_penalty'], 2)))(ppo_rlhf_objective(torch.tensor([-2.0]), torch.tensor([-1.8]), torch.tensor([-2.0]), torch.tensor([1.0]), 0.2, 0.1))`,
+        expected: '(1.18, 1.18, 0.02)',
         hidden: false,
       },
       {
@@ -1205,17 +1309,24 @@ def ppo_rlhf_objective(old_logp: torch.Tensor, new_logp: torch.Tensor,
       },
       {
         id: '3',
-        description: 'Clipped ratio and KL penalty values',
-        input: `(lambda r: (r['policy_loss'], r['kl_penalty']))(ppo_rlhf_objective(torch.tensor([-2.0, -1.0]), torch.tensor([-1.0, -1.0]), torch.tensor([-1.5, -2.0]), torch.tensor([2.0, 1.0]), 0.2, 0.2))`,
-        expected: '(1.54, 0.15)',
+        description: 'Clipped ratio and KL penalty values (KL counted once)',
+        input: `(lambda r: (r['objective'], r['policy_loss'], r['kl_penalty']))(ppo_rlhf_objective(torch.tensor([-2.0, -1.0]), torch.tensor([-1.0, -1.0]), torch.tensor([-1.5, -2.0]), torch.tensor([2.0, 1.0]), 0.2, 0.2))`,
+        expected: '(1.54, 1.54, 0.15)',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Result has exactly the required keys',
+        input: `sorted(ppo_rlhf_objective(torch.tensor([-1.0]), torch.tensor([-1.0]), torch.tensor([-1.0]), torch.tensor([1.0]), 0.2, 0.1).keys())`,
+        expected: "['kl_penalty', 'objective', 'policy_loss']",
         hidden: true,
       },
     ],
     hints: [
-      'ratio = torch.exp(new_logp - old_logp)',
-      'kl = new_logp - ref_logp; kl_penalty = beta * kl.mean()',
-      'advantage = rewards - beta * kl',
-      'policy_loss = torch.minimum(ratio * A, torch.clamp(ratio, 1 - eps, 1 + eps) * A).mean()',
+      'This is PPO\'s clipped surrogate where the advantage is the reward minus a per-token KL charge.',
+      'Compute the ratio from log-probs, the KL to the reference, the shaped advantage, then the clipped surrogate and its mean.',
+      'ratio = torch.exp(new_logp - old_logp); A = rewards - beta * (new_logp - ref_logp); torch.minimum(ratio * A, torch.clamp(ratio, 1 - epsilon, 1 + epsilon) * A).mean().',
+      'Don\'t subtract beta * kl.mean() from the objective again: it is already inside A. Report it as kl_penalty only.',
     ],
   },
 };
