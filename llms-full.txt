@@ -429,5 +429,6 @@ Tests can be:
 
 ## Contact
 
+- **Email**: sid@mlgrind.dev
 - **GitHub Repository**: https://github.com/mlgrind/mlgrind.github.io
 - **Issues/Feedback**: https://github.com/mlgrind/mlgrind.github.io/issues
