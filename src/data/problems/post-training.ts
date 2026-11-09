@@ -7,60 +7,79 @@ export const postTrainingProblems: Problem[] = [
     section: 'post-training',
     difficulty: 'hard',
     description: `
-## GRPO: Group Relative Policy Optimization
+## GRPO: Group-Relative Advantages & Objective
 
-GRPO (DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a **group** of G responses, score each with a reward model (or a verifier), and use the reward **relative to the group** as the advantage. The group mean plays the role of the critic's baseline.
+### What you'll build
+Two functions: \`group_advantages\`, which turns each prompt's group of rewards into normalized advantages, and \`grpo_objective\`, the clipped, masked GRPO objective with a k3 KL penalty.
 
-### Step 1: group-normalized advantages
-For prompt b with rewards r_{b,1..G}:
+### Background
+GRPO (Group Relative Policy Optimization, DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a **group** of G responses and score each one with a reward model or a verifier (e.g. 1 if the final answer is correct, 0 otherwise). The group mean plays the role of the critic's baseline, so there is no critic to train. Compared with **PPO-RLHF Objective** (Reinforcement Learning), the KL to the reference model is a separate term in the objective rather than part of the reward, and it uses the k3 estimator, which is never negative (compare **KL Divergence Penalty (RLHF)**).
+
+### Formula
+**Step 1: group-normalized advantages.** For prompt b with rewards r_{b,1..G}:
+\`\`\`text
+A_{b,i} = (r_{b,i} - mean_i r_{b,:}) / (std_i r_{b,:} + eps)
 \`\`\`
-A_{b,i} = (r_{b,i} - mean_i(r_{b,:})) / (std_i(r_{b,:}) + eps)
-\`\`\`
-- \`std\` is the **population** standard deviation (ddof = 0, i.e. \`np.std\` default; in PyTorch \`unbiased=False\`)
-- \`eps = 1e-8\`, so a group where every response gets the same reward has advantage 0 everywhere (no learning signal, no division by zero)
+- \`std\` is the **population** standard deviation (ddof = 0: \`np.std\`'s default; PyTorch \`unbiased=False\`)
 - This is outcome supervision: every token of response i gets the same advantage A_{b,i}
 
-### Step 2: per-token clipped surrogate with a KL term
-For token t of response i (log-probs of the sampled token):
-\`\`\`
+**Step 2: per-token clipped surrogate and k3 KL.** For token t of response i (log-probs of the sampled token):
+\`\`\`text
 ratio = exp(logp - old_logp)
-surr  = min(ratio * A, clip(ratio, 1 - ε, 1 + ε) * A)
-
-# k3 estimator of KL(π_θ || π_ref), always >= 0
-kl    = exp(ref_logp - logp) - (ref_logp - logp) - 1
-
-per_token = surr - β * kl
+surr  = min(ratio · A, clip(ratio, 1 - ε, 1 + ε) · A)
+d     = ref_logp - logp
+kl    = exp(d) - d - 1                 k3 estimate of KL(π_θ ‖ π_ref), always ≥ 0
+per_token = surr - β · kl
 \`\`\`
 
-### Step 3: averaging (as in the DeepSeekMath objective)
+**Step 3: average** (as in the DeepSeekMath objective):
+\`\`\`text
+J = mean over all (b, i) of [ Σ_t mask_t · per_token_t / Σ_t mask_t ]
 \`\`\`
-J = mean over (b, i) of [ (1 / |o_i|) * Σ_t mask_t * per_token_t ]
-\`\`\`
-Average over each response's **valid** tokens first (\`mask\` is 1 for real tokens and 0 for padding, |o_i| = mask.sum()), then average over all B·G responses. \`'mean_kl'\` uses the same averaging applied to \`kl\`. The training loss is \`-J\`.
+First average over each response's **valid** tokens (mask = 1 for real tokens, 0 for padding), then over all B·G responses. \`'mean_kl'\` uses the same averaging applied to \`kl\`. The training loss is -J.
 
-### Shapes
-- \`rewards\`: (B, G)
-- \`logp\`, \`old_logp\`, \`ref_logp\`, \`mask\`: (B, G, T)
+### Inputs
+- \`rewards\`: (B, G) floats, one scalar per response
+- \`logp\`, \`old_logp\`, \`ref_logp\`: (B, G, T) token log-probs under the current policy, the policy that sampled the data, and the frozen reference model
+- \`mask\`: (B, G, T) of 0/1, with at least one valid token per response
+- \`epsilon\` (clip range, default 0.2), \`beta\` (KL coefficient, default 0.04), \`eps\` (std epsilon, default 1e-8)
 
-### Expected Return Format
-\`group_advantages(rewards, eps=1e-8)\` returns the (B, G) array of advantages.
+### Expected return format
+\`group_advantages(rewards, eps=1e-8)\` returns the (B, G) float array of advantages.
 
 \`grpo_objective(...)\` returns a dictionary with these keys:
-- \`'advantages'\`: (B, G) array from step 1
+- \`'advantages'\`: the (B, G) array from step 1
 - \`'objective'\`: J as a Python float (to maximize)
-- \`'loss'\`: \`-J\` as a Python float (to minimize)
-- \`'mean_kl'\`: averaged k3 KL as a Python float
+- \`'loss'\`: -J as a Python float (to minimize)
+- \`'mean_kl'\`: the masked, averaged k3 KL as a Python float
+
+### Edge cases and conventions
+- A group where every response has the same reward gets advantage 0 everywhere: no learning signal, and no division by zero thanks to eps.
+- Values at padded positions (mask = 0) must not affect any output.
+- On-policy with no drift (logp = old_logp = ref_logp), ratio = 1 and kl = 0, so J is the mean advantage, which is 0.
+
+### Constraints
+NumPy only, fully vectorized (no Python loops over B, G or T).
+
+### Follow-up
+- Dr. GRPO argues that dividing by the response length (1/|o_i|) and by the group std biases training toward particular lengths and prompts. What changes if you drop them?
+- How large should G be? What happens to the advantage estimates with G = 2?
     `,
     examples: [
       {
         input: 'group_advantages([[1.0, 0.0, 0.0, 1.0]])',
         output: '[[1.0, -1.0, -1.0, 1.0]]',
-        explanation: 'mean 0.5, std 0.5: correct answers get +1, wrong ones -1',
+        explanation: 'Mean 0.5, population std 0.5: correct answers get +1, wrong ones -1',
       },
       {
-        input: 'logp == old_logp == ref_logp',
-        output: "{'objective': 0.0, 'mean_kl': 0.0, ...}",
-        explanation: 'ratio = 1 and KL = 0, so J is the mean advantage, which is 0 within every group',
+        input: 'group_advantages([[0.5, 0.5, 0.5], [1.0, 2.0, 3.0]])',
+        output: '[[0.0, 0.0, 0.0], [-1.224745, 0.0, 1.224745]]',
+        explanation: 'Identical rewards give 0 (no NaN); the second group has std √(2/3) = 0.8165',
+      },
+      {
+        input: 'grpo_objective(logp=[[[0.0], [0.0]]], old_logp=[[[-1.0], [0.0]]], ref_logp=[[[0.0], [0.0]]], rewards=[[1.0, 0.0]], mask=[[[1], [1]]], epsilon=0.2, beta=0.0)',
+        output: "{'objective': 0.1, 'loss': -0.1, 'mean_kl': 0.0, ...}",
+        explanation: 'A = [+1, -1]; response 1 has ratio e ≈ 2.72, clipped to 1.2; response 2 has ratio 1, so J = (1.2 - 1) / 2 = 0.1',
       },
     ],
     starterCode: `import numpy as np
@@ -96,7 +115,9 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         eps: std epsilon for the advantages
 
     Returns:
-        dict with 'advantages' (B, G), 'objective', 'loss', 'mean_kl' (floats)
+        dict with 'advantages' (B, G) array, and 'objective', 'loss' (= -objective)
+        and 'mean_kl' as Python floats; token terms are averaged over each
+        response's valid tokens, then over all responses
     """
     # Your code here
     pass
@@ -153,24 +174,44 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         expected: '0.1',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Values at padded positions are ignored',
+        input: `(lambda: (
+    lp := np.array([[[-1.0, -0.5, 0.0], [-0.3, -1.2, 0.0]]]),
+    old := np.array([[[-1.1, -0.4, 0.0], [-0.4, -1.0, 0.0]]]),
+    ref := np.array([[[-1.2, -0.7, 0.0], [-0.3, -1.1, 0.0]]]),
+    m := np.array([[[1, 1, 0], [1, 1, 0]]]),
+    a := grpo_objective(lp, old, ref, [[1.0, 0.0]], m, beta=0.1),
+    junk := np.array([[[0.0, 0.0, 5.0], [0.0, 0.0, -7.0]]]),
+    b := grpo_objective(lp + junk, old - junk, ref + 2 * junk, [[1.0, 0.0]], m, beta=0.1),
+    bool(abs(a['objective'] - b['objective']) < 1e-9 and abs(a['mean_kl'] - b['mean_kl']) < 1e-9 and abs(a['objective']) > 1e-4)
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Advantages: subtract rewards.mean(axis=1, keepdims=True) and divide by rewards.std(axis=1, keepdims=True) + eps',
-      'Broadcast the (B, G) advantages over tokens with adv[..., None]',
-      'k3 KL: with d = ref_logp - logp, kl = np.exp(d) - d - 1 (it is >= 0 for every token)',
-      'Per response: (per_token * mask).sum(-1) / mask.sum(-1); then .mean() over all responses',
+      'Two separate pieces: a per-prompt normalization of rewards, then a PPO-style token objective where padding must not count.',
+      'Normalize along the group axis (axis=1), broadcast each response\'s advantage over its tokens, build the per-token terms, then do a masked mean per response followed by a plain mean.',
+      'adv = (r - r.mean(axis=1, keepdims=True)) / (r.std(axis=1, keepdims=True) + eps); A = adv[..., None]; d = ref_logp - logp; kl = np.exp(d) - d - 1; per response: (x * mask).sum(-1) / mask.sum(-1).',
+      'Use the population std (np.std\'s default, not ddof=1), apply the mask before summing, and divide by each response\'s own length, not by T or by the total token count.',
     ],
     solution: `import numpy as np
 
 def group_advantages(rewards, eps=1e-8):
+    """(B, G) group-normalized advantages with the population std."""
     r = np.asarray(rewards, dtype=float)
     mean = r.mean(axis=1, keepdims=True)
     std = r.std(axis=1, keepdims=True)  # population std (ddof=0)
-    return (r - mean) / (std + eps)
+    return (r - mean) / (std + eps)     # identical rewards -> 0, not NaN
 
 
 def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
                    epsilon=0.2, beta=0.04, eps=1e-8):
+    """
+    GRPO objective. Returns {'advantages', 'objective', 'loss', 'mean_kl'}.
+    """
     logp = np.asarray(logp, dtype=float)
     old_logp = np.asarray(old_logp, dtype=float)
     ref_logp = np.asarray(ref_logp, dtype=float)
@@ -183,14 +224,14 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
     ratio = np.exp(logp - old_logp)
     surr = np.minimum(ratio * A, np.clip(ratio, 1 - epsilon, 1 + epsilon) * A)
 
-    # k3 KL estimator against the reference model
+    # k3 KL estimator against the reference model (always >= 0)
     d = ref_logp - logp
     kl = np.exp(d) - d - 1
 
     per_token = surr - beta * kl
 
-    # Mean over each response's valid tokens, then over all responses
-    lengths = mask.sum(axis=-1)
+    # Masked mean over each response's valid tokens, then mean over all responses
+    lengths = mask.sum(axis=-1)                 # (B, G), assumed >= 1
     objective = ((per_token * mask).sum(axis=-1) / lengths).mean()
     mean_kl = ((kl * mask).sum(axis=-1) / lengths).mean()
 
@@ -200,6 +241,8 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         'loss': float(-objective),
         'mean_kl': float(mean_kl),
     }
+
+# Time and space O(B * G * T)
 `,
   },
   {
@@ -208,62 +251,107 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
     section: 'post-training',
     difficulty: 'medium',
     description: `
-## Symmetric Int8 Quantization
+## Int8 Weight Quantization (absmax)
 
-Storing weights in int8 instead of float32 cuts memory by 4×. **Absmax** (symmetric) quantization maps the largest magnitude to 127:
+### What you'll build
+Symmetric (absmax) int8 quantization of a weight matrix, per output channel and per tensor; dequantization; an int8 matmul that rescales an int32 accumulator; and a report comparing the two schemes' errors.
+
+### Background
+Storing weights as int8 instead of float32 cuts memory by 4×, and int8 matmuls are fast on modern hardware. Absmax quantization maps the largest magnitude to ±127 and rounds everything else to the nearest step. The catch is outliers: one large weight sets a large step for everything sharing its scale. Giving each output row its own scale (**per-channel**, the "vector-wise" quantization of LLM.int8()) contains that damage.
+
+### Formula
+For a group of weights w that share one scale:
+\`\`\`text
+scale = max(max|w|, 1e-8) / 127
+w_q   = clip(round(w / scale), -127, 127)      stored as int8
+w_hat = w_q · scale                            dequantized
 \`\`\`
-scale = max|w| / 127
-w_q   = clip(round(w / scale), -127, 127)     (stored as int8)
-w_hat = w_q * scale                            (dequantized)
-\`\`\`
-Rounding is round-half-to-even (\`np.round\` / \`torch.round\`). The rounding error per weight is at most scale / 2.
+Rounding is round-half-to-even (\`np.round\` / \`torch.round\`), so the per-weight error is at most scale / 2.
+- **Per-tensor**: one scale for the whole matrix.
+- **Per-channel**: one scale per **row** of W, which has shape (d_out, d_in).
 
-### Per-tensor vs per-channel
-- **Per-tensor**: one scale for the whole matrix. One large outlier makes the scale large, and every small weight loses precision.
-- **Per-channel**: one scale per **output row** of W (shape (d_out, d_in)), so each row uses its own range. This is what LLM.int8() calls vector-wise quantization.
+**Int8 matmul** for y = x · Wᵀ:
+1. Quantize the activations **per row** of x (one scale per token): x_q of shape (n, d_in) and s_x of shape (n,).
+2. Accumulate the integer products in int32: acc = x_q · W_qᵀ, shape (n, d_out).
+3. Rescale with both scales: y ≈ acc · s_x[:, None] · s_w[None, :].
 
-To avoid dividing by zero, use \`scale = max(absmax, 1e-8) / 127\`.
+### Inputs
+- \`W\`: (d_out, d_in) float array
+- \`x\`: (n, d_in) float array
+- \`W_q\`: (d_out, d_in) int8 array; \`w_scales\` / \`scales\`: (d_out,) float array (or a Python float in \`dequantize\`)
 
-### Int8 matmul
-To compute y = x Wᵀ in int8, also quantize the activations **per row** of x (per token), accumulate the integer products in int32 and rescale with both scales:
-\`\`\`
-x_q, s_x = absmax-quantize each row of x          (n, d_in), (n,)
-acc      = x_q @ W_qᵀ   (int32 accumulation)       (n, d_out)
-y        ≈ acc * s_x[:, None] * s_w[None, :]
-\`\`\`
-
-### What to implement
-- \`quantize_per_channel(W)\` returns \`(W_q, scales)\`: W_q is an **int8** array (d_out, d_in), scales is (d_out,)
-- \`quantize_per_tensor(W)\` returns \`(W_q, scale)\`: int8 array and a Python float
-- \`dequantize(W_q, scales)\` returns floats; \`scales\` is either a (d_out,) array (one per row) or a scalar
-- \`int8_matmul(x, W_q, w_scales)\` returns the (n, d_out) float approximation of x Wᵀ
+### Expected return format
+- \`quantize_per_channel(W)\` returns a tuple \`(W_q, scales)\`: an **int8** array of shape (d_out, d_in) and a float array of shape (d_out,)
+- \`quantize_per_tensor(W)\` returns \`(W_q, scale)\`: an int8 array and a Python float
+- \`dequantize(W_q, scales)\` returns a float array of W_q's shape; \`scales\` is a (d_out,) array (one per row) or a scalar
+- \`int8_matmul(x, W_q, w_scales)\` returns an (n, d_out) float array approximating x · Wᵀ
 - \`quantization_report(W)\` returns a dictionary:
-  - \`'per_channel_error'\`: max |W - dequantize(per-channel)| (Python float)
-  - \`'per_tensor_error'\`: max |W - dequantize(per-tensor)| (Python float)
+  - \`'per_channel_error'\`: max |W - dequantize(*quantize_per_channel(W))| as a Python float
+  - \`'per_tensor_error'\`: max |W - dequantize(*quantize_per_tensor(W))| as a Python float
+
+### Edge cases and conventions
+- An all-zero row must not divide by zero: the 1e-8 floor on the absmax keeps it at 0.
+- The symmetric range is [-127, 127]; -128 is never used.
+- Exact halves round to even, e.g. 63.5 becomes 64 and 62.5 becomes 62.
+
+### Constraints
+NumPy only, vectorized. Cast to int32 before the integer matmul: int8 products overflow int8 immediately.
+
+### Follow-up
+- Why do LLM activations need special care (outlier features), and how does LLM.int8() handle them with mixed precision?
+- How do zero-point (asymmetric) quantization and 4-bit group-wise quantization (e.g. block size 64) change the error?
     `,
     examples: [
       {
-        input: 'W = [[0.7, -1.2, 0.3], [2.0, 0.1, -0.5]]',
-        output: 'W_q = [[74, -127, 32], [127, 6, -32]], scales = [1.2/127, 2.0/127] = [0.009449, 0.015748]',
-        explanation: 'Each row is scaled so that its largest magnitude maps to ±127',
+        input: 'quantize_per_channel(np.array([[0.7, -1.2, 0.3], [2.0, 0.1, -0.5]]))',
+        output: '(array([[74, -127, 32], [127, 6, -32]], dtype=int8), array([0.009449, 0.015748]))',
+        explanation: 'Each row\'s largest magnitude maps to ±127: scales are 1.2/127 and 2.0/127, and 0.7/0.009449 = 74.08 rounds to 74',
+      },
+      {
+        input: 'quantization_report(np.array([[0.01, -0.02, 0.013], [5.0, -3.0, 1.7]]))',
+        output: "{'per_channel_error': 0.007874, 'per_tensor_error': 0.01937}",
+        explanation: 'With one scale (5/127 = 0.039) the small first row quantizes to [0, -1, 0] and is nearly erased; per-row scales keep it',
       },
     ],
     starterCode: `import numpy as np
 
 def quantize_per_channel(W):
-    """Returns (W_q int8 (d_out, d_in), scales (d_out,)) with one scale per row."""
+    """
+    Absmax-quantize each row of W with its own scale.
+
+    Args:
+        W: (d_out, d_in) float weights
+
+    Returns:
+        (W_q, scales): W_q int8 (d_out, d_in), scales float (d_out,)
+        with scales = max(row absmax, 1e-8) / 127
+    """
     # Your code here
     pass
 
 
 def quantize_per_tensor(W):
-    """Returns (W_q int8, scale float) with one scale for the whole matrix."""
+    """
+    Absmax-quantize all of W with one scale.
+
+    Returns:
+        (W_q, scale): W_q int8 with W's shape, scale a Python float
+    """
     # Your code here
     pass
 
 
 def dequantize(W_q, scales):
-    """W_q * scale; scales is (d_out,) (per row) or a scalar."""
+    """
+    Map int8 values back to floats.
+
+    Args:
+        W_q: (d_out, d_in) int8 array
+        scales: (d_out,) per-row scales, or a single scalar
+
+    Returns:
+        (d_out, d_in) float array W_q * scale
+    """
     # Your code here
     pass
 
@@ -285,7 +373,7 @@ def int8_matmul(x, W_q, w_scales):
 
 
 def quantization_report(W):
-    """Returns {'per_channel_error': float, 'per_tensor_error': float}."""
+    """Returns {'per_channel_error': float, 'per_tensor_error': float} (max abs errors)."""
     # Your code here
     pass
 `,
@@ -344,18 +432,33 @@ def quantization_report(W):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'All-zero row stays 0 (no NaN); 63.5 rounds half-to-even to 64',
+        input: 'quantize_per_channel(np.array([[0.0, 0.0], [1.0, -2.0]]))[0].tolist()',
+        expected: '[[0, 0], [64, -127]]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'dequantize accepts a scalar scale',
+        input: 'dequantize(np.array([[1, -2], [127, 0]], dtype=np.int8), 0.5).tolist()',
+        expected: '[[0.5, -1.0], [63.5, 0.0]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Per-channel absmax: np.abs(W).max(axis=1); scales = np.maximum(absmax, 1e-8) / 127',
-      'Quantize: np.clip(np.round(W / scales[:, None]), -127, 127).astype(np.int8)',
-      'dequantize can reshape scales with np.reshape(scales, (-1, 1)) so it works for a scalar too',
-      'int8_matmul: quantize x per row the same way, then x_q.astype(np.int32) @ W_q.astype(np.int32).T, times s_x[:, None] * w_scales[None, :]',
+      'Every scheme here is the same operation (divide by a scale, round, clip, cast) applied to different groups of weights: rows, the whole matrix, or activation rows.',
+      'Write one helper that absmax-quantizes each row of a matrix and reuse it for per-channel weights and per-token activations; per-tensor is the same with a single scale.',
+      'scales = np.maximum(np.abs(M).max(axis=1), 1e-8) / 127; M_q = np.clip(np.round(M / scales[:, None]), -127, 127).astype(np.int8); dequantize with np.reshape(scales, (-1, 1)) so a scalar also works.',
+      'In int8_matmul, cast both operands with .astype(np.int32) before the matmul (int8 overflows), then multiply by x_scales[:, None] * w_scales[None, :].',
     ],
     solution: `import numpy as np
 
 def _absmax_quantize_rows(M):
+    """Quantize each row of M with its own absmax scale."""
     absmax = np.abs(M).max(axis=1)
-    scales = np.maximum(absmax, 1e-8) / 127.0
+    scales = np.maximum(absmax, 1e-8) / 127.0          # floor avoids 0-division
     M_q = np.clip(np.round(M / scales[:, None]), -127, 127).astype(np.int8)
     return M_q, scales
 
@@ -373,12 +476,13 @@ def quantize_per_tensor(W):
 
 
 def dequantize(W_q, scales):
+    # reshape(-1, 1) turns per-row scales into a column; a scalar stays a 1x1
     return W_q.astype(float) * np.reshape(scales, (-1, 1))
 
 
 def int8_matmul(x, W_q, w_scales):
     x = np.asarray(x, dtype=float)
-    x_q, x_scales = _absmax_quantize_rows(x)           # per-token activation scales
+    x_q, x_scales = _absmax_quantize_rows(x)             # per-token activation scales
     acc = x_q.astype(np.int32) @ W_q.astype(np.int32).T  # int32 accumulation
     return acc * x_scales[:, None] * np.asarray(w_scales)[None, :]
 
@@ -391,6 +495,8 @@ def quantization_report(W):
         'per_channel_error': float(np.abs(W - per_channel).max()),
         'per_tensor_error': float(np.abs(W - per_tensor).max()),
     }
+
+# int8_matmul: O(n * d_in * d_out) integer multiply-adds, 4x less weight memory than float32
 `,
   },
 ];

@@ -313,7 +313,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 19: Reinforcement Learning
 
 **URL**: /section/reinforcement-learning
-**Summary**: Master RL fundamentals from Q-learning to policy gradients.
+**Summary**: From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.
 **Problems** (15):
 
 1. **Discounted Return** (`/problem/reinforcement-learning/rl-discounted-return`) — easy
@@ -337,7 +337,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 20: Post-training & Efficiency
 
 **URL**: /section/post-training
-**Summary**: GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.
+**Summary**: GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve.
 **Problems** (2):
 
 1. **GRPO: Group-Relative Advantages & Objective** (`/problem/post-training/grpo-advantages`) — hard
