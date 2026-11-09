@@ -7,18 +7,18 @@ import { LanguageVariant } from '../../../types';
  */
 export const supervisedLearningPyTorch: Record<string, LanguageVariant> = {
   'logistic-regression': {
-    note: "Implement it with torch.exp; don't call torch.sigmoid or F.sigmoid.",
+    note: "Implement it with torch.exp; don't call torch.sigmoid, F.sigmoid or nn.Sigmoid. For a stable version, only ever exponentiate -|x|.",
     starterCode: `import torch
 
 def sigmoid(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute the sigmoid activation function.
+    Compute the sigmoid activation function element-wise.
 
     Args:
         x: Float tensor of any shape
 
     Returns:
-        Tensor of same shape with sigmoid applied element-wise
+        Float tensor of the same shape, with 1 / (1 + exp(-x)) applied element-wise
     """
     # Your code here
     pass
@@ -27,9 +27,18 @@ def sigmoid(x: torch.Tensor) -> torch.Tensor:
 
 def sigmoid(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute the sigmoid activation function.
+    Numerically stable sigmoid, applied element-wise.
+
+    Returns:
+        Float tensor of the same shape as x
     """
-    return 1 / (1 + torch.exp(-x))
+    x = x.float()
+    # exp(-|x|) is in (0, 1], so it can never overflow
+    e = torch.exp(-x.abs())
+    # x >= 0: 1 / (1 + exp(-x));  x < 0: exp(x) / (1 + exp(x))
+    return torch.where(x >= 0, 1 / (1 + e), e / (1 + e))
+
+# Time O(N), extra space O(N)
 `,
     testCases: [
       {
@@ -60,10 +69,26 @@ def sigmoid(x: torch.Tensor) -> torch.Tensor:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: '2D input keeps its shape and values',
+        input: 'bool(torch.allclose(sigmoid(torch.tensor([[2.0, -3.0], [0.5, 0.0]])), torch.tensor([[0.880797, 0.047426], [0.622459, 0.5]]), atol=1e-5))',
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Extreme inputs saturate to 0 and 1 (no nan)',
+        input: 'sigmoid(torch.tensor([-1000.0, 1000.0])).tolist()',
+        expected: '[0.0, 1.0]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Use torch.exp() for the exponential function.',
-      'The formula is 1 / (1 + exp(-x)); it broadcasts over any shape.',
+      'The sigmoid maps any real number to (0, 1); think about what happens at x = 0, x -> +inf and x -> -inf.',
+      'Tensor arithmetic is element-wise and broadcasts, so one expression handles any shape.',
+      'torch.exp(-x) is the only non-trivial piece: 1 / (1 + torch.exp(-x)).',
+      'torch.exp overflows to inf for large arguments. Stable trick: e = torch.exp(-x.abs()), then torch.where(x >= 0, 1 / (1 + e), e / (1 + e)).',
     ],
   },
   'binary-cross-entropy': {
@@ -75,11 +100,12 @@ def binary_cross_entropy(y_true, y_pred):
     Compute binary cross-entropy loss.
 
     Args:
-        y_true: True labels (0 or 1), tensor
-        y_pred: Predicted probabilities, tensor
+        y_true: True labels (0 or 1), tensor of shape (m,)
+        y_pred: Predicted probabilities in [0, 1], float tensor of shape (m,)
 
     Returns:
-        loss: Scalar BCE loss (Python float rounded to 4 decimals)
+        loss: Mean BCE as a Python float, rounded to 4 decimals
+              (clamp y_pred to [1e-7, 1 - 1e-7] before the logs)
     """
     # Your code here
     pass
@@ -127,15 +153,23 @@ def binary_cross_entropy(y_true, y_pred):
         expected: '0.2877',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Mixed confidence',
+        input: 'binary_cross_entropy(torch.tensor([1.0, 1.0, 0.0, 0.0]), torch.tensor([0.7, 0.5, 0.2, 0.4]))',
+        expected: '0.4459',
+        hidden: true,
+      },
     ],
     hints: [
-      'Clamp predictions with torch.clamp(y_pred, eps, 1 - eps)',
-      'Apply the formula element-wise with torch.log',
-      'Take the mean, then .item() and round to 4 decimals',
+      'Each sample contributes -log of the probability given to the true class: -log(p) if y = 1, -log(1 - p) if y = 0.',
+      'Cast the labels to float (integer labels are allowed), clamp the predictions, compute the per-sample terms, then average.',
+      'torch.clamp(y_pred, eps, 1 - eps), then -torch.mean(y * torch.log(p) + (1 - y) * torch.log(1 - p)); finish with round(loss.item(), 4).',
+      'In float32, 1 - 1e-15 is exactly 1.0, so a 1e-15 clamp does nothing at the top end and log(1 - p) becomes log(0). Use eps = 1e-7.',
     ],
   },
   'hinge-loss': {
-    note: 'Use tensor ops: torch.clamp(..., min=0) is max(0, ...).',
+    note: "Use tensor ops: torch.clamp(..., min=0) (or torch.relu) is max(0, ...). Don't use nn.HingeEmbeddingLoss or nn.MultiMarginLoss.",
     starterCode: `import torch
 
 def hinge_loss(y_true, scores):
@@ -199,11 +233,19 @@ def hinge_loss(y_true, scores):
         expected: '0.5625',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Mix of inside-margin, wrong-side and safe samples',
+        input: 'hinge_loss(torch.tensor([1.0, -1.0, 1.0, -1.0]), torch.tensor([0.3, 0.2, -0.5, -1.5]))',
+        expected: '0.85',
+        hidden: true,
+      },
     ],
     hints: [
-      'Compute element-wise margins: y_true * scores',
-      'Apply max(0, 1 - margin) using torch.clamp(..., min=0)',
-      'Return the mean of the losses with .item(), rounded to 4 decimals',
+      'The loss only cares about the margin y * s: how far on the correct side of the boundary each sample is.',
+      'Compute all margins at once, turn each into a loss, then average.',
+      'torch.clamp(1 - y_true * scores, min=0).mean().item(), rounded to 4 decimals.',
+      'Labels must be +1/-1, not 0/1. torch.max(a, 0) is a reduction over dim 0, not an element-wise max with 0: use torch.clamp(..., min=0) or torch.relu.',
     ],
   },
   'decision-tree-split': {
@@ -218,7 +260,8 @@ def gini_impurity(labels: torch.Tensor) -> float:
         labels: 1D int64 tensor of class labels (non-negative integers)
 
     Returns:
-        Gini impurity value between 0 and 1 (Python float)
+        Gini impurity 1 - sum_c p_c^2 as a Python float, in [0, 1)
+        (0.0 for an empty tensor)
     """
     # Your code here
     pass
@@ -270,11 +313,26 @@ def gini_impurity(labels: torch.Tensor) -> float:
         expected: '0.625',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Non-contiguous labels',
+        input: 'gini_impurity(torch.tensor([3, 3, 7, 7, 7]))',
+        expected: '0.48',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Three unbalanced classes',
+        input: 'gini_impurity(torch.tensor([0, 0, 1, 1, 1, 2]))',
+        expected: '0.611111',
+        hidden: true,
+      },
     ],
     hints: [
-      'torch.bincount(labels) counts each class.',
-      'Divide by labels.numel() to get proportions (convert to float first).',
-      'Gini = 1 - sum of squared probabilities; return it with .item().',
+      'Gini only depends on the fraction of samples in each class, not on the label values or their order.',
+      'Count each class, divide by the number of samples, then combine the proportions.',
+      'torch.bincount(labels) counts every label (missing labels count 0); p = counts.float() / labels.numel(); return (1 - (p ** 2).sum()).item().',
+      'Integer division or forgetting .float() gives all-zero proportions; also guard the empty tensor before dividing.',
     ],
   },
   'linear-regression-gd': {
@@ -288,13 +346,13 @@ def linear_regression(X: torch.Tensor, y: torch.Tensor,
     Train a simple linear regression model using gradient descent.
 
     Args:
-        X: Input features (1D float tensor)
-        y: Target values (1D float tensor)
+        X: Input features, 1D float tensor of shape (n,)
+        y: Target values, 1D float tensor of shape (n,)
         learning_rate: Step size for gradient descent
-        iterations: Number of training iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        Tuple of (weight, bias) as Python floats rounded to 2 decimals
+        Tuple (w, b) as Python floats, each rounded to 2 decimals
     """
     # Initialize parameters (autograd tracks them)
     w = torch.tensor(0.0, requires_grad=True)
@@ -369,15 +427,23 @@ def linear_regression(X: torch.Tensor, y: torch.Tensor,
         expected: '(1.51, 0.49)',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Negative slope',
+        input: 'linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([8.0, 6.0, 4.0, 2.0]), 0.1, 1000)',
+        expected: '(-2.0, 10.0)',
+        hidden: true,
+      },
     ],
     hints: [
-      'Forward: y_pred = w * X + b, loss = ((y_pred - y) ** 2).mean()',
-      'loss.backward() fills w.grad and b.grad',
-      'Inside torch.no_grad(): w -= learning_rate * w.grad, then w.grad.zero_() (gradients accumulate otherwise)',
+      'Each iteration: predict with the current parameters, measure the loss, let autograd compute the gradients, step downhill.',
+      'Forward: y_pred = w * X + b and loss = ((y_pred - y) ** 2).mean(); loss.backward() fills w.grad and b.grad with exactly the (2/n) formulas.',
+      'Update inside torch.no_grad(): w -= learning_rate * w.grad (same for b), so the update is not recorded in the graph.',
+      'Gradients accumulate across backward() calls: zero them (w.grad.zero_()) after every update, or every step uses the sum of all past gradients.',
     ],
   },
   'logistic-regression-full': {
-    note: 'Let autograd compute the gradients of the mean BCE loss (F.binary_cross_entropy_with_logits is fine for the loss); update under torch.no_grad().',
+    note: "Let autograd compute the gradients of the mean BCE loss (F.binary_cross_entropy_with_logits is fine for the loss) and update under torch.no_grad(). Don't use nn.Linear or torch.optim: the point is the update rule.",
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -386,10 +452,10 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     Train logistic regression using gradient descent.
 
     Args:
-        X: Float features (m samples, n features)
-        y: Binary float labels (m,)
+        X: Float features, shape (m, n)
+        y: Binary float labels in {0, 1}, shape (m,)
         learning_rate: Step size
-        iterations: Number of iterations
+        iterations: Number of full-batch updates
 
     Returns:
         w: Learned weights (n,), rounded to 4 decimals
@@ -451,15 +517,23 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Weight vector shape',
+        input: 'tuple(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0]), 0.5, 10)[0].shape)',
+        expected: '(2,)',
+        hidden: false,
+      },
     ],
     hints: [
-      'Forward: z = X @ w + b; loss = F.binary_cross_entropy_with_logits(z, y) (mean over samples)',
-      'loss.backward() gives exactly dw = (1/m) X^T (y_pred - y) and db = mean(y_pred - y)',
-      'Update inside torch.no_grad(), then zero w.grad and b.grad',
+      'Same loop as linear regression with autograd: forward, loss, backward, update, zero the gradients.',
+      'Forward: z = X @ w + b, then loss = F.binary_cross_entropy_with_logits(z, y), which is the mean BCE of sigmoid(z) computed stably from the logits.',
+      'loss.backward() gives exactly dw = X.T @ (sigmoid(z) - y) / m and db = mean(sigmoid(z) - y); update w and b inside torch.no_grad().',
+      'Pass the logits z (not sigmoid(z)) to binary_cross_entropy_with_logits, use float labels, and zero w.grad and b.grad after every step.',
     ],
   },
   'linear-svm': {
-    note: 'Write the objective (λ/2)·||w||² + mean(relu(1 - margins)) and let autograd differentiate it. torch.relu has gradient 0 at the hinge (margin exactly 1), matching the strict margin < 1 rule.',
+    note: "Write the objective (λ/2)·||w||² + mean(relu(1 - margins)) and let autograd differentiate it; don't use torch.optim or nn.Linear. torch.relu has gradient 0 at the hinge (margin exactly 1), matching the strict margin < 1 rule.",
     starterCode: `import torch
 
 def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
@@ -467,11 +541,11 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     Train a linear SVM using gradient descent on hinge loss + L2 regularization.
 
     Args:
-        X: Float features (m samples, n features)
+        X: Float features, shape (m, n)
         y: Float labels in {-1, +1}, shape (m,)
-        learning_rate: Step size for gradient descent
-        lambda_param: L2 regularization strength
-        iterations: Number of training iterations
+        learning_rate: Step size
+        lambda_param: L2 regularization strength (bias not regularized)
+        iterations: Number of full-batch updates
 
     Returns:
         w: Learned weights (n,), rounded to 4 decimals
@@ -563,16 +637,24 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'One step from zero (every sample violates the margin)',
+        input: '(lambda r: (r[0].tolist(), r[1]))(linear_svm(torch.tensor([[2.0, 1.0], [3.0, 2.0], [-2.0, -1.0], [-3.0, -2.0]]), torch.tensor([1.0, 1.0, -1.0, -1.0]), 0.1, 0.01, 1))',
+        expected: '([0.25, 0.15], 0.0)',
+        hidden: true,
+      },
     ],
     hints: [
-      'margins = y * (X @ w + b)',
-      'loss = lambda_param / 2 * (w ** 2).sum() + torch.relu(1 - margins).mean()',
-      'loss.backward(), then update w and b inside torch.no_grad() and zero their gradients',
+      'Write down the objective as a tensor expression and let autograd produce the subgradient.',
+      'margins = y * (X @ w + b); loss = lambda_param / 2 * (w ** 2).sum() + torch.relu(1 - margins).mean().',
+      'loss.backward(), then w -= learning_rate * w.grad and b -= learning_rate * b.grad inside torch.no_grad(), then zero both gradients.',
+      'Use .mean() over all m samples for the hinge part (not a mean over the violators) and do not put b in the L2 term. torch.relu has gradient 0 at exactly 0, matching the strict margin < 1 rule.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
   'knn-classifier': {
-    note: 'Use torch.cdist or broadcasting for the distances, torch.argsort(..., stable=True) for the neighbour order and torch.bincount for the vote.',
+    note: 'Use torch.cdist or broadcasting for the distances, torch.argsort(..., stable=True) for the neighbour order and torch.bincount for the vote. No sklearn.',
     starterCode: `import torch
 
 def knn_predict(X_train, y_train, X_test, k=3):
@@ -662,13 +744,14 @@ def knn_predict(X_train, y_train, X_test, k=3):
       },
     ],
     hints: [
-      '(X_test.unsqueeze(1) - X_train.unsqueeze(0)) has shape (m, n, d); square, sum over dim=-1, sqrt.',
-      'torch.argsort(D, dim=1, stable=True)[:, :k] keeps training order for equal distances.',
-      'torch.bincount(labels, minlength=n_classes).argmax() picks the smallest label among tied counts.',
+      'Split the problem in two: an (m, n) distance matrix between queries and training points, then a vote per query.',
+      '(X_test.unsqueeze(1) - X_train.unsqueeze(0)) has shape (m, n, d); square, sum over dim=-1, sqrt. torch.cdist(X_test, X_train) gives the same matrix.',
+      'torch.argsort(D, dim=1, stable=True)[:, :k] gives the k nearest indices with distance ties in training order; torch.bincount(y_train[idx], minlength=n_classes).argmax() picks the smallest label among tied counts.',
+      'Without stable=True, equal distances can come out in any order. torch.topk(-D, k) is not guaranteed to keep index order on ties either.',
     ],
   },
   'naive-bayes': {
-    note: 'Compute in log space and normalize with torch.logsumexp (or F.log_softmax). Return tensors.',
+    note: 'Compute in log space and normalize with torch.logsumexp (or F.log_softmax). Return tensors. Use var(unbiased=False): torch defaults to the n - 1 estimator. No sklearn.',
     starterCode: `import math
 import torch
 
@@ -769,15 +852,23 @@ def gaussian_nb_predict_proba(model, X):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'Unequal priors shift the posterior',
+        input: 'bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[0.0], [2.0], [0.5], [1.5], [3.0], [5.0]]), torch.tensor([0, 0, 0, 0, 1, 1])), torch.tensor([[2.5]])), torch.tensor([[0.562951, 0.437049]]), atol=1e-5))',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'X[y == c].mean(dim=0) and X[y == c].var(dim=0, unbiased=False) per class; torch.stack the results.',
-      'epsilon = var_smoothing * X.var(dim=0, unbiased=False).max()',
-      'jll - torch.logsumexp(jll, dim=1, keepdim=True) is the log posterior.',
+      'Fitting is counting and averaging per class; prediction is log prior + sum of per-feature log densities, then normalise.',
+      'Per class: X[y == c].mean(dim=0) and X[y == c].var(dim=0, unbiased=False); torch.stack the results. epsilon = var_smoothing * X.var(dim=0, unbiased=False).max(), once over all samples.',
+      'Build the (m, C) joint log-likelihood with X.unsqueeze(1) - means.unsqueeze(0); jll - torch.logsumexp(jll, dim=1, keepdim=True) is the log posterior.',
+      "torch.var defaults to the unbiased (n - 1) estimator; sklearn and this problem use unbiased=False. Never exponentiate jll before normalising: it underflows to 0 and gives nan.",
     ],
   },
   'ridge-lasso': {
-    note: 'Ridge: torch.linalg.solve. Lasso: loop over coordinates with tensor ops; torch.sign(a) * torch.clamp(a.abs() - lam, min=0) is the soft-threshold.',
+    note: 'Ridge: torch.linalg.solve. Lasso: loop over coordinates with tensor ops; torch.sign(a) * torch.clamp(a.abs() - lam, min=0) is the soft-threshold. No sklearn, and no autograd/optim (L1 has no gradient at 0, which is exactly why coordinate descent is used).',
     starterCode: `import torch
 
 def ridge_fit(X, y, lam):
@@ -905,15 +996,23 @@ def lasso_fit(X, y, lam, n_sweeps=100):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '8',
+        description: 'One-feature lasso is a soft-thresholded least-squares slope',
+        input: '(lambda wb: bool(torch.allclose(wb[0], torch.tensor([1.6]), atol=1e-5) and abs(wb[1] - 2.0) < 1e-5))(lasso_fit(torch.tensor([[1.0], [2.0], [3.0], [4.0]]), torch.tensor([3.0, 5.0, 7.0, 9.0]), 0.5))',
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Centre with X.mean(dim=0) and y.mean(); b = (y_mean - x_mean @ w).item().',
-      'torch.linalg.solve(Xc.T @ Xc + lam * torch.eye(d), Xc.T @ yc)',
-      'In the lasso loop, update the residual r = r - Xc[:, j] * (w_new - w[j]) before writing w[j] = w_new.',
+      'Both problems become intercept-free after centring: X.mean(dim=0) and y.mean(); b = (y_mean - x_mean @ w).item().',
+      'Ridge is one linear solve; lasso optimises one weight at a time, each with a closed-form soft-threshold update.',
+      'Ridge: torch.linalg.solve(Xc.T @ Xc + lam * torch.eye(d), Xc.T @ yc). Soft-threshold: torch.sign(a) * torch.clamp(a.abs() - lam, min=0).',
+      'In the lasso loop, update the residual r = r - Xc[:, j] * (w_new - w[j]) before writing w[j] = w_new; never form the matrix inverse with torch.linalg.inv.',
     ],
   },
   'gradient-boosting': {
-    note: 'Same algorithm with tensor ops; thresholds and leaf values are returned as Python floats, predictions as a tensor.',
+    note: 'Same algorithm with tensor ops; no sklearn. Thresholds and leaf values are returned as Python floats, predictions as a tensor.',
     starterCode: `import torch
 
 def fit_stump(X, r):
@@ -1043,11 +1142,19 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'Constant features: no candidate split',
+        input: '(lambda s: (s[0], s[1] == float("inf"), s[2], s[3]))(fit_stump(torch.tensor([[2.0, 7.0], [2.0, 7.0], [2.0, 7.0]]), torch.tensor([1.0, 2.0, 6.0])))',
+        expected: '(0, True, 3.0, 3.0)',
+        hidden: true,
+      },
     ],
     hints: [
-      'torch.unique(X[:, j]) is sorted; midpoints are (u[:-1] + u[1:]) / 2.',
-      'Score all thresholds at once with a (T, n) mask: X[:, j].unsqueeze(0) <= thresholds.unsqueeze(1).',
-      'torch.where(X[:, j] <= t, left, right) evaluates a stump.',
+      'Get fit_stump right first: the boosting loop is "fit a stump to the residuals, add learning_rate times its prediction".',
+      'torch.unique(X[:, j]) is sorted, so the candidate thresholds are (u[:-1] + u[1:]) / 2.',
+      'Score all thresholds of a feature at once with a (T, n) mask X[:, j].unsqueeze(0) <= thresholds.unsqueeze(1): SSE = sum(r^2) - s_l^2 / n_l - s_r^2 / n_r. torch.where(X[:, j] <= t, left, right) evaluates a stump.',
+      'Replace the best only on a strictly smaller SSE, return Python numbers with .item(), and fit each stump to y - F, not to y.',
     ],
   },
   'decision-tree-bagging': {
@@ -1224,6 +1331,12 @@ def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
         expected: 'True',
         hidden: true,
       },
+    ],
+    hints: [
+      'Think recursively: a node either stops (leaf with the majority class) or picks the single best split and asks the same question of each half.',
+      'Scan every (feature, threshold) pair with best starting at the node\'s own Gini and replace only if imp < best - 1e-12. Thresholds: v = torch.unique(X[:, f]) (sorted); midpoints (v[:-1] + v[1:]) / 2.',
+      'torch.bincount(y).argmax() is the majority class with ties to the smallest label; the same idiom per column of the stacked (n_estimators, n_test) votes does the bagging vote.',
+      'Draw bootstrap indices from one np.random.default_rng(seed) created outside the tree loop, and convert with torch.from_numpy. Store feature, label and threshold as Python int/float (.item(), .tolist()), not 0-d tensors.',
     ],
   },
 };

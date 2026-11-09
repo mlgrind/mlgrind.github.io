@@ -248,52 +248,85 @@ Let's practice these essential skills!
   {
     id: 'supervised-learning',
     title: 'Supervised Learning',
-    description: 'Implement core supervised learning algorithms from scratch.',
+    description: 'Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.',
     icon: '📊',
     introduction: `
 # Supervised Learning
 
-Supervised learning is when you train a model on labeled data to make predictions.
+Supervised learning fits a function \`f(x) ≈ y\` from labelled examples \`(x_i, y_i)\`. Linear and logistic models, trees and their ensembles still power most tabular ML in production (fraud scoring, ranking features, demand forecasting), and they are the standard warm-up in ML coding interviews: "implement logistic regression from scratch" tests your calculus, your NumPy and your feel for numerical stability in one go.
 
-## Key Concepts
+## Core ideas
 
-### Linear Regression
-- **Goal**: Predict continuous values
-- **Formula**: y = wx + b
-- **Training**: Minimize mean squared error (MSE)
-- **Gradient descent**: Update weights iteratively
+Almost every model here follows one recipe: pick a **model family**, a **loss** that measures how wrong it is, and an **optimiser** that reduces the loss.
 
-### Logistic Regression
-- **Goal**: Binary classification
-- **Sigmoid function**: Maps outputs to [0, 1] probabilities
-- **Loss**: Binary cross-entropy
-- **Decision boundary**: Linear separation of classes
+| Model | Prediction | Loss | Fitting |
+|-------|------------|------|---------|
+| Linear regression | \`X @ w + b\` | MSE \`mean((y_pred - y)^2)\` | gradient descent or closed form |
+| Logistic regression | \`sigmoid(X @ w + b)\` | binary cross-entropy | gradient descent |
+| Linear SVM | \`sign(X @ w + b)\` | hinge \`max(0, 1 - y*s)\` + \`(lam/2)\\|\\|w\\|\\|^2\` | subgradient descent |
+| Ridge / Lasso | \`X @ w + b\` | squared error + L2 / L1 penalty | closed form / coordinate descent |
+| k-NN | majority vote of the k nearest points | none (lazy) | store the data |
+| Gaussian Naive Bayes | \`argmax_c P(c) * prod_j N(x_j; mean_cj, var_cj)\` | likelihood | per-class means and variances |
+| Trees, boosting, bagging | piecewise-constant regions | Gini / squared error | greedy splits, ensembles |
 
-### Decision Trees
-- **Concept**: Recursive binary splits based on features
-- **Splitting criteria**: Gini impurity, Information gain
-- **Advantages**: Interpretable, handles non-linear relationships
+Shapes used throughout: \`X\` is \`(n_samples, n_features)\`, \`y\` is \`(n_samples,)\`, \`w\` is \`(n_features,)\` and \`b\` is a scalar.
 
-### Support Vector Machines (SVMs)
-- **Goal**: Find the maximum-margin hyperplane
-- **Hinge loss**: max(0, 1 - y * score) — penalizes misclassified and low-margin samples
-- **Regularization**: L2 penalty on weights to maximize margin
-- **Key insight**: Only "support vectors" (points near the boundary) affect the decision boundary
+**Gradients you should know by heart.** For MSE, \`dL/dw = (2/n) * X.T @ (y_pred - y)\`. For BCE with a sigmoid output, the derivatives cancel and \`dL/dw = (1/n) * X.T @ (y_pred - y)\`: the same form, without the 2. For the hinge loss only the samples with margin \`y * s < 1\` contribute.
 
-### Beyond Linear Models
-- **k-Nearest Neighbours**: no training; predict by majority vote of the k closest points
-- **Gaussian Naive Bayes**: Bayes' rule with per-class Gaussians, computed in log space with logsumexp
-- **Ridge & Lasso**: L2 shrinks weights smoothly (closed form); L1 sets some exactly to zero (coordinate descent)
-- **Gradient Boosting**: add weak learners (stumps) one at a time, each fit to the residuals of the current model
+**Regularisation** trades training fit for simpler models: L2 (\`lam * ||w||^2\`) shrinks every weight; L1 (\`lam * ||w||_1\`) drives some weights to exactly zero. The intercept is not penalised.
 
-### The Interview Perspective
-Interviewers often ask you to:
-- Implement gradient descent from scratch
-- Explain the math behind these algorithms
-- Compute and interpret hinge loss
-- Discuss trade-offs between algorithms
+**Trees and ensembles.** A tree greedily picks the split that most reduces impurity (Gini \`1 - sum_c p_c^2\` for classification, squared error for regression). Single deep trees overfit; **bagging** averages trees on bootstrap samples to cut variance, and **boosting** adds small trees one by one, each fit to the residuals (negative gradient) of the current model, to cut bias.
 
-Let's build these algorithms!
+## Worked micro-example
+
+Logistic regression on the AND gate: \`X = [[0, 0], [0, 1], [1, 0], [1, 1]]\`, \`y = [0, 0, 0, 1]\`, starting at \`w = [0, 0]\`, \`b = 0\`, learning rate 0.5.
+
+\`\`\`text
+z      = X @ w + b        = [0, 0, 0, 0]
+y_pred = sigmoid(z)       = [0.5, 0.5, 0.5, 0.5]
+BCE    = -mean(log 0.5)   = 0.6931
+error  = y_pred - y       = [0.5, 0.5, 0.5, -0.5]
+dw     = X.T @ error / 4  = [(0.5 - 0.5) / 4, (0.5 - 0.5) / 4] = [0, 0]
+db     = mean(error)      = 0.25
+b      = 0 - 0.5 * 0.25   = -0.125
+\`\`\`
+
+After one step only the bias moved: the model first learns that most labels are 0. After 1000 steps it reaches \`w ≈ [6.01, 6.01]\`, \`b ≈ -9.20\`, and only \`(1, 1)\` gets a positive logit.
+
+## Common pitfalls
+
+- **log(0) and overflow**: clip probabilities before \`log\` (\`1e-15\` in float64, about \`1e-7\` in float32), and never exponentiate large numbers. Use the stable sigmoid, and do Naive Bayes in log space with logsumexp.
+- **Label conventions**: BCE wants \`{0, 1}\`, the hinge loss wants \`{-1, +1}\`. Mixing them silently breaks training.
+- **Simultaneous updates**: compute all gradients from the current parameters before changing any of them.
+- **Shapes**: \`X.T @ error\` is \`(n_features,)\`; \`X @ error\` is a shape error or, worse, a silent bug when the matrix is square.
+- **Scaling**: k-NN distances and gradient-descent step sizes depend on feature scales; standardise using statistics from the **training** split only.
+- **Tie-breaking**: k-NN votes, tree splits and majority leaves need a rule. Every problem here states one so results are reproducible.
+- **Unregularised logistic regression on separable data** never converges: the weights grow forever.
+
+## Interview angle
+
+- Derive the logistic regression gradient, and explain why BCE beats MSE for classification (convexity, gradients that do not vanish).
+- "Why does L1 give sparse weights?" (the corners of the L1 ball; the soft-threshold update).
+- Bias versus variance: when do bagging and boosting each help?
+- Complexity: k-NN costs \`O(n * d)\` per query and \`O(n * d)\` memory; a split search is \`O(d * n log n)\` per node with sorting; gradient descent is \`O(iterations * n * d)\`.
+- Follow-ups: how does scikit-learn define \`alpha\`, \`C\` and \`var_smoothing\`? The problems state these conventions and match sklearn where they mirror it.
+
+## Problems in this section
+
+1. **Sigmoid for Logistic Regression**: a numerically stable logistic function.
+2. **Binary Cross-Entropy Loss**: the log loss with clipping.
+3. **Hinge Loss**: the margin loss behind SVMs.
+4. **Gini Impurity for Decision-Tree Splits**: the impurity a classification tree minimises.
+5. **Linear Regression with Gradient Descent**: the full predict, gradient, update loop.
+6. **Logistic Regression with Gradient Descent**: the previous three problems combined into a classifier.
+7. **Linear SVM with Subgradient Descent**: L2-regularised hinge loss.
+8. **k-Nearest Neighbours Classifier**: vectorised distances and careful tie-breaking.
+9. **Gaussian Naive Bayes**: sklearn's \`GaussianNB\` in log space.
+10. **Ridge & Lasso Regression**: closed form and coordinate descent, matching sklearn.
+11. **Gradient Boosting with Stumps**: residual fitting, like \`GradientBoostingRegressor(max_depth=1)\`.
+12. **Decision Tree Classifier with Bagging**: recursive Gini trees and bootstrap voting.
+
+Related: **Model Evaluation** covers how to measure these models (precision/recall, ROC, cross-validation), and the softmax and cross-entropy problems in **Neural Networks** extend logistic regression to many classes.
     `,
     problems: ['logistic-regression', 'binary-cross-entropy', 'hinge-loss', 'decision-tree-split', 'linear-regression-gd', 'logistic-regression-full', 'linear-svm', 'knn-classifier', 'naive-bayes', 'ridge-lasso', 'gradient-boosting', 'decision-tree-bagging'],
   },
