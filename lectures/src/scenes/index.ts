@@ -4,6 +4,7 @@ import type { LectureManifest, ManifestChapter, ManifestSentence } from '../type
 import { TransformersScenes } from './transformers';
 import { LlmGenerationScenes } from './llm-generation';
 import { LlmInternalsScenes } from './llm-internals';
+import { RepresentationLearningScenes } from './representation-learning';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -25,4 +26,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'llm-generation': LlmGenerationScenes,
   'llm-internals': LlmInternalsScenes,
+  'representation-learning': RepresentationLearningScenes,
 };
