@@ -1,146 +1,79 @@
-# Test UX - ML Coding Lab
+# Test UX - ML Grind
 
-Perform a comprehensive UX test of the ML Coding Lab website running at http://localhost:5173/ml-coding-lab/. Use the Chrome browser automation tools to interact with the site like a real user would.
+Run an end-to-end UX test of ML Grind (production: https://mlgrind.github.io/) against a local production build, the way real learners use it.
 
-**Before starting**: Verify the dev server is running on port 5173. If not, start it with `npm run dev` in the background and wait for it to be ready.
+**Setup**
 
-## Test Plan
+```bash
+npm run build
+npx vite preview --port 4197 --strictPort   # serves dist/ at http://localhost:4197/
+```
 
-Run through the following test cases in order. For each test, take a screenshot to verify the result and report PASS/FAIL.
+The site is served at the root (`base: '/'`). Drive it with Playwright (`require('playwright')`, `chromium.launch()`). Pyodide loads from cdn.jsdelivr.net, so in a sandbox launch Chromium with the HTTPS proxy (`proxy: { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' }`). Monaco is bundled (there is no `window.monaco`): to replace editor code, click the editor, press Ctrl+A, write the code with `navigator.clipboard.writeText` (grant `clipboard-read`/`clipboard-write`) and press Ctrl+V.
 
-### 1. Homepage Load
-- Navigate to http://localhost:5173/ml-coding-lab/
-- Verify the page title is "ML Coding Lab"
-- Verify the hero text "Learn ML By Building" is visible
-- Verify the Overall Progress bar is displayed
-- Verify section cards are rendered (at least 10 sections)
-- Verify the sidebar shows "LEARNING SECTIONS" with numbered items
+Collect `console` errors and `pageerror`s on every page, and check `document.documentElement.scrollWidth <= clientWidth` (no horizontal overflow) on every page.
 
-### 2. Header Navigation
-- Verify "ML Coding Lab" logo/title links to home
-- Verify "Scratchpad" button is present
-- Verify "Cheat Sheet" button is present
-- Verify "Feedback" button is present
-- Verify "Overall Progress" indicator is shown with percentage
+## Personas, themes, viewports
 
-### 3. Section Page
-- Click on any section card (e.g., "NumPy Fundamentals")
-- Verify the section title and description are displayed
-- Verify the Introduction section renders with markdown formatting (headings, code blocks, bullet lists)
-- Verify the Problems list shows problem cards with:
-  - Problem number
-  - Title
-  - Difficulty badge (easy/medium/hard)
-  - Test case count
-  - Arrow indicator
+Test each persona in **light and dark** at **1440px** and **390px** (plus a pass at **768px**). Seed `localStorage` before the app loads (`context.addInitScript`):
 
-### 4. Problem Page - Layout
-- Click on a problem from the list
-- Verify the split-pane layout:
-  - Left: Problem description with title, difficulty badge, description, examples, function signature
-  - Right top: Monaco code editor with starter code
-  - Right bottom: Console with Tests/Output tabs
-- Verify "Python ready" indicator (green dot) appears
-- Verify "Run Tests" button is visible
-- Verify breadcrumb navigation is shown (Section name / Problem name)
+| Key | Purpose |
+|-----|---------|
+| `ml-lab-dark-mode` | `"true"` / `"false"` (the default with no key is dark) |
+| `ml-interview-progress` | `{ [sectionId]: { [problemId]: { status: 'in_progress' \| 'completed', code?, codes?: { pytorch }, solvedIn?: ['numpy' \| 'pytorch'], lastAttempt: ISO } } }` |
+| `ml-grind-flashcard-progress` | `{ [cardId]: { cardId, ease, interval, repetitions, nextReview: ISO, lastReviewed? } }` (card ids like `fc-numpy-broadcasting`) |
+| `ml-lab-language` | `"pytorch"` or `"numpy"` (the problem page track preference) |
+| `mlgrind-analytics-disabled` | `"true"` to keep test runs out of analytics |
 
-### 5. Code Editor
-- Click into the Monaco editor
-- Verify you can select all text (Cmd+A) and type new code
-- Verify syntax highlighting works (keywords like `import`, `def` should be colored)
-- Verify "Maximize" and "Reset" buttons are present
+1. **First-time visitor**: empty localStorage. Expect "Solve your first problem →" and no dashboard.
+2. **Returning user**: several problems completed / in progress across sections, saved code, `lastAttempt` timestamps over the last week, some flash-card state. Expect the "Continue: <problem> →" CTA, the "Your dashboard" cards (CONTINUE / NEXT), Recent activity and the Flash cards panel.
+3. **PyTorch user**: returning progress plus `ml-lab-language = pytorch`. Problem pages open on the PyTorch track (`import torch` starter) with the "PyTorch track" note.
 
-### 6. Python Execution - Passing Tests
-- For the current problem, paste/type the correct solution (look at the problem and write a valid solution, or use the solution from hints)
-- Click "Run Tests"
-- Wait for execution (2-3 seconds)
-- Verify:
-  - Test Results show with green checkmarks
-  - "X/X passed" indicator appears
-  - Progress updates in sidebar and header
-  - "Next Problem" button appears after all tests pass
+## Flows
 
-### 7. Python Execution - Failing Tests
-- Navigate to a different problem
-- Click "Run Tests" with the starter code (which should fail)
-- Verify:
-  - Test Results show with red X marks for failures
-  - Error messages or "Expected vs Got" output is shown
-  - No "Next Problem" button appears
+### Home `/`
+- Hero (eyebrow with the problem count, "Learn Machine Learning by Building"), primary CTA.
+- **Learning paths** dropdown: every item (NumPy foundations, ML interview prep, Build a transformer, Seven days of ML coding) must be fully visible and clickable **above** the dashboard cards and panels, on desktop and inside the viewport at 390px. Check with `document.elementFromPoint` at each item's centre.
+- Dashboard cards, Recent activity (collapsible), Flash cards → Review Now.
+- Grouped curriculum (Foundations … Capstone) with `done/total` counts per section.
+- "Browse problems reported in interviews →" goes to `/companies`.
 
-### 8. Hints & Solution
-- On any problem page, scroll down in the left panel
-- Verify "Hints" section shows "Show Hint (0/N)"
-- Click "Show Hint" - verify first hint appears
-- Click again to reveal more hints
-- Verify "Solution" section says "Reveal all hints first to unlock the solution"
-- Reveal all hints, then verify "Reveal Solution" button appears
-- Click "Reveal Solution" and verify solution code is shown
+### Header and navigation
+- Logo → home. **Tools** menu (Scratchpad, Flash Cards with due badge, Cheat Sheet opens `/ml-cheatsheet.html` in a new tab, Send feedback opens the feedback dialog). Theme toggle. Progress pill (`solved / total`).
+- On problem pages and below 1024px, **☰** opens the curriculum drawer: collapsible groups, Tools links on mobile, Escape and backdrop click close it, navigating closes it.
 
-### 9. Test Cases Tab
-- Click the "Tests (N)" tab in the console
-- Verify test cases are displayed with:
-  - Test description
-  - Input values
-  - Expected output
-- Verify hidden tests show "+ N hidden test (not editable)"
-- Verify visible test cases are editable (click into input/expected fields)
+### Section page `/section/<id>`
+- Icon, title, progress bar; the Introduction collapses and expands (state remembered per section, `aria-expanded` on the toggle); markdown renders (headings, lists, code, tables).
+- Problem list: status circle / check, difficulty, test count, "PyTorch" tag when a track exists.
 
-### 10. Scratchpad
-- Click "Scratchpad" in the header
-- Verify the Python Scratchpad page loads with:
-  - Full-width Monaco editor
-  - "Run Code", "Reset", "Clear Output" buttons
-  - "Code is auto-saved" indicator
-  - Output panel
-- Type or modify code in the editor
-- Click "Run Code" and verify output appears
-- Verify NumPy is available (e.g., `import numpy as np; print(np.array([1,2,3]))`)
+### Problem page `/problem/<section>/<problem>`
+- Title row: H1, difficulty, `n / total` with prev/next, share. Company tags ("Reported in interviews at …") toggle a sources panel.
+- Tabs: Description, Examples, Hints & Solution.
+- NumPy | PyTorch toggle swaps the starter code and saved code per track.
+- **Run Tests** with the starter code (fails), with a wrong solution (fails, Expected vs Actual), then reveal all hints → Reveal Solution → Load into Editor → Run Tests (all pass, green "All tests passed!" banner auto-dismisses after 3 s, "Next Problem →" appears, progress pill increments).
+- Infinite loop (`while True: pass`) → **Stop** appears next to Run; clicking it stops the run ("Execution stopped.") and Python is ready again. The layout must not shift while running.
+- ⋯ menu: Maximize editor / Restore layout, Reset code (confirm dialog), Copy share link (copies `https://mlgrind.github.io/problem/...`).
+- Console tabs: Tests (editable visible tests, "+ N hidden tests"), Output, Results, AI Feedback (when the worker is not configured it must fail gracefully).
+- **Mobile (390px)**: Problem | Code segmented control, sticky "Start coding" bar, Load into Editor from the Hints view, console tabs on one line, ⋯ menu inside the viewport.
 
-### 11. Progress Persistence
-- Solve a problem (if not already done)
-- Navigate to the homepage
-- Verify the section's progress bar updated
-- Verify overall progress percentage updated
-- Reload the page (navigate away and back)
-- Verify progress is still persisted (localStorage)
+### Other pages
+- `/learn/<id>` (e.g. `numpy-foundations`, `ml-interview-prep`, `build-a-transformer`): steps with completion ticks and "n of m completed".
+- `/challenge`: seven days.
+- `/flashcards`: deck filter chips, Show Answer, grading buttons, due counts.
+- `/scratchpad`: Run Code (NumPy available), Stop on long runs, Reset, Clear Output, autosave.
+- `/companies` and `/companies?company=uber`: company chips with logos and counts, filtered problem list.
+- `/terms`, `/privacy`: readable in both themes.
+- An unknown URL shows the 404 page ("Page not found", Back to curriculum).
+- Legacy `/problem/<id>` redirects to `/problem/<section>/<id>`.
 
-### 12. Footer & Legal Pages
-- Scroll to the bottom of the homepage
-- Verify footer shows:
-  - Copyright with current year
-  - "Terms of Service" link
-  - "Privacy Policy" link
-  - "GitHub" link
-  - License text
-- Click "Terms of Service" - verify the page loads with legal content
-- Navigate back and click "Privacy Policy" - verify it loads
+### Keyboard and accessibility
+- Tab through the header and home page: visible focus rings, logical order, no traps.
+- Menus (Tools, Learning paths, ⋯): Enter / ArrowDown opens with focus on the first item, ArrowUp/ArrowDown wrap, Home/End, Escape closes and returns focus to the trigger (also after a mouse click), Tab closes and continues from the trigger.
+- Feedback dialog: `role="dialog"`, focus starts in the Name field, Tab stays inside, Escape closes and returns focus.
 
-### 13. Responsive Elements
-- Verify no horizontal scrolling on any page
-- Verify code blocks in problem descriptions wrap properly
-- Verify the sidebar doesn't overflow
-
-### 14. Cheat Sheet
-- Click "Cheat Sheet" in the header
-- Verify the ML Interview Cheat Sheet page loads (may open in new tab)
-- Verify it contains reference material organized in sections
-- Verify "Print / Save as PDF" button is present
+### Visual
+- Overlap / z-index (menus and banners above content), clipped text, horizontal overflow, broken layouts at 390px and 768px, light-mode contrast, dark-mode text that is too dark, inconsistent spacing.
 
 ## Reporting
 
-After completing all tests, provide a summary table:
-
-```
-| # | Test Case | Status | Notes |
-|---|-----------|--------|-------|
-| 1 | Homepage Load | PASS/FAIL | ... |
-| 2 | Header Navigation | PASS/FAIL | ... |
-...
-```
-
-Also note any:
-- Visual issues (misalignment, overflow, clipping)
-- Functional bugs (broken interactions, wrong behavior)
-- Performance concerns (slow loading, lag)
-- UX improvements that could be made
+For each issue: severity (blocker / major / minor / nit), URL, persona, theme, viewport, repro steps, expected vs actual, and a screenshot path. Finish with a PASS/FAIL table per flow and the console errors found (there should be none).
