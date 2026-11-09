@@ -941,47 +941,87 @@ The same numbers come out of a two-pass softmax; the online version never needed
   {
     id: 'representation-learning',
     title: 'Representation Learning & Retrieval',
-    description: 'Contrastive learning, embedding search and retrieval for RAG.',
+    description: 'Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.',
     icon: '🧭',
     introduction: `
 # Representation Learning & Retrieval
 
-A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.
+## Why it matters
+A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close, unrelated things are far apart. Once you have that, search, clustering, deduplication, recommendation and retrieval for LLMs all come down to comparing vectors. Retrieval-augmented generation (RAG) is how most production LLM applications ground answers in private or fresh data, and "design a RAG system" is a standard LLM interview question.
 
-## Embeddings and cosine similarity
-Most embedding models are compared with **cosine similarity**, the dot product of L2-normalised vectors:
-\`\`\`
-cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
-\`\`\`
-After normalisation, scoring a query against N documents is a single matrix multiply.
+## Where this sits in the LLM pipeline
+An embedding model is the same Transformer stack as an LLM, stopped before the LM head and pooled into one vector per text. RAG wires it in front of a generator:
 
-## Contrastive learning
-Instead of labels, contrastive methods learn from **pairs**: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the **InfoNCE** loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.
+\`\`\`text
+offline:  documents ──tokenize──> Transformer encoder ──pool + L2-normalize──> doc vectors (N, D) ──> index
+online:   question  ──same encoder──> query vector (D,)
+          ──retrieve──> top candidates by BM25 and/or cosine        (Cosine Top-k, BM25 stage)
+          ──rerank────> fused scores / cross-encoder                 (Retrieve and Rerank)
+          ──prompt────> [instructions + top passages + question] ──> LLM ──decode──> answer
+\`\`\`
+
+The encoder is trained with a **contrastive** loss so that matching pairs (image and caption, query and passage) end up close.
+
+## Core ideas
+
+**Cosine similarity** is the dot product of L2-normalized vectors:
+
+\`\`\`text
+cos(a, b) = a · b / (||a|| ||b||)            in [-1, 1]
+scores    = Q_n @ D_n.T                      (num_queries, num_docs), one matmul
+\`\`\`
+
+**Contrastive learning (InfoNCE / CLIP).** In a batch of \`N\` pairs, each item must pick its partner out of \`N\` candidates: a softmax over cosine similarities divided by a temperature \`tau\`.
 
 | Idea | Role |
 |------|------|
-| Positives | The matching pair (diagonal of the similarity matrix) |
-| Negatives | Every other item in the batch, so bigger batches give more negatives |
-| Temperature τ | Sharpens or softens the softmax; CLIP learns it |
-| Symmetric loss | Average of image→text and text→image cross-entropy |
+| Positives | The matching pair: the diagonal of the \`(N, N)\` similarity matrix |
+| Negatives | Every other item in the batch, so bigger batches give more (and harder) negatives |
+| Temperature \`tau\` | Sharpens or softens the softmax; CLIP learns it (starting at 0.07) |
+| Symmetric loss | Average of image-to-text (rows) and text-to-image (columns) cross-entropy |
 
-## Vector search
-Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
+**Vector search.** Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
 
-## Retrieval-augmented generation (RAG)
-RAG answers a question by retrieving relevant passages and putting them in the LLM's prompt:
-1. **Retrieve** candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)
-2. **Rerank** the candidates with a stronger signal (a cross-encoder, or a fusion of scores)
-3. **Generate** with the top passages as context
+**Hybrid retrieval.** Lexical search (BM25) finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. BM25 per query term:
 
-Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.
+\`\`\`text
+IDF(t) * f(t,d) * (k1 + 1) / (f(t,d) + k1 * (1 - b + b * |d| / avgdl))
+\`\`\`
 
-## Interview Topics
-- Why normalise embeddings, and what the temperature does in InfoNCE
-- Why in-batch negatives make large batches important for CLIP
-- BM25's term-frequency saturation (k1) and length normalisation (b)
-- Exact vs approximate nearest-neighbour search
-- How the retrieval stage limits a RAG system's answer quality
+\`k1\` saturates repeated terms, \`b\` penalizes long documents.
+
+## Worked micro-example
+Two perfectly aligned pairs, \`img = txt = [[1, 0], [0, 1]]\`, \`tau = 1\`:
+
+\`\`\`text
+logits = img_n @ txt_n.T / 1 = [[1, 0], [0, 1]]
+row 0: softmax([1, 0]) = [0.7311, 0.2689]  ->  CE = -log(0.7311) = 0.3133
+loss_i2t = loss_t2i = 0.3133               ->  loss = 0.3133
+\`\`\`
+
+Even perfect alignment has a non-zero loss at \`tau = 1\`, because a cosine gap of 1 is a small logit gap. At \`tau = 0.1\` the gap becomes 10 and the loss drops to about 0.0001 (with 3 pairs), which is why the temperature matters so much.
+
+## Common pitfalls
+- **Forgetting to normalize** (or normalizing columns instead of rows): scores then reward vector length, not direction.
+- **Unstable log-sum-exp** at small temperatures: subtract the row max.
+- **Asymmetry**: the similarity matrix isn't symmetric, so the two CLIP directions give different losses.
+- **Tie order**: \`argsort(scores)[::-1]\` reverses tied items; use a stable sort of \`-scores\` when order is specified.
+- **Exact-token matching**: BM25 doesn't stem (\`cats != cat\`) and counts each distinct query term once.
+- **Mixing scales**: raw BM25 is unbounded while cosine is in \`[-1, 1]\`; normalize before fusing.
+
+## Interview angle
+- Why normalize embeddings, and what does the temperature do in InfoNCE?
+- Why do in-batch negatives make large batches important for CLIP? What does SigLIP change?
+- BM25's term-frequency saturation (\`k1\`) and length normalization (\`b\`); when lexical beats dense retrieval.
+- Exact vs approximate nearest-neighbour search: complexity (\`O(N · D)\` per query for brute force) and the recall trade-off.
+- How the retrieval stage caps a RAG system's quality, and how to evaluate it (recall@k, MRR) separately from generation.
+
+## Problems in this section
+1. **CLIP Contrastive Loss (InfoNCE)**: the symmetric contrastive loss that trains embedding models.
+2. **Cosine Top-k Embedding Search**: exact dense retrieval with a defined tie order.
+3. **RAG Retrieval: BM25 + Embedding Rerank**: lexical candidates, then weighted fusion with cosine.
+
+**Related problems.** The encoder that produces the embeddings is the Transformer stack from **Transformer Architecture** (tokenizers, attention, LayerNorm); the generator that consumes the retrieved passages is the decoding loop from **LLM Generation & Decoding**, scored with **Token Cross-Entropy and Perplexity** (LLM Internals). The cross-entropy inside InfoNCE is the same as **Cross-Entropy Loss** in Neural Networks. For full models, see **E2E: Transformer Encoder** (the kind of encoder used for embeddings) and **Mini GPT** (a decoder-only generator).
     `,
     problems: ['infonce-loss', 'embedding-search', 'retrieve-and-rerank'],
   },

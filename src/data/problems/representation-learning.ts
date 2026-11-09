@@ -7,41 +7,61 @@ export const representationLearningProblems: Problem[] = [
     section: 'representation-learning',
     difficulty: 'medium',
     description: `
-## Symmetric InfoNCE (CLIP)
+## Symmetric InfoNCE (CLIP Loss)
 
-CLIP (Radford et al., 2021) learns a shared embedding space for images and text from (image, caption) pairs. In a batch of N pairs, the i-th image and i-th caption are a **positive** pair, and the other N − 1 captions are **negatives** for that image (and vice versa).
+### What you'll build
+The contrastive loss CLIP is trained with: L2-normalize image and text embeddings, build the temperature-scaled cosine similarity matrix, and average the cross-entropy over both directions with the matching pairs on the diagonal.
 
-### Steps
-1. **L2-normalise** each embedding (rows of both matrices) so dot products are cosine similarities:
-\`\`\`
-img_n = img / ||img||,   txt_n = txt / ||txt||      (per row; clamp the norm at 1e-12)
-\`\`\`
-2. **Similarity logits**, scaled by a temperature τ:
-\`\`\`
-logits = img_n @ txt_nᵀ / τ                         (N, N)
-\`\`\`
-3. **Cross-entropy in both directions**, with the correct match on the diagonal (labels = 0, 1, ..., N−1):
-\`\`\`
-loss_i2t = CE(logits,   labels)    each image picks its caption among N captions (rows)
-loss_t2i = CE(logitsᵀ,  labels)    each caption picks its image among N images (columns)
-CE(Z, y) = mean_i [ logsumexp(Z_i) - Z_{i, y_i} ]
-\`\`\`
-4. **Average** the two: \`loss = (loss_i2t + loss_t2i) / 2\`
+### Background
+CLIP (Radford et al., 2021) learns one embedding space for images and text from 400M (image, caption) pairs, with no class labels. In a batch of \`N\` pairs, image \`i\` and caption \`i\` are a **positive** pair; the other \`N - 1\` captions are **negatives** for that image, and vice versa. The same loss trains text embedding models for retrieval (with (query, passage) pairs), SimCLR (two augmentations of one image) and many more. More negatives make the task harder and the representation better, which is why these models are trained with very large batches.
 
-A lower temperature sharpens the softmax; CLIP learns τ (initialised to 0.07). Use a numerically stable log-sum-exp.
+### Formula
+\`\`\`text
+img_n  = img / max(||img||, 1e-12)                    # per row, (N, D)
+txt_n  = txt / max(||txt||, 1e-12)                    # per row, (N, D)
+logits = img_n @ txt_n.T / tau                        # (N, N); row = image, column = text
+
+CE(Z)    = mean_i [ logsumexp(Z[i, :]) - Z[i, i] ]    # correct class of row i is column i
+loss_i2t = CE(logits)                                 # each image picks its caption among N
+loss_t2i = CE(logits.T)                               # each caption picks its image among N
+loss     = (loss_i2t + loss_t2i) / 2
+\`\`\`
+A lower temperature \`tau\` sharpens the softmax; CLIP learns it (initialised to 0.07).
+
+### Inputs
+- \`img_emb\`: float array \`(N, D)\`; row \`i\` pairs with \`txt_emb\` row \`i\`
+- \`txt_emb\`: float array \`(N, D)\`
+- \`temperature\`: float \`> 0\`, default 0.07
 
 ### Expected Return Format
-\`clip_loss(img_emb, txt_emb, temperature=0.07)\` returns a dictionary:
-- \`'logits'\`: (N, N) array of scaled cosine similarities (row = image, column = text)
+A dictionary:
+- \`'logits'\`: \`(N, N)\` array of scaled cosine similarities (row = image, column = text)
 - \`'loss_i2t'\`: image-to-text cross-entropy (Python float)
 - \`'loss_t2i'\`: text-to-image cross-entropy (Python float)
 - \`'loss'\`: their mean (Python float)
-    `,
+
+### Edge cases and conventions
+- Normalize the **rows** (each embedding), not the columns; rescaling an embedding must not change the loss.
+- Use a stable log-sum-exp: with \`tau = 0.07\` logits reach about 14, and smaller temperatures go higher.
+- The matrix is not symmetric in general, so \`loss_i2t != loss_t2i\`.
+
+### Constraints
+NumPy only, vectorised (no loop over the batch).
+
+### Follow-up
+- With \`N\` pairs, the loss of a random model is about \`log N\`. Why? What does that say about comparing losses across batch sizes?
+- SigLIP replaces the softmax with independent sigmoid losses per pair. What does that buy for distributed training?
+`,
     examples: [
       {
-        input: 'img = txt = [[1, 0], [0, 1]], temperature = 1.0',
-        output: "{'loss': 0.3133, ...}",
-        explanation: 'logits = I, so each row is softmax([1, 0]) and CE = log(1 + e^-1) = 0.3133 in both directions',
+        input: 'clip_loss(np.eye(2), np.eye(2), temperature=1.0)',
+        output: "{'logits': [[1.0, 0.0], [0.0, 1.0]], 'loss_i2t': 0.3133, 'loss_t2i': 0.3133, 'loss': 0.3133}",
+        explanation: 'Each row is softmax([1, 0]), so CE = log(1 + e^-1) = 0.3133 in both directions.',
+      },
+      {
+        input: 'clip_loss(np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]), np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), temperature=0.5)',
+        output: "{'loss_i2t': 1.1121, 'loss_t2i': 1.1433, 'loss': 1.1277, ...}",
+        explanation: 'logits = [[1.6, 0, 1.4142], [1.92, 1.6, 1.9799], [1.2, 2.0, 1.4142]]: image 1 is closer to captions 0 and 2 than to its own, so the loss is high, and the two directions differ.',
       },
     ],
     starterCode: `import numpy as np
@@ -53,10 +73,11 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
     Args:
         img_emb: (N, D) image embeddings (row i pairs with txt_emb row i)
         txt_emb: (N, D) text embeddings
-        temperature: softmax temperature τ
+        temperature: softmax temperature tau
 
     Returns:
-        dict with 'logits' (N, N), 'loss_i2t', 'loss_t2i', 'loss' (floats)
+        dict with 'logits' (N, N) = cos / tau (row = image), and the Python
+        floats 'loss_i2t', 'loss_t2i' and 'loss' (their mean)
     """
     # Your code here
     pass
@@ -71,7 +92,7 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
       },
       {
         id: '2',
-        description: 'Logits shape and range (|cos| / τ <= 1 / τ)',
+        description: 'Logits shape and range (|cos| / tau <= 1 / tau)',
         input: `(lambda r: (r['logits'].shape, bool(np.all(np.abs(r['logits']) <= 1 / 0.1 + 1e-9))))(clip_loss(np.random.randn(4, 8), np.random.randn(4, 8), 0.1))`,
         expected: '((4, 4), True)',
         hidden: false,
@@ -103,12 +124,19 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
         expected: '(0.2395, 0.0001)',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Logits values (row = image, column = text)',
+        input: `np.round(clip_loss(np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]), np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), 0.5)['logits'], 4).tolist()`,
+        expected: '[[1.6, 0.0, 1.4142], [1.92, 1.6, 1.9799], [1.2, 2.0, 1.4142]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Normalise rows: x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12)',
-      'logits = img_n @ txt_n.T / temperature; the correct pairs are on the diagonal',
-      'Stable CE: subtract the row max, log-sum-exp each row, and take -mean of the diagonal log-probs',
-      'loss_t2i is the same CE applied to logits.T',
+      'This is ordinary classification twice: each image is a sample whose N classes are the captions (and vice versa), and the correct class is on the diagonal.',
+      'Normalize both matrices row-wise, build the (N, N) logits, then take a cross-entropy over rows and another over columns (rows of the transpose).',
+      'x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12); logits = img_n @ txt_n.T / temperature; log_probs = z - z.max(1, keepdims=True) - log-sum-exp; loss = -np.mean(np.diag(log_probs)).',
+      'Without normalization the logits aren\'t cosines and rescaling changes the loss; without the max subtraction a small temperature overflows. Return Python floats.',
     ],
     solution: `import numpy as np
 
@@ -117,17 +145,21 @@ def _l2_normalize(x, eps=1e-12):
 
 
 def _cross_entropy_diag(logits):
-    # Correct class for row i is column i
-    z = logits - logits.max(axis=1, keepdims=True)
+    """Mean CE where the correct class of row i is column i."""
+    z = logits - logits.max(axis=1, keepdims=True)              # stable log-sum-exp
     log_probs = z - np.log(np.exp(z).sum(axis=1, keepdims=True))
     return float(-np.mean(np.diag(log_probs)))
 
 
 def clip_loss(img_emb, txt_emb, temperature=0.07):
+    """
+    Returns:
+        dict with 'logits' (N, N), 'loss_i2t', 'loss_t2i', 'loss'
+    """
     img = _l2_normalize(np.asarray(img_emb, dtype=float))
     txt = _l2_normalize(np.asarray(txt_emb, dtype=float))
 
-    logits = img @ txt.T / temperature        # (N, N) cosine / τ
+    logits = img @ txt.T / temperature        # (N, N) cosine / tau
 
     loss_i2t = _cross_entropy_diag(logits)    # rows: image -> texts
     loss_t2i = _cross_entropy_diag(logits.T)  # columns: text -> images
@@ -138,6 +170,8 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
         'loss_t2i': loss_t2i,
         'loss': (loss_i2t + loss_t2i) / 2,
     }
+
+# O(N^2 * D) for the similarity matrix
 `,
   },
   {
@@ -148,26 +182,51 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
     description: `
 ## Dense Retrieval with Cosine Similarity
 
-Vector search finds the documents whose embeddings are closest to a query embedding. With L2-normalised vectors, cosine similarity is a plain dot product, so scoring every document for a batch of queries is one matrix multiply. (Vector databases use approximate indexes such as HNSW or IVF to avoid scoring everything; this is the exact brute-force version they approximate.)
+### What you'll build
+Exact top-k nearest-neighbour search by cosine similarity: for each query embedding, return the \`k\` most similar documents and their scores.
 
-### Steps
+### Background
+This is the "retrieve" step of a RAG system and of every semantic search engine. Embeddings come from a model trained with a contrastive loss (previous problem). With L2-normalized vectors, cosine similarity is a plain dot product, so scoring all documents for a batch of queries is one matrix multiply. Vector databases use approximate indexes (HNSW graphs, IVF clustering, product quantization) to avoid scoring every document; this brute-force version is what they approximate, and what their recall is measured against.
+
+### Algorithm
+\`\`\`text
+q_n    = queries / max(||queries||, 1e-12)     # (Q, D), per row
+d_n    = docs / max(||docs||, 1e-12)           # (N, D), per row
+scores = q_n @ d_n.T                           # (Q, N) cosine similarities
 \`\`\`
-q_n = queries / ||queries||        (Q, D), per row; clamp the norm at 1e-12
-d_n = docs / ||docs||              (N, D)
-scores = q_n @ d_nᵀ                (Q, N) cosine similarities
-\`\`\`
-For each query, return the k best documents sorted by score **descending**. When two documents have exactly the same score, the one with the **lower index comes first** (a stable sort of the negated scores does this; \`np.argpartition\` and \`torch.topk\` don't guarantee it).
+For each query row, sort the documents by score **descending** and keep the first \`k\`.
+
+### Inputs
+- \`queries\`: float array \`(Q, D)\`
+- \`docs\`: float array \`(N, D)\`
+- \`k\`: int, \`1 <= k <= N\`
 
 ### Expected Return Format
-\`cosine_topk(queries, docs, k)\` returns a tuple \`(indices, scores)\`:
-- \`indices\`: (Q, k) integer array of document indices, best first
-- \`scores\`: (Q, k) array of the matching cosine similarities (non-increasing along each row)
-    `,
+A tuple \`(indices, scores)\`:
+- \`indices\`: \`(Q, k)\` integer array of document indices, best first
+- \`scores\`: \`(Q, k)\` array of the matching cosine similarities, non-increasing along each row
+
+### Edge cases and conventions
+- **Ties**: equal scores keep the **lower document index first**. A stable sort of the negated scores does this; \`np.argpartition\` and \`torch.topk\` don't guarantee it.
+- Documents pointing the same way score the same regardless of their length (that's the point of cosine).
+
+### Constraints
+NumPy only, vectorised over queries and documents.
+
+### Follow-up
+- Use \`np.argpartition\` to get the top-k in \`O(N)\` per query, then sort only those \`k\`. How do you keep the tie rule?
+- When is maximum inner product (no normalization) the right similarity instead of cosine?
+`,
     examples: [
       {
-        input: 'queries = [[1, 0]], docs = [[1, 0], [0, 1], [1, 1], [-1, 0]], k = 2',
-        output: 'indices = [[0, 2]], scores = [[1.0, 0.7071]]',
-        explanation: 'Doc 0 points the same way as the query; doc 2 is at 45 degrees',
+        input: 'cosine_topk(np.array([[1.0, 0.0]]), np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [-1.0, 0.0]]), k=2)',
+        output: '(indices = [[0, 2]], scores = [[1.0, 0.7071]])',
+        explanation: 'Doc 0 points the same way as the query; doc 2 is at 45 degrees; doc 3 is opposite (-1).',
+      },
+      {
+        input: 'cosine_topk(np.array([[1.0, 0.0]]), np.array([[0.0, 3.0], [2.0, 0.0], [1.0, 1.0], [1.0, 0.0], [5.0, 0.0]]), k=4)[0]',
+        output: '[[1, 3, 4, 2]]',
+        explanation: 'Docs 1, 3 and 4 all have cosine 1 and stay in index order; doc 2 (0.7071) comes next.',
       },
     ],
     starterCode: `import numpy as np
@@ -234,9 +293,10 @@ def cosine_topk(queries, docs, k):
       },
     ],
     hints: [
-      'Normalise both matrices row-wise, then scores = q_n @ d_n.T',
-      'np.argsort(-scores, axis=1, kind="stable") sorts descending and keeps equal scores in index order',
-      'Keep the first k columns, then np.take_along_axis(scores, idx, axis=1) for the scores',
+      'Cosine similarity of unit vectors is a dot product, so all query-document scores come from one matrix multiply.',
+      'Normalize both matrices row-wise, compute the (Q, N) score matrix, sort each row in descending order, keep k columns.',
+      'np.argsort(-scores, axis=1, kind="stable")[:, :k] gives the indices; np.take_along_axis(scores, idx, axis=1) gives the matching scores.',
+      'np.argsort(scores)[:, ::-1] also sorts descending but reverses the order of ties (higher index first). Clamp norms at 1e-12 so zero vectors don\'t divide by zero.',
     ],
     solution: `import numpy as np
 
@@ -245,14 +305,20 @@ def _l2_normalize(x, eps=1e-12):
 
 
 def cosine_topk(queries, docs, k):
+    """
+    Returns:
+        (indices (Q, k), scores (Q, k)), best first
+    """
     q = _l2_normalize(np.asarray(queries, dtype=float))
     d = _l2_normalize(np.asarray(docs, dtype=float))
-    scores = q @ d.T                                        # (Q, N)
+    scores = q @ d.T                                        # (Q, N) cosine similarities
 
     # Stable sort of -scores: descending, ties keep the lower index first
     order = np.argsort(-scores, axis=1, kind='stable')[:, :k]
     top_scores = np.take_along_axis(scores, order, axis=1)
     return order, top_scores
+
+# O(Q * N * D) to score + O(Q * N log N) to sort
 `,
   },
   {
@@ -261,47 +327,72 @@ def cosine_topk(queries, docs, k):
     section: 'representation-learning',
     difficulty: 'medium',
     description: `
-## Hybrid Retrieval for RAG
+## Hybrid Retrieval for RAG: BM25 + Embedding Rerank
 
-A retrieval-augmented generation (RAG) system first **retrieves** a few passages, then pastes them into the LLM's prompt. A common recipe is two-stage: a cheap lexical retriever (BM25) picks candidates, then a semantic signal (embedding similarity) **reranks** them.
+### What you'll build
+A two-stage retriever: score every document with BM25, take the top-\`n\` as candidates, then rerank them with a weighted fusion of normalized BM25 and embedding cosine similarity.
+
+### Background
+A retrieval-augmented generation (RAG) system answers a question by pasting a few retrieved passages into the LLM's prompt, so the answer can only be as good as the retrieval. Lexical search (BM25) finds rare exact terms that embeddings blur (names, error codes, IDs); dense search finds paraphrases that share no words. Production systems combine them: a cheap first stage over the whole corpus, then a more expensive or more semantic second stage over a few candidates (here a score fusion; often a cross-encoder).
 
 ### Stage 1: BM25 (Robertson & Zaragoza)
-For a query q and document d (both lists of tokens):
-\`\`\`
-score(q, d) = Σ_{t in unique(q)}  IDF(t) · f(t,d) · (k1 + 1) / ( f(t,d) + k1 · (1 - b + b · |d| / avgdl) )
+For a query \`q\` and a document \`d\` (both token lists):
+\`\`\`text
+score(q, d) = sum over unique terms t of q:
+              IDF(t) * f(t, d) * (k1 + 1) / ( f(t, d) + k1 * (1 - b + b * |d| / avgdl) )
 
 IDF(t) = ln( (N - n_t + 0.5) / (n_t + 0.5) + 1 )
 \`\`\`
-- f(t, d): count of term t in d; |d|: number of tokens in d; avgdl: mean document length
-- N: number of documents; n_t: number of documents containing t
-- The \`+ 1\` inside the log (the Lucene variant) keeps IDF positive even for very common terms
-- Defaults: **k1 = 1.5** (term-frequency saturation), **b = 0.75** (length normalisation)
-- Each distinct query term counts once, in order of first appearance
+- \`f(t, d)\`: count of \`t\` in \`d\`; \`|d|\`: number of tokens in \`d\`; \`avgdl\`: mean document length
+- \`N\`: number of documents; \`n_t\`: number of documents containing \`t\`
+- \`k1\` (default 1.5) saturates repeated terms; \`b\` (default 0.75) normalizes for length
+- The \`+ 1\` inside the log (Lucene's variant) keeps IDF positive even for very common terms
 
 ### Stage 2: candidates
-Take the top-n documents by BM25 (descending; ties go to the lower document index).
+The top-\`n\` documents by BM25, descending; ties go to the lower document index.
 
-### Stage 3: rerank with weighted score fusion
-For each candidate c, with \`cos_c\` the cosine similarity between the query embedding and the candidate's embedding:
+### Stage 3: rerank by weighted score fusion
+For each candidate \`c\`, with \`cos_c\` the cosine similarity between \`query_emb\` and \`doc_embs[c]\` (denominator \`||q|| · ||d|| + 1e-12\`):
+\`\`\`text
+bm25_norm_c = bm25_c / max over candidates of bm25     (all 0 if that max is 0)
+fused_c     = alpha * bm25_norm_c + (1 - alpha) * cos_c
 \`\`\`
-bm25_norm_c = bm25_c / max_{c' in candidates} bm25_c'      (0 for all if that max is 0)
-fused_c     = alpha · bm25_norm_c + (1 - alpha) · cos_c
-\`\`\`
-Sort candidates by \`fused\` descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a [0, 1] scale like cosine. (Reciprocal rank fusion, which adds 1 / (60 + rank) from each ranker, is a common alternative that ignores raw scores; this problem uses the weighted fusion above.)
+Sort the candidates by \`fused\`, descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a \`[0, 1]\` scale comparable with cosine.
+
+### Inputs
+- \`query_tokens\`: list of str; \`docs_tokens\`: list of \`N\` lists of str (no stemming: \`'cats' != 'cat'\`)
+- \`query_emb\`: \`(D,)\`; \`doc_embs\`: \`(N, D)\`
+- \`n\`: number of candidates (default 3); \`alpha\` in \`[0, 1]\` (default 0.5); \`k1\`, \`b\` as above
 
 ### Expected Return Format
-- \`bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)\` returns an (N,) array of BM25 scores
-- \`retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs, n=3, alpha=0.5, k1=1.5, b=0.75)\` returns a dictionary:
-  - \`'bm25'\`: (N,) BM25 scores of every document
-  - \`'candidates'\`: (n,) integer array of the top-n document indices by BM25
-  - \`'reranked'\`: (n,) the same documents in fused order
-  - \`'fused'\`: (n,) fused scores, aligned with \`'reranked'\`
-    `,
+- \`bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)\`: \`(N,)\` float array
+- \`retrieve_and_rerank(...)\`: a dictionary with
+  - \`'bm25'\`: \`(N,)\` BM25 scores of every document
+  - \`'candidates'\`: \`(n,)\` integer array, top-\`n\` document indices by BM25
+  - \`'reranked'\`: \`(n,)\` the same documents in fused order
+  - \`'fused'\`: \`(n,)\` fused scores, aligned with \`'reranked'\`
+
+### Edge cases and conventions
+- Each distinct query term counts once (repeating a word in the query doesn't double its weight).
+- \`alpha = 1\` keeps the BM25 order; \`alpha = 0\` sorts the candidates by cosine alone.
+
+### Constraints
+NumPy and plain Python; no retrieval libraries.
+
+### Follow-up
+- Reciprocal rank fusion scores \`sum over rankers of 1 / (60 + rank)\` and ignores raw scores. When is it more robust than weighted fusion?
+- How would you measure the retriever on its own (recall@k, MRR) before blaming the LLM for a wrong answer?
+`,
     examples: [
       {
-        input: "query = ['cat', 'pet'], 5 short documents",
-        output: 'bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0], reranked = [0, 2, 4]',
-        explanation: "BM25 ranks doc 4 (it contains both words) first, but doc 0's embedding is closest to the query, so the rerank moves it to the top. Doc 1 ('cats', 'pets') scores 0 because BM25 matches exact tokens (no stemming)",
+        input: "query = ['cat', 'pet'], docs = ['the cat sat on the mat', 'dogs and cats are pets', 'the cat chased the mouse', 'stock markets fell sharply today', 'a cat is a small pet'] (split on spaces)",
+        output: 'bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0]',
+        explanation: "Doc 4 contains both terms. Doc 1 ('cats', 'pets') scores 0: BM25 matches exact tokens only.",
+      },
+      {
+        input: 'same query and docs, query_emb = [1.0, 0.5, 0.0], doc_embs rows 0, 2, 4 = [1, 0.5, 0], [0.6, 0.6, 0.4], [0, 0.3, 1]; n=3, alpha=0.5',
+        output: 'reranked = [0, 2, 4], fused = [0.64, 0.5811, 0.5643]',
+        explanation: "Doc 0's embedding matches the query exactly (cos = 1), so the rerank lifts it above doc 4, whose embedding is far from the query.",
       },
     ],
     starterCode: `import numpy as np
@@ -311,7 +402,7 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
     BM25 score of every document for one query.
 
     Args:
-        query_tokens: list of query tokens
+        query_tokens: list of query tokens (each distinct term counts once)
         docs_tokens: list of N token lists
         k1, b: BM25 parameters
 
@@ -325,7 +416,8 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
 def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
                         n=3, alpha=0.5, k1=1.5, b=0.75):
     """
-    BM25 top-n, then rerank by alpha * normalised BM25 + (1 - alpha) * cosine.
+    BM25 top-n, then rerank by alpha * (bm25 / max candidate bm25)
+    + (1 - alpha) * cosine(query_emb, doc_emb).
 
     Args:
         query_emb: (D,) query embedding
@@ -387,16 +479,24 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
         expected: '([1, 0, 3], [3, 1, 0])',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'A repeated query term counts once',
+        input: `(lambda D: bool(np.allclose(bm25_scores(['cat', 'cat', 'pet'], D), bm25_scores(['cat', 'pet'], D))))([s.split() for s in ['a cat', 'a pet store', 'cat and pet', 'nothing here']])`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Precompute N, the document lengths and avgdl; loop over dict.fromkeys(query_tokens) to get unique terms in order',
-      'For each term: tf = np.array([d.count(t) for d in docs]); n_t = np.count_nonzero(tf); idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1)',
-      'Candidates: np.argsort(-bm25, kind="stable")[:n]',
-      'Cosine of the query against doc_embs[candidates]; fused = alpha * bm25_c / bm25_c.max() + (1 - alpha) * cos; stable argsort of -fused',
+      'Two independent pieces: a lexical scorer over the whole corpus, then a small rerank over n candidates. Get the BM25 numbers right first (the first test checks them alone).',
+      'BM25: precompute N, the document lengths and avgdl; for each distinct query term, compute its term frequency in every document and its IDF, and add the saturated, length-normalized contribution.',
+      'for t in dict.fromkeys(query_tokens): tf = np.array([d.count(t) for d in docs]); n_t = np.count_nonzero(tf); idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1). Candidates: np.argsort(-bm25, kind="stable")[:n].',
+      'Normalize BM25 by the max over the candidates (guard against a max of 0), compute cosine only for the candidates, and use a stable sort of -fused so ties keep the BM25 order.',
     ],
     solution: `import numpy as np
 
 def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
+    """Returns an (N,) array of BM25 scores."""
     N = len(docs_tokens)
     lengths = np.array([len(d) for d in docs_tokens], dtype=float)
     avgdl = lengths.mean()
@@ -405,20 +505,23 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
         tf = np.array([d.count(term) for d in docs_tokens], dtype=float)
         n_t = np.count_nonzero(tf)
         idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1.0)
+        # Saturating term frequency with length normalization
         scores += idf * tf * (k1 + 1) / (tf + k1 * (1 - b + b * lengths / avgdl))
     return scores
 
 
 def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
                         n=3, alpha=0.5, k1=1.5, b=0.75):
+    """Returns a dict with 'bm25', 'candidates', 'reranked', 'fused'."""
     bm25 = bm25_scores(query_tokens, docs_tokens, k1, b)
-    candidates = np.argsort(-bm25, kind='stable')[:n]
+    candidates = np.argsort(-bm25, kind='stable')[:n]   # ties: lower index first
 
     # Cosine similarity between the query and each candidate
     q = np.asarray(query_emb, dtype=float)
     D = np.asarray(doc_embs, dtype=float)[candidates]
     cos = D @ q / (np.linalg.norm(D, axis=1) * np.linalg.norm(q) + 1e-12)
 
+    # Put BM25 on a [0, 1] scale before mixing
     cand_bm25 = bm25[candidates]
     top = cand_bm25.max()
     bm25_norm = cand_bm25 / top if top > 0 else np.zeros_like(cand_bm25)
@@ -431,6 +534,8 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
         'reranked': candidates[order],
         'fused': fused[order],
     }
+
+# BM25: O(|q| * total corpus tokens) here (an inverted index makes it sublinear); rerank: O(n * D)
 `,
   },
 ];
