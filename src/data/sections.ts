@@ -1175,128 +1175,167 @@ Related: **Gradient Clipping by Global Norm** (Optimization & Training) for expl
   {
     id: 'transformers',
     title: 'Transformer Architecture',
-    description: 'Master attention, positional encoding, and modern LLM architecture.',
+    description: 'Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.',
     icon: '🤖',
     introduction: `
-# Attention and Transformers
+# Transformer Architecture
 
-Transformers have revolutionized NLP and are now used in vision, speech, and more.
+## Why it matters
+Every modern LLM (GPT, LLaMA, Mistral, Qwen) is a stack of the same Transformer block, and so are vision transformers and speech models. "Implement attention" is the single most common ML coding interview question, usually followed by "now make it multi-head", "now make it causal" and "how would you make it faster?".
 
-## Key Concepts
+## The pipeline, end to end
+This section builds every stage of a decoder-only LLM except decoding, which has its own section:
 
-### Self-Attention
-- **Query, Key, Value**: Three projections of input
-- **Attention scores**: Q @ K.T / sqrt(d_k)
-- **Output**: Weighted sum of values
-
-### Scaled Dot-Product Attention
+\`\`\`text
+text ──tokenize──> ids (batch, seq_len)                     BPE / longest match
+     ──embed────> x   (batch, seq_len, d_model)             lookup table (+ positions)
+     ──N blocks─> x = x + Attn(Norm(x))                      causal multi-head attention, RoPE
+                  x = x + FFN(Norm(x))                       MLP (SwiGLU in LLaMA)
+     ──LM head──> logits (batch, seq_len, vocab)            final norm, x @ W_vocab
+     ──decode───> next token, append, repeat                LLM Generation & Decoding
 \`\`\`
-Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
+
+Training feeds the whole sequence at once and uses the causal mask so position \`t\` only sees tokens \`0..t\`; generation runs the same network one token at a time.
+
+## Core ideas
+
+**Attention** is a soft lookup: each query scores every key, a softmax turns the scores into weights, and the output is the weighted mix of the values.
+
+| Piece | Formula | Shape |
+|-------|---------|-------|
+| Scores | \`S = Q K^T / sqrt(d_k)\` | \`(seq_len, seq_len)\` |
+| Causal mask | \`S[i, j] = -inf\` for \`j > i\` | same |
+| Weights | \`A = softmax(S, axis=-1)\` | rows sum to 1 |
+| Output | \`A V\` | \`(seq_len, d_v)\` |
+| Multi-head | split \`d_model\` into \`H\` heads of \`d_k = d_model / H\`, attend per head, concatenate | \`(seq_len, d_model)\` |
+
+The \`sqrt(d_k)\` keeps the scores at unit variance so the softmax doesn't saturate.
+
+**Positions.** Attention ignores order, so position must be injected: sinusoidal or learned vectors **added** to the embeddings (original Transformer, GPT-2), or **RoPE**, which rotates \`q\` and \`k\` so that \`q · k\` depends only on the relative offset (LLaMA and most current LLMs).
+
+**Normalization and residuals.** Each sub-layer is wrapped as \`x + f(Norm(x))\` (pre-norm). LayerNorm normalizes each token's features: \`gamma * (x - mean) / sqrt(var + eps) + beta\`.
+
+**Efficient attention variants.** Grouped-query attention shares K/V heads across query heads to shrink the KV cache; sliding-window attention limits each token to the last \`W\` positions, so cost drops from \`O(n^2)\` to \`O(n · W)\`.
+
+## Worked micro-example
+Two tokens with \`Q = K = [[1, 0], [0, 1]]\`, \`V = [[1, 2], [3, 4]]\`, \`d_k = 2\`:
+
+\`\`\`text
+S = Q K^T / sqrt(2) = [[0.7071, 0     ], [0,      0.7071]]
+A = softmax(S)      = [[0.6698, 0.3302], [0.3302, 0.6698]]
+out = A V           = [[1.6605, 2.6605], [2.3395, 3.3395]]
 \`\`\`
 
-### Multi-Head Attention
-- **Multiple heads**: Parallel attention with different projections
-- **Concatenate**: Combine all head outputs
-- **Project**: Linear transformation back to model dimension
+Each token leans toward its own value. With a causal mask, row 0 would become \`[1, 0]\` and its output exactly \`[1, 2]\`.
 
-### Transformer Components
-- **Positional Encoding**: Inject position information
-- **Layer Normalization**: Normalize across features
-- **Feed-Forward Network**: MLP after attention
-- **Residual Connections**: Add input to output
+## Common pitfalls
+- **Unstable softmax**: subtract the row max before \`exp\`, or large scores overflow to \`inf\` and give NaN.
+- **Head reshapes**: go \`(seq_len, d_model) -> (seq_len, H, d_k) -> (H, seq_len, d_k)\`; reshaping straight to \`(H, seq_len, d_k)\` mixes tokens across heads.
+- **Wrong scale**: per-head attention divides by \`sqrt(d_k)\`, not \`sqrt(d_model)\`.
+- **Mask off-by-one**: the diagonal must stay visible (\`np.triu(..., k=1)\`); a fully masked row gives NaN.
+- **Biased vs unbiased variance** in LayerNorm (use the biased one, as PyTorch does).
+- **Layouts**: interleaved RoPE pairs vs Hugging Face's \`rotate_half\`; \`np.repeat\` vs \`np.tile\` when sharing KV heads. Both give plausible-looking but wrong numbers.
 
-### Causal Masking
-- **Purpose**: Prevent attending to future tokens
-- **Implementation**: Add -inf to upper triangle before softmax
+## Interview angle
+- Why scale by \`sqrt(d_k)\`? Why LayerNorm rather than BatchNorm?
+- Complexity: attention is \`O(n^2 · d)\` time and \`O(n^2)\` memory per head; the MLP is \`O(n · d^2)\`. Which dominates at 128k context?
+- Parameter count of one block: about \`4 d^2\` (attention) + \`8 d^2\` (a \`4d\`-wide MLP) = \`12 d^2\`.
+- How do RoPE and GQA reduce the cost of serving long contexts? Derive the backward pass of attention.
 
-### Modern LLM Architecture
-- **BPE Tokenization**: Subword tokenization used by GPT, LLaMA, and most LLMs
-- **Rotary Positional Embeddings (RoPE)**: Encodes relative positions via rotation, replacing sinusoidal
-- **Grouped Query Attention (GQA)**: Shares KV heads across query head groups for efficient inference
-- **Sliding Window Attention**: Local attention pattern for efficient long-context processing
+## Problems in this section
+1. **Scaled Dot-Product Attention**: the core \`softmax(QK^T / sqrt(d_k)) V\`, returning output and weights.
+2. **Multi-Head Attention**: split into heads, attend in parallel, merge back.
+3. **Sinusoidal Positional Encoding**: the original fixed position table.
+4. **Layer Normalization**: per-token normalization with \`gamma\` and \`beta\`.
+5. **Causal Attention Mask**: the \`-inf\` upper triangle that makes a model autoregressive.
+6. **BPE Tokenization**: learn merge rules, the first stage of the pipeline.
+7. **Rotary Positional Embeddings (RoPE)**: relative positions by rotating \`q\` and \`k\`.
+8. **Grouped Query Attention (GQA)**: share K/V heads to shrink the KV cache.
+9. **Sliding Window Attention**: a banded causal mask for long contexts.
+10. **Attention Backward Pass**: \`dQ\`, \`dK\`, \`dV\` by hand, checked against finite differences.
+11. **Greedy Longest-Match Tokenizer**: encode text with a fixed vocabulary (WordPiece style).
 
-### Interview Essentials
-- Implement scaled dot-product attention
-- Explain why we scale by sqrt(d_k)
-- Multi-head attention benefits
-- Positional encoding purpose
-- BPE tokenization algorithm
-- RoPE vs sinusoidal positional encoding
-- GQA/MQA for efficient inference
-
-Let's build transformers from scratch!
+**Where this leads.** **LLM Generation & Decoding** turns logits into text and adds the KV cache; **LLM Internals** swaps in RMSNorm + SwiGLU, FlashAttention's online softmax, mixture-of-experts and perplexity; **Representation Learning & Retrieval** uses the embeddings for search and RAG. The capstones assemble everything: **E2E: Transformer Encoder** (one encoder block), **Mini GPT** (a full decoder-only LM with training and generation) and **Transformer Bug Hunt** (find the four bugs in a broken mini-GPT).
     `,
     problems: ['scaled-dot-product-attention', 'multi-head-attention', 'positional-encoding', 'layer-norm', 'causal-mask', 'bpe-tokenization', 'rope-embeddings', 'grouped-query-attention', 'sliding-window-attention', 'attention-backward', 'longest-match-tokenizer'],
   },
   {
     id: 'llm-generation',
     title: 'LLM Generation & Decoding',
-    description: 'Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.',
+    description: 'Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.',
     icon: '💬',
     introduction: `
 # LLM Generation & Decoding
 
-Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.
+## Why it matters
+A trained LLM only outputs a distribution over the next token. Everything users see (how creative, repetitive or fast the model is) is decided by the decoding loop around it. Interviews for LLM roles routinely ask you to implement sampling, explain the KV cache, and reason about why decoding is memory-bound.
 
-## The Autoregressive Pipeline
+## Where decoding sits in the pipeline
+The **Transformer Architecture** section builds the model up to the logits. This section is the loop that turns logits into text:
 
-LLMs generate text one token at a time:
+\`\`\`text
+prompt ──tokenize──> ids (1, T)
+       ──prefill───> run all T tokens in parallel, fill the KV cache, logits for the last position
+loop:  logits (vocab,) ──repetition penalty──> ──/ temperature──> ──top-k / top-p filter──>
+       probs ──sample (or argmax, or beam search)──> next id
+       ──decode step──> run ONE new token, reading the KV cache; append k, v
+until EOS or max_new_tokens
 \`\`\`
-logits = model(input_tokens)        # Raw scores for each vocab token
-probs = softmax(logits / temperature)  # Convert to probabilities
-next_token = sample(probs)          # Pick a token
+
+Prefill is compute-bound (big matrix multiplies over the prompt). Each decode step processes a single token but must read every weight and the whole KV cache, so it is **memory-bandwidth-bound**. KV caching, grouped-query attention and speculative decoding all attack that cost.
+
+## Core ideas
+
+**From logits to a choice.** With logits \`z\` of shape \`(vocab_size,)\`:
+
+| Step | Formula | Effect |
+|------|---------|--------|
+| Repetition penalty | \`z_t / penalty\` if \`z_t > 0\` else \`z_t * penalty\`, for generated \`t\` | discourages loops |
+| Temperature | \`p = softmax(z / T)\` | \`T < 1\` sharper, \`T > 1\` flatter, ranking unchanged |
+| Top-k | keep the \`k\` largest logits | fixed-size candidate set |
+| Top-p (nucleus) | keep the smallest prefix with cumulative probability \`>= p\` | adaptive candidate set |
+| Greedy / beam | \`argmax\`, or keep the \`B\` best partial sequences | deterministic, used for "one right answer" tasks |
+
+**KV cache.** Keys and values of past tokens never change under causal attention, so each step projects only the new token and attends over the cached \`K, V\`. Cache size: \`2 · n_layers · n_kv_heads · d_head · seq_len\` values per sequence.
+
+**Speculative decoding.** A small draft model proposes \`K\` tokens; the target model scores all of them in one pass; token \`i\` is accepted with probability \`min(1, p_target / p_draft)\`, and the first rejection ends the draft. With residual resampling, the output follows the target distribution exactly.
+
+## Worked micro-example
+Logits \`z = [2.0, 1.0, 0.1]\`:
+
+\`\`\`text
+T = 1.0 : softmax(z)      = [0.659,  0.2424, 0.0986]
+T = 0.5 : softmax(z / .5) = [0.8638, 0.1169, 0.0193]     sharper
+T = 2.0 : softmax(z / 2)  = [0.5017, 0.3043, 0.194 ]     flatter
+top-k, k = 2 (T = 1)      = [0.7311, 0.2689, 0.0   ]     softmax of [2, 1]
+top-p, p = 0.8 (T = 1)    : cumulative [0.659, 0.9014, 1.0] reaches 0.8 at token 1
+                          = [0.7311, 0.2689, 0.0   ]     same two tokens here
 \`\`\`
 
-## Key Concepts
+## Common pitfalls
+- **Overflow**: subtract the max before \`exp\`, especially after dividing by a small temperature.
+- **Top-p off-by-one**: include the token that crosses \`p\`, or a confident distribution keeps nothing.
+- **Order of operations**: temperature before top-k/top-p; filter logits with \`-inf\`, then softmax (or renormalize after zeroing).
+- **Repetition penalty sign**: dividing a negative logit makes the token *more* likely; and each distinct token is penalized once.
+- **Beam search underflow**: add log-probabilities; never multiply raw probabilities over long sequences.
+- **Reproducibility**: seed once, then draw random numbers in a fixed order (the sampling problems here seed inside the function).
 
-### Temperature Scaling
-Controls randomness by scaling logits before softmax:
-\`\`\`
-scaled_logits = logits / T
-\`\`\`
-- T < 1: More deterministic (sharper distribution)
-- T > 1: More random (flatter distribution)
-- T → 0: Greedy decoding (always pick most likely)
+## Interview angle
+- Compare greedy, beam search, top-k, top-p. When would you use each?
+- Why is decoding memory-bound, and how do KV caching, GQA, quantization and batching help? Estimate the KV cache of a 7B model at 4k tokens.
+- Walk through speculative decoding and argue why it preserves the target distribution; what acceptance rate makes it worthwhile?
+- Complexity per generated token: \`O(t · d)\` attention with a cache vs \`O(t^2 · d)\` without.
 
-### Sampling Strategies
+## Problems in this section
+1. **Temperature Scaling**: \`softmax(logits / T)\`, stably.
+2. **Top-k Sampling**: keep the \`k\` best tokens, renormalize, sample.
+3. **Nucleus (Top-p) Sampling**: keep the smallest prefix with mass \`>= p\`.
+4. **Repetition Penalty**: the CTRL / Hugging Face penalty on already-generated tokens.
+5. **KV Cache for Efficient Generation**: one cached decoding step of attention.
+6. **Beam Search Decoding**: keep the \`B\` best hypotheses, with EOS handling.
+7. **Speculative Decoding**: the draft-then-verify acceptance loop.
 
-| Strategy | How It Works | When to Use |
-|----------|-------------|-------------|
-| **Top-k** | Keep only the k most likely tokens | Simple, predictable filtering |
-| **Top-p (Nucleus)** | Keep smallest set with cumulative prob ≥ p | Adaptive, works across distributions |
-| **Repetition Penalty** | Reduce probability of already-generated tokens | Prevent loops and repetition |
-
-### KV Cache
-The key optimization for efficient autoregressive generation:
-- Cache Key and Value projections from previous tokens
-- Only compute Q, K, V for the **new** token at each step
-- Reduces per-token cost from O(n²) to O(n)
-
-### Beam Search
-Maintain multiple candidate sequences:
-\`\`\`
-score(sequence) = sum(log P(token_i))
-\`\`\`
-- Explores multiple paths simultaneously
-- Finds higher-probability sequences than greedy decoding
-- Used in translation, summarization, and structured output
-
-### Speculative Decoding
-Use a small "draft" model to propose tokens, verified by the large model:
-1. Draft model generates K tokens quickly
-2. Target model verifies all K in one forward pass
-3. Accept with probability min(1, p_target / p_draft)
-- Mathematically guarantees target model distribution
-- 2-3x speedup in practice
-
-## Interview Essentials
-- Explain temperature scaling and its effect on output diversity
-- Compare top-k vs top-p sampling trade-offs
-- Describe how KV cache reduces inference cost
-- Implement beam search with length normalization
-- Explain why speculative decoding preserves the target distribution
-
-Let's implement these essential LLM techniques!
+**Related problems.** The logits come from the decoder built in **Transformer Architecture** (causal mask, GQA, RoPE) and measured by **Token Cross-Entropy and Perplexity** in **LLM Internals**, where **Online Softmax** shows how attention itself is made memory-efficient. **Mini GPT** (E2E Implementations) uses greedy generation with context cropping; try swapping in your top-p sampler. **Transformer Bug Hunt** checks the causal masking that makes cached decoding valid.
     `,
     problems: [
       'llm-temperature-scaling',
@@ -1311,121 +1350,189 @@ Let's implement these essential LLM techniques!
   {
     id: 'llm-internals',
     title: 'LLM Internals',
-    description: 'SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.',
+    description: 'How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention\'s online softmax, mixture-of-experts routing and perplexity.',
     icon: '🧩',
     introduction: `
 # LLM Internals
 
-You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how we measure a language model at all. These are the details LLM engineering interviews probe.
+## Why it matters
+You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how a language model is measured. LLM engineering interviews probe exactly these details, usually as "why" questions after you've written the code.
 
-Some pieces of the pipeline below have their own problems elsewhere: BPE tokenization, RoPE and grouped-query attention in **Transformer Architecture**, and temperature, top-k/top-p sampling, the KV cache and speculative decoding in **LLM Generation & Decoding**. This section covers the rest.
+## How an LLM works, end to end
+Each stage has a problem somewhere on this site:
 
-## How an LLM generates text, end to end
-
-\`\`\`
-text -> tokenizer -> token ids (B, T)
-     -> embedding lookup                         (B, T, d_model)
+\`\`\`text
+text -> tokenizer -> ids (B, T)                       BPE, longest match       (Transformer Architecture)
+     -> embedding lookup -> h (B, T, d_model)
      -> N x decoder block:
-            h = h + Attention(RMSNorm(h))        causal, multi-head, positions via RoPE
-            h = h + FFN(RMSNorm(h))              SwiGLU MLP, or a mixture of experts
-     -> final RMSNorm -> LM head                 logits (B, T, vocab)
-     -> pick next token (greedy / sampling), append it, repeat
+          h = h + Attention(RMSNorm(h))               causal, RoPE, GQA        (Transformer Architecture)
+                                                      computed with the online softmax (this section)
+          h = h + FFN(RMSNorm(h))                     SwiGLU MLP or a mixture of experts (this section)
+     -> final RMSNorm -> LM head -> logits (B, T, vocab)
+     -> training: next-token cross-entropy / perplexity (this section)
+     -> inference: KV cache + sampling, one token at a time (LLM Generation & Decoding)
 \`\`\`
 
-Training runs the whole sequence at once and minimizes next-token cross-entropy. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
+Training runs the whole sequence at once and is compute-bound. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
 
-## What each technique solves
+## Core ideas
 
-| Technique | Problem it solves | Axis | Problem here |
-|-----------|-------------------|------|--------------|
-| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality | SwiGLU Feed-Forward Block |
-| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory + speed | Online Softmax |
-| Mixture of experts | More parameters without more compute per token | Speed (compute) | Mixture-of-Experts Routing |
-| Cross-entropy / perplexity | One number to train on and to compare models with | Quality (evaluation) | Token Cross-Entropy and Perplexity |
-
-## Key formulas
+| Technique | Problem it solves | Axis |
+|-----------|-------------------|------|
+| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality |
+| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory traffic |
+| Mixture of experts | More parameters without more compute per token | Compute |
+| Cross-entropy / perplexity | One number to train on and to compare models with | Evaluation |
 
 **SwiGLU and RMSNorm** (LLaMA):
-\`\`\`
+
+\`\`\`text
 rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
-ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,   silu(z) = z * sigmoid(z)
+ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,     silu(z) = z * sigmoid(z)
 \`\`\`
 
-**Online softmax**: stream over key blocks, keeping a running max \`m\`, normalizer \`l\` and output \`acc\`:
-\`\`\`
+**Online softmax**: stream over key blocks with a running max \`m\`, normalizer \`l\` and output \`acc\`:
+
+\`\`\`text
 m' = max(m, rowmax(S_b))
 l  = l * exp(m - m') + rowsum(exp(S_b - m'))
-acc = acc * exp(m - m') + exp(S_b - m') @ V_b
-output = acc / l
+acc = acc * exp(m - m') + exp(S_b - m') @ V_b          output = acc / l
 \`\`\`
 
 **MoE routing** (top-k gates, Switch Transformer load-balancing loss):
-\`\`\`
-gates = softmax(top-k router logits)
-y = sum_j gates_j * expert_{i_j}(x)
-aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router prob)
+
+\`\`\`text
+gates    = softmax(top-k router logits)
+y        = sum_j gates_j * expert_{i_j}(x)
+aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router probability)
 \`\`\`
 
 **Perplexity**:
-\`\`\`
-mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)      (padding masked out)
-perplexity = exp(mean_nll)                           (uniform over V tokens -> V)
+
+\`\`\`text
+mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)        padding masked out
+perplexity = exp(mean_nll)                             uniform over V tokens -> V
 \`\`\`
 
-## Interview essentials
-- Why SwiGLU uses \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`
-- Why FlashAttention is exact (not an approximation) and what it saves: memory traffic, not FLOPs
-- What goes wrong in an MoE without the auxiliary loss (expert collapse) and how capacity factors drop tokens
-- Why perplexity must exclude padding, and why it's only comparable between models with the same tokenizer
+## Worked micro-example
+Online softmax of \`x = [0, 1, 5, 2, 9]\` with blocks of 2:
 
-Then put it all together in the capstone **Mini GPT** problem (E2E Implementations).
+\`\`\`text
+block [0, 1]: m = 1, l = e^-1 + e^0                   = 1.3679
+block [5, 2]: m = 5, l = 1.3679 * e^-4 + e^0 + e^-3   = 1.0748   (old sum rescaled by e^(1-5))
+block [9]   : m = 9, l = 1.0748 * e^-4 + e^0          = 1.0197
+softmax(x)  = exp(x - 9) / 1.0197 = [0.0001, 0.0003, 0.018, 0.0009, 0.9807]
+\`\`\`
+
+The same numbers come out of a two-pass softmax; the online version never needed the global max up front. FlashAttention does this for every query row, with \`acc\` carrying the weighted values.
+
+## Common pitfalls
+- **RMSNorm is not LayerNorm**: no mean subtraction and no bias; the residual adds the un-normalized input.
+- **Online softmax**: forgetting to rescale \`acc\` (not just \`l\`) when the max changes, or dividing by \`l\` inside the loop.
+- **MoE**: computing \`f\` from gates instead of routing counts, using the renormalized top-k gates for \`P\`, or running every expert on every token.
+- **Perplexity**: dividing by the number of positions instead of the number of real tokens; comparing perplexities across different tokenizers.
+- **Overflow** everywhere: log-softmax and attention need the max subtracted.
+
+## Interview angle
+- Why does SwiGLU use \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`?
+- Why is FlashAttention exact, and what does it save? (Memory traffic and \`O(T^2)\` memory, not FLOPs.)
+- What goes wrong in an MoE without the auxiliary loss (expert collapse)? How do capacity factors drop tokens? Total vs active parameters of Mixtral 8x7B (about 47B vs 13B).
+- Why must perplexity exclude padding, and why is it only comparable between models with the same tokenizer?
+
+## Problems in this section
+1. **SwiGLU Feed-Forward Block (LLaMA MLP)**: RMSNorm, the gated MLP and the residual.
+2. **Online Softmax (the FlashAttention Trick)**: streaming softmax and block-wise exact attention.
+3. **Mixture-of-Experts Routing**: top-k routing, dispatch/combine and the load-balancing loss.
+4. **Token Cross-Entropy and Perplexity**: the LM loss with a padding mask.
+
+**Related problems.** The attention half of the LLaMA block (RoPE, GQA, causal mask) is in **Transformer Architecture**, along with **Attention Backward Pass**, whose \`rowsum(dP * P)\` term FlashAttention's backward pass also needs. Decoding and the KV cache are in **LLM Generation & Decoding**. **Masked Cross-Entropy with Label Smoothing** (Neural Networks) is a close cousin of the perplexity problem. Then assemble a full model in **Mini GPT**, debug one in **Transformer Bug Hunt**, and compare with the post-norm encoder in **E2E: Transformer Encoder** (all in E2E Implementations).
     `,
     problems: ['rmsnorm-swiglu', 'online-softmax', 'moe-routing', 'perplexity'],
   },
   {
     id: 'representation-learning',
     title: 'Representation Learning & Retrieval',
-    description: 'Contrastive learning, embedding search and retrieval for RAG.',
+    description: 'Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.',
     icon: '🧭',
     introduction: `
 # Representation Learning & Retrieval
 
-A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.
+## Why it matters
+A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close, unrelated things are far apart. Once you have that, search, clustering, deduplication, recommendation and retrieval for LLMs all come down to comparing vectors. Retrieval-augmented generation (RAG) is how most production LLM applications ground answers in private or fresh data, and "design a RAG system" is a standard LLM interview question.
 
-## Embeddings and cosine similarity
-Most embedding models are compared with **cosine similarity**, the dot product of L2-normalised vectors:
-\`\`\`
-cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
-\`\`\`
-After normalisation, scoring a query against N documents is a single matrix multiply.
+## Where this sits in the LLM pipeline
+An embedding model is the same Transformer stack as an LLM, stopped before the LM head and pooled into one vector per text. RAG wires it in front of a generator:
 
-## Contrastive learning
-Instead of labels, contrastive methods learn from **pairs**: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the **InfoNCE** loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.
+\`\`\`text
+offline:  documents ──tokenize──> Transformer encoder ──pool + L2-normalize──> doc vectors (N, D) ──> index
+online:   question  ──same encoder──> query vector (D,)
+          ──retrieve──> top candidates by BM25 and/or cosine        (Cosine Top-k, BM25 stage)
+          ──rerank────> fused scores / cross-encoder                 (Retrieve and Rerank)
+          ──prompt────> [instructions + top passages + question] ──> LLM ──decode──> answer
+\`\`\`
+
+The encoder is trained with a **contrastive** loss so that matching pairs (image and caption, query and passage) end up close.
+
+## Core ideas
+
+**Cosine similarity** is the dot product of L2-normalized vectors:
+
+\`\`\`text
+cos(a, b) = a · b / (||a|| ||b||)            in [-1, 1]
+scores    = Q_n @ D_n.T                      (num_queries, num_docs), one matmul
+\`\`\`
+
+**Contrastive learning (InfoNCE / CLIP).** In a batch of \`N\` pairs, each item must pick its partner out of \`N\` candidates: a softmax over cosine similarities divided by a temperature \`tau\`.
 
 | Idea | Role |
 |------|------|
-| Positives | The matching pair (diagonal of the similarity matrix) |
-| Negatives | Every other item in the batch, so bigger batches give more negatives |
-| Temperature τ | Sharpens or softens the softmax; CLIP learns it |
-| Symmetric loss | Average of image→text and text→image cross-entropy |
+| Positives | The matching pair: the diagonal of the \`(N, N)\` similarity matrix |
+| Negatives | Every other item in the batch, so bigger batches give more (and harder) negatives |
+| Temperature \`tau\` | Sharpens or softens the softmax; CLIP learns it (starting at 0.07) |
+| Symmetric loss | Average of image-to-text (rows) and text-to-image (columns) cross-entropy |
 
-## Vector search
-Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
+**Vector search.** Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
 
-## Retrieval-augmented generation (RAG)
-RAG answers a question by retrieving relevant passages and putting them in the LLM's prompt:
-1. **Retrieve** candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)
-2. **Rerank** the candidates with a stronger signal (a cross-encoder, or a fusion of scores)
-3. **Generate** with the top passages as context
+**Hybrid retrieval.** Lexical search (BM25) finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. BM25 per query term:
 
-Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.
+\`\`\`text
+IDF(t) * f(t,d) * (k1 + 1) / (f(t,d) + k1 * (1 - b + b * |d| / avgdl))
+\`\`\`
 
-## Interview Topics
-- Why normalise embeddings, and what the temperature does in InfoNCE
-- Why in-batch negatives make large batches important for CLIP
-- BM25's term-frequency saturation (k1) and length normalisation (b)
-- Exact vs approximate nearest-neighbour search
-- How the retrieval stage limits a RAG system's answer quality
+\`k1\` saturates repeated terms, \`b\` penalizes long documents.
+
+## Worked micro-example
+Two perfectly aligned pairs, \`img = txt = [[1, 0], [0, 1]]\`, \`tau = 1\`:
+
+\`\`\`text
+logits = img_n @ txt_n.T / 1 = [[1, 0], [0, 1]]
+row 0: softmax([1, 0]) = [0.7311, 0.2689]  ->  CE = -log(0.7311) = 0.3133
+loss_i2t = loss_t2i = 0.3133               ->  loss = 0.3133
+\`\`\`
+
+Even perfect alignment has a non-zero loss at \`tau = 1\`, because a cosine gap of 1 is a small logit gap. At \`tau = 0.1\` the gap becomes 10 and the loss drops to about 0.0001 (with 3 pairs), which is why the temperature matters so much.
+
+## Common pitfalls
+- **Forgetting to normalize** (or normalizing columns instead of rows): scores then reward vector length, not direction.
+- **Unstable log-sum-exp** at small temperatures: subtract the row max.
+- **Asymmetry**: the similarity matrix isn't symmetric, so the two CLIP directions give different losses.
+- **Tie order**: \`argsort(scores)[::-1]\` reverses tied items; use a stable sort of \`-scores\` when order is specified.
+- **Exact-token matching**: BM25 doesn't stem (\`cats != cat\`) and counts each distinct query term once.
+- **Mixing scales**: raw BM25 is unbounded while cosine is in \`[-1, 1]\`; normalize before fusing.
+
+## Interview angle
+- Why normalize embeddings, and what does the temperature do in InfoNCE?
+- Why do in-batch negatives make large batches important for CLIP? What does SigLIP change?
+- BM25's term-frequency saturation (\`k1\`) and length normalization (\`b\`); when lexical beats dense retrieval.
+- Exact vs approximate nearest-neighbour search: complexity (\`O(N · D)\` per query for brute force) and the recall trade-off.
+- How the retrieval stage caps a RAG system's quality, and how to evaluate it (recall@k, MRR) separately from generation.
+
+## Problems in this section
+1. **CLIP Contrastive Loss (InfoNCE)**: the symmetric contrastive loss that trains embedding models.
+2. **Cosine Top-k Embedding Search**: exact dense retrieval with a defined tie order.
+3. **RAG Retrieval: BM25 + Embedding Rerank**: lexical candidates, then weighted fusion with cosine.
+
+**Related problems.** The encoder that produces the embeddings is the Transformer stack from **Transformer Architecture** (tokenizers, attention, LayerNorm); the generator that consumes the retrieved passages is the decoding loop from **LLM Generation & Decoding**, scored with **Token Cross-Entropy and Perplexity** (LLM Internals). The cross-entropy inside InfoNCE is the same as **Cross-Entropy Loss** in Neural Networks. For full models, see **E2E: Transformer Encoder** (the kind of encoder used for embeddings) and **Mini GPT** (a decoder-only generator).
     `,
     problems: ['infonce-loss', 'embedding-search', 'retrieve-and-rerank'],
   },

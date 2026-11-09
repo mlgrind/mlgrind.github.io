@@ -98,9 +98,10 @@ def clip_loss(img_emb: torch.Tensor, txt_emb: torch.Tensor, temperature: float =
       },
     ],
     hints: [
-      'F.normalize(x, dim=-1) L2-normalises each row',
-      'logits = img @ txt.T / temperature; labels = torch.arange(N)',
-      'loss = (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2',
+      'This is ordinary classification twice: each image\'s N classes are the captions (and vice versa), and the correct class sits on the diagonal.',
+      'Normalize both embedding matrices, build the (N, N) logits, take a cross-entropy over rows and another over the transposed matrix, average them.',
+      'F.normalize(x, dim=-1); logits = img @ txt.T / temperature; labels = torch.arange(N); (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2.',
+      'Normalize along dim=-1 (each embedding), not dim=0; return the losses as Python floats with .item().',
     ],
   },
   'embedding-search': {
@@ -182,9 +183,10 @@ def cosine_topk(queries: torch.Tensor, docs: torch.Tensor, k: int):
       },
     ],
     hints: [
-      'F.normalize both matrices along dim=-1, then scores = q @ d.T',
-      'torch.sort(scores, dim=1, descending=True, stable=True) returns (values, indices)',
-      'Slice the first k columns of both',
+      'Cosine similarity of unit vectors is a dot product, so every query-document score comes from one matmul.',
+      'Normalize both matrices row-wise, compute the (Q, N) scores, sort each row in descending order, keep k columns.',
+      'values, idx = torch.sort(q @ d.T, dim=1, descending=True, stable=True); return idx[:, :k], values[:, :k].',
+      'torch.topk doesn\'t guarantee the order of tied scores; a stable descending sort keeps the lower index first.',
     ],
   },
   'retrieve-and-rerank': {
@@ -314,10 +316,10 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
       },
     ],
     hints: [
-      'Build tf with torch.tensor([d.count(t) for d in docs], dtype=torch.float64) for each unique query term',
-      'idf = math.log((N - n_t + 0.5) / (n_t + 0.5) + 1); n_t = number of documents with tf > 0',
-      'torch.sort(bm25, descending=True, stable=True)[1][:n] gives the candidates',
-      'F.cosine_similarity(doc_embs[candidates], query_emb.unsqueeze(0), dim=-1) for the semantic score',
+      'Two pieces: a lexical scorer over the whole corpus, then a small rerank over n candidates. Check the BM25 numbers first.',
+      'For each distinct query term: term frequencies in every document, document frequency n_t, IDF, then the saturated, length-normalized contribution.',
+      'tf = torch.tensor([d.count(t) for d in docs], dtype=torch.float64); idf = math.log((N - n_t + 0.5) / (n_t + 0.5) + 1); candidates = torch.sort(bm25, descending=True, stable=True)[1][:n].',
+      'Normalize BM25 by the candidates\' max (guard against 0), use F.cosine_similarity(doc_embs[candidates], query_emb.unsqueeze(0), dim=-1), and sort fused scores stably.',
     ],
   },
 };

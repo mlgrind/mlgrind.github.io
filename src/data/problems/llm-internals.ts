@@ -9,54 +9,65 @@ export const llmInternalsProblems: Problem[] = [
     description: `
 ## SwiGLU Feed-Forward Block (LLaMA MLP)
 
-The original Transformer MLP is \`ReLU(x W_1) W_2\`. LLaMA, Mistral, Qwen and PaLM replace it with a **gated** MLP, **SwiGLU** (Shazeer, 2020, "GLU Variants Improve Transformer"): one projection is passed through SiLU and used as a *gate* that multiplies a second, linear projection elementwise.
+### What you'll build
+The MLP half of a LLaMA decoder block: RMSNorm, a SwiGLU gated feed-forward network, and the residual connection around them. Three functions: \`rms_norm\`, \`swiglu_ffn\` and \`llama_mlp_block\`.
 
-### SiLU (a.k.a. Swish with beta = 1)
-\`\`\`
-silu(z) = z * sigmoid(z) = z / (1 + exp(-z))
-\`\`\`
+### Background
+The original Transformer MLP is \`ReLU(x W_1) W_2\`. LLaMA, Mistral, Qwen and PaLM use a **gated** MLP instead, SwiGLU (Shazeer, 2020): one projection goes through SiLU and **gates** a second, linear projection elementwise. At equal parameter count it gives lower loss. LLaMA also replaces LayerNorm with **RMSNorm**, which skips the mean subtraction and the bias: cheaper, and empirically just as good. About two thirds of a dense LLM's parameters live in these MLPs.
 
-### SwiGLU FFN
-\`\`\`
-gate   = silu(x @ W_gate)          # (..., d_ff)
-up     = x @ W_up                  # (..., d_ff)
-ffn(x) = (gate * up) @ W_down      # (..., d_model)
-\`\`\`
-No biases (LLaMA uses none). There are **three** weight matrices instead of two, so to keep the parameter count of a \`4 * d_model\` ReLU MLP, LLaMA uses \`d_ff ≈ (2/3) * 4 * d_model\`.
+### Formula
+\`\`\`text
+rms_norm(x)  = x / sqrt(mean(x^2, axis=-1) + eps) * weight
 
-### RMSNorm (brief)
-LLaMA normalizes with RMSNorm: like LayerNorm but **no mean subtraction and no bias**:
-\`\`\`
-rms_norm(x) = x / sqrt(mean(x**2, axis=-1) + eps) * weight
-\`\`\`
+silu(z)      = z * sigmoid(z) = z / (1 + exp(-z))
+gate         = silu(x @ W_gate)                  # (..., d_ff)
+up           = x @ W_up                          # (..., d_ff)
+swiglu_ffn(x) = (gate * up) @ W_down             # (..., d_model)
 
-### The full pre-norm MLP sub-block
+llama_mlp_block(x) = x + swiglu_ffn(rms_norm(x))
 \`\`\`
-llama_mlp_block(x) = x + ffn(rms_norm(x))
-\`\`\`
+No biases anywhere (LLaMA uses none). With three weight matrices instead of two, LLaMA sets \`d_ff ≈ (2/3) · 4 · d_model\` to match the parameter count of a \`4 · d_model\` ReLU MLP.
+
+### Inputs
+- \`x\`: float array \`(..., d_model)\` (any number of leading axes, e.g. \`(batch, seq_len, d_model)\`)
+- \`weight\` / \`norm_weight\`: \`(d_model,)\`
+- \`W_gate\`, \`W_up\`: \`(d_model, d_ff)\`; \`W_down\`: \`(d_ff, d_model)\`
+- \`eps\`: float, default \`1e-6\`
 
 ### Expected Return Format
-- \`rms_norm(x, weight, eps=1e-6)\`: array with the same shape as \`x\` (normalized over the last axis)
-- \`swiglu_ffn(x, W_gate, W_up, W_down)\`: \`W_gate\`, \`W_up\` are \`(d_model, d_ff)\`, \`W_down\` is \`(d_ff, d_model)\`; returns shape \`(..., d_model)\`
+- \`rms_norm(x, weight, eps=1e-6)\`: same shape as \`x\`
+- \`swiglu_ffn(x, W_gate, W_up, W_down)\`: shape \`(..., d_model)\`
 - \`llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6)\`: same shape as \`x\`
+
+### Edge cases and conventions
+- RMSNorm normalizes over the last axis only; \`eps\` goes inside the square root.
+- The residual adds the **un-normalized** \`x\` (pre-norm): \`x + ffn(norm(x))\`, not \`norm(x) + ffn(norm(x))\`.
+- The gate is SiLU, not sigmoid (that would be GLU) and not ReLU (ReGLU).
+
+### Constraints
+NumPy only, vectorised.
+
+### Follow-up
+- Count the parameters of the SwiGLU MLP and of a ReLU MLP with \`d_ff = 4 d_model\`. What \`d_ff\` makes them equal?
+- Write the attention half of the LLaMA block (RMSNorm, RoPE, GQA, causal mask). Which earlier problems give you each piece?
 `,
     examples: [
       {
         input: 'rms_norm(np.array([[3.0, 4.0]]), np.ones(2))',
         output: '[[0.8485, 1.1314]]',
-        explanation: 'mean(x**2) = 12.5, rms = 3.5355',
+        explanation: 'mean(x^2) = 12.5, so the RMS is 3.5355 and x / 3.5355 = [0.8485, 1.1314]. The mean is not subtracted.',
       },
       {
-        input: 'x (4, 8), W_gate/W_up (8, 16), W_down (16, 8)',
-        output: 'llama_mlp_block(...) shape (4, 8)',
-        explanation: 'Residual connection keeps the model dimension.',
+        input: 'swiglu_ffn(np.array([[1.0, -1.0]]), np.array([[1.0], [0.0]]), np.array([[2.0], [1.0]]), np.array([[1.0, 0.5]]))',
+        output: '[[0.7311, 0.3655]]',
+        explanation: 'gate = silu(1) = 0.7311, up = 2 - 1 = 1, then (0.7311 * 1) @ [[1, 0.5]].',
       },
     ],
     starterCode: `import numpy as np
 
 def rms_norm(x, weight, eps=1e-6):
     """
-    RMSNorm over the last axis.
+    RMSNorm over the last axis: x / sqrt(mean(x**2) + eps) * weight.
 
     Args:
         x: (..., d_model)
@@ -126,7 +137,7 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
       },
       {
         id: '5',
-        description: 'SwiGLU matches a reference',
+        description: 'SwiGLU matches a reference on a 3-D input',
         input: '(lambda x, Wg, Wu, Wd: bool(np.allclose(swiglu_ffn(x, Wg, Wu, Wd), ((x @ Wg) * (1 / (1 + np.exp(-(x @ Wg)))) * (x @ Wu)) @ Wd)))(np.random.randn(2, 3, 8), np.random.randn(8, 12), np.random.randn(8, 12), np.random.randn(12, 8))',
         expected: 'True',
         hidden: true,
@@ -154,30 +165,36 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
       },
     ],
     hints: [
-      'RMSNorm: rms = np.sqrt(np.mean(x**2, axis=-1, keepdims=True) + eps); return x / rms * weight. No mean subtraction, no bias.',
-      'SiLU is z * sigmoid(z) = z / (1 + np.exp(-z)).',
-      'SwiGLU: (silu(x @ W_gate) * (x @ W_up)) @ W_down. The gate and up projections have the same width d_ff.',
-      'The block normalizes first, then adds the FFN output back to the un-normalized x.',
+      'Three small pieces that compose: a normalizer, a gated MLP, and a residual add. Write and test each one separately.',
+      'RMSNorm divides by the root-mean-square of the last axis (no mean subtraction, no bias); SwiGLU multiplies silu(x @ W_gate) by x @ W_up elementwise before projecting down.',
+      'rms = np.sqrt(np.mean(x**2, axis=-1, keepdims=True) + eps); silu(z) = z / (1 + np.exp(-z)); block = x + swiglu_ffn(rms_norm(x, norm_weight, eps), ...).',
+      'Add the residual to the original x, not to the normalized x, and keep keepdims=True so the RMS broadcasts over any leading axes.',
     ],
     solution: `import numpy as np
 
 def rms_norm(x, weight, eps=1e-6):
-    rms = np.sqrt(np.mean(x ** 2, axis=-1, keepdims=True) + eps)
+    """Returns an array with the same shape as x."""
+    rms = np.sqrt(np.mean(x ** 2, axis=-1, keepdims=True) + eps)   # (..., 1)
     return x / rms * weight
 
 
 def silu(z):
-    return z / (1.0 + np.exp(-z))
+    return z / (1.0 + np.exp(-z))           # z * sigmoid(z)
 
 
 def swiglu_ffn(x, W_gate, W_up, W_down):
+    """Returns an array of shape (..., d_model)."""
     gate = silu(x @ W_gate)   # (..., d_ff)
     up = x @ W_up             # (..., d_ff)
     return (gate * up) @ W_down
 
 
 def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
+    """Returns an array with the same shape as x."""
+    # Pre-norm: normalize the branch input, add the result to the raw x
     return x + swiglu_ffn(rms_norm(x, norm_weight, eps), W_gate, W_up, W_down)
+
+# O(N * d_model * d_ff) for N tokens, dominated by the three matmuls
 `,
   },
   {
@@ -188,59 +205,75 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
     description: `
 ## Online Softmax: the trick behind FlashAttention
 
-Standard attention materializes the full \`(n_q, n_k)\` score matrix, then takes a softmax over each row. For long sequences that matrix doesn't fit in fast on-chip memory (SRAM), and reading/writing it to slow memory (HBM) dominates runtime.
+### What you'll build
+Two functions that compute a softmax **in one streaming pass over blocks**: \`online_softmax\` for a 1-D vector, and \`online_attention\`, which computes exact attention block by block over the keys without ever forming the full score matrix.
 
-**FlashAttention** (Dao et al., 2022) never builds the full matrix. It walks over the keys in **blocks** and keeps, for every query row, three running statistics. The key idea is the **online softmax** (Milakov & Gimelshein, 2018): you can compute a softmax normalizer in one streaming pass by rescaling the running sum whenever the running max changes.
+### Background
+Standard attention materializes the \`(n_q, n_k)\` score matrix, then takes a row softmax. For long sequences that matrix doesn't fit in fast on-chip memory (SRAM), and moving it to and from slow memory (HBM) dominates the runtime. **FlashAttention** (Dao et al., 2022) walks over the keys in blocks and keeps three running statistics per query. It is **exact**, not an approximation; it saves memory traffic, not FLOPs. The enabling idea is the **online softmax** (Milakov & Gimelshein, 2018): when the running max increases, rescale everything accumulated so far by \`exp(m_old - m_new)\`.
 
-### Part 1: \`online_softmax(x, block_size)\` for a 1-D vector
-Keep a running max \`m\` and a running sum \`l\` (start with \`m = -inf\`, \`l = 0\`). For each block \`b\` of \`x\`:
-\`\`\`
+### Formula: \`online_softmax(x, block_size)\`
+Start with a running max \`m = -inf\` and running sum \`l = 0\`. For each block \`b\` of \`x\` (the last block may be shorter):
+\`\`\`text
 m_new = max(m, max(b))
-l     = l * exp(m - m_new) + sum(exp(b - m_new))     # rescale old sum to the new max
+l     = l * exp(m - m_new) + sum(exp(b - m_new))     # rescale the old sum to the new max
 m     = m_new
 \`\`\`
-After the pass, \`softmax(x) = exp(x - m) / l\`.
+After the pass: \`softmax(x) = exp(x - m) / l\`.
 
-### Part 2: \`online_attention(Q, K, V, block_size)\`
-Same idea, but also keep a running (unnormalized) output \`acc\` per query. For each block \`(K_b, V_b)\` of \`block_size\` keys (the last block may be shorter):
-\`\`\`
-S     = Q @ K_b.T / sqrt(d)                           # (n_q, B)
-m_new = maximum(m, rowmax(S))                         # (n_q, 1)
-scale = exp(m - m_new)                                # shrink old stats
-P     = exp(S - m_new)                                # (n_q, B)
+### Formula: \`online_attention(Q, K, V, block_size)\`
+Keep per query row a running max \`m\` \`(n_q, 1)\`, a running denominator \`l\` \`(n_q, 1)\` and an unnormalized output \`acc\` \`(n_q, d_v)\`. For each block \`(K_b, V_b)\` of \`block_size\` keys:
+\`\`\`text
+S     = Q @ K_b.T / sqrt(d)                # (n_q, B)
+m_new = maximum(m, rowmax(S))              # (n_q, 1)
+scale = exp(m - m_new)                     # shrink the old statistics
+P     = exp(S - m_new)                     # (n_q, B)
 l     = l * scale + rowsum(P)
-acc   = acc * scale + P @ V_b                         # (n_q, d_v)
+acc   = acc * scale + P @ V_b              # (n_q, d_v)
 m     = m_new
 \`\`\`
-At the end \`output = acc / l\`, which equals \`softmax(Q K^T / sqrt(d)) @ V\` exactly (up to float rounding), while only ever holding an \`(n_q, block_size)\` slice of scores.
+At the end, \`output = acc / l\`, which equals \`softmax(Q K^T / sqrt(d)) @ V\` up to float rounding.
+
+### Inputs
+- \`x\`: 1-D float array; \`block_size\`: positive int
+- \`Q\` \`(n_q, d)\`, \`K\` \`(n_k, d)\`, \`V\` \`(n_k, d_v)\`; \`block_size\` keys per block
 
 ### Expected Return Format
 - \`online_softmax(x, block_size)\`: 1-D array, same shape as \`x\`, sums to 1
-- \`online_attention(Q, K, V, block_size)\`: \`Q\` \`(n_q, d)\`, \`K\` \`(n_k, d)\`, \`V\` \`(n_k, d_v)\`; returns \`(n_q, d_v)\`
+- \`online_attention(Q, K, V, block_size)\`: array \`(n_q, d_v)\`
 
-Don't compute the softmax over a whole row at once: process the keys block by block.
+### Edge cases and conventions
+- \`exp(-inf - m_new) = 0\`, so the first block needs no special case.
+- Any \`block_size\` (1, a divisor of \`n_k\`, or larger than \`n_k\`) must give the same answer.
+- Logits around 1000 must not overflow.
+
+### Constraints
+NumPy only. Process the keys block by block; don't take a softmax over a whole row of scores at once.
+
+### Follow-up
+- What is the memory footprint of the score matrix for \`n = 32k\` tokens and 32 heads in fp16? What does FlashAttention store instead?
+- FlashAttention-2 delays the division by \`l\` to the very end and parallelises over query blocks. Why does that help?
 `,
     examples: [
       {
         input: 'online_softmax(np.array([1000.0, 1001.0, 1002.0]), block_size=2)',
         output: '[0.09, 0.2447, 0.6652]',
-        explanation: 'Stable even for huge logits: every exp is taken relative to the running max.',
+        explanation: 'Every exp is taken relative to the running max, so huge logits are fine.',
       },
       {
-        input: 'Q (3, 4), K (10, 4), V (10, 2), block_size=4',
-        output: '(3, 2)',
-        explanation: 'Blocks of 4, 4 and 2 keys; result equals standard attention.',
+        input: 'online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), block_size=2)',
+        output: '[0.0001, 0.0003, 0.018, 0.0009, 0.9807]',
+        explanation: 'The max changes from 1 to 5 to 9; each time, the running sum is rescaled by exp(m_old - m_new).',
       },
     ],
     starterCode: `import numpy as np
 
 def online_softmax(x, block_size):
     """
-    Softmax of a 1-D array computed with a single streaming pass over blocks
+    Softmax of a 1-D array computed with one streaming pass over blocks
     (running max + running sum), then one normalization pass.
 
     Returns:
-        probs: same shape as x
+        probs: same shape as x, sums to 1
     """
     # Your code here
     pass
@@ -271,9 +304,9 @@ def online_attention(Q, K, V, block_size):
       },
       {
         id: '2',
-        description: 'online_attention output shape',
-        input: 'online_attention(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2), 4).shape',
-        expected: '(3, 2)',
+        description: 'Max in a later block (old sum must be rescaled)',
+        input: 'np.round(online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), 2), 4).tolist()',
+        expected: '[0.0001, 0.0003, 0.018, 0.0009, 0.9807]',
         hidden: false,
       },
       {
@@ -292,9 +325,9 @@ def online_attention(Q, K, V, block_size):
       },
       {
         id: '5',
-        description: 'Max in a later block (old sum must be rescaled)',
-        input: 'np.round(online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), 2), 4).tolist()',
-        expected: '[0.0001, 0.0003, 0.018, 0.0009, 0.9807]',
+        description: 'online_attention output shape',
+        input: 'online_attention(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2), 4).shape',
+        expected: '(3, 2)',
         hidden: true,
       },
       {
@@ -313,24 +346,27 @@ def online_attention(Q, K, V, block_size):
       },
     ],
     hints: [
-      'Start with m = -inf and l = 0. exp(-inf - m_new) = 0, so the first block needs no special case.',
-      'When the max grows from m to m_new, every term already in l was computed as exp(x - m); multiplying by exp(m - m_new) turns it into exp(x - m_new).',
-      'For attention, keep m and l as (n_q, 1) columns so they broadcast, and rescale acc with the same factor as l before adding P @ V_b.',
-      'Divide once at the very end: output = acc / l.',
+      'If you knew the global max in advance, softmax would be one pass. What do you have to fix up when a later block reveals a bigger max?',
+      'Every term already summed into l was computed as exp(x - m_old). Multiplying l by exp(m_old - m_new) turns all of them into exp(x - m_new) at once; acc needs the same factor.',
+      'Start with m = -inf and l = 0 (np.full((n_q, 1), -np.inf) and np.zeros((n_q, 1)) for attention); loop over range(0, n_k, block_size); S.max(axis=1, keepdims=True); np.maximum(m, ...).',
+      'Rescale acc and l by the same scale before adding the new block, and divide by l only once at the end. Keep m and l as (n_q, 1) columns so they broadcast.',
     ],
     solution: `import numpy as np
 
 def online_softmax(x, block_size):
+    """Returns softmax(x), same shape as x."""
     m, l = -np.inf, 0.0
     for start in range(0, len(x), block_size):
         block = x[start:start + block_size]
         m_new = max(m, block.max())
+        # Rescale the old sum to the new max, then add this block
         l = l * np.exp(m - m_new) + np.exp(block - m_new).sum()
         m = m_new
     return np.exp(x - m) / l
 
 
 def online_attention(Q, K, V, block_size):
+    """Returns output (n_q, d_v) equal to softmax(Q K^T / sqrt(d)) V."""
     n_q, d = Q.shape
     m = np.full((n_q, 1), -np.inf)     # running row max
     l = np.zeros((n_q, 1))             # running softmax denominator
@@ -338,14 +374,16 @@ def online_attention(Q, K, V, block_size):
     for start in range(0, K.shape[0], block_size):
         K_b = K[start:start + block_size]
         V_b = V[start:start + block_size]
-        S = Q @ K_b.T / np.sqrt(d)
+        S = Q @ K_b.T / np.sqrt(d)                      # (n_q, B): only one block of scores
         m_new = np.maximum(m, S.max(axis=1, keepdims=True))
-        scale = np.exp(m - m_new)
+        scale = np.exp(m - m_new)                       # 0 on the first block
         P = np.exp(S - m_new)
         l = l * scale + P.sum(axis=1, keepdims=True)
         acc = acc * scale + P @ V_b
         m = m_new
     return acc / l
+
+# Same O(n_q * n_k * d) FLOPs as standard attention; extra memory O(n_q * (block_size + d_v))
 `,
   },
   {
@@ -356,52 +394,67 @@ def online_attention(Q, K, V, block_size):
     description: `
 ## Mixture-of-Experts (MoE) Routing
 
-MoE layers (Switch Transformer, Mixtral, DeepSeek-MoE) replace one big FFN with \`E\` smaller **experts** and a **router** that sends each token to only \`k\` of them. Parameters grow with \`E\`, but compute per token grows only with \`k\`.
+### What you'll build
+A top-k mixture-of-experts layer: a router picks \`k\` experts per token, each expert runs only on the tokens routed to it, the outputs are combined with the gate weights, and a load-balancing auxiliary loss is returned.
 
-Here each expert is a linear map \`expert_e(x) = x @ expert_weights[e]\` (real experts are SwiGLU FFNs; the routing is the same).
+### Background
+MoE layers (Switch Transformer, Mixtral, DeepSeek-MoE) replace one big FFN with \`E\` smaller **experts** and a **router**. Parameters grow with \`E\`, but compute per token grows only with \`k\`: Mixtral 8x7B has about 47B parameters but uses about 13B per token. The cost is engineering: tokens must be dispatched to experts and gathered back, and the router must be kept from collapsing onto a few experts. Here each expert is a linear map \`expert_e(x) = x @ expert_weights[e]\` (real experts are SwiGLU FFNs; the routing is identical).
 
-### 1. Router
-\`\`\`
-logits = x @ W_router                  # (T, E)
-probs  = softmax(logits, axis=-1)      # full router distribution (used by the aux loss)
-\`\`\`
-
-### 2. Top-k gating (Mixtral style)
-- \`expert_indices\`: the \`k\` experts with the largest logits for each token, **sorted by descending logit**
-- \`gates = softmax(top-k logits)\`: renormalized over the chosen \`k\` only, so each row sums to 1
-
-### 3. Dispatch and combine
-For each expert \`e\`, gather the tokens routed to it, run the expert **only on those tokens**, and add the outputs back weighted by the gate:
-\`\`\`
+### Algorithm
+With \`T\` tokens and \`E\` experts:
+1. **Router**: \`logits = x @ W_router\` \`(T, E)\`; \`probs = softmax(logits, axis=-1)\` (used by the aux loss).
+2. **Top-k gating (Mixtral style)**: \`expert_indices\` = the \`k\` experts with the largest logits per token, **sorted by descending logit**; \`gates = softmax(top-k logits)\`, renormalized over the chosen \`k\` only.
+3. **Dispatch and combine**: for each expert \`e\`, gather the tokens routed to it, run the expert **only on those tokens**, and add the outputs back weighted by their gate:
+\`\`\`text
 y_t = sum_{j=1..k} gates[t, j] * expert_{expert_indices[t, j]}(x_t)
 \`\`\`
-
-### 4. Load-balancing auxiliary loss (Switch Transformer)
-Without it, the router collapses onto a few experts. With \`T\` tokens:
-\`\`\`
-f_e = (number of tokens whose top-k includes e) / (T * k)    # fraction of routing slots
-P_e = mean over tokens of probs[:, e]                         # mean router probability
+4. **Load-balancing loss (Switch Transformer)**:
+\`\`\`text
+f_e      = (number of tokens whose top-k includes e) / (T * k)    # fraction of routing slots
+P_e      = mean over tokens of probs[:, e]                        # mean router probability
 aux_loss = E * sum_e f_e * P_e
 \`\`\`
-It equals 1.0 when routing is perfectly uniform and grows toward \`E\` as routing collapses onto one expert. For \`k = 1\` this is exactly the Switch Transformer loss. In training it's added to the LM loss times a small coefficient (e.g. 0.01). \`f\` is not differentiable; the gradient flows through \`P\`.
+It is 1.0 for perfectly uniform routing and approaches \`E\` when everything collapses onto one expert. In training it is added to the LM loss times a small coefficient (e.g. 0.01); \`f\` is not differentiable, so the gradient flows through \`P\`.
+
+### Inputs
+- \`x\`: \`(T, d)\`
+- \`W_router\`: \`(d, E)\`
+- \`expert_weights\`: \`(E, d, d_out)\`
+- \`top_k\`: int, \`1 <= top_k <= E\`
 
 ### Expected Return Format
-Return a dictionary with these keys:
-- \`'output'\`: combined expert outputs, shape \`(T, d_out)\`
+A dictionary with these keys:
+- \`'output'\`: combined expert outputs, \`(T, d_out)\`
 - \`'expert_indices'\`: integer array \`(T, k)\`, sorted by descending router logit
-- \`'gates'\`: \`(T, k)\`, each row sums to 1
-- \`'aux_loss'\`: the load-balancing loss as a float
+- \`'gates'\`: \`(T, k)\`, each row sums to 1, aligned with \`'expert_indices'\`
+- \`'aux_loss'\`: the load-balancing loss as a Python float
+
+### Edge cases and conventions
+- \`top_k = 1\` (Switch): the gate is 1 and the output is the chosen expert's output.
+- Tests use random logits, so ties between experts don't occur; a stable sort of \`-logits\` is a safe choice.
+
+### Constraints
+NumPy only. Don't run every expert on every token and mask afterwards: run each expert on its routed tokens.
+
+### Follow-up
+- Real systems give each expert a **capacity** (\`capacity_factor · T · k / E\` slots) and drop overflow tokens. How would you implement that, and what happens to dropped tokens?
+- Why does expert parallelism need an all-to-all communication step?
 `,
     examples: [
       {
-        input: 'x (6, 4), W_router (4, 4), expert_weights (4, 4, 4), top_k=2',
-        output: '{\'output\': shape (6, 4), \'expert_indices\': shape (6, 2), \'gates\': shape (6, 2), \'aux_loss\': float}',
-        explanation: 'Each token is processed by its 2 highest-scoring experts.',
+        input: 'x (6, 4), W_router (4, 4), expert_weights (4, 4, 3), top_k=2',
+        output: "{'output': shape (6, 3), 'expert_indices': shape (6, 2), 'gates': shape (6, 2), 'aux_loss': float}",
+        explanation: 'Each token is processed by its 2 highest-scoring experts and gets a weighted sum of their outputs.',
       },
       {
-        input: 'W_router = zeros',
-        output: 'aux_loss = 1.0',
-        explanation: 'Uniform router probabilities: P_e = 1/E for every expert.',
+        input: 'W_router = np.zeros((4, 4)), any x, top_k=2',
+        output: "aux_loss = 1.0",
+        explanation: 'Uniform router probabilities: P_e = 1/4 for every expert and the f_e sum to 1, so 4 * sum(f_e / 4) = 1.',
+      },
+      {
+        input: 'x = np.ones((6, 4)), router strongly prefers expert 0, top_k=1, E=4',
+        output: 'aux_loss = 4.0',
+        explanation: 'Collapse: f_0 = 1 and P_0 is about 1, so the loss reaches E.',
       },
     ],
     starterCode: `import numpy as np
@@ -417,8 +470,9 @@ def moe_layer(x, W_router, expert_weights, top_k):
         top_k: experts per token
 
     Returns:
-        dict with 'output' (T, d_out), 'expert_indices' (T, k),
-        'gates' (T, k) and 'aux_loss' (float)
+        dict with 'output' (T, d_out), 'expert_indices' (T, k) sorted by
+        descending logit, 'gates' (T, k) rows summing to 1, and
+        'aux_loss' (float) = E * sum_e f_e * P_e
     """
     # Your code here
     pass
@@ -482,10 +536,10 @@ def moe_layer(x, W_router, expert_weights, top_k):
       },
     ],
     hints: [
-      'Top-k: np.argsort(-logits, axis=-1, kind="stable")[:, :k]; get the matching logits with np.take_along_axis, then softmax them.',
-      'Dispatch: token_ids, slot = np.nonzero(expert_indices == e) gives every (token, slot) routed to expert e.',
-      'Combine: output[token_ids] += gates[token_ids, slot][:, None] * (x[token_ids] @ expert_weights[e]). A token appears at most once per expert.',
-      'Aux loss: f = np.bincount(expert_indices.ravel(), minlength=E) / (T * k); P = probs.mean(0); return E * sum(f * P).',
+      'Split the layer into four steps: router probabilities, top-k selection with renormalized gates, per-expert dispatch/combine, and the aux loss from routing counts and mean probabilities.',
+      'Top-k: sort each row of logits in descending order and take the first k columns; gates are a softmax of just those k logits. Dispatch: for each expert, find the (token, slot) pairs that chose it.',
+      'np.argsort(-logits, axis=-1, kind="stable")[:, :k]; np.take_along_axis for the chosen logits; token_ids, slot = np.nonzero(expert_indices == e); output[token_ids] += gates[token_ids, slot][:, None] * (x[token_ids] @ expert_weights[e]).',
+      'f uses routing counts (np.bincount(expert_indices.ravel(), minlength=E) / (T * k)) and P uses the full softmax over all E experts, not the renormalized gates. Return aux_loss as a Python float.',
     ],
     solution: `import numpy as np
 
@@ -495,6 +549,10 @@ def softmax(z, axis=-1):
 
 
 def moe_layer(x, W_router, expert_weights, top_k):
+    """
+    Returns:
+        dict with 'output', 'expert_indices', 'gates', 'aux_loss'
+    """
     T = x.shape[0]
     E = W_router.shape[1]
 
@@ -502,7 +560,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
     logits = x @ W_router                       # (T, E)
     probs = softmax(logits)                     # full distribution, for the aux loss
 
-    # 2. Top-k experts per token, renormalized gates
+    # 2. Top-k experts per token (descending logit), renormalized gates
     expert_indices = np.argsort(-logits, axis=-1, kind='stable')[:, :top_k]   # (T, k)
     gates = softmax(np.take_along_axis(logits, expert_indices, axis=-1))       # (T, k)
 
@@ -515,7 +573,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
         expert_out = x[token_ids] @ expert_weights[e]      # run e on its tokens only
         output[token_ids] += gates[token_ids, slot][:, None] * expert_out
 
-    # 4. Load-balancing loss
+    # 4. Load-balancing loss (Switch Transformer)
     f = np.bincount(expert_indices.ravel(), minlength=E) / (T * top_k)
     P = probs.mean(axis=0)
     aux_loss = E * np.sum(f * P)
@@ -526,6 +584,8 @@ def moe_layer(x, W_router, expert_weights, top_k):
         'gates': gates,
         'aux_loss': float(aux_loss),
     }
+
+# Expert compute O(T * k * d * d_out) instead of O(T * E * d * d_out) for a dense mixture
 `,
   },
   {
@@ -536,37 +596,53 @@ def moe_layer(x, W_router, expert_weights, top_k):
     description: `
 ## Token Cross-Entropy and Perplexity
 
-Language models are trained and evaluated with **next-token cross-entropy**. Given logits for every position and the true next tokens:
-\`\`\`
-log_probs  = log_softmax(logits, axis=-1)          # stable: z - max - log(sum(exp(z - max)))
-token_nll  = -log_probs[..., target]               # one number per position
-mean_nll   = sum(token_nll * mask) / sum(mask)
+### What you'll build
+The language-modeling loss and its standard evaluation metric: per-token negative log-likelihood from logits and targets, with a padding mask, averaged into a mean NLL and exponentiated into perplexity.
+
+### Background
+Every LLM is pretrained by minimizing next-token cross-entropy, and **perplexity** is how papers report it: "the effective number of tokens the model is choosing between". A model that is uniform over \`V\` tokens has perplexity exactly \`V\`; a perfect model has perplexity 1. Batches are padded to a common length, so padded positions must be excluded, or the reported loss depends on how much padding the batch happened to have.
+
+### Formula
+\`\`\`text
+log_probs  = log_softmax(logits, axis=-1)          # z - max - log(sum(exp(z - max)))
+token_nll  = -log_probs[..., target]               # one value per position
+mean_nll   = sum(token_nll * mask) / sum(mask)     # nats per real token
 perplexity = exp(mean_nll)
 \`\`\`
 
-**Perplexity** is "the effective number of tokens the model is choosing between". A model that predicts uniformly over \`V\` tokens has perplexity exactly \`V\`; a perfect model has perplexity 1.
-
-### Padding mask
-Batches are padded to the same length. Padded positions must not count: \`mask\` is 1 for real tokens and 0 for padding. Masked positions get \`token_nll = 0\` and are excluded from the mean. If \`mask\` is None, every position counts.
+### Inputs
+- \`logits\`: float array \`(..., V)\`, e.g. \`(T, V)\` or \`(B, T, V)\`
+- \`targets\`: integer array \`(...)\` of token ids in \`[0, V)\`; \`targets[b, t]\` is the token that follows position \`t\` (already shifted)
+- \`mask\`: array \`(...)\` with 1 for real tokens and 0 for padding, or None (every position counts)
 
 ### Expected Return Format
-Return a dictionary with these keys:
-- \`'token_nll'\`: per-position negative log-likelihood, same shape as \`targets\` (0 where masked)
-- \`'mean_nll'\`: mean NLL over unmasked positions (float, in nats)
-- \`'perplexity'\`: \`exp(mean_nll)\` (float)
+A dictionary with these keys:
+- \`'token_nll'\`: per-position NLL, same shape as \`targets\`, **0 where masked**
+- \`'mean_nll'\`: mean NLL over unmasked positions (Python float, in nats)
+- \`'perplexity'\`: \`exp(mean_nll)\` (Python float)
 
-\`logits\` has shape \`(..., V)\` (e.g. \`(T, V)\` or \`(B, T, V)\`) and \`targets\` has shape \`(...)\` with integer token ids.
+### Edge cases and conventions
+- Use a stable log-softmax: logits around 1000 must not overflow.
+- Divide by the number of **real** tokens (\`mask.sum()\`), not by the number of positions.
+- Natural log (nats). Bits per token would be \`mean_nll / ln 2\`.
+
+### Constraints
+NumPy only, vectorised (\`np.take_along_axis\` for the target gather).
+
+### Follow-up
+- Why is perplexity only comparable between models that share a tokenizer? How does bits-per-byte fix that?
+- Training code often averages per sequence first, then over the batch. When does that differ from the per-token mean here?
 `,
     examples: [
       {
-        input: 'logits = zeros((3, 5)), targets = [0, 1, 2]',
-        output: 'perplexity = 5.0',
-        explanation: 'Uniform predictions over 5 tokens',
+        input: 'perplexity(np.zeros((3, 5)), np.array([0, 1, 2]))',
+        output: "{'token_nll': [1.6094, 1.6094, 1.6094], 'mean_nll': 1.6094, 'perplexity': 5.0}",
+        explanation: 'Uniform predictions over 5 tokens: NLL = log 5 at every position.',
       },
       {
-        input: 'logits = [[2, 1, 0], [0, 0, 3]], targets = [0, 2]',
-        output: 'token_nll = [0.4076, 0.0949]',
-        explanation: '-log softmax at the target index',
+        input: 'perplexity(np.array([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), np.array([0, 2]))',
+        output: "token_nll = [0.4076, 0.0949]",
+        explanation: '-log softmax at the target index: the model is confident and right at both positions.',
       },
     ],
     starterCode: `import numpy as np
@@ -581,8 +657,8 @@ def perplexity(logits, targets, mask=None):
         mask: (...) 1 for real tokens, 0 for padding (None = all real)
 
     Returns:
-        dict with 'token_nll' (same shape as targets), 'mean_nll' (float),
-        'perplexity' (float)
+        dict with 'token_nll' (same shape as targets, 0 where masked),
+        'mean_nll' (float, nats) and 'perplexity' (float, exp(mean_nll))
     """
     # Your code here
     pass
@@ -632,34 +708,41 @@ def perplexity(logits, targets, mask=None):
       },
     ],
     hints: [
-      'Stable log-softmax: z - max(z) - log(sum(exp(z - max(z)))) along the last axis.',
-      'Select target log-probs with np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0].',
-      'Multiply token_nll by the mask, then divide the sum by mask.sum() (not by the number of positions).',
+      'Perplexity is just exp of the average per-token loss. The work is computing a stable per-token loss and averaging over the right positions.',
+      'Stable log-softmax over the last axis, pick the log-prob of each target, negate, mask, then average over real tokens only.',
+      'log_probs = z - m - np.log(np.exp(z - m).sum(-1, keepdims=True)); token_nll = -np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0].',
+      'Divide by mask.sum(), not token_nll.size, and set masked positions to 0 before summing. Return Python floats for the scalars.',
     ],
     solution: `import numpy as np
 
 def perplexity(logits, targets, mask=None):
+    """
+    Returns:
+        dict with 'token_nll', 'mean_nll', 'perplexity'
+    """
     logits = np.asarray(logits, dtype=np.float64)
     targets = np.asarray(targets)
 
-    # Stable log-softmax
+    # Stable log-softmax over the vocabulary
     m = logits.max(axis=-1, keepdims=True)
     log_probs = logits - m - np.log(np.exp(logits - m).sum(axis=-1, keepdims=True))
 
-    # Pick the log-prob of the correct next token at every position
+    # Log-prob of the correct next token at every position
     token_nll = -np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0]
 
     if mask is None:
         mask = np.ones_like(token_nll)
     mask = np.asarray(mask, dtype=np.float64)
-    token_nll = token_nll * mask
+    token_nll = token_nll * mask                 # padding contributes 0
 
-    mean_nll = token_nll.sum() / mask.sum()
+    mean_nll = token_nll.sum() / mask.sum()      # average over real tokens only
     return {
         'token_nll': token_nll,
         'mean_nll': float(mean_nll),
         'perplexity': float(np.exp(mean_nll)),
     }
+
+# O(N * V) for N positions
 `,
   },
 ];
