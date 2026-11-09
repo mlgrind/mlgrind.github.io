@@ -399,7 +399,7 @@ def one_hot_encode(labels: np.ndarray, num_classes: int) -> np.ndarray:
     section: 'data-preprocessing',
     difficulty: 'medium',
     description: `
-## Stratified Train / Validation / Test Split
+## Stratified Train/Val/Test Split
 
 ### What you'll build
 \`stratified_split(y, val_frac, test_frac, seed)\`, which splits the sample indices \`0 .. n-1\` into train, validation and test sets **class by class**, so every split keeps the class proportions of the full dataset.

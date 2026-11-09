@@ -7,19 +7,20 @@ import { LanguageVariant } from '../../../types';
  */
 export const modelEvaluationPyTorch: Record<string, LanguageVariant> = {
   'precision-recall-f1': {
-    note: 'Build boolean masks with == and &, count with .sum().item(), and return Python floats.',
+    note: "Count with boolean masks and .sum().item(); don't use sklearn or torchmetrics. Return Python floats.",
     starterCode: `import torch
 
 def precision_recall(y_true: torch.Tensor, y_pred: torch.Tensor) -> tuple:
     """
-    Calculate precision and recall for binary classification.
+    Precision and recall for binary classification (positive class = 1).
 
     Args:
-        y_true: True labels (0 or 1), int64 tensor
-        y_pred: Predicted labels (0 or 1), int64 tensor
+        y_true: True labels (0 or 1), int64 tensor of shape (n,)
+        y_pred: Predicted labels (0 or 1), int64 tensor of shape (n,)
 
     Returns:
-        Tuple of (precision, recall) rounded to 4 decimal places
+        Tuple (precision, recall) of floats rounded to 4 decimals;
+        a metric whose denominator is 0 is returned as 0.0
     """
     # Your code here
     pass
@@ -70,27 +71,43 @@ def precision_recall(y_true: torch.Tensor, y_pred: torch.Tensor) -> tuple:
         expected: '(0.4, 1.0)',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'No positive predictions: precision falls back to 0.0',
+        input: 'precision_recall(torch.tensor([1, 1, 0]), torch.tensor([0, 0, 0]))',
+        expected: '(0.0, 0.0)',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Longer mixed example',
+        input: 'precision_recall(torch.tensor([1, 0, 1, 1, 0, 0, 1, 0, 1, 1]), torch.tensor([1, 1, 1, 0, 0, 1, 1, 0, 1, 1]))',
+        expected: '(0.7143, 0.8333)',
+        hidden: true,
+      },
     ],
     hints: [
-      'TP: ((y_true == 1) & (y_pred == 1)).sum()',
-      'FP: predicted 1 but actually 0; FN: actually 1 but predicted 0',
-      'Use .item() to turn the counts into Python ints before dividing.',
+      'Every sample falls into one of four cells (TP, FP, FN, TN). Which three do you need?',
+      'Build boolean masks with == and combine them with &.',
+      '((y_true == 1) & (y_pred == 1)).sum().item() is TP as a Python int; FP and FN flip one side.',
+      'Guard both denominators (nothing predicted positive gives TP + FP = 0) and round with round(x, 4).',
     ],
   },
   'cross-validation': {
-    note: 'Slice torch.arange(n_samples) into folds and join the rest with torch.cat. Return plain Python lists (.tolist()).',
+    note: "Slice torch.arange(n_samples) into contiguous folds and join the rest with torch.cat; don't use sklearn's KFold. Return plain Python lists (.tolist()).",
     starterCode: `import torch
 
 def kfold_indices(n_samples: int, k: int) -> list:
     """
-    Generate train/validation indices for K-fold cross-validation.
+    Train/validation indices for k-fold cross-validation (no shuffling).
 
     Args:
-        n_samples: Total number of samples
+        n_samples: Total number of samples (>= k)
         k: Number of folds
 
     Returns:
-        List of (train_indices, val_indices) tuples of Python lists
+        List of k tuples (train_indices, val_indices), each a sorted Python list of ints;
+        the first n_samples % k folds have one extra validation sample
     """
     # Your code here
     pass
@@ -145,27 +162,35 @@ def kfold_indices(n_samples: int, k: int) -> list:
         expected: '[[[3, 4], [0, 1, 2]], [[0, 1, 2], [3, 4]]]',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Uneven folds: the first n % k folds get one extra sample',
+        input: 'kfold_indices(7, 3)',
+        expected: '[([3, 4, 5, 6], [0, 1, 2]), ([0, 1, 2, 5, 6], [3, 4]), ([0, 1, 2, 3, 4], [5, 6])]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Fold sizes: n_samples // k, plus one for the first n_samples % k folds.',
-      'indices[start:start + size] is the validation fold.',
-      'torch.cat([indices[:start], indices[start + size:]]) is the training set.',
+      'First decide how big each fold is, then walk along the indices handing out consecutive blocks.',
+      'Fold sizes: n_samples // k, plus one for the first n_samples % k folds; keep a running start offset.',
+      'indices[start:start + size] is the validation fold; torch.cat([indices[:start], indices[start + size:]]) is the training set; .tolist() both.',
+      'Pitfall: giving the remainder to the last fold changes every fold boundary.',
     ],
   },
   'confusion-matrix': {
-    note: 'Compare tensors element-wise, convert the boolean result to float, and take the mean. Return a Python float.',
+    note: "Compare tensors element-wise and average; don't use sklearn or torchmetrics. Return a Python float (.item()).",
     starterCode: `import torch
 
 def accuracy(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
     """
-    Calculate accuracy of predictions.
+    Fraction of predictions equal to the true labels.
 
     Args:
-        y_true: True labels
-        y_pred: Predicted labels
+        y_true: True integer labels, int64 tensor of shape (n,)
+        y_pred: Predicted integer labels, int64 tensor of shape (n,)
 
     Returns:
-        Accuracy score between 0 and 1
+        Accuracy, a Python float in [0, 1]
     """
     # Your code here
     pass
@@ -208,16 +233,24 @@ def accuracy(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
         expected: '0.625',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Four-class predictions',
+        input: 'round(accuracy(torch.tensor([0, 1, 2, 3, 3, 2, 1, 0, 0, 2]), torch.tensor([0, 1, 1, 3, 2, 2, 1, 0, 3, 2])), 6)',
+        expected: '0.7',
+        hidden: true,
+      },
     ],
     hints: [
+      'Accuracy only asks whether each prediction equals its label.',
       'y_true == y_pred gives a boolean tensor.',
-      '.float().mean() gives the fraction of matches.',
-      '.item() turns the 0-d result into a Python float.',
+      '(y_true == y_pred).float().mean().item(): the mean of the 0/1 values is the fraction correct.',
+      'Integer and boolean tensors have no .mean(): convert with .float() first.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
   'roc-auc': {
-    note: 'torch.unique returns sorted values; flip them for decreasing thresholds. Return tensors for the curve and a Python float for the AUC.',
+    note: "Implement with tensor ops; don't use sklearn or torchmetrics. torch.unique returns sorted values, so flip them for decreasing thresholds. Return tensors for the curve and a Python float for the AUC.",
     starterCode: `import torch
 
 def roc_curve_auc(y_true, scores):
@@ -301,13 +334,14 @@ def roc_curve_auc(y_true, scores):
       },
     ],
     hints: [
-      'thresholds = torch.cat([torch.tensor([float(\'inf\')]), torch.unique(scores).flip(0)])',
-      'predicted = scores.unsqueeze(0) >= thresholds.unsqueeze(1) is (T+1, n); combine with the positive mask using &.',
-      'Cast counts to float before dividing, then sum the trapezoids and call .item().',
+      'Each distinct score is a candidate threshold; at each one, count how many positives and negatives score at least that much.',
+      "thresholds = torch.cat([torch.tensor([float('inf')]), torch.unique(scores).flip(0)]): torch.unique merges tied scores into one threshold.",
+      'predicted = scores.unsqueeze(0) >= thresholds.unsqueeze(1) is (T+1, n); combine with the positive mask using & and sum over dim=1, cast to float, divide by P or N, then sum the trapezoids and call .item().',
+      'Pitfall: stepping one sorted sample at a time breaks ties by order; tied scores must enter together.',
     ],
   },
   'calibration-ece': {
-    note: 'Bin with comparisons against the interior edges (or torch.bucketize(conf, edges, right=False)); return tensors for the per-bin stats and a Python float for the ECE.',
+    note: "Implement with tensor ops; don't use torchmetrics. Bin with comparisons against the interior edges (or torch.bucketize(conf, edges, right=False)); return tensors for the per-bin stats and a Python float for the ECE.",
     starterCode: `import torch
 
 def expected_calibration_error(probs, labels, n_bins=10):
@@ -389,13 +423,14 @@ def expected_calibration_error(probs, labels, n_bins=10):
       },
     ],
     hints: [
-      'confidence, prediction = probs.max(dim=1)',
-      'bins = (confidence.unsqueeze(1) > inner_edges.unsqueeze(0)).sum(dim=1) implements the (lo, hi] rule.',
-      'torch.bincount(bins, minlength=M) for counts; a (n, M) one-hot of the bins gives per-bin sums by a column sum.',
+      'Reduce each row to two numbers first (confidence and correctness), then group them by confidence bin.',
+      'confidence, prediction = probs.max(dim=1); correct = (prediction == labels).float().',
+      'bins = (confidence.unsqueeze(1) > inner_edges.unsqueeze(0)).sum(dim=1) implements the (lo, hi] rule; torch.bincount(bins, minlength=M) counts, and torch.bincount(bins, weights=..., minlength=M) sums.',
+      "Pitfalls: right=True in torch.bucketize puts edge values in the bin above, and empty bins must not divide by zero (clamp the counts to at least 1).",
     ],
   },
   'pr-curve-thresholds': {
-    note: "Return Python lists and floats (use .tolist() / .item()). Comparing each score with every threshold by broadcasting is fine at this size. Don't use sklearn or torchmetrics.",
+    note: "Implement with tensor ops; don't use sklearn or torchmetrics. Return Python lists and floats (.tolist() / .item()). Comparing each score with every threshold by broadcasting is fine at this size.",
     starterCode: `import torch
 
 def pr_curve(y_true, scores):
@@ -441,6 +476,12 @@ def pr_curve(y_true, scores):
         'best_f1': f1[best].item(),
     }
 `,
+    hints: [
+      'Each distinct score is a threshold; at each one you need TP and FP among the samples scoring at least that much.',
+      'thresholds = torch.unique(scores).flip(0) gives the distinct scores in descending order.',
+      'predicted = scores.unsqueeze(0) >= thresholds.unsqueeze(1) is (T, n); TP = (predicted & (y == 1)).sum(dim=1), FP likewise; F1 = 2*TP / (2*TP + FP + FN) as floats, and .argmax() picks the first (highest) best threshold.',
+      'Pitfalls: F1 from P and R gives 0/0 when both are 0, and with no positives recall must be set to 1.0 instead of dividing by zero.',
+    ],
     testCases: [
       {
         id: '1',

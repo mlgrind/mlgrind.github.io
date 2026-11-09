@@ -135,11 +135,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 07: Unsupervised Learning
 
 **URL**: /section/unsupervised-learning
-**Summary**: Implement clustering and dimensionality reduction algorithms.
+**Summary**: Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.
 **Problems** (5):
 
 1. **K-Means: Assign to Nearest Centroid** (`/problem/unsupervised-learning/kmeans-clustering`) — medium
-2. **PCA: Center Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
+2. **PCA Step 1: Center the Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
 3. **Gaussian Mixture Model (EM)** (`/problem/unsupervised-learning/gmm-em`) — hard
 4. **DBSCAN Clustering** (`/problem/unsupervised-learning/dbscan`) — medium
 5. **K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)** (`/problem/unsupervised-learning/kmeans-full`) — hard
@@ -149,12 +149,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 08: Model Evaluation
 
 **URL**: /section/model-evaluation
-**Summary**: Learn metrics and techniques to evaluate ML models properly.
+**Summary**: Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right.
 **Problems** (6):
 
 1. **Precision and Recall** (`/problem/model-evaluation/precision-recall-f1`) — medium
-2. **K-Fold Split Indices** (`/problem/model-evaluation/cross-validation`) — medium
-3. **Accuracy Score** (`/problem/model-evaluation/confusion-matrix`) — easy
+2. **K-Fold Cross-Validation Indices** (`/problem/model-evaluation/cross-validation`) — medium
+3. **Accuracy from the Confusion Matrix** (`/problem/model-evaluation/confusion-matrix`) — easy
 4. **ROC Curve & AUC (with Ties)** (`/problem/model-evaluation/roc-auc`) — medium
 5. **Expected Calibration Error** (`/problem/model-evaluation/calibration-ece`) — medium
 6. **Precision-Recall Curve and Best-F1 Threshold** (`/problem/model-evaluation/pr-curve-thresholds`) — medium

@@ -440,43 +440,89 @@ Related: **Data Preprocessing** (scale features before clustering), and the k-NN
   {
     id: 'model-evaluation',
     title: 'Model Evaluation',
-    description: 'Learn metrics and techniques to evaluate ML models properly.',
+    description: 'Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right.',
     icon: '📈',
     introduction: `
 # Model Evaluation
 
-Building a model is only half the job. You need to evaluate it properly.
+## Why it matters
 
-## Key Concepts
+A model is only as good as the number you use to judge it. Choosing the wrong metric (accuracy on a 1%-positive fraud dataset), the wrong threshold, or a leaky validation scheme ships models that look great offline and fail in production. Interviewers probe this constantly: "Which metric would you use, and why?" is part of almost every ML system design round.
 
-### Classification Metrics
-- **Accuracy**: Correct / Total (can be misleading!)
-- **Precision**: TP / (TP + FP) - "Of positive predictions, how many correct?"
-- **Recall**: TP / (TP + FN) - "Of actual positives, how many found?"
-- **F1 Score**: Harmonic mean of precision and recall
+## Core ideas
 
-### Regression Metrics
-- **MSE**: Mean Squared Error
-- **RMSE**: Root MSE (same units as target)
-- **MAE**: Mean Absolute Error (robust to outliers)
-- **R²**: Proportion of variance explained
+### The confusion matrix
 
-### Cross-Validation
-- **Why**: Single train/test split is unreliable
-- **K-Fold**: Split data into K parts, rotate test set
-- **Stratified**: Maintain class distribution in folds
+For binary labels (positive = 1), every prediction falls into one cell:
 
-### Ranking & Calibration
-- **ROC curve**: TPR vs FPR over every score threshold; tied scores form one diagonal step
-- **AUC**: probability a random positive outscores a random negative (ties count half)
-- **Calibration**: do 80%-confidence predictions come true 80% of the time? **ECE** averages the gap over confidence bins
+| | Predicted 1 | Predicted 0 |
+|---|---|---|
+| **Actual 1** | TP (true positive) | FN (false negative) |
+| **Actual 0** | FP (false positive) | TN (true negative) |
 
-### Interview Essentials
-- Know when to use each metric
-- Implement cross-validation from scratch
-- Discuss precision-recall trade-offs
+\`\`\`text
+accuracy  = (TP + TN) / n               # the diagonal over the total
+precision = TP / (TP + FP)              # of the predicted positives, how many are right?
+recall    = TP / (TP + FN)              # of the actual positives, how many did we find? (= TPR)
+F1        = 2 * P * R / (P + R) = 2TP / (2TP + FP + FN)
+FPR       = FP / (FP + TN)
+\`\`\`
 
-Let's practice evaluation!
+### Thresholds, ROC and PR curves
+
+Most classifiers output a score; a threshold \`t\` turns it into a label (\`score >= t\`). Sweeping \`t\` over every distinct score traces:
+
+- the **ROC curve** (FPR on x, TPR on y). Its area, **AUC**, is the probability that a random positive scores higher than a random negative (ties count one half). It ignores the class balance.
+- the **precision-recall curve**, which focuses on the positive class and is more informative when positives are rare.
+
+### Calibration
+
+A model is calibrated if its 0.8-confidence predictions are right 80% of the time. **Expected calibration error (ECE)** bins predictions by confidence and averages \`|accuracy - confidence|\`, weighted by bin size. A model can rank perfectly (AUC 1) and still be badly calibrated.
+
+### Cross-validation
+
+A single split gives a noisy estimate. **K-fold** cross-validation splits the data into \`k\` folds, trains on \`k - 1\` and validates on the remaining one, rotating so that every sample is validated exactly once, and averages the \`k\` scores. Use stratified folds for imbalanced classes and grouped folds when rows from one user or session are correlated.
+
+## Worked micro-example
+
+Ten samples with 4 positives; the model predicts 5 positives, 3 of them correct: \`TP = 3, FN = 1, FP = 2, TN = 4\`.
+
+\`\`\`text
+accuracy  = (3 + 4) / 10        = 0.70
+precision = 3 / (3 + 2)         = 0.60
+recall    = 3 / (3 + 1)         = 0.75
+F1        = 6 / (6 + 2 + 1)     = 0.6667
+\`\`\`
+
+Ranking: with labels \`[0, 0, 1, 1]\` and scores \`[0.1, 0.4, 0.35, 0.8]\` there are \`2 x 2 = 4\` positive/negative pairs. Three are ordered correctly (\`0.8 > 0.1\`, \`0.8 > 0.4\`, \`0.35 > 0.1\`) and one is not (\`0.35 < 0.4\`), so AUC = \`3 / 4 = 0.75\`.
+
+## Common pitfalls
+
+- **Accuracy on imbalanced data**: always predicting the majority class gets 99% when positives are 1%.
+- **Zero division**: precision is undefined with no predicted positives and recall with no actual positives; pick a convention (scikit-learn's \`zero_division\` parameter defaults to returning 0 with a warning) and state it.
+- **Ties in scores**: tied scores must cross a threshold together; sorting and breaking ties by index changes the AUC.
+- **Tuning the threshold on the test set**: choose it on validation data, then report on test.
+- **Leakage across folds**: preprocessing fitted before splitting, or the same user in train and validation folds.
+- **Threshold-dependent vs ranking metrics**: F1 changes with the threshold, AUC doesn't.
+
+## Interview angle
+
+- "Precision or recall?" Depends on the costs: spam filtering favours precision, cancer screening favours recall. Know F-beta.
+- "ROC-AUC or PR-AUC for a 0.1%-positive problem?" PR-AUC: ROC-AUC can look excellent while precision is tiny.
+- "Explain AUC to a product manager", and why it is equivalent to the Mann-Whitney U statistic. Sorting makes it \`O(n log n)\`.
+- "How do you pick the operating threshold?" (maximise F1 or expected value on validation data, or meet a precision/recall constraint).
+- "Your model says 90% confident: can you trust that?" (calibration, temperature scaling, Platt scaling).
+
+## Problems in this section
+
+1. **Precision and Recall**: count TP, FP and FN, the building blocks of F1, with a zero-division convention.
+2. **K-Fold Cross-Validation Indices**: generate contiguous train/validation index folds like \`KFold(shuffle=False)\`.
+3. **Accuracy from the Confusion Matrix**: the fraction of correct predictions, binary or multi-class.
+4. **ROC Curve & AUC (with Ties)**: the full ROC curve over distinct thresholds and the trapezoidal AUC, matching \`roc_auc_score\`.
+5. **Expected Calibration Error**: equal-width confidence bins with a precise edge convention.
+6. **Precision-Recall Curve and Best-F1 Threshold**: precision, recall and F1 at every threshold, and the best operating point.
+
+Related: the stratified split and leakage-safe preprocessing in **Data Preprocessing**, and the classifiers in **Supervised Learning** whose scores these metrics evaluate.
     `,
     problems: ['precision-recall-f1', 'cross-validation', 'confusion-matrix', 'roc-auc', 'calibration-ece', 'pr-curve-thresholds'],
   },

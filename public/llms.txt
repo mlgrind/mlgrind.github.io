@@ -31,8 +31,8 @@ The platform covers 21 learning sections with 149 problems:
 - **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy. _(23 problems)_
 - **05 Data Preprocessing** (`/section/data-preprocessing`) — Scale, impute, encode and split data without leaking the test set into training. _(5 problems)_
 - **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(12 problems)_
-- **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(5 problems)_
-- **08 Model Evaluation** (`/section/model-evaluation`) — Learn metrics and techniques to evaluate ML models properly. _(6 problems)_
+- **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch. _(5 problems)_
+- **08 Model Evaluation** (`/section/model-evaluation`) — Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right. _(6 problems)_
 - **09 Deep Learning Basics** (`/section/deep-learning`) — Activation functions and fundamental building blocks. _(3 problems)_
 - **10 Neural Networks** (`/section/neural-networks`) — Build neural networks from scratch with forward and backward passes. _(6 problems)_
 - **11 Optimization & Training** (`/section/optimization`) — Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable. _(2 problems)_

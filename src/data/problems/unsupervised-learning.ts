@@ -7,7 +7,7 @@ export const unsupervisedLearningProblems: Problem[] = [
     section: 'unsupervised-learning',
     difficulty: 'medium',
     description: `
-## K-Means: Assign Points to the Nearest Centroid
+## K-Means: Assign to Nearest Centroid
 
 ### What you'll build
 The **assignment step** of k-means: given data points and centroids, return the index of the nearest centroid for every point, without a Python loop over points.
@@ -269,7 +269,7 @@ def center_data(X: np.ndarray) -> np.ndarray:
     section: 'unsupervised-learning',
     difficulty: 'hard',
     description: `
-## Gaussian Mixture Model with Expectation-Maximization (1-D)
+## Gaussian Mixture Model (EM)
 
 ### What you'll build
 Two functions for a 1-D Gaussian mixture: a numerically stable **E-step** that computes responsibilities in log space, and the full **EM loop** that fits the weights, means and variances from given initial values.
@@ -659,7 +659,7 @@ def dbscan(X, eps, min_samples):
     section: 'unsupervised-learning',
     difficulty: 'hard',
     description: `
-## K-Means from Scratch
+## K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)
 
 ### What you'll build
 The complete k-means algorithm (Lloyd's algorithm): **k-means++** seeding, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty. Two functions:
