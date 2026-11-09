@@ -5,6 +5,7 @@ import { menuItemClass } from '../Menu/menuItemClass';
 const cheatSheetHref = `${import.meta.env.BASE_URL}ml-cheatsheet.html`;
 
 const icons = {
+  companies: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
   scratchpad: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
   flashcards:
     'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
@@ -36,7 +37,7 @@ interface ToolsProps {
   onOpenFeedback: () => void;
 }
 
-/** Desktop header dropdown holding Scratchpad, Flash Cards, Cheat Sheet and Feedback. */
+/** Desktop header dropdown holding Scratchpad, Problems by Company, Flash Cards, Cheat Sheet and Feedback. */
 export function ToolsMenu({ flashDueCount, onOpenFeedback }: ToolsProps) {
   return (
     <MenuButton
@@ -57,6 +58,10 @@ export function ToolsMenu({ flashDueCount, onOpenFeedback }: ToolsProps) {
           <Link role="menuitem" to="/scratchpad" onClick={close} className={menuItemClass}>
             <Icon d={icons.scratchpad} />
             <span className="flex-1">Scratchpad</span>
+          </Link>
+          <Link role="menuitem" to="/companies" onClick={close} className={menuItemClass}>
+            <Icon d={icons.companies} />
+            <span className="flex-1">Problems by Company</span>
           </Link>
           <Link role="menuitem" to="/flashcards" onClick={close} className={menuItemClass}>
             <Icon d={icons.flashcards} />
@@ -108,6 +113,10 @@ export function DrawerTools({ flashDueCount, onOpenFeedback, onNavigate }: Tools
       <Link to="/scratchpad" onClick={onNavigate} className={drawerItemClass}>
         <Icon d={icons.scratchpad} />
         <span className="flex-1">Scratchpad</span>
+      </Link>
+      <Link to="/companies" onClick={onNavigate} className={drawerItemClass}>
+        <Icon d={icons.companies} />
+        <span className="flex-1">Problems by Company</span>
       </Link>
       <Link to="/flashcards" onClick={onNavigate} className={drawerItemClass}>
         <Icon d={icons.flashcards} />

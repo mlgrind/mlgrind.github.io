@@ -86,6 +86,7 @@ describe("header", () => {
     const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
     expect(items).toEqual([
       "Scratchpad",
+      "Problems by Company",
       expect.stringContaining("Flash Cards"),
       expect.stringContaining("Cheat Sheet"),
       "Send feedback",

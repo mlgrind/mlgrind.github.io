@@ -7,6 +7,8 @@ import { getProblemById } from '../data/problems';
 import { resolvedGroups, completedInSection } from '../data/curriculum';
 import Dashboard from '../components/Dashboard/Dashboard';
 import MenuButton from '../components/Menu/MenuButton';
+import { CompanyLogo } from '../components/CompanyTags/CompanyTags';
+import { getCompanyIndex } from '../data/companyTags';
 
 const totalProblems = sections.reduce((sum, s) => sum + s.problems.length, 0);
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -92,6 +94,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Interview problems by company */}
+      <CompanyStrip />
+
       {/* Dashboard — only renders when user has progress */}
       <Dashboard />
 
@@ -153,5 +158,40 @@ export default function HomePage() {
         </p>
       </section>
     </div>
+  );
+}
+
+function CompanyStrip() {
+  const index = getCompanyIndex();
+  if (index.length === 0) return null;
+  const top = index.slice(0, 8);
+  return (
+    <section
+      aria-labelledby="companies-heading"
+      className="mb-10 rounded-xl border border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 p-4 sm:p-5"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
+        <h2 id="companies-heading" className="text-base font-semibold text-gray-900 dark:text-dark-100">
+          Interviewing somewhere specific?
+        </h2>
+        <Link to="/companies" className="text-sm font-medium text-primary-600 dark:text-primary-300 hover:underline">
+          Problems by company ({index.length}) →
+        </Link>
+      </div>
+      <ul className="flex flex-wrap gap-2">
+        {top.map(entry => (
+          <li key={entry.slug}>
+            <Link
+              to={`/companies?company=${entry.slug}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-dark-500 text-sm text-gray-700 dark:text-dark-100 hover:border-primary-300 hover:text-primary-600 dark:hover:border-primary-400 dark:hover:text-primary-200 transition-colors"
+            >
+              <CompanyLogo company={entry.company} size={14} />
+              {entry.company}
+              <span className="font-mono text-xs text-gray-400 dark:text-dark-300">{entry.problemIds.length}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
