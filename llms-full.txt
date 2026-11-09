@@ -6,7 +6,7 @@
 
 ML Grind is a LeetCode-style web application for learning machine learning through hands-on coding. Users implement ML algorithms from scratch using Python (via Pyodide WebAssembly) directly in the browser.
 
-**Live Site**: https://mlgrind.github.io/
+**Live Site**: https://mlgrind.dev/
 **Repository**: https://github.com/mlgrind/mlgrind.github.io
 
 ### Core Features

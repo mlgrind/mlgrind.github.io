@@ -4,7 +4,7 @@
 
 ## About This Site
 
-- **URL**: https://mlgrind.github.io/
+- **URL**: https://mlgrind.dev/
 - **Type**: Educational / Learning Platform
 - **Topic**: Machine Learning, Deep Learning, Neural Networks, AI
 - **Language**: English
@@ -49,20 +49,20 @@ The platform covers 21 learning sections with 149 problems:
 
 ## Learning Paths
 
-- [NumPy foundations](https://mlgrind.github.io/learn/numpy-foundations): Get comfortable with arrays, shapes, broadcasting, and matrix operations. Prerequisites: Basic Python.
-- [ML interview prep](https://mlgrind.github.io/learn/ml-interview-prep): Practice core building blocks and explain how they work. Prerequisites: Python and basic linear algebra.
-- [Build a transformer](https://mlgrind.github.io/learn/build-a-transformer): Work through attention and the components behind modern language models. Prerequisites: NumPy, matrix multiplication, and neural networks.
-- [Seven days of ML coding](https://mlgrind.github.io/challenge): One focused exercise per day. Start any time, follow at your own pace, and build a habit. Prerequisites: Basic Python; NumPy helps.
+- [NumPy foundations](https://mlgrind.dev/learn/numpy-foundations): Get comfortable with arrays, shapes, broadcasting, and matrix operations. Prerequisites: Basic Python.
+- [ML interview prep](https://mlgrind.dev/learn/ml-interview-prep): Practice core building blocks and explain how they work. Prerequisites: Python and basic linear algebra.
+- [Build a transformer](https://mlgrind.dev/learn/build-a-transformer): Work through attention and the components behind modern language models. Prerequisites: NumPy, matrix multiplication, and neural networks.
+- [Seven days of ML coding](https://mlgrind.dev/challenge): One focused exercise per day. Start any time, follow at your own pace, and build a habit. Prerequisites: Basic Python; NumPy helps.
 
 ## Key URLs
 
-- Home: https://mlgrind.github.io/
-- Scratchpad: https://mlgrind.github.io/scratchpad
-- Flash cards: https://mlgrind.github.io/flashcards
-- Problems by company: https://mlgrind.github.io/companies
-- Cheat sheet: https://mlgrind.github.io/ml-cheatsheet.html
-- Sections: https://mlgrind.github.io/section/{section-id}
-- Problems: https://mlgrind.github.io/problem/{section-id}/{problem-id}
+- Home: https://mlgrind.dev/
+- Scratchpad: https://mlgrind.dev/scratchpad
+- Flash cards: https://mlgrind.dev/flashcards
+- Problems by company: https://mlgrind.dev/companies
+- Cheat sheet: https://mlgrind.dev/ml-cheatsheet.html
+- Sections: https://mlgrind.dev/section/{section-id}
+- Problems: https://mlgrind.dev/problem/{section-id}/{problem-id}
 
 Note the problem URL shape: it includes **both** the section id and the problem id.
 A URL of the form `/problem/{problem-id}` is not canonical; it redirects.
