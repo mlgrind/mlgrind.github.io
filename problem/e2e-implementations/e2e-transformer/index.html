@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Transformer Encoder - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Transformer Encoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-transformer" data-rh="true" />
@@ -100,31 +100,36 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Transformer Encoder - End-to-End Implementations","description":"Implement E2E: Transformer Encoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-transformer","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Transformer Encoder - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Transformer Encoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Transformer Encoder</h2>
-<p>Implement a complete Transformer encoder block.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Every piece of the original (post-norm) Transformer encoder from &quot;Attention Is All You Need&quot;, written as small functions and then stacked: layer norm, sinusoidal positions, scaled dot-product attention, multi-head attention, the feed-forward network, an encoder block and a multi-layer encoder.</p>
 <h3>Architecture</h3>
-<pre><code>Input Embeddings + Positional Encoding
-  ↓
-Multi-Head Self-Attention
-  ↓
-Add &amp; LayerNorm (Residual)
-  ↓
-Feed-Forward Network (FFN)
-  ↓
-Add &amp; LayerNorm (Residual)
-  ↓
-Output
-</code></pre>
-<h3>Components</h3>
-<ol>
-<li><strong>Positional Encoding</strong>: Sinusoidal position embeddings</li>
-<li><strong>Multi-Head Attention</strong>: Parallel attention heads</li>
-<li><strong>FFN</strong>: Two linear layers with ReLU</li>
-<li><strong>Layer Normalization</strong>: Normalize across features</li>
-<li><strong>Residual Connections</strong>: Add input to output</li>
-</ol>
-<h3>Task</h3>
-<p>Implement all components and combine into encoder block.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: TransformerEncoder(d_model=64, nhead=8, dim_ff=256)
-Output: Encoded sequence (batch, seq_len, d_model)</pre><p>Complete encoder forward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<table><thead><tr><th>Step</th><th>Operation</th><th>Shape</th></tr></thead><tbody><tr><td>input</td><td><code>x</code></td><td><code>(batch, seq_len, d_model)</code></td></tr><tr><td>positions</td><td><code>x = x + positional_encoding(seq_len, d_model)</code></td><td>same</td></tr><tr><td>per block: attention</td><td><code>a = multi_head_attention(x, x, x, num_heads)</code></td><td>same</td></tr><tr><td>per block: add &amp; norm</td><td><code>x = layer_norm(x + a, ln1_gamma, ln1_beta)</code></td><td>same</td></tr><tr><td>per block: FFN</td><td><code>f = relu(x @ W1 + b1) @ W2 + b2</code></td><td>hidden <code>(…, d_ff)</code>, out same</td></tr><tr><td>per block: add &amp; norm</td><td><code>x = layer_norm(x + f, ln2_gamma, ln2_beta)</code></td><td>same</td></tr></tbody></table>
+<p>This is <strong>post-norm</strong> (LayerNorm after the residual add), as in the 2017 paper. GPT-style models use pre-norm; see <strong>Mini GPT</strong>.</p>
+<h3>Function contract</h3>
+<table><thead><tr><th>Function</th><th>Formula / behaviour</th><th>Returns</th></tr></thead><tbody><tr><td><code>layer_norm(x, gamma, beta, eps=1e-5)</code></td><td><code>gamma · (x − mean) / sqrt(var + eps) + beta</code> over the last axis, population variance</td><td>array shaped like <code>x</code></td></tr><tr><td><code>positional_encoding(seq_len, d_model)</code></td><td><code>PE[p, 2i] = sin(p / 10000^(2i/d_model))</code>, <code>PE[p, 2i+1] = cos(…)</code></td><td><code>(seq_len, d_model)</code></td></tr><tr><td><code>scaled_dot_product_attention(Q, K, V, mask=None)</code></td><td><code>A = softmax(Q Kᵀ / sqrt(d_k) + mask)</code>; <code>mask</code> is <strong>additive</strong> (0 or −inf)</td><td>tuple <code>(A @ V, A)</code> for 3-D inputs <code>(batch, seq, d_k)</code></td></tr><tr><td><code>multi_head_attention(Q, K, V, num_heads)</code></td><td>split <code>d_model</code> into <code>num_heads</code> heads of <code>d_k = d_model / num_heads</code>, attend per head, concatenate</td><td>output only, <code>(batch, seq_len, d_model)</code></td></tr><tr><td><code>feed_forward(x, W1, b1, W2, b2)</code></td><td><code>relu(x @ W1 + b1) @ W2 + b2</code></td><td><code>(…, d_model)</code></td></tr><tr><td><code>TransformerEncoderBlock(d_model, num_heads, d_ff)</code></td><td>attributes below; <code>forward(x)</code> runs one post-norm block</td><td><code>(batch, seq_len, d_model)</code></td></tr><tr><td><code>transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256)</code></td><td>add positions, then <code>num_layers</code> fresh blocks</td><td><code>(batch, seq_len, d_model)</code></td></tr></tbody></table>
+<p><strong>Simplification:</strong> <code>multi_head_attention</code> has <strong>no learned projections</strong>: the heads are slices of the given Q, K, V and there is no <code>W_O</code>. Real layers project first (<code>Q = x W_Q</code> etc.); the PyTorch <code>nn.MultiheadAttention</code> and the <strong>Mini GPT</strong> problem do.</p>
+<h3>Block parameters (the tests use these names)</h3>
+<p>After <code>np.random.seed(42)</code> (in the starter), create, in this order:</p>
+<ul>
+<li><code>ln1_gamma</code>, <code>ln2_gamma</code>: ones <code>(d_model,)</code>; <code>ln1_beta</code>, <code>ln2_beta</code>: zeros <code>(d_model,)</code></li>
+<li><code>W1 = np.random.randn(d_model, d_ff) * 0.02</code>, then <code>W2 = np.random.randn(d_ff, d_model) * 0.02</code>; <code>b1</code>, <code>b2</code> zeros</li>
+</ul>
+<p>Because every block re-seeds, all blocks in <code>transformer_encoder</code> start with identical weights; that keeps the exercise deterministic.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Subtract the row max inside softmax (the provided <code>softmax</code> does).</li>
+<li><code>d_model</code> must be divisible by <code>num_heads</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, no loops over batch, heads or positions (<code>einsum</code> or <code>@</code> with transposes).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Attention costs <code>O(seq_len² · d_model)</code> time and <code>O(seq_len²)</code> memory per head. What do FlashAttention and sliding windows change?</li>
+<li>Why does pre-norm train more stably than post-norm in deep stacks?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4))
+Output: array([[-1.3416, -0.4472, 0.4472, 1.3416]])</pre><p>Mean 2.5 and population variance 1.25, so each value becomes (x − 2.5) / 1.118</p></div><div><pre class="overflow-auto">Input: positional_encoding(3, 4)[2]
+Output: array([0.9093, -0.4161, 0.02, 0.9998])</pre><p>Position 2: sin(2), cos(2), then the slower pair sin(2/100), cos(2/100)</p></div><div><pre class="overflow-auto">Input: Q = K = [[[1, 0], [0, 1]]], V = [[[1, 2], [3, 4]]]; scaled_dot_product_attention(Q, K, V)
+Output: (array([[[1.6605, 2.6605], [2.3395, 3.3395]]]), array([[[0.6698, 0.3302], [0.3302, 0.6698]]]))</pre><p>Scores are I / sqrt(2), so each query puts softmax([0.707, 0]) = [0.67, 0.33] on itself and the other key</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def softmax(x, axis=-1):
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
@@ -132,25 +137,33 @@ def softmax(x, axis=-1):
 
 
 def layer_norm(x, gamma, beta, eps=1e-5):
-    &quot;&quot;&quot;Layer normalization.&quot;&quot;&quot;
+    &quot;&quot;&quot;Normalize over the last axis (population variance), then scale and shift.&quot;&quot;&quot;
     # Your code here
     pass
 
 
 def positional_encoding(seq_len, d_model):
-    &quot;&quot;&quot;Sinusoidal positional encoding.&quot;&quot;&quot;
+    &quot;&quot;&quot;Sinusoidal positional encoding, shape (seq_len, d_model): sin on even, cos on odd columns.&quot;&quot;&quot;
     # Your code here
     pass
 
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
-    &quot;&quot;&quot;Scaled dot-product attention.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Q, K, V: (batch, seq_len, d_k). mask: optional additive mask (0 / -inf).
+
+    Returns:
+        (output, attention): (batch, seq_len, d_k) and (batch, seq_len, seq_len)
+    &quot;&quot;&quot;
     # Your code here
     pass
 
 
 def multi_head_attention(Q, K, V, num_heads):
-    &quot;&quot;&quot;Multi-head attention.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Split d_model into num_heads heads (no learned projections), attend per head,
+    concatenate. Returns the output only: (batch, seq_len, d_model).
+    &quot;&quot;&quot;
     # Your code here
     pass
 
@@ -164,12 +177,11 @@ def feed_forward(x, W1, b1, W2, b2):
 class TransformerEncoderBlock:
     def __init__(self, d_model: int, num_heads: int, d_ff: int):
         &quot;&quot;&quot;
-        Initialize transformer encoder block.
+        Post-norm encoder block.
 
-        Args:
-            d_model: Model dimension
-            num_heads: Number of attention heads
-            d_ff: Feed-forward hidden dimension
+        Create: ln1_gamma, ln1_beta, ln2_gamma, ln2_beta (ones / zeros, shape (d_model,)),
+        W1 = np.random.randn(d_model, d_ff) * 0.02, b1 = zeros(d_ff),
+        W2 = np.random.randn(d_ff, d_model) * 0.02, b2 = zeros(d_model)  (W1 drawn before W2).
         &quot;&quot;&quot;
         np.random.seed(42)
         self.d_model = d_model
@@ -181,7 +193,7 @@ class TransformerEncoderBlock:
 
     def forward(self, x: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Forward pass through encoder block.
+        x = LN1(x + MHA(x)); x = LN2(x + FFN(x)).
 
         Args:
             x: Input (batch, seq_len, d_model)
@@ -194,10 +206,10 @@ class TransformerEncoderBlock:
 
 
 def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
-    &quot;&quot;&quot;Stack multiple encoder blocks.&quot;&quot;&quot;
+    &quot;&quot;&quot;Add positional encoding, then apply num_layers new TransformerEncoderBlocks.&quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 10 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

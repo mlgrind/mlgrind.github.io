@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Token Cross-Entropy and Perplexity - LLM Internals | ML Grind</title>
 <meta name="description" content="Implement Token Cross-Entropy and Perplexity in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-internals/perplexity" data-rh="true" />
@@ -100,25 +100,44 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Token Cross-Entropy and Perplexity - LLM Internals","description":"Implement Token Cross-Entropy and Perplexity in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-internals/perplexity","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Token Cross-Entropy and Perplexity - LLM Internals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Token Cross-Entropy and Perplexity in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Token Cross-Entropy and Perplexity</h2>
-<p>Language models are trained and evaluated with <strong>next-token cross-entropy</strong>. Given logits for every position and the true next tokens:</p>
-<pre><code>log_probs  = log_softmax(logits, axis=-1)          # stable: z - max - log(sum(exp(z - max)))
-token_nll  = -log_probs[..., target]               # one number per position
-mean_nll   = sum(token_nll * mask) / sum(mask)
+<h3>What you&#x27;ll build</h3>
+<p>The language-modeling loss and its standard evaluation metric: per-token negative log-likelihood from logits and targets, with a padding mask, averaged into a mean NLL and exponentiated into perplexity.</p>
+<h3>Background</h3>
+<p>Every LLM is pretrained by minimizing next-token cross-entropy, and <strong>perplexity</strong> is how papers report it: &quot;the effective number of tokens the model is choosing between&quot;. A model that is uniform over <code>V</code> tokens has perplexity exactly <code>V</code>; a perfect model has perplexity 1. Batches are padded to a common length, so padded positions must be excluded, or the reported loss depends on how much padding the batch happened to have.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">log_probs  = log_softmax(logits, axis=-1)          # z - max - log(sum(exp(z - max)))
+token_nll  = -log_probs[..., target]               # one value per position
+mean_nll   = sum(token_nll * mask) / sum(mask)     # nats per real token
 perplexity = exp(mean_nll)
 </code></pre>
-<p><strong>Perplexity</strong> is &quot;the effective number of tokens the model is choosing between&quot;. A model that predicts uniformly over <code>V</code> tokens has perplexity exactly <code>V</code>; a perfect model has perplexity 1.</p>
-<h3>Padding mask</h3>
-<p>Batches are padded to the same length. Padded positions must not count: <code>mask</code> is 1 for real tokens and 0 for padding. Masked positions get <code>token_nll = 0</code> and are excluded from the mean. If <code>mask</code> is None, every position counts.</p>
-<h3>Expected Return Format</h3>
-<p>Return a dictionary with these keys:</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;token_nll&#x27;</code>: per-position negative log-likelihood, same shape as <code>targets</code> (0 where masked)</li>
-<li><code>&#x27;mean_nll&#x27;</code>: mean NLL over unmasked positions (float, in nats)</li>
-<li><code>&#x27;perplexity&#x27;</code>: <code>exp(mean_nll)</code> (float)</li>
+<li><code>logits</code>: float array <code>(..., V)</code>, e.g. <code>(T, V)</code> or <code>(B, T, V)</code></li>
+<li><code>targets</code>: integer array <code>(...)</code> of token ids in <code>[0, V)</code>; <code>targets[b, t]</code> is the token that follows position <code>t</code> (already shifted)</li>
+<li><code>mask</code>: array <code>(...)</code> with 1 for real tokens and 0 for padding, or None (every position counts)</li>
 </ul>
-<p><code>logits</code> has shape <code>(..., V)</code> (e.g. <code>(T, V)</code> or <code>(B, T, V)</code>) and <code>targets</code> has shape <code>(...)</code> with integer token ids.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits = zeros((3, 5)), targets = [0, 1, 2]
-Output: perplexity = 5.0</pre><p>Uniform predictions over 5 tokens</p></div><div><pre class="overflow-auto">Input: logits = [[2, 1, 0], [0, 0, 3]], targets = [0, 2]
-Output: token_nll = [0.4076, 0.0949]</pre><p>-log softmax at the target index</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;token_nll&#x27;</code>: per-position NLL, same shape as <code>targets</code>, <strong>0 where masked</strong></li>
+<li><code>&#x27;mean_nll&#x27;</code>: mean NLL over unmasked positions (Python float, in nats)</li>
+<li><code>&#x27;perplexity&#x27;</code>: <code>exp(mean_nll)</code> (Python float)</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Use a stable log-softmax: logits around 1000 must not overflow.</li>
+<li>Divide by the number of <strong>real</strong> tokens (<code>mask.sum()</code>), not by the number of positions.</li>
+<li>Natural log (nats). Bits per token would be <code>mean_nll / ln 2</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (<code>np.take_along_axis</code> for the target gather).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why is perplexity only comparable between models that share a tokenizer? How does bits-per-byte fix that?</li>
+<li>Training code often averages per sequence first, then over the batch. When does that differ from the per-token mean here?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: perplexity(np.zeros((3, 5)), np.array([0, 1, 2]))
+Output: {&#x27;token_nll&#x27;: [1.6094, 1.6094, 1.6094], &#x27;mean_nll&#x27;: 1.6094, &#x27;perplexity&#x27;: 5.0}</pre><p>Uniform predictions over 5 tokens: NLL = log 5 at every position.</p></div><div><pre class="overflow-auto">Input: perplexity(np.array([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), np.array([0, 2]))
+Output: token_nll = [0.4076, 0.0949]</pre><p>-log softmax at the target index: the model is confident and right at both positions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def perplexity(logits, targets, mask=None):
     &quot;&quot;&quot;
@@ -130,8 +149,8 @@ def perplexity(logits, targets, mask=None):
         mask: (...) 1 for real tokens, 0 for padding (None = all real)
 
     Returns:
-        dict with &#x27;token_nll&#x27; (same shape as targets), &#x27;mean_nll&#x27; (float),
-        &#x27;perplexity&#x27; (float)
+        dict with &#x27;token_nll&#x27; (same shape as targets, 0 where masked),
+        &#x27;mean_nll&#x27; (float, nats) and &#x27;perplexity&#x27; (float, exp(mean_nll))
     &quot;&quot;&quot;
     # Your code here
     pass

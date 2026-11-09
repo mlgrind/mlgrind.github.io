@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Layer Normalization - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Layer Normalization in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/layer-norm" data-rh="true" />
@@ -100,34 +100,56 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Layer Normalization - Transformer Architecture","description":"Implement Layer Normalization in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/layer-norm","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Layer Normalization - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Layer Normalization in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Layer Normalization</h2>
-<p>Implement layer normalization, used in Transformers instead of batch normalization.</p>
+<h3>What you&#x27;ll build</h3>
+<p>LayerNorm over the last (feature) axis, with a learned scale <code>gamma</code> and shift <code>beta</code>. Every Transformer block uses it.</p>
+<h3>Background</h3>
+<p>BatchNorm normalizes each feature over the batch, which couples examples together and breaks down for variable-length sequences and batch size 1 at inference. LayerNorm normalizes each token&#x27;s feature vector on its own, so it behaves identically in training and inference and needs no running statistics. In pre-norm Transformers (GPT-2 onwards) it sits at the start of every residual branch: <code>x = x + Attn(LN(x))</code>. LLaMA-style models use the cheaper <strong>RMSNorm</strong> (see <strong>SwiGLU Feed-Forward Block</strong> in LLM Internals).</p>
 <h3>Formula</h3>
-<pre><code>LayerNorm(x) = γ * (x - μ) / sqrt(σ² + ε) + β
+<p>For each position (each vector <code>x</code> along the last axis, length <code>D</code>):</p>
+<pre><code class="language-text">mu      = mean(x)                          # scalar per position
+sigma^2 = mean((x - mu)^2)                 # population (biased) variance
+y       = gamma * (x - mu) / sqrt(sigma^2 + eps) + beta
 </code></pre>
-<h3>Difference from BatchNorm</h3>
+<h3>Inputs</h3>
 <ul>
-<li><strong>BatchNorm</strong>: Normalizes across batch dimension</li>
-<li><strong>LayerNorm</strong>: Normalizes across feature dimension</li>
-<li>LayerNorm works better for sequence models</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X (batch, seq_len, features)
-Output: Normalized X, each position normalized independently</pre><p>Normalize across last dimension</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>X</code>: float array <code>(..., D)</code>, e.g. <code>(seq_len, D)</code> or <code>(batch, seq_len, D)</code></li>
+<li><code>gamma</code>, <code>beta</code>: float arrays <code>(D,)</code></li>
+<li><code>eps</code>: small float, default <code>1e-5</code></li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>Array with the same shape as <code>X</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Statistics are over <strong>axis=-1 only</strong>, never over the batch or sequence axes.</li>
+<li>Use the <strong>biased</strong> variance (<code>np.var</code> default, <code>ddof=0</code>), as PyTorch&#x27;s <code>nn.LayerNorm</code> does.</li>
+<li><code>eps</code> goes <strong>inside</strong> the square root. A constant row gives <code>x - mu = 0</code>, so the output is just <code>beta</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; use <code>keepdims=True</code> so the statistics broadcast for any number of leading axes.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Write the backward pass. Why do the gradients with respect to <code>x</code> sum to zero along the feature axis?</li>
+<li>Pre-norm vs post-norm: which one trains stably without learning-rate warmup, and why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4))
+Output: [[-1.3416, -0.4472, 0.4472, 1.3416]]</pre><p>mean = 2.5, variance = 1.25, so (x - 2.5) / sqrt(1.25).</p></div><div><pre class="overflow-auto">Input: layer_norm(np.array([[2.0, 2.0, 2.0, 2.0]]), np.ones(4), np.array([0.0, 0.0, 0.0, 1.0]))
+Output: [[0.0, 0.0, 0.0, 1.0]]</pre><p>A constant row normalizes to 0 (eps avoids division by zero), leaving only beta.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def layer_norm(X, gamma, beta, eps=1e-5):
     &quot;&quot;&quot;
-    Apply layer normalization.
+    Apply layer normalization over the last axis.
 
     Args:
-        X: Input (batch, seq_len, features) or (seq_len, features)
-        gamma: Scale parameter (features,)
-        beta: Shift parameter (features,)
-        eps: Small constant
+        X: Input (..., D), e.g. (batch, seq_len, D) or (seq_len, D)
+        gamma: Scale (D,)
+        beta: Shift (D,)
+        eps: Small constant added to the variance
 
     Returns:
-        output: Normalized tensor
+        Array with the same shape as X
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Classifier-Free Guidance - Generative Models | ML Grind</title>
 <meta name="description" content="Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/classifier-free-guidance" data-rh="true" />
@@ -100,26 +100,40 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Classifier-Free Guidance - Generative Models","description":"Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/classifier-free-guidance","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Classifier-Free Guidance - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Classifier-Free Guidance in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Classifier-Free Guidance (CFG)</h2>
-<p>Conditional diffusion models (e.g. text-to-image) are trained with the condition randomly <strong>dropped</strong> (replaced by a null token) some fraction of the time, so the same network predicts both ε_c = ε_θ(x_t, t, c) and ε_u = ε_θ(x_t, t, ∅). At sampling time, Ho &amp; Salimans (2022) extrapolate away from the unconditional prediction:</p>
-<pre><code>ε_guided = ε_u + w · (ε_c - ε_u)
+<h3>What you&#x27;ll build</h3>
+<p>The guidance rule that makes text-to-image diffusion follow the prompt, plus a DDPM reverse step that uses the guided noise prediction.</p>
+<h3>Background</h3>
+<p>A conditional diffusion model is trained with its condition randomly <strong>dropped</strong> (replaced by a null token, typically 10–20% of the time), so one network predicts both
+<code>ε_c = ε_θ(x_t, t, c)</code> and <code>ε_u = ε_θ(x_t, t, ∅)</code>. At sampling time Ho &amp; Salimans (2022) push the prediction further in the direction the condition points:</p>
+<h3>Formula</h3>
+<pre><code class="language-text">ε_guided = ε_u + w · (ε_c − ε_u)
 </code></pre>
+<table><thead><tr><th>Guidance scale w</th><th>Effect</th></tr></thead><tbody><tr><td>0</td><td>unconditional prediction</td></tr><tr><td>1</td><td>plain conditional prediction (no guidance)</td></tr><tr><td>&gt; 1</td><td>follows the prompt more closely, less diversity (Stable Diffusion&#x27;s default is 7.5)</td></tr></tbody></table>
+<p>This is the &quot;guidance scale&quot; convention used by most libraries. The paper writes <code>ε̃ = (1 + w&#x27;)·ε_c − w&#x27;·ε_u</code>, the same formula with <code>w = 1 + w&#x27;</code>.</p>
+<p>Guided step: plug <code>ε_guided</code> into the DDPM reverse step from <strong>DDPM Reverse Sampling Step</strong> (0-indexed t, σ_t² = β_t, no noise at t = 0):</p>
+<pre><code class="language-text">α_t = 1 − β_t,   ᾱ_t = Π_{s ≤ t} α_s
+x_{t-1} = ( x_t − β_t / sqrt(1 − ᾱ_t) · ε_guided ) / sqrt(α_t)  +  σ_t · z     (z term only if t &gt; 0)
+</code></pre>
+<h3>Inputs</h3>
 <ul>
-<li><strong>w = 0</strong>: unconditional prediction</li>
-<li><strong>w = 1</strong>: plain conditional prediction (no guidance)</li>
-<li><strong>w &gt; 1</strong>: stronger guidance, samples follow the prompt more closely and lose diversity (Stable Diffusion&#x27;s default guidance scale is 7.5)</li>
+<li><code>eps_uncond</code>, <code>eps_cond</code>, <code>x_t</code>, <code>z</code>: float arrays of the same shape</li>
+<li><code>w</code>: float guidance scale</li>
+<li><code>t</code>: int in <code>[0, T−1]</code>; <code>betas</code>: float array <code>(T,)</code></li>
 </ul>
-<p>This is the &quot;guidance scale&quot; convention used by most libraries. The paper writes ε̃ = (1 + w&#x27;)·ε_c - w&#x27;·ε_u, which is the same formula with w = 1 + w&#x27;.</p>
-<h3>Guided sampling step</h3>
-<p>Plug ε_guided into the DDPM reverse step (σ_t² = β_t, 0-indexed t, no noise at t = 0):</p>
-<pre><code>α_t = 1 - β_t,  ᾱ_t = Π_{s&lt;=t} α_s
-x_{t-1} = 1 / sqrt(α_t) · ( x_t - β_t / sqrt(1 - ᾱ_t) · ε_guided ) + σ_t · z
-</code></pre>
-<h3>What to implement</h3>
+<h3>Expected return format</h3>
 <ul>
-<li><code>guided_noise(eps_uncond, eps_cond, w)</code>: returns ε_guided (same shape as the inputs)</li>
-<li><code>cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z)</code>: returns x_{t-1}</li>
+<li><code>guided_noise(eps_uncond, eps_cond, w)</code> returns <code>ε_guided</code> (same shape as the inputs)</li>
+<li><code>cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z)</code> returns <code>x_{t-1}</code> (same shape as <code>x_t</code>)</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Reuse <code>guided_noise</code> inside <code>cfg_step</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>CFG doubles the cost of each step (two forward passes). How do batching and guidance distillation reduce it?</li>
+<li>Why do very high guidance scales oversaturate images?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: eps_uncond = [0.1, -0.2], eps_cond = [0.3, 0.2], w = 3
-Output: [0.7, 1.0]</pre><p>0.1 + 3·(0.3 - 0.1) = 0.7 and -0.2 + 3·(0.2 + 0.2) = 1.0</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: [0.7, 1.0]</pre><p>0.1 + 3·(0.3 − 0.1) = 0.7 and −0.2 + 3·(0.2 + 0.2) = 1.0</p></div><div><pre class="overflow-auto">Input: x_t = [0.5, -1.0, 2.0], eps_uncond = [0.1, 0.0, -0.3], eps_cond = [0.4, -0.2, 0.1], w = 7.5, t = 3, betas = linspace(0.01, 0.1, 5), z = [1.0, -0.5, 0.25]
+Output: [0.3322, -0.8824, 1.6156]</pre><p>Guide the noise first, then apply the usual DDPM step with σ_3 = sqrt(β_3)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def guided_noise(eps_uncond, eps_cond, w):
     &quot;&quot;&quot;eps_uncond + w * (eps_cond - eps_uncond)&quot;&quot;&quot;

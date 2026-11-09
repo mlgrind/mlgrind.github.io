@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Diffusion Noise Schedule - Generative Models | ML Grind</title>
 <meta name="description" content="Implement Diffusion Noise Schedule in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/diffusion-noise-schedule" data-rh="true" />
@@ -100,36 +100,50 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Diffusion Noise Schedule - Generative Models","description":"Implement Diffusion Noise Schedule in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/diffusion-noise-schedule","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Diffusion Noise Schedule - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Diffusion Noise Schedule in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Diffusion Noise Schedule</h2>
-<p>Implement a linear noise schedule for diffusion models.</p>
-<h3>Linear Schedule</h3>
-<pre><code>β_t = β_start + t * (β_end - β_start) / (T - 1)
-
-where t = 0, 1, ..., T-1
+<h3>What you&#x27;ll build</h3>
+<p>The linear β schedule from DDPM (Ho et al., 2020) and the two quantities every diffusion step uses: <code>α_t</code> and the cumulative product <code>ᾱ_t</code>.</p>
+<h3>Background</h3>
+<p>The forward process adds a little Gaussian noise at each of T steps; <code>β_t</code> is the variance added at step t. Because Gaussians compose, you never simulate the steps one by one: the noise level after t steps is fully described by <code>ᾱ_t</code>, which falls from about 1 (clean data) towards 0 (pure noise).</p>
+<h3>Formula</h3>
+<p>Timesteps are <strong>0-indexed</strong>, <code>t = 0, 1, ..., T−1</code> (the same indexing as the sampling problems):</p>
+<pre><code class="language-text">β_t  = β_start + t · (β_end − β_start) / (T − 1)     # evenly spaced, both ends included
+α_t  = 1 − β_t
+ᾱ_t  = α_0 · α_1 · ... · α_t                         # cumulative product, ᾱ_0 = α_0
 </code></pre>
-<h3>Derived Quantities</h3>
-<pre><code>α_t = 1 - β_t
-ᾱ_t = prod(α_1, ..., α_t)  # cumulative product
-</code></pre>
-<p>These control how much noise is added at each step.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: T=1000, beta_start=0.0001, beta_end=0.02
-Output: betas, alphas, alpha_bars arrays</pre><p>Standard DDPM schedule</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>With the DDPM defaults (T = 1000, β from 1e-4 to 0.02), ᾱ is 0.9999 at t = 0, about 0.0786 at t = 499 and 4.0e-5 at t = 999.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>T</code>: int ≥ 2, the number of steps</li>
+<li><code>beta_start</code>, <code>beta_end</code>: floats with <code>0 &lt; beta_start &lt; beta_end &lt; 1</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p>A tuple of three float arrays, each of shape <code>(T,)</code>: <code>(betas, alphas, alpha_bars)</code></p>
+<h3>Constraints</h3>
+<p>NumPy only, no loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why did Improved DDPM switch to a cosine schedule? (The linear one destroys information too early for small images.)</li>
+<li>What is the signal-to-noise ratio <code>ᾱ_t / (1 − ᾱ_t)</code> at the last step, and why should it be close to 0?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: T = 3, beta_start = 0.1, beta_end = 0.3
+Output: betas = [0.1, 0.2, 0.3], alphas = [0.9, 0.8, 0.7], alpha_bars = [0.9, 0.72, 0.504]</pre><p>ᾱ is the running product: 0.9, 0.9·0.8 = 0.72, 0.72·0.7 = 0.504</p></div><div><pre class="overflow-auto">Input: T = 1000 (DDPM defaults)
+Output: alpha_bars[0] = 0.9999, alpha_bars[-1] ≈ 4.0e-05</pre><p>The last step is almost pure noise</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
     &quot;&quot;&quot;
-    Create linear noise schedule for diffusion.
+    Create the linear DDPM noise schedule (0-indexed timesteps).
 
     Args:
-        T: Number of diffusion steps
-        beta_start: Starting beta value
-        beta_end: Ending beta value
+        T: Number of diffusion steps (int)
+        beta_start: beta_0
+        beta_end: beta_{T-1}
 
     Returns:
-        betas: Beta values (T,)
-        alphas: Alpha values (T,)
-        alpha_bars: Cumulative alpha product (T,)
+        (betas, alphas, alpha_bars): float arrays of shape (T,), where
+        alphas = 1 - betas and alpha_bars is the cumulative product of alphas
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

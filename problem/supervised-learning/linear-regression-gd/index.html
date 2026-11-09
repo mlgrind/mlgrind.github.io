@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Linear Regression with Gradient Descent - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Linear Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/linear-regression-gd" data-rh="true" />
@@ -100,40 +100,63 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Linear Regression with Gradient Descent - Supervised Learning","description":"Implement Linear Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/linear-regression-gd","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Linear Regression with Gradient Descent - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Linear Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Linear Regression with Gradient Descent</h2>
-<p>Implement simple linear regression using gradient descent optimization.</p>
-<h3>Model</h3>
-<pre><code>y = w * x + b
+<p>Fit a one-feature linear model <code>y ≈ w * x + b</code> by running <strong>batch gradient descent</strong> on the mean squared error.</p>
+<h3>Background</h3>
+<p>Linear regression has a closed-form solution, but gradient descent is how almost every other model (and every neural network) is trained. Implementing it on the simplest model shows the full loop: predict, measure the loss, compute gradients, step.</p>
+<h3>Formula</h3>
+<p>Loss (mean squared error over the <code>n</code> samples):</p>
+<pre><code class="language-text">J(w, b) = (1/n) * sum_i (y_pred_i - y_i)^2,     y_pred_i = w * x_i + b
 </code></pre>
-<h3>Gradient Descent Updates</h3>
-<pre><code>w = w - learning_rate * dw
-b = b - learning_rate * db
+<p>Gradients:</p>
+<pre><code class="language-text">dJ/dw = (2/n) * sum_i (y_pred_i - y_i) * x_i
+dJ/db = (2/n) * sum_i (y_pred_i - y_i)
 </code></pre>
-<p>Where:</p>
+<p>Algorithm:</p>
+<ol>
+<li>Start from <code>w = 0</code>, <code>b = 0</code>.</li>
+<li>Repeat <code>iterations</code> times: compute <code>y_pred</code> with the <strong>current</strong> <code>w, b</code>, compute both gradients, then update <strong>both</strong> parameters simultaneously: <code>w -= learning_rate * dJ/dw</code>, <code>b -= learning_rate * dJ/db</code>.</li>
+<li>Return the final <code>(w, b)</code>.</li>
+</ol>
+<h3>Inputs</h3>
 <ul>
-<li>dw = (2/n) * sum((y_pred - y) * x)</li>
-<li>db = (2/n) * sum(y_pred - y)</li>
+<li><code>X</code>: 1D float array of inputs, shape <code>(n,)</code></li>
+<li><code>y</code>: 1D float array of targets, shape <code>(n,)</code></li>
+<li><code>learning_rate</code>: step size (float, e.g. 0.01 to 0.1)</li>
+<li><code>iterations</code>: number of full-batch updates (int)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def linear_regression(X: np.ndarray, y: np.ndarray,
-                      learning_rate: float, iterations: int) -&gt; tuple:
-</code></pre>
-<p>Returns (w, b) - the learned weight and bias.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [1, 2, 3, 4], y = [2, 4, 6, 8], lr = 0.1, iters = 1000
-Output: w ≈ 2.0, b ≈ 0.0</pre><p>The true relationship is y = 2x, so w should be close to 2</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(w, b)</code> with both values <strong>rounded to 2 decimals</strong>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Use the exact update order above: the tests include a 10-iteration run, which checks the update rule itself, not just the optimum it converges to.</li>
+<li>Too large a learning rate makes the iterates diverge; the tests use stable values.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; no <code>np.polyfit</code> or closed-form least squares. Vectorise each step over the samples (one Python loop over iterations is expected).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Derive the closed form <code>w = cov(x, y) / var(x)</code>, <code>b = mean(y) - w * mean(x)</code>, and explain when gradient descent is still preferable.</li>
+<li>Why does standardising <code>x</code> let you use a larger learning rate?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: linear_regression(np.array([1, 2, 3, 4]), np.array([2, 4, 6, 8]), 0.1, 1000)
+Output: (2.0, 0.0)</pre><p>The data lie exactly on y = 2x, and 1000 steps are enough to converge.</p></div><div><pre class="overflow-auto">Input: linear_regression(np.array([1, 2, 3, 4]), np.array([2, 4, 6, 8]), 0.01, 1)
+Output: (0.3, 0.1)</pre><p>One step from (0, 0): dJ/dw = (2/4) * (-60) = -30 and dJ/db = (2/4) * (-20) = -10, so w = 0.3 and b = 0.1.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def linear_regression(X: np.ndarray, y: np.ndarray,
                       learning_rate: float = 0.01,
                       iterations: int = 1000) -&gt; tuple:
     &quot;&quot;&quot;
-    Train a simple linear regression model using gradient descent.
+    Train y = w * x + b with batch gradient descent on the MSE.
 
     Args:
-        X: Input features (1D array)
-        y: Target values (1D array)
+        X: Input features, 1D array of shape (n,)
+        y: Target values, 1D array of shape (n,)
         learning_rate: Step size for gradient descent
-        iterations: Number of training iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        Tuple of (weight, bias)
+        Tuple (w, b), each rounded to 2 decimals
     &quot;&quot;&quot;
     # Initialize parameters
     w = 0.0
@@ -144,7 +167,7 @@ def linear_regression(X: np.ndarray, y: np.ndarray,
     pass
 
     return (round(w, 2), round(b, 2))
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>VQ-VAE Vector Quantization - Generative Models | ML Grind</title>
 <meta name="description" content="Implement VQ-VAE Vector Quantization in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/vqvae-quantization" data-rh="true" />
@@ -100,50 +100,57 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"VQ-VAE Vector Quantization - Generative Models","description":"Implement VQ-VAE Vector Quantization in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/vqvae-quantization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">VQ-VAE Vector Quantization - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement VQ-VAE Vector Quantization in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>VQ-VAE Vector Quantization</h2>
-<p>Implement the vector quantization layer used in VQ-VAE (Vector Quantized Variational Autoencoder).</p>
-<h3>Overview</h3>
-<p>Unlike standard VAEs that use continuous latent spaces, VQ-VAE uses <strong>discrete</strong> latent representations by mapping encoder outputs to the nearest embedding in a learned codebook.</p>
-<h3>Quantization Process</h3>
+<h3>What you&#x27;ll build</h3>
+<p>The discrete bottleneck of a VQ-VAE (van den Oord et al., 2017): snap every encoder vector to its nearest codebook entry, and compute the two auxiliary losses that train the codebook and the encoder.</p>
+<h3>Background</h3>
+<p>A VQ-VAE replaces the Gaussian latent of a VAE with a <strong>discrete</strong> one: a grid of indices into a learned codebook of K vectors. Discrete codes are what image and audio tokenizers (VQGAN, SoundStream, the image tokens of many multimodal LLMs) produce, so a Transformer can then model them like text.</p>
+<h3>Algorithm: <code>vq_quantize</code></h3>
 <ol>
-<li><strong>Encoder output</strong>: z_e of shape (batch, H, W, D)</li>
-<li><strong>Codebook</strong>: K embedding vectors of dimension D</li>
-<li><strong>Find nearest</strong>: For each spatial position, find the closest codebook entry</li>
-<li><strong>Quantize</strong>: Replace z_e with the nearest codebook vector z_q</li>
+<li>Flatten the encoder output <code>z_e</code> from <code>(B, H, W, D)</code> to <code>N = B·H·W</code> vectors of size D.</li>
+<li>Compute all squared distances to the K codes with the expansion
+<code>||z − e_k||² = ||z||² − 2·z·e_k + ||e_k||²</code>, giving an <code>(N, K)</code> matrix.</li>
+<li><code>indices = argmin</code> over K (ties go to the <strong>lowest</strong> index, as <code>np.argmin</code> does).</li>
+<li><code>z_q = codebook[indices]</code>, reshaped back to <code>(B, H, W, D)</code>; indices to <code>(B, H, W)</code>.</li>
 </ol>
-<h3>Distance Calculation</h3>
-<pre><code>distances[b, h, w, k] = ||z_e[b, h, w] - codebook[k]||²
+<h3>Losses: <code>vq_loss</code></h3>
+<p><code>sg[·]</code> is stop-gradient (<code>.detach()</code> in PyTorch):</p>
+<pre><code class="language-text">codebook_loss   = mean( (sg[z_e] − z_q)² )          # pulls codes toward encoder outputs
+commitment_loss = β · mean( (z_e − sg[z_q])² )      # keeps the encoder near its codes
 </code></pre>
-<h3>Straight-Through Estimator</h3>
-<p>During training, gradients flow through z_q to z_e by copying gradients:</p>
-<pre><code>z_q = z_e + stop_gradient(z_q - z_e)
-</code></pre>
-<p>(We don&#x27;t implement this here, just the forward pass)</p>
-<h3>VQ-VAE Loss Components</h3>
-<pre><code>L = reconstruction + ||sg[z_e] - e||² + β * ||z_e - sg[e]||²
-</code></pre>
+<p>Means are over <strong>all</strong> elements. In a forward pass both squared errors have the same value (<code>sg</code> only changes gradients), so <code>commitment_loss = β · codebook_loss</code>. The full VQ-VAE loss is <code>reconstruction + codebook_loss + commitment_loss</code>. The straight-through estimator <code>z_q = z_e + sg[z_q − z_e]</code> copies the decoder&#x27;s gradient to the encoder; it only matters in an autograd framework (see the PyTorch track and <strong>E2E: VQ-VAE</strong>).</p>
+<h3>Inputs</h3>
 <ul>
-<li><strong>Codebook loss</strong>: Moves embeddings toward encoder outputs</li>
-<li><strong>Commitment loss</strong>: Commits encoder to embeddings</li>
+<li><code>z_e</code>: float array <code>(B, H, W, D)</code></li>
+<li><code>codebook</code>: float array <code>(K, D)</code></li>
+<li><code>beta</code>: float, commitment weight (default 0.25)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def vq_quantize(z_e, codebook):
-    # z_e: (batch, H, W, embedding_dim) - encoder output
-    # codebook: (num_embeddings, embedding_dim) - K embedding vectors
-    # Returns: z_q, indices
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: z_e (2, 4, 4, 64), codebook (512, 64)
-Output: z_q (2, 4, 4, 64), indices (2, 4, 4)</pre><p>Each spatial position mapped to one of 512 codes</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<ul>
+<li><code>vq_quantize</code> returns <code>(z_q, indices)</code>: <code>z_q</code> float <code>(B, H, W, D)</code>, <code>indices</code> int <code>(B, H, W)</code></li>
+<li><code>vq_loss</code> returns <code>(codebook_loss, commitment_loss)</code>: Python floats rounded to 4 decimals</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Vectorise the distance computation: no loop over positions or codes.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>What is codebook collapse, and how do EMA codebook updates or dead-code restarts fix it?</li>
+<li>Memory of the <code>(N, K)</code> distance matrix for a 32×32 grid, batch 64 and K = 8192? (64·1024·8192·4 bytes ≈ 2 GB, so chunk it.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: z_e = [[[[1, 1], [9, 8], [4, 6]]]] (shape (1, 1, 3, 2)), codebook = [[0, 0], [10, 10], [5, 5]]
+Output: indices = [[[0, 1, 2]]], z_q = [[[[0, 0], [10, 10], [5, 5]]]]</pre><p>[9, 8] is at squared distance 5 from [10, 10] but 25 from [5, 5]; [4, 6] is 2 from [5, 5]</p></div><div><pre class="overflow-auto">Input: vq_loss(z_e, z_q, beta=0.25) for the example above
+Output: (1.5, 0.375)</pre><p>Squared errors 1, 1, 1, 4, 1, 1 have mean 1.5; the commitment loss is 0.25 · 1.5</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def vq_quantize(z_e, codebook):
     &quot;&quot;&quot;
     Vector quantization for VQ-VAE.
 
     Args:
-        z_e: Encoder output (batch, H, W, embedding_dim)
-        codebook: Embedding vectors (num_embeddings, embedding_dim)
+        z_e: Encoder output, shape (batch, H, W, embedding_dim)
+        codebook: Code vectors, shape (num_embeddings, embedding_dim)
 
     Returns:
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        indices: Codebook indices used (batch, H, W)
+        z_q: Nearest code for every position, shape (batch, H, W, embedding_dim)
+        indices: Index of that code, int array of shape (batch, H, W);
+                 ties go to the lowest index
     &quot;&quot;&quot;
     # Your code here
     pass
@@ -151,20 +158,20 @@ def vq_quantize(z_e, codebook):
 
 def vq_loss(z_e, z_q, beta=0.25):
     &quot;&quot;&quot;
-    Compute VQ-VAE losses (codebook + commitment).
+    Codebook and commitment losses (forward values).
 
     Args:
-        z_e: Encoder output (batch, H, W, embedding_dim)
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        beta: Commitment loss weight (default: 0.25)
+        z_e: Encoder output, shape (batch, H, W, embedding_dim)
+        z_q: Quantized vectors, same shape
+        beta: Commitment loss weight (default 0.25)
 
     Returns:
-        codebook_loss: Loss to update codebook
-        commitment_loss: Loss to commit encoder to codebook
+        (codebook_loss, commitment_loss): Python floats rounded to 4 decimals,
+        codebook_loss = mean((z_e - z_q)**2), commitment_loss = beta * that
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

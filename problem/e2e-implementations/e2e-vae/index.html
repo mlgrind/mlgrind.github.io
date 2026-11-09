@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Variational Autoencoder - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Variational Autoencoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-vae" data-rh="true" />
@@ -100,22 +100,34 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Variational Autoencoder - End-to-End Implementations","description":"Implement E2E: Variational Autoencoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-vae","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Variational Autoencoder - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Variational Autoencoder in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Variational Autoencoder</h2>
-<p>Implement a complete VAE with encoder, decoder, reparameterization, and ELBO loss.</p>
+<h3>What you&#x27;ll build</h3>
+<p>A complete VAE in NumPy: an MLP encoder that outputs a Gaussian per input, the reparameterization trick, an MLP decoder, the negative-ELBO loss, and sampling from the prior. It assembles <strong>VAE Reparameterization Trick</strong> and <strong>VAE Loss Function</strong> from Generative Models into one model.</p>
 <h3>Architecture</h3>
-<pre><code>Encoder: x → h → (μ, log_σ²)
-         ↓
-Reparameterization: z = μ + σ * ε, ε ~ N(0,1)
-         ↓
-Decoder: z → h → x_reconstructed
+<table><thead><tr><th>Stage</th><th>Operation</th><th>Shape</th></tr></thead><tbody><tr><td>input</td><td><code>x</code></td><td><code>(batch, input_dim)</code></td></tr><tr><td>encoder hidden</td><td><code>h = relu(x @ W_enc + b_enc)</code></td><td><code>(batch, hidden_dim)</code></td></tr><tr><td>latent mean</td><td><code>mu = h @ W_mu + b_mu</code></td><td><code>(batch, latent_dim)</code></td></tr><tr><td>latent log-variance</td><td><code>log_var = h @ W_logvar + b_logvar</code></td><td><code>(batch, latent_dim)</code></td></tr><tr><td>sample</td><td><code>z = mu + exp(0.5·log_var) ⊙ ε</code>, <code>ε = np.random.randn(*mu.shape)</code></td><td><code>(batch, latent_dim)</code></td></tr><tr><td>decoder hidden</td><td><code>h&#x27; = relu(z @ W_dec1 + b_dec1)</code></td><td><code>(batch, hidden_dim)</code></td></tr><tr><td>reconstruction</td><td><code>x_recon = sigmoid(h&#x27; @ W_dec2 + b_dec2)</code></td><td><code>(batch, input_dim)</code>, values in (0, 1)</td></tr></tbody></table>
+<p>The constructor (given) seeds <code>np.random.seed(42)</code> and initializes every weight as <code>N(0, 0.01²)</code> with zero biases.</p>
+<h3>Loss (negative ELBO)</h3>
+<p>The same convention as <strong>VAE Loss Function</strong> (the standard one from Kingma &amp; Welling and the PyTorch VAE example):</p>
+<pre><code class="language-text">recon_loss = mean((x − x_recon)²)                                        # over all elements
+kl_loss    = mean_i [ −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij)) ]   # sum over latent dims, mean over batch
+total_loss = recon_loss + kl_loss
 </code></pre>
-<h3>Loss (ELBO)</h3>
-<pre><code>L = Reconstruction Loss + KL Divergence
-L = ||x - x_hat||² + KL(q(z|x) || p(z))
-KL = -0.5 * sum(1 + log_var - μ² - exp(log_var))
-</code></pre>
-<h3>Task</h3>
-<p>Implement encoder, decoder, reparameterization trick, and loss computation.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: VAE(input_dim=784, latent_dim=20)
-Output: Reconstructed images + latent samples</pre><p>Full VAE forward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>Earlier versions of this problem averaged the KL over latent dims as well; that shrinks it by a factor of <code>latent_dim</code> relative to the reconstruction term. The convention above is the one both problems now use.</p>
+<h3>Method contract</h3>
+<table><thead><tr><th>Method</th><th>Returns</th></tr></thead><tbody><tr><td><code>encode(x)</code></td><td>tuple <code>(mu, log_var)</code>, each <code>(batch, latent_dim)</code></td></tr><tr><td><code>reparameterize(mu, log_var)</code></td><td><code>z</code>, drawing ε once with <code>np.random.randn(*mu.shape)</code> (no re-seeding)</td></tr><tr><td><code>decode(z)</code></td><td><code>x_recon</code> <code>(batch, input_dim)</code>, sigmoid output</td></tr><tr><td><code>forward(x)</code></td><td>dict <code>{&#x27;mu&#x27;, &#x27;log_var&#x27;, &#x27;z&#x27;, &#x27;x_recon&#x27;}</code></td></tr><tr><td><code>compute_loss(x, x_recon, mu, log_var)</code></td><td>dict <code>{&#x27;total_loss&#x27;, &#x27;recon_loss&#x27;, &#x27;kl_loss&#x27;}</code> of floats</td></tr><tr><td><code>sample(num_samples)</code></td><td><code>decode(z)</code> with <code>z = np.random.randn(num_samples, latent_dim)</code>: <code>(num_samples, input_dim)</code></td></tr></tbody></table>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>With the tiny initial weights, <code>mu ≈ 0</code> and <code>log_var ≈ 0</code>, so the initial KL is close to 0 and <code>x_recon ≈ 0.5</code>.</li>
+<li><code>kl_loss ≥ 0</code> always; <code>total_loss</code> is exactly the sum of the other two.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised over the batch. Training (backprop) is not required here; the PyTorch track&#x27;s autograd makes it a one-liner.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>With sigmoid outputs and binary data, why is BCE the more principled reconstruction loss?</li>
+<li>How do you detect posterior collapse (KL → 0 for every latent dim), and what do KL annealing and free bits do?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: vae.compute_loss(x=[[1.0, 2.0]], x_recon=[[0.0, 0.0]], mu=[[0.5, -0.5]], log_var=[[0.0, 1.0]])
+Output: {&#x27;total_loss&#x27;: 3.1091, &#x27;recon_loss&#x27;: 2.5, &#x27;kl_loss&#x27;: 0.6091} (rounded)</pre><p>Same numbers as the VAE Loss Function example: recon = 5/2, KL summed over the 2 latent dims</p></div><div><pre class="overflow-auto">Input: VAE(784, 256, 20).forward(np.random.randn(4, 784))
+Output: {&#x27;mu&#x27;: (4, 20), &#x27;log_var&#x27;: (4, 20), &#x27;z&#x27;: (4, 20), &#x27;x_recon&#x27;: (4, 784)}</pre><p>Shapes of the returned arrays</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 class VAE:
     def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
@@ -150,24 +162,28 @@ class VAE:
     def encode(self, x: np.ndarray) -&gt; tuple:
         &quot;&quot;&quot;
         Encode input to latent distribution parameters.
+        h = relu(x @ W_enc + b_enc); mu = h @ W_mu + b_mu; log_var = h @ W_logvar + b_logvar
 
         Returns:
-            mu: Mean of latent distribution
-            log_var: Log variance of latent distribution
+            (mu, log_var): each (batch, latent_dim)
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def reparameterize(self, mu: np.ndarray, log_var: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Reparameterization trick: z = mu + std * epsilon
+        Reparameterization trick: z = mu + exp(0.5 * log_var) * eps,
+        with eps = np.random.randn(*mu.shape) (drawn once, no re-seeding).
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def decode(self, z: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Decode latent vector to reconstruction.
+        Decode latent vectors: relu(z @ W_dec1 + b_dec1), then sigmoid(... @ W_dec2 + b_dec2).
+
+        Returns:
+            x_recon: (batch, input_dim), values in (0, 1)
         &quot;&quot;&quot;
         # Your code here
         pass
@@ -177,7 +193,7 @@ class VAE:
         Full forward pass.
 
         Returns:
-            Dictionary with mu, log_var, z, x_recon
+            {&#x27;mu&#x27;, &#x27;log_var&#x27;, &#x27;z&#x27;, &#x27;x_recon&#x27;}
         &quot;&quot;&quot;
         # Your code here
         pass
@@ -185,21 +201,26 @@ class VAE:
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      mu: np.ndarray, log_var: np.ndarray) -&gt; dict:
         &quot;&quot;&quot;
-        Compute VAE loss (ELBO).
+        Negative ELBO.
+        recon_loss = MSE over all elements;
+        kl_loss = -0.5 * sum over latent dims of (1 + log_var - mu^2 - exp(log_var)), averaged over the batch.
 
         Returns:
-            Dictionary with total_loss, recon_loss, kl_loss
+            {&#x27;total_loss&#x27;, &#x27;recon_loss&#x27;, &#x27;kl_loss&#x27;} as floats, total = recon + kl
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def sample(self, num_samples: int) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Generate samples by decoding random latent vectors.
+        Decode z = np.random.randn(num_samples, latent_dim) drawn from the prior.
+
+        Returns:
+            (num_samples, input_dim)
         &quot;&quot;&quot;
         # Your code here
         pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>KL Divergence (Gaussians) - Generative Models | ML Grind</title>
 <meta name="description" content="Implement KL Divergence (Gaussians) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/kl-divergence" data-rh="true" />
@@ -99,34 +99,50 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"KL Divergence (Gaussians) - Generative Models","description":"Implement KL Divergence (Gaussians) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/kl-divergence","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">KL Divergence (Gaussians) - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement KL Divergence (Gaussians) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>KL Divergence Between Gaussians</h2>
-<p>Compute the KL divergence between two univariate Gaussian distributions.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">KL Divergence (Gaussians) - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement KL Divergence (Gaussians) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>KL Divergence Between Two Gaussians</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The closed-form KL divergence <code>KL(P || Q)</code> between two univariate Gaussians.</p>
+<h3>Background</h3>
+<p>KL divergence measures how many extra nats you pay, on average, for encoding samples from P with a code optimised for Q. It appears all over generative modelling: the VAE regulariser is <code>KL(q(z|x) || N(0, 1))</code>, diffusion&#x27;s ELBO is a sum of Gaussian KLs, and RLHF penalises <code>KL(π || π_ref)</code>. For Gaussians it has a closed form, so no sampling is needed.</p>
 <h3>Formula</h3>
-<pre><code>KL(P || Q) = log(σ_q/σ_p) + (σ_p² + (μ_p - μ_q)²) / (2σ_q²) - 0.5
+<p>With <code>P = N(μ_p, σ_p²)</code> and <code>Q = N(μ_q, σ_q²)</code> (σ are <strong>standard deviations</strong>):</p>
+<pre><code class="language-text">KL(P || Q) = log(σ_q / σ_p) + (σ_p² + (μ_p − μ_q)²) / (2 σ_q²) − 1/2
 </code></pre>
-<p>Where P = N(μ_p, σ_p²) and Q = N(μ_q, σ_q²)</p>
+<p>Setting <code>μ_q = 0, σ_q = 1</code> and writing <code>log_var = log σ_p²</code> gives the VAE term <code>−0.5·(1 + log_var − μ² − exp(log_var))</code> used in <strong>VAE Loss Function</strong>.</p>
 <h3>Properties</h3>
 <ul>
-<li>KL ≥ 0</li>
-<li>KL = 0 iff P = Q</li>
-<li>Not symmetric: KL(P||Q) ≠ KL(Q||P)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: P = N(0, 1), Q = N(0, 1)
-Output: 0</pre><p>Same distribution</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>KL ≥ 0</code>, with equality iff P = Q</li>
+<li><strong>Not symmetric</strong>: <code>KL(P || Q) ≠ KL(Q || P)</code> in general</li>
+<li>Units are nats because the log is natural</li>
+</ul>
+<h3>Inputs</h3>
+<p><code>mu_p, sigma_p, mu_q, sigma_q</code>: Python numbers (or NumPy scalars), with <code>sigma_p, sigma_q &gt; 0</code>.</p>
+<h3>Expected return format</h3>
+<p><code>kl</code>: a Python float rounded to 4 decimals.</p>
+<h3>Constraints</h3>
+<p>Use the closed form (no sampling).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Which direction does a VAE minimise, and why does reverse KL lead to mode-seeking behaviour?</li>
+<li>Generalise to diagonal multivariate Gaussians (sum the per-dimension KLs).</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: mu_p = 1, sigma_p = 1, mu_q = 0, sigma_q = 1
+Output: 0.5</pre><p>Equal widths, so only the mean term remains: 1² / 2</p></div><div><pre class="overflow-auto">Input: mu_p = 0, sigma_p = 2, mu_q = 0, sigma_q = 1
+Output: 0.8069</pre><p>log(1/2) + 4/2 − 0.5 = 0.8069; swapping P and Q gives 0.3181, so KL is not symmetric</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
     &quot;&quot;&quot;
-    Compute KL divergence between two Gaussians.
+    KL(P || Q) for P = N(mu_p, sigma_p^2) and Q = N(mu_q, sigma_q^2).
 
     Args:
-        mu_p, sigma_p: Mean and std of P
-        mu_q, sigma_q: Mean and std of Q
+        mu_p, sigma_p: Mean and standard deviation of P (sigma_p &gt; 0)
+        mu_q, sigma_q: Mean and standard deviation of Q (sigma_q &gt; 0)
 
     Returns:
-        kl: KL(P || Q)
+        kl: Python float rounded to 4 decimals
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

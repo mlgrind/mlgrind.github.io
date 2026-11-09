@@ -78,56 +78,75 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
-  <title>Sigmoid Function - Supervised Learning | ML Grind</title>
-<meta name="description" content="Implement Sigmoid Function in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
+  <title>Sigmoid for Logistic Regression - Supervised Learning | ML Grind</title>
+<meta name="description" content="Implement Sigmoid for Logistic Regression in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/logistic-regression" data-rh="true" />
-<meta property="og:title" content="Sigmoid Function - Supervised Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Sigmoid Function in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Sigmoid for Logistic Regression - Supervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Sigmoid for Logistic Regression in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/supervised-learning/logistic-regression" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Sigmoid Function - Supervised Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Sigmoid Function in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Sigmoid for Logistic Regression - Supervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Sigmoid for Logistic Regression in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Sigmoid Function - Supervised Learning","description":"Implement Sigmoid Function in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/logistic-regression","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Sigmoid for Logistic Regression - Supervised Learning","description":"Implement Sigmoid for Logistic Regression in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/logistic-regression","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Sigmoid Function - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Sigmoid Function in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Sigmoid Function</h2>
-<p>Implement the sigmoid activation function used in logistic regression.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Sigmoid for Logistic Regression - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Sigmoid for Logistic Regression in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Sigmoid for Logistic Regression</h2>
+<p>Implement the <strong>sigmoid</strong> (logistic) function, the piece that turns a linear score into a probability in logistic regression.</p>
+<h3>Background</h3>
+<p>Logistic regression computes a real-valued score <code>z = x · w + b</code> (the <em>logit</em>) and squashes it into <code>(0, 1)</code> with the sigmoid, so the output can be read as <code>P(y = 1 | x)</code>. The sigmoid is also the inverse of the log-odds: if <code>p = sigmoid(z)</code> then <code>z = log(p / (1 - p))</code>. You will reuse it in <strong>Logistic Regression with Gradient Descent</strong> later in this section.</p>
 <h3>Formula</h3>
-<pre><code>sigmoid(x) = 1 / (1 + exp(-x))
+<pre><code class="language-text">sigmoid(z) = 1 / (1 + exp(-z))
 </code></pre>
-<h3>Properties</h3>
+<p>Useful properties:</p>
 <ul>
-<li>Output is always between 0 and 1</li>
-<li>sigmoid(0) = 0.5</li>
-<li>Monotonically increasing</li>
+<li><code>sigmoid(0) = 0.5</code>, and the output is strictly between 0 and 1 for finite <code>z</code></li>
+<li>Symmetry: <code>sigmoid(-z) = 1 - sigmoid(z)</code></li>
+<li>Derivative: <code>sigmoid&#x27;(z) = sigmoid(z) * (1 - sigmoid(z))</code> (at most 0.25, at <code>z = 0</code>)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def sigmoid(x: np.ndarray) -&gt; np.ndarray:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([0, 1, -1])
-Output: [0.5, 0.731059, 0.268941]</pre><p>sigmoid(0)=0.5, sigmoid(1)≈0.73, sigmoid(-1)≈0.27</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>x</code>: a NumPy array of any shape (ints or floats)</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A float NumPy array with the <strong>same shape</strong> as <code>x</code>, with the sigmoid applied element-wise.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>For very negative inputs, <code>exp(-z)</code> overflows to <code>inf</code> (NumPy warns, and the result is still 0). A <strong>numerically stable</strong> version uses <code>1 / (1 + exp(-z))</code> for <code>z &gt;= 0</code> and the equivalent <code>exp(z) / (1 + exp(z))</code> for <code>z &lt; 0</code>, so <code>exp</code> only ever sees non-positive numbers.</li>
+<li>Tests compare with a tolerance of about <code>1e-5</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised (no Python loop over elements).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why is <code>sigmoid(z)</code> used for binary classification while softmax is used for <code>K &gt; 2</code> classes? Show that a 2-class softmax reduces to a sigmoid of the logit difference.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: sigmoid(np.array([0, 1, -1]))
+Output: array([0.5, 0.731059, 0.268941])</pre><p>sigmoid(0) = 0.5, and sigmoid(-1) = 1 - sigmoid(1) by symmetry.</p></div><div><pre class="overflow-auto">Input: sigmoid(np.array([[2.0, -3.0]]))
+Output: array([[0.880797, 0.047426]])</pre><p>The shape (1, 2) is preserved; large |z| pushes the output towards 0 or 1.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def sigmoid(x: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Compute the sigmoid activation function.
+    Compute the sigmoid activation function element-wise.
 
     Args:
         x: Input array of any shape
 
     Returns:
-        Array of same shape with sigmoid applied element-wise
+        Float array of the same shape, with 1 / (1 + exp(-x)) applied element-wise
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

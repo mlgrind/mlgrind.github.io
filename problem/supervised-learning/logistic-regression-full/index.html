@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Logistic Regression with Gradient Descent - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Logistic Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/logistic-regression-full" data-rh="true" />
@@ -100,36 +100,70 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Logistic Regression with Gradient Descent - Supervised Learning","description":"Implement Logistic Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/logistic-regression-full","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Logistic Regression with Gradient Descent - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Logistic Regression with Gradient Descent in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Logistic Regression with Gradient Descent</h2>
-<p>Implement binary logistic regression from scratch.</p>
-<h3>Model</h3>
-<pre><code>z = X @ w + b
-y_pred = sigmoid(z) = 1 / (1 + exp(-z))
+<p>Train a binary <strong>logistic regression</strong> classifier from scratch: a linear score, a sigmoid, and batch gradient descent on the mean binary cross-entropy.</p>
+<h3>Background</h3>
+<p>Logistic regression is the baseline classifier in industry (click-through prediction, fraud scoring) and the &quot;one-neuron network&quot; of deep learning. It combines the two earlier problems in this section: <strong>Sigmoid for Logistic Regression</strong> and <strong>Binary Cross-Entropy Loss</strong>. The neat fact interviewers ask about: the gradient of BCE through a sigmoid simplifies to <code>(prediction - label) * input</code>, exactly the same form as linear regression.</p>
+<h3>Formula</h3>
+<p>For <code>X</code> of shape <code>(m, n)</code>, <code>w</code> of shape <code>(n,)</code> and a scalar <code>b</code>:</p>
+<pre><code class="language-text">z      = X @ w + b                      # logits, shape (m,)
+y_pred = sigmoid(z) = 1 / (1 + exp(-z)) # probabilities, shape (m,)
+L      = -(1/m) * sum_i [ y_i log(y_pred_i) + (1 - y_i) log(1 - y_pred_i) ]
+
+dL/dw  = (1/m) * X.T @ (y_pred - y)     # shape (n,)
+dL/db  = (1/m) * sum_i (y_pred_i - y_i) # scalar
 </code></pre>
-<h3>Loss (Binary Cross-Entropy)</h3>
-<pre><code>L = -1/m * sum(y * log(y_pred) + (1-y) * log(1-y_pred))
-</code></pre>
-<h3>Gradients</h3>
-<pre><code>dw = 1/m * X.T @ (y_pred - y)
-db = 1/m * sum(y_pred - y)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X (100, 2), y binary labels, 1000 iterations
-Output: Trained weights and bias</pre><p>Learns decision boundary separating classes</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>Algorithm:</p>
+<ol>
+<li>Start from <code>w = zeros(n)</code>, <code>b = 0</code>.</li>
+<li>Repeat <code>iterations</code> times: forward pass, both gradients, then <code>w -= learning_rate * dw</code> and <code>b -= learning_rate * db</code>.</li>
+</ol>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: features, array of shape <code>(m, n)</code> (ints or floats)</li>
+<li><code>y</code>: binary labels in {0, 1}, shape <code>(m,)</code></li>
+<li><code>learning_rate</code>: step size (float)</li>
+<li><code>iterations</code>: number of full-batch updates (int)</li>
+</ul>
+<p>A <code>sigmoid(z)</code> helper is already provided in the starter code.</p>
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(w, b)</code>:</p>
+<ul>
+<li><code>w</code>: NumPy array of shape <code>(n,)</code>, rounded to 4 decimals (<code>np.round(w, 4)</code>)</li>
+<li><code>b</code>: Python float, rounded to 4 decimals</li>
+</ul>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>There is <strong>no regularisation</strong>, so on linearly separable data (like the AND gate in the tests) the weights keep growing the longer you train; the tests fix the iteration count so the result is deterministic.</li>
+<li>You do not need to compute the loss itself to train; only its gradient.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised over samples; no sklearn. (This matches <code>sklearn.linear_model.LogisticRegression(penalty=None)</code> only in the limit of convergence; sklearn adds an L2 penalty by default.)</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Derive <code>dL/dz = y_pred - y</code> from the chain rule.</li>
+<li>Add L2 regularisation <code>(lam/2) * ||w||^2</code>: how do the gradients change, and why is <code>b</code> usually not penalised?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000)
+Output: (array([6.0141, 6.0141]), -9.1984)</pre><p>The AND gate: only (1, 1) gets a positive logit (6.01 + 6.01 - 9.20 &gt; 0).</p></div><div><pre class="overflow-auto">Input: Same data, iterations=1
+Output: (array([0., 0.]), -0.125)</pre><p>At w = 0, b = 0 every prediction is 0.5, so y_pred - y = [0.5, 0.5, 0.5, -0.5]: dw = 0 and db = 0.25, giving b = -0.5 * 0.25.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     &quot;&quot;&quot;
-    Train logistic regression using gradient descent.
+    Train logistic regression with batch gradient descent on the mean BCE.
 
     Args:
-        X: Features (m samples, n features)
-        y: Binary labels (m,)
+        X: Features, shape (m, n)
+        y: Binary labels in {0, 1}, shape (m,)
         learning_rate: Step size
-        iterations: Number of iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        w: Learned weights (n,)
-        b: Learned bias (scalar)
+        w: Learned weights, shape (n,), rounded to 4 decimals
+        b: Learned bias (Python float), rounded to 4 decimals
     &quot;&quot;&quot;
     m, n = X.shape
     w = np.zeros(n)
@@ -139,7 +173,7 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     pass
 
     return np.round(w, 4), round(float(b), 4)
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

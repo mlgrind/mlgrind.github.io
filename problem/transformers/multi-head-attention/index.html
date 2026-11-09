@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Multi-Head Attention - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Multi-Head Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/multi-head-attention" data-rh="true" />
@@ -100,33 +100,51 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Multi-Head Attention - Transformer Architecture","description":"Implement Multi-Head Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/multi-head-attention","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Multi-Head Attention - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Multi-Head Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Multi-Head Attention</h2>
-<p>Implement multi-head attention from the Transformer architecture.</p>
-<h3>Concept</h3>
-<pre><code>MultiHead(Q, K, V) = Concat(head_1, ..., head_h) @ W_O
-
-where head_i = Attention(Q @ W_Q_i, K @ W_K_i, V @ W_V_i)
+<h3>What you&#x27;ll build</h3>
+<p>The head-splitting core of multi-head attention: cut the model dimension into <code>num_heads</code> slices, run scaled dot-product attention on every slice in parallel, and concatenate the results.</p>
+<h3>Background</h3>
+<p>One attention head produces one weighted average per query, so it can only &quot;look&quot; one way at a time. Several smaller heads let the model attend to different things at once (for example, the previous token in one head and the subject of the sentence in another) for the same cost as one big head. In a full layer, <code>Q</code>, <code>K</code>, <code>V</code> come from learned projections <code>X @ W_Q</code> etc. and the concatenated heads go through an output projection <code>W_O</code>. Here the inputs are <strong>already projected</strong> and there is <strong>no output projection</strong>: the task is the reshape-attend-merge part, which is where the shape bugs live.</p>
+<h3>Formula</h3>
+<p>With <code>d_k = d_model / num_heads</code>, head <code>h</code> uses columns <code>h*d_k : (h+1)*d_k</code>:</p>
+<pre><code class="language-text">head_h = softmax(Q_h @ K_h.T / sqrt(d_k)) @ V_h          # (seq_len, d_k)
+output = concat(head_0, ..., head_{H-1}, axis=-1)        # (seq_len, d_model)
 </code></pre>
-<h3>Steps</h3>
-<ol>
-<li>Project Q, K, V with different learned projections for each head</li>
-<li>Apply scaled dot-product attention in parallel</li>
-<li>Concatenate heads</li>
-<li>Project back to original dimension</li>
-</ol></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X (4, 64), num_heads=8, d_model=64
-Output: output (4, 64)</pre><p>8 heads with d_k=8 each, concatenated to 64</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>Vectorised: reshape <code>(seq_len, d_model) -&gt; (seq_len, H, d_k)</code>, transpose to <code>(H, seq_len, d_k)</code>, do batched attention, then undo both steps.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>Q</code>, <code>K</code>, <code>V</code>: float arrays <code>(seq_len, d_model)</code></li>
+<li><code>num_heads</code>: int that divides <code>d_model</code></li>
+</ul>
+<h3>Expected Return Format</h3>
+<p><code>output</code>: array <code>(seq_len, d_model)</code>, head <code>h</code>&#x27;s result in columns <code>h*d_k : (h+1)*d_k</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Scale by <code>sqrt(d_k)</code> (the <strong>per-head</strong> width), not <code>sqrt(d_model)</code>.</li>
+<li><code>num_heads = 1</code> is plain scaled dot-product attention.</li>
+<li>Stable softmax (subtract the row max).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Use reshape/transpose and batched matmul; no loop over heads is needed.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Add learned <code>W_Q, W_K, W_V, W_O</code>. How many parameters does the layer have? (Answer: <code>4 · d_model^2</code>, independent of <code>num_heads</code>.)</li>
+<li>Why does <code>reshape(seq_len, d_model)</code> directly on the <code>(H, seq_len, d_k)</code> array give the wrong answer?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q = K = np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), V = np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), num_heads = 2
+Output: [[2.321, 3.321, 4.321, 5.321], [3.679, 4.679, 5.679, 6.679]]</pre><p>Each head sees a 2-dim slice; in both heads token i matches itself best, so the weights are [[0.6698, 0.3302], [0.3302, 0.6698]].</p></div><div><pre class="overflow-auto">Input: Q (4, 64), K (4, 64), V (4, 64), num_heads = 8
+Output: output shape (4, 64)</pre><p>8 heads of width d_k = 8, concatenated back to 64.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def multi_head_attention(Q, K, V, num_heads):
     &quot;&quot;&quot;
-    Multi-head attention mechanism.
+    Multi-head attention on already-projected Q, K, V (no learned weights).
 
     Args:
         Q: Queries (seq_len, d_model)
         K: Keys (seq_len, d_model)
         V: Values (seq_len, d_model)
-        num_heads: Number of attention heads
+        num_heads: Number of attention heads (divides d_model)
 
     Returns:
-        output: Multi-head attention output (seq_len, d_model)
+        output: (seq_len, d_model), head h in columns h*d_k:(h+1)*d_k
     &quot;&quot;&quot;
     seq_len, d_model = Q.shape
     assert d_model % num_heads == 0
@@ -134,7 +152,7 @@ def multi_head_attention(Q, K, V, num_heads):
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Binary Cross-Entropy Loss - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Binary Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/binary-cross-entropy" data-rh="true" />
@@ -100,36 +100,56 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Binary Cross-Entropy Loss - Supervised Learning","description":"Implement Binary Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/binary-cross-entropy","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Binary Cross-Entropy Loss - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Binary Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Binary Cross-Entropy Loss</h2>
-<p>Implement the binary cross-entropy (log loss) function.</p>
+<p>Implement the mean <strong>binary cross-entropy</strong> (log loss) between 0/1 labels and predicted probabilities.</p>
+<h3>Background</h3>
+<p>BCE is the negative log-likelihood of Bernoulli labels, so minimising it is maximum-likelihood training of a binary classifier (logistic regression, the output head of a binary neural net). It punishes confident mistakes hard: predicting 0.01 for a true positive costs <code>-log(0.01) ≈ 4.6</code>, while 0.9 costs only 0.105.</p>
 <h3>Formula</h3>
-<pre><code>BCE = -1/m * sum(y * log(p) + (1-y) * log(1-p))
+<pre><code class="language-text">p_i   = clip(y_pred_i, eps, 1 - eps),   eps = 1e-15
+BCE   = -(1/m) * sum_i [ y_i * log(p_i) + (1 - y_i) * log(1 - p_i) ]
 </code></pre>
-<p>Where:</p>
 <ul>
-<li>y: True labels (0 or 1)</li>
-<li>p: Predicted probabilities</li>
-<li>m: Number of samples</li>
+<li><code>y_i</code> in {0, 1}: the true label of sample <code>i</code></li>
+<li><code>y_pred_i</code> in [0, 1]: the predicted probability that <code>y_i = 1</code></li>
+<li><code>m</code>: the number of samples</li>
 </ul>
-<h3>Numerical Stability</h3>
-<p>Clip predictions to avoid log(0):</p>
-<pre><code class="language-python">p = np.clip(p, 1e-15, 1 - 1e-15)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y = [1, 0, 1], p = [0.9, 0.1, 0.8]
-Output: 0.1446</pre><p>Low loss for confident correct predictions</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>y_true</code>: array of shape <code>(m,)</code> with 0/1 labels (ints or floats)</li>
+<li><code>y_pred</code>: array of shape <code>(m,)</code> with probabilities in <code>[0, 1]</code></li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A Python float: the mean loss <strong>rounded to 4 decimals</strong>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li><strong>Clip first</strong>: <code>log(0)</code> is <code>-inf</code>, so clip <code>y_pred</code> to <code>[1e-15, 1 - 1e-15]</code> before taking logs. With clipping, perfect predictions give a loss that rounds to <code>0.0</code>, and a prediction of exactly the wrong value costs about <code>34.54</code> instead of <code>inf</code>.</li>
+<li>Average over samples (mean, not sum).</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>When you have logits <code>z</code> rather than probabilities, why is <code>max(z, 0) - z*y + log(1 + exp(-|z|))</code> preferred over <code>BCE(y, sigmoid(z))</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: binary_cross_entropy([1, 0, 1], [0.9, 0.1, 0.8])
+Output: 0.1446</pre><p>Per-sample losses are -log(0.9), -log(0.9), -log(0.8) = 0.1054, 0.1054, 0.2231; their mean is 0.1446.</p></div><div><pre class="overflow-auto">Input: binary_cross_entropy([1, 0], [0.5, 0.5])
+Output: 0.6931</pre><p>An uninformative 0.5 prediction costs log(2) per sample.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def binary_cross_entropy(y_true, y_pred):
     &quot;&quot;&quot;
-    Compute binary cross-entropy loss.
+    Compute the mean binary cross-entropy loss.
 
     Args:
-        y_true: True labels (0 or 1)
-        y_pred: Predicted probabilities
+        y_true: True labels (0 or 1), shape (m,)
+        y_pred: Predicted probabilities in [0, 1], shape (m,)
 
     Returns:
-        loss: Scalar BCE loss
+        loss: Mean BCE as a Python float, rounded to 4 decimals
+              (clip y_pred to [1e-15, 1 - 1e-15] before the logs)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

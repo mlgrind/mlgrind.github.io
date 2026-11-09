@@ -114,16 +114,16 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 06: Supervised Learning
 
 **URL**: /section/supervised-learning
-**Summary**: Implement core supervised learning algorithms from scratch.
+**Summary**: Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.
 **Problems** (12):
 
-1. **Sigmoid Function** (`/problem/supervised-learning/logistic-regression`) — easy
+1. **Sigmoid for Logistic Regression** (`/problem/supervised-learning/logistic-regression`) — easy
 2. **Binary Cross-Entropy Loss** (`/problem/supervised-learning/binary-cross-entropy`) — easy
 3. **Hinge Loss** (`/problem/supervised-learning/hinge-loss`) — easy
-4. **Gini Impurity** (`/problem/supervised-learning/decision-tree-split`) — medium
+4. **Gini Impurity for Decision-Tree Splits** (`/problem/supervised-learning/decision-tree-split`) — medium
 5. **Linear Regression with Gradient Descent** (`/problem/supervised-learning/linear-regression-gd`) — medium
 6. **Logistic Regression with Gradient Descent** (`/problem/supervised-learning/logistic-regression-full`) — medium
-7. **Linear SVM with Gradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
+7. **Linear SVM with Subgradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
 8. **k-Nearest Neighbours Classifier** (`/problem/supervised-learning/knn-classifier`) — medium
 9. **Gaussian Naive Bayes** (`/problem/supervised-learning/naive-bayes`) — medium
 10. **Ridge & Lasso Regression** (`/problem/supervised-learning/ridge-lasso`) — hard
@@ -234,7 +234,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 14: Transformer Architecture
 
 **URL**: /section/transformers
-**Summary**: Master attention, positional encoding, and modern LLM architecture.
+**Summary**: Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.
 **Problems** (11):
 
 1. **Scaled Dot-Product Attention** (`/problem/transformers/scaled-dot-product-attention`) — medium
@@ -254,7 +254,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 15: LLM Generation & Decoding
 
 **URL**: /section/llm-generation
-**Summary**: Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.
+**Summary**: Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.
 **Problems** (7):
 
 1. **Temperature Scaling** (`/problem/llm-generation/llm-temperature-scaling`) — easy
@@ -270,7 +270,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 16: LLM Internals
 
 **URL**: /section/llm-internals
-**Summary**: SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.
+**Summary**: How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention's online softmax, mixture-of-experts routing and perplexity.
 **Problems** (4):
 
 1. **SwiGLU Feed-Forward Block (LLaMA MLP)** (`/problem/llm-internals/rmsnorm-swiglu`) — medium
@@ -283,7 +283,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 17: Representation Learning & Retrieval
 
 **URL**: /section/representation-learning
-**Summary**: Contrastive learning, embedding search and retrieval for RAG.
+**Summary**: Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.
 **Problems** (3):
 
 1. **CLIP Contrastive Loss (InfoNCE)** (`/problem/representation-learning/infonce-loss`) — medium
@@ -295,7 +295,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 18: Generative Models
 
 **URL**: /section/generative-models
-**Summary**: Learn VAEs, diffusion models, and generative AI fundamentals.
+**Summary**: Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.
 **Problems** (9):
 
 1. **KL Divergence (Gaussians)** (`/problem/generative-models/kl-divergence`) — easy
@@ -348,7 +348,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 21: End-to-End Implementations
 
 **URL**: /section/e2e-implementations
-**Summary**: Build complete ML models from scratch.
+**Summary**: Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.
 **Problems** (9):
 
 1. **E2E: 2-Layer MLP with Backprop** (`/problem/e2e-implementations/e2e-mlp`) — hard

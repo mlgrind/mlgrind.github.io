@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Beam Search Decoding - LLM Generation &amp; Decoding | ML Grind</title>
 <meta name="description" content="Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-beam-search" data-rh="true" />
@@ -100,55 +100,70 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Beam Search Decoding - LLM Generation & Decoding","description":"Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-beam-search","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Beam Search Decoding - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Beam Search Decoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Beam Search Decoding</h2>
-<p>Implement beam search, which maintains multiple candidate sequences to find higher-probability outputs.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Beam search over a table of per-step log-probabilities: keep the <code>beam_width</code> best partial sequences at every step, with optional end-of-sequence handling, and return the best sequence and its score.</p>
+<h3>Background</h3>
+<p>Greedy decoding commits to the single best token at each step and can miss a sequence whose first token looked worse. Beam search keeps several hypotheses alive. It is used where there is one &quot;right&quot; output (translation, speech recognition, constrained or structured generation); open-ended chat uses sampling instead, because beam search tends to produce bland, repetitive text.</p>
+<p>In a real model, the next-token distribution depends on the prefix. To keep this problem self-contained, <code>log_probs[t]</code> is the <strong>same for every beam</strong> at step <code>t</code>. Without EOS that makes greedy already optimal, so the interesting case is EOS: a beam that ends early stops paying log-probability costs.</p>
 <h3>Algorithm</h3>
+<p>Scores are sums of log-probabilities (never multiply raw probabilities: they underflow).</p>
 <ol>
-<li>Start with <code>beam_width</code> copies of the initial sequence</li>
-<li>At each step, for each beam:
+<li>Start with one empty beam: <code>[([], 0.0)]</code>.</li>
+<li>For each step <code>t</code> in <code>0 .. min(max_length, num_steps) - 1</code>:
 <ul>
-<li>Get log-probabilities for next token</li>
-<li>Consider top-k expansions</li>
+<li>For each beam, in order: if it <strong>ends with <code>eos_token</code></strong>, carry it to the candidate list unchanged; otherwise add one candidate per token <code>v = 0 .. vocab_size - 1</code>: <code>(seq + [v], score + log_probs[t, v])</code>.</li>
+<li>Sort all candidates by score, descending, with a <strong>stable</strong> sort (ties keep candidate order: earlier beam first, then lower token id), and keep the first <code>beam_width</code>.</li>
 </ul>
 </li>
-<li>Keep only the <code>beam_width</code> sequences with highest total log-probability</li>
-<li>Stop when all beams have generated the EOS token or hit max length</li>
+<li>Return the first (best) beam.</li>
 </ol>
-<h3>Scoring</h3>
-<p>Use <strong>log probabilities</strong> (not raw probabilities) to avoid underflow:</p>
-<pre><code>score(sequence) = sum of log P(token_i | tokens_&lt;i)
-</code></pre>
-<h3>Length Normalization</h3>
-<p>Beam search favors shorter sequences. Normalize by length:</p>
-<pre><code>normalized_score = score / length^alpha
-</code></pre>
-<p>where alpha is typically 0.6-0.7.</p>
-<h3>Simplified Version</h3>
-<p>For this problem, implement a simplified beam search using a pre-computed log-probability matrix (no actual model). At each step, expand each beam with all possible next tokens, score them, and keep the top <code>beam_width</code>.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def beam_search(log_probs, beam_width, max_length, eos_token=None):
-    # log_probs: (max_length, vocab_size) - pre-computed log probs per step
-    # Returns: best_sequence, best_score
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: log_probs (3 steps, 4 tokens), beam_width=2
-Output: best sequence of length 3 with highest total log-prob</pre><p>Explores 2 paths at each step, returns the best one</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>log_probs</code>: float array <code>(num_steps, vocab_size)</code> of log-probabilities</li>
+<li><code>beam_width</code>: int &gt;= 1</li>
+<li><code>max_length</code>: int or None (None means <code>num_steps</code>)</li>
+<li><code>eos_token</code>: int or None (None disables EOS handling)</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(best_sequence, best_score)</code>:</p>
+<ul>
+<li><code>best_sequence</code>: list of Python ints</li>
+<li><code>best_score</code>: total log-probability of that sequence, <strong>rounded to 4 decimals</strong></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Finished (EOS) beams compete with unfinished ones on their raw score: <strong>no length normalization</strong> here (see the follow-up).</li>
+<li><code>beam_width = 1</code> is greedy decoding.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy and plain Python lists.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Raw log-probability scores favour short sequences. Add length normalization <code>score / len(seq)^alpha</code> (<code>alpha</code> about 0.6 to 0.7, Wu et al., 2016). Where in the algorithm must it be applied?</li>
+<li>Complexity per step is <code>O(B · V)</code> candidates; how do real implementations avoid sorting all of them (top-k per beam first)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: beam_search(np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), beam_width=1)
+Output: ([0, 1, 2], -1.3783)</pre><p>Greedy: log(0.6) + log(0.7) + log(0.6) = -1.3783.</p></div><div><pre class="overflow-auto">Input: beam_search(np.log(np.array([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), beam_width=2, eos_token=1)
+Output: ([1], -0.7985)</pre><p>The beam [1] ends at once with log(0.45). Greedy (beam_width=1) drops it and ends with [0, 2, 2] at -2.5257.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
     &quot;&quot;&quot;
     Beam search decoding over pre-computed log probabilities.
 
     Args:
-        log_probs: Log probability matrix (num_steps, vocab_size).
-                   log_probs[t] gives log probs for step t.
-        beam_width: Number of beams to maintain
+        log_probs: Log probability matrix (num_steps, vocab_size);
+                   log_probs[t] gives the log probs for step t
+        beam_width: Number of beams to keep
         max_length: Maximum sequence length (defaults to num_steps)
-        eos_token: End-of-sequence token ID (optional)
+        eos_token: End-of-sequence token id (optional); a beam ending with it
+                   is carried forward unchanged
 
     Returns:
-        best_sequence: List of token indices for the best beam
-        best_score: Total log-probability of the best sequence
+        best_sequence: List of token ids (ints) for the best beam
+        best_score: Its total log-probability, rounded to 4 decimals
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Rotary Positional Embeddings (RoPE) - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Rotary Positional Embeddings (RoPE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/rope-embeddings" data-rh="true" />
@@ -100,46 +100,56 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Rotary Positional Embeddings (RoPE) - Transformer Architecture","description":"Implement Rotary Positional Embeddings (RoPE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/rope-embeddings","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Rotary Positional Embeddings (RoPE) - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Rotary Positional Embeddings (RoPE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Rotary Positional Embeddings (RoPE)</h2>
-<p>Implement RoPE, the positional encoding used by LLaMA, Mistral, GPT-NeoX, and most modern LLMs.</p>
-<h3>How It Works</h3>
-<p>Instead of <em>adding</em> position information to embeddings (like sinusoidal encoding), RoPE <em>rotates</em> pairs of dimensions in Q and K by position-dependent angles.</p>
-<h3>Formulas</h3>
-<p>For position <code>pos</code> and dimension pair <code>(2i, 2i+1)</code>:</p>
-<pre><code>θ_i = 1 / (10000^(2i / d_model))
+<h3>What you&#x27;ll build</h3>
+<p>Apply RoPE to queries and keys: rotate each pair of dimensions by an angle proportional to the token&#x27;s position. LLaMA, Mistral, Qwen, GPT-NeoX and most modern LLMs use it.</p>
+<h3>Background</h3>
+<p>Sinusoidal encodings are <strong>added</strong> to the embeddings once, at the input. RoPE instead <strong>rotates</strong> <code>q</code> and <code>k</code> inside every attention layer. Rotating <code>q</code> at position <code>m</code> by <code>m·θ</code> and <code>k</code> at position <code>n</code> by <code>n·θ</code> makes their dot product depend only on the angle difference <code>(m - n)·θ</code>, so attention scores see <strong>relative</strong> positions, with no learned parameters and no change to the vectors&#x27; norms. Values <code>V</code> are not rotated.</p>
+<h3>Formula</h3>
+<p>For position <code>pos</code> (row index, starting at 0), <code>d = d_model</code> and pair index <code>i = 0 .. d/2 - 1</code>:</p>
+<pre><code class="language-text">theta_i = 1 / 10000^(2i / d)
+a       = pos * theta_i
 
-q_rot[2i]   = q[2i] · cos(pos · θ_i) - q[2i+1] · sin(pos · θ_i)
-q_rot[2i+1] = q[2i] · sin(pos · θ_i) + q[2i+1] · cos(pos · θ_i)
+x_rot[2i]     = x[2i] * cos(a) - x[2i+1] * sin(a)
+x_rot[2i + 1] = x[2i] * sin(a) + x[2i+1] * cos(a)
 </code></pre>
-<p>Apply the same rotation to both Q and K.</p>
-<h3>Key Properties</h3>
+<p>This is the 2-D rotation <code>[[cos a, -sin a], [sin a, cos a]]</code> applied to the pair <code>(x[2i], x[2i+1])</code>. Apply it to every row of <code>Q</code> and of <code>K</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li><strong>Relative position awareness</strong>: The dot product between rotated Q and K depends only on the relative position difference</li>
-<li><strong>Norm preservation</strong>: Rotation does not change vector magnitudes</li>
-<li><strong>No learned parameters</strong>: Computed directly from position indices</li>
+<li><code>Q</code>: float array <code>(seq_len, d_model)</code>, <code>d_model</code> even</li>
+<li><code>K</code>: float array <code>(seq_len, d_model)</code></li>
 </ul>
-<h3>Why RoPE Over Sinusoidal?</h3>
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(Q_rot, K_rot)</code>, each with the shape of its input.</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>Encodes <em>relative</em> positions naturally (sinusoidal is absolute)</li>
-<li>Better extrapolation to longer sequences</li>
-<li>Applied directly in attention computation (not added to embeddings)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q, K both (4, 8) - 4 tokens, 8 dims
-Output: Q_rot (4, 8), K_rot (4, 8)</pre><p>Each pair of dimensions is rotated by a position-dependent angle</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><strong>Interleaved pairs</strong> <code>(0,1), (2,3), ...</code> as in the RoFormer paper. Hugging Face LLaMA code pairs dimension <code>i</code> with <code>i + d/2</code> (&quot;rotate_half&quot;); it is the same idea with permuted dimensions, but it gives different numbers, so use the interleaved layout here.</li>
+<li>Position 0 is unchanged (angle 0). Don&#x27;t modify the inputs in place.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised over positions and pairs (strided slicing <code>x[:, 0::2]</code>, <code>x[:, 1::2]</code>).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Prove <code>&lt;R(m) q, R(n) k&gt; = &lt;q, R(n - m) k&gt;</code>.</li>
+<li>Context extension (NTK scaling, YaRN) changes the base 10000. Which pairs are affected most, and why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: apply_rope(np.array([[1.0, 0.0, 1.0, 0.0]] * 3), K)[0]
+Output: [[1.0, 0.0, 1.0, 0.0], [0.5403, 0.8415, 1.0, 0.01], [-0.4161, 0.9093, 0.9998, 0.02]]</pre><p>theta = [1, 0.01]: pair 0 rotates by pos radians, pair 1 by pos / 100 radians.</p></div><div><pre class="overflow-auto">Input: apply_rope(np.ones((2, 2)), np.ones((2, 2)))[0]
+Output: [[1.0, 1.0], [-0.3012, 1.3818]]</pre><p>Row 1: (cos 1 - sin 1, sin 1 + cos 1); the norm stays sqrt(2).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def apply_rope(Q, K):
     &quot;&quot;&quot;
-    Apply Rotary Positional Embeddings to Q and K.
+    Apply Rotary Positional Embeddings to Q and K (interleaved pairs).
 
     Args:
-        Q: Queries (seq_len, d_model) where d_model is even
+        Q: Queries (seq_len, d_model), d_model even
         K: Keys (seq_len, d_model)
 
     Returns:
-        Q_rot: Rotated queries (seq_len, d_model)
-        K_rot: Rotated keys (seq_len, d_model)
+        (Q_rot, K_rot): pair (2i, 2i+1) of row pos rotated by pos * theta_i,
+                        theta_i = 1 / 10000^(2i / d_model)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

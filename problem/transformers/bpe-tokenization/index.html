@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>BPE Tokenization - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement BPE Tokenization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/bpe-tokenization" data-rh="true" />
@@ -99,50 +99,57 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"BPE Tokenization - Transformer Architecture","description":"Implement BPE Tokenization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/bpe-tokenization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">BPE Tokenization - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement BPE Tokenization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Byte-Pair Encoding (BPE) Tokenization</h2>
-<p>Implement the training step of BPE, the tokenization algorithm used by GPT, LLaMA, and most modern LLMs.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">BPE Tokenization - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement BPE Tokenization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Byte-Pair Encoding (BPE) Training</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The training loop of BPE: starting from characters, repeatedly merge the most frequent adjacent pair of tokens and record the merge rules in order.</p>
+<h3>Background</h3>
+<p>Tokenization is the first step of every LLM pipeline (<code>text -&gt; token ids -&gt; embeddings</code>). Word-level vocabularies can&#x27;t handle unseen words; character-level sequences are long and slow. BPE (Sennrich et al., 2016; byte-level in GPT-2, LLaMA and most LLMs) sits in between: frequent words become single tokens and rare words split into known subwords, so there is never an unknown token. The ordered merge list <strong>is</strong> the tokenizer: to encode new text you apply the merges in the same order.</p>
 <h3>Algorithm</h3>
 <ol>
-<li>Start with words split into individual character tokens</li>
-<li>Count frequency of all adjacent token pairs across the corpus</li>
-<li>Merge the most frequent pair into a new token</li>
-<li>Repeat for <code>num_merges</code> iterations</li>
+<li>Split every word into its tokens (initially characters, plus the end-of-word marker <code>&lt;/w&gt;</code>).</li>
+<li>Count every <strong>adjacent</strong> pair of tokens across the corpus, <strong>weighted by the word&#x27;s frequency</strong>.</li>
+<li>Pick the most frequent pair <code>(a, b)</code> and append it to <code>merges</code>.</li>
+<li>Replace every occurrence of <code>a b</code> with the single token <code>ab</code> in every word, scanning <strong>left to right</strong> (so <code>a a a</code> with the pair <code>(a, a)</code> becomes <code>aa a</code>).</li>
+<li>Repeat <code>num_merges</code> times, or stop early when no word has two or more tokens left.</li>
 </ol>
-<h3>Input Format</h3>
+<h3>Inputs</h3>
 <ul>
-<li><code>word_freqs</code>: Dict mapping space-separated token sequences to frequency
-<ul>
-<li>e.g., <code>{&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5}</code></li>
-<li><code>&lt;/w&gt;</code> marks end-of-word</li>
+<li><code>word_freqs</code>: dict mapping a space-separated token sequence to its count, e.g. <code>{&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5}</code></li>
+<li><code>num_merges</code>: int &gt;= 0, the maximum number of merges</li>
 </ul>
-</li>
-</ul>
-<h3>Return Format</h3>
-<p>Return a list of merge pair tuples, in the order they were applied.</p>
-<h3>Why BPE?</h3>
+<h3>Expected Return Format</h3>
+<p>A list of <code>(token_a, token_b)</code> tuples of strings, in the order they were merged. Its length is <code>num_merges</code>, or less if the corpus ran out of pairs.</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>Handles any input text (no unknown tokens)</li>
-<li>Balances character-level and word-level tokenization</li>
-<li>Common subwords become single tokens, rare words split into subwords</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: word_freqs = {&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5, &quot;b u g &lt;/w&gt;&quot;: 2}, num_merges=3
-Output: [(&#x27;u&#x27;, &#x27;g&#x27;), (&#x27;ug&#x27;, &#x27;&lt;/w&gt;&#x27;), (&#x27;h&#x27;, &#x27;ug&lt;/w&gt;&#x27;)]</pre><p>&quot;ug&quot; is the most frequent pair (freq 17), merged first</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
-from collections import Counter
+<li><strong>Ties:</strong> when several pairs share the top count, pick the one <strong>seen first</strong> when you scan the words in dict order and each word left to right. <code>max(counter, key=counter.get)</code> on a <code>collections.Counter</code> filled in that order does exactly this. (In the example, <code>(&#x27;u&#x27;, &#x27;g&#x27;)</code> and <code>(&#x27;g&#x27;, &#x27;&lt;/w&gt;&#x27;)</code> are both 17; <code>(&#x27;u&#x27;, &#x27;g&#x27;)</code> appears first.)</li>
+<li>Recount the pairs after every merge: merges change which pairs exist.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Plain Python (<code>collections.Counter</code> is fine); no tokenizer libraries.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Write <code>encode(word, merges)</code>: apply the merges in order. Why must encoding use the training order rather than &quot;longest token first&quot; (see <strong>Greedy Longest-Match Tokenizer</strong>)?</li>
+<li>Byte-level BPE starts from 256 bytes instead of characters. What problem does that solve?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: bpe_train({&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5, &quot;b u g &lt;/w&gt;&quot;: 2}, 3)
+Output: [(&#x27;u&#x27;, &#x27;g&#x27;), (&#x27;ug&#x27;, &#x27;&lt;/w&gt;&#x27;), (&#x27;h&#x27;, &#x27;ug&lt;/w&gt;&#x27;)]</pre><p>(&#x27;u&#x27;,&#x27;g&#x27;) and (&#x27;g&#x27;,&#x27;&lt;/w&gt;&#x27;) tie at 17 and (&#x27;u&#x27;,&#x27;g&#x27;) is seen first; then &#x27;ug &lt;/w&gt;&#x27; (17), then &#x27;h ug&lt;/w&gt;&#x27; (10).</p></div><div><pre class="overflow-auto">Input: bpe_train({&quot;a b &lt;/w&gt;&quot;: 1, &quot;c d &lt;/w&gt;&quot;: 1}, 5)
+Output: [(&#x27;a&#x27;, &#x27;b&#x27;), (&#x27;ab&#x27;, &#x27;&lt;/w&gt;&#x27;), (&#x27;c&#x27;, &#x27;d&#x27;), (&#x27;cd&#x27;, &#x27;&lt;/w&gt;&#x27;)]</pre><p>Every word is a single token after 4 merges, so training stops early.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">from collections import Counter
 
 def bpe_train(word_freqs, num_merges):
     &quot;&quot;&quot;
-    Train BPE tokenizer by learning merge rules.
+    Train a BPE tokenizer by learning merge rules.
 
     Args:
-        word_freqs: Dict mapping space-separated token sequences to frequency
-                    e.g., {&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5}
-        num_merges: Number of merge operations to perform
+        word_freqs: Dict mapping space-separated token sequences to frequency,
+                    e.g. {&quot;h u g &lt;/w&gt;&quot;: 10, &quot;p u g &lt;/w&gt;&quot;: 5}
+        num_merges: Maximum number of merge operations
 
     Returns:
-        merges: List of (token_a, token_b) tuples merged, in order
+        merges: List of (token_a, token_b) tuples, in the order merged
+                (ties: the pair seen first, scanning words in dict order)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Sinusoidal Positional Encoding - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Sinusoidal Positional Encoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/positional-encoding" data-rh="true" />
@@ -100,39 +100,55 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Sinusoidal Positional Encoding - Transformer Architecture","description":"Implement Sinusoidal Positional Encoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/positional-encoding","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Sinusoidal Positional Encoding - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Sinusoidal Positional Encoding in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Sinusoidal Positional Encoding</h2>
-<p>Implement the positional encoding from the original Transformer paper.</p>
-<h3>Formulas</h3>
-<pre><code>PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
-PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+<h3>What you&#x27;ll build</h3>
+<p>The fixed position table from &quot;Attention Is All You Need&quot;: one <code>d_model</code>-dimensional vector per position, made of sines and cosines at geometrically spaced frequencies. It is added to the token embeddings.</p>
+<h3>Background</h3>
+<p>Attention is permutation-invariant: shuffle the tokens and each output is shuffled the same way. Without position information, &quot;dog bites man&quot; and &quot;man bites dog&quot; look identical. The sinusoidal table gives every position a unique pattern, and because <code>sin</code>/<code>cos</code> at a fixed frequency rotate as the position advances, <code>PE[pos + k]</code> is a linear function of <code>PE[pos]</code> for every offset <code>k</code>. Modern LLMs mostly use <strong>RoPE</strong> (later in this section) instead, which applies the same frequencies as rotations inside attention.</p>
+<h3>Formula</h3>
+<p>For position <code>pos</code> and pair index <code>i = 0, 1, ..., d_model/2 - 1</code>:</p>
+<pre><code class="language-text">omega_i         = 1 / 10000^(2i / d_model)
+PE[pos, 2i]     = sin(pos * omega_i)
+PE[pos, 2i + 1] = cos(pos * omega_i)
 </code></pre>
-<p>Where:</p>
+<p>Column pair <code>(2i, 2i+1)</code> shares the frequency <code>omega_i</code>; frequencies go from 1 (fast) down to about <code>1/10000</code> (slow).</p>
+<h3>Inputs</h3>
 <ul>
-<li>pos: Position in sequence</li>
-<li>i: Dimension index</li>
-<li>d_model: Model dimension</li>
+<li><code>max_len</code>: int, number of positions (rows), positions are <code>0 .. max_len - 1</code></li>
+<li><code>d_model</code>: even int, embedding width</li>
 </ul>
-<h3>Purpose</h3>
+<h3>Expected Return Format</h3>
+<p><code>PE</code>: float array <code>(max_len, d_model)</code>, values in <code>[-1, 1]</code>.</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>Injects position information into embeddings</li>
-<li>Allows model to learn relative positions</li>
-<li>Fixed (not learned) encodings</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: max_len=100, d_model=512
-Output: PE matrix (100, 512)</pre><p>Position encoding for 100 positions</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>Even columns are sines, odd columns are cosines (interleaved, not first half / second half).</li>
+<li>Row 0 is <code>[0, 1, 0, 1, ...]</code> because <code>sin(0) = 0</code> and <code>cos(0) = 1</code>.</li>
+<li>Computing <code>omega_i</code> as <code>np.exp(-2i * ln(10000) / d_model)</code> is equivalent and avoids huge powers.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (an outer product of positions and frequencies, no Python loops).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does <code>PE[pos + k] = R_k @ PE[pos]</code> for a block-diagonal rotation <code>R_k</code>?</li>
+<li>Learned position embeddings (GPT-2, used in <strong>Mini GPT</strong>) vs sinusoidal vs RoPE: which ones extrapolate past the training length?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: positional_encoding(3, 4)
+Output: [[0.0, 1.0, 0.0, 1.0], [0.8415, 0.5403, 0.01, 1.0], [0.9093, -0.4161, 0.02, 0.9998]]</pre><p>Frequencies are 1 and 1/100: columns 0-1 are sin/cos(pos), columns 2-3 are sin/cos(pos / 100).</p></div><div><pre class="overflow-auto">Input: positional_encoding(100, 512).shape
+Output: (100, 512)</pre><p>One row per position.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def positional_encoding(max_len, d_model):
     &quot;&quot;&quot;
     Generate sinusoidal positional encodings.
 
     Args:
-        max_len: Maximum sequence length
-        d_model: Model dimension
+        max_len: Number of positions (rows)
+        d_model: Model dimension (even)
 
     Returns:
-        PE: Positional encoding matrix (max_len, d_model)
+        PE: (max_len, d_model); PE[pos, 2i] = sin(pos * w_i),
+            PE[pos, 2i+1] = cos(pos * w_i), w_i = 1 / 10000^(2i / d_model)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Gaussian Naive Bayes - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Gaussian Naive Bayes in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/naive-bayes" data-rh="true" />
@@ -100,30 +100,32 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gaussian Naive Bayes - Supervised Learning","description":"Implement Gaussian Naive Bayes in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/naive-bayes","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gaussian Naive Bayes - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gaussian Naive Bayes in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gaussian Naive Bayes</h2>
-<p>Naive Bayes applies Bayes&#x27; rule with the &quot;naive&quot; assumption that features are <strong>independent given the class</strong>. In the Gaussian variant each feature follows a normal distribution per class.</p>
-<p>Implement two functions:</p>
-<ul>
-<li><code>gaussian_nb_fit(X, y, var_smoothing=1e-9)</code>: estimate the parameters</li>
-<li><code>gaussian_nb_predict_proba(model, X)</code>: class probabilities for new points</li>
-</ul>
+<p>Implement <code>gaussian_nb_fit</code> and <code>gaussian_nb_predict_proba</code>: fit one Gaussian per class and feature, then turn new points into class probabilities with Bayes&#x27; rule, computed in <strong>log space</strong>.</p>
+<h3>Background</h3>
+<p>Naive Bayes assumes the features are <strong>independent given the class</strong>, so the class-conditional density factorises into one 1D density per feature. The assumption is rarely true, yet the classifier is fast, needs little data and is a classic text and tabular baseline. The interview content is in the numerics: multiplying many small densities underflows, so everything happens in log space with a logsumexp.</p>
 <h3>Fit</h3>
-<p>For each class <code>c</code> (in ascending order, <code>np.unique(y)</code>):</p>
-<pre><code>prior[c]   = n_c / n
+<p>For each class <code>c</code> in ascending order (<code>np.unique(y)</code>), with <code>n_c</code> samples of class <code>c</code> out of <code>n</code>:</p>
+<pre><code class="language-text">prior[c]   = n_c / n
 mean[c, j] = mean of feature j over the samples of class c
 var[c, j]  = variance (ddof=0) of feature j over class c  +  epsilon
-epsilon    = var_smoothing * max_j Var(X[:, j])     # over ALL samples
+epsilon    = var_smoothing * max_j Var(X[:, j])     # computed once, over ALL samples
 </code></pre>
-<p><code>epsilon</code> keeps variances away from zero (a constant feature within a class would otherwise give a division by zero). This is exactly scikit-learn&#x27;s <code>GaussianNB(var_smoothing=...)</code>.</p>
-<h3>Predict (in log space)</h3>
-<p>The joint log-likelihood of sample <code>x</code> and class <code>c</code>:</p>
-<pre><code>jll[c] = log prior[c] - 0.5 * sum_j log(2*pi*var[c, j])
+<p><code>epsilon</code> keeps variances away from zero (a feature that is constant within a class would otherwise divide by zero). These are exactly the conventions of scikit-learn&#x27;s <code>GaussianNB(var_smoothing=1e-9)</code>: <code>priors</code> = <code>class_prior_</code>, <code>means</code> = <code>theta_</code>, <code>vars</code> = <code>var_</code>.</p>
+<h3>Predict</h3>
+<p>The joint log-likelihood of sample <code>x</code> (shape <code>(d,)</code>) and class <code>c</code>:</p>
+<pre><code class="language-text">jll[c] = log prior[c] - 0.5 * sum_j log(2*pi*var[c, j])
                       - 0.5 * sum_j (x_j - mean[c, j])^2 / var[c, j]
 </code></pre>
-<p>Normalize with <strong>logsumexp</strong> to get the posterior:</p>
-<pre><code>log P(c | x) = jll[c] - logsumexp_c&#x27;(jll[c&#x27;])
+<p>Normalise with <strong>logsumexp</strong> to get the posterior:</p>
+<pre><code class="language-text">log P(c | x) = jll[c] - logsumexp_c&#x27;(jll[c&#x27;])
 logsumexp(a) = max(a) + log(sum(exp(a - max(a))))
 </code></pre>
-<p>Never multiply raw densities: with many features (or a point far from every class) they underflow to <code>0</code> and you get <code>0/0 = nan</code>.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: float array <code>(n, d)</code> for fitting, <code>(m, d)</code> for prediction</li>
+<li><code>y</code>: class labels <code>(n,)</code></li>
+<li><code>var_smoothing</code>: float, default <code>1e-9</code></li>
+</ul>
 <h3>Expected Return Format</h3>
 <p><code>gaussian_nb_fit</code> returns a dictionary with these keys:</p>
 <ul>
@@ -132,9 +134,23 @@ logsumexp(a) = max(a) + log(sum(exp(a - max(a))))
 <li><code>&#x27;means&#x27;</code>: per-class feature means, shape <code>(C, d)</code></li>
 <li><code>&#x27;vars&#x27;</code>: per-class feature variances <strong>including</strong> epsilon, shape <code>(C, d)</code></li>
 </ul>
-<p><code>gaussian_nb_predict_proba</code> returns an array of shape <code>(m, C)</code> whose rows sum to 1, with columns in the order of <code>model[&#x27;classes&#x27;]</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]], y = [0, 0, 0, 1, 1, 1]
+<p><code>gaussian_nb_predict_proba</code> returns an array of shape <code>(m, C)</code> whose rows sum to 1, with columns in the order of <code>model[&#x27;classes&#x27;]</code>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Use the population variance (<code>ddof=0</code>), as sklearn does.</li>
+<li>Never multiply raw densities: with many features, or a point far from every class, they underflow to <code>0</code> and you get <code>0/0 = nan</code>. In log space a point at <code>x = -500</code> still gets a clean <code>[1.0, 0.0]</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; no sklearn or scipy. Vectorise prediction over samples and classes with broadcasting.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Where does the &quot;naive&quot; assumption hurt most (duplicated or strongly correlated features)?</li>
+<li>How do multinomial and Bernoulli Naive Bayes differ, and why do they need Laplace smoothing instead of <code>var_smoothing</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1]))
 Output: priors [0.5, 0.5], means [[2.0], [7.0]], vars ≈ [[0.6667], [0.6667]]</pre><p>Each class has 3 points with variance 2/3; epsilon = 1e-9 * Var(X) is negligible here.</p></div><div><pre class="overflow-auto">Input: gaussian_nb_predict_proba(model, np.array([[4.5]]))
-Output: [[0.5, 0.5]]</pre><p>4.5 is equidistant from both means and the classes have equal priors and variances.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: array([[0.5, 0.5]])</pre><p>4.5 is equidistant from both means, and the classes have equal priors and variances.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def gaussian_nb_fit(X, y, var_smoothing=1e-9):
     &quot;&quot;&quot;
@@ -146,7 +162,8 @@ def gaussian_nb_fit(X, y, var_smoothing=1e-9):
         var_smoothing: Fraction of the largest feature variance added to all variances
 
     Returns:
-        dict with &#x27;classes&#x27; (C,), &#x27;priors&#x27; (C,), &#x27;means&#x27; (C, d), &#x27;vars&#x27; (C, d)
+        dict with &#x27;classes&#x27; (C,), &#x27;priors&#x27; (C,), &#x27;means&#x27; (C, d),
+        &#x27;vars&#x27; (C, d) (ddof=0 variances plus epsilon)
     &quot;&quot;&quot;
     # Your code here
     pass
@@ -161,7 +178,8 @@ def gaussian_nb_predict_proba(model, X):
         X: Features, shape (m, d)
 
     Returns:
-        Probabilities, shape (m, C); rows sum to 1
+        Probabilities, shape (m, C), columns in the order of model[&#x27;classes&#x27;];
+        rows sum to 1
     &quot;&quot;&quot;
     # Your code here
     pass

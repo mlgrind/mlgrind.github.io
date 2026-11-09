@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Transformer Bug Hunt: Fix a Broken Mini-GPT - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement Transformer Bug Hunt: Fix a Broken Mini-GPT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/transformer-bug-hunt" data-rh="true" />
@@ -100,11 +100,14 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Transformer Bug Hunt: Fix a Broken Mini-GPT - End-to-End Implementations","description":"Implement Transformer Bug Hunt: Fix a Broken Mini-GPT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/transformer-bug-hunt","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Transformer Bug Hunt: Fix a Broken Mini-GPT - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Transformer Bug Hunt: Fix a Broken Mini-GPT in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Transformer Bug Hunt: Fix a Broken Mini-GPT</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A working <code>gpt_forward</code> by debugging a broken one. Reading and fixing someone else&#x27;s model code is a common interview format, and these four bugs are the classic silent ones: the code runs and the shapes are right, but the numbers are wrong.</p>
+<h3>The setup</h3>
 <p>The starter code is a tiny GPT-style language model: token and position embeddings, one causal self-attention block, one MLP block, a final LayerNorm and an LM head. It runs without errors on short inputs, but its outputs are wrong.</p>
 <p><strong>There are exactly 4 bugs, all inside <code>gpt_forward</code>.</strong> The helpers <code>init_params</code>, <code>layer_norm</code>, <code>softmax</code> and <code>gelu</code> are correct. Find and fix the bugs; you shouldn&#x27;t need to rewrite the model.</p>
 <h3>Reference architecture (what the code should compute)</h3>
 <p>For token ids <code>tokens</code> of length <code>T</code> (positions <code>t = 0 .. T-1</code>), with <code>d = d_model</code>:</p>
-<pre><code>x   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0
+<pre><code class="language-text">x   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0
 
 h   = LN1(x)
 q, k, v = h @ W_q, h @ W_k, h @ W_v
@@ -127,7 +130,14 @@ logits = LN_f(x) @ wte.T                                 # tied LM head
 <h3>How it is tested</h3>
 <p>The tests check properties every correct decoder must have (causality, attention rows summing to 1), compare against an independent reference computation with the attention and MLP outputs switched off, and check exact logits and attention values for fixed <code>init_params</code> weights.</p>
 <h3>Debugging tips</h3>
-<p>Write small experiments in the editor: inspect <code>att</code>, try a single token, zero out <code>W_o</code> or <code>W_2</code>, compare positions.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits, att = gpt_forward([3, 1, 4, 1, 5], init_params())
+<p>Write small experiments in the editor: inspect <code>att</code>, try a single token, zero out <code>W_o</code> or <code>W_2</code>, compare positions.</p>
+<h3>Constraints</h3>
+<p>Edit only <code>gpt_forward</code>; keep the signature and the <code>(logits, att)</code> return.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Which of these bugs would still let training loss go down? (Most of them: that is why they are dangerous.)</li>
+<li>What unit tests would have caught each bug before training?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits, att = gpt_forward([3, 1, 4, 1, 5], init_params())
 Output: logits.shape == (5, 11), att.shape == (5, 5)</pre><p>In the fixed model every row of att sums to 1 and att is lower-triangular.</p></div><div><pre class="overflow-auto">Input: gpt_forward([6], init_params(seed=3))[1]
 Output: array([[1.]])</pre><p>A single token can only attend to itself.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 

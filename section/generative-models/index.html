@@ -78,70 +78,84 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Generative Models | ML Grind</title>
-<meta name="description" content="Learn VAEs, diffusion models, and generative AI fundamentals." data-rh="true" />
+<meta name="description" content="Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/generative-models" data-rh="true" />
 <meta property="og:title" content="Generative Models | ML Grind" data-rh="true" />
-<meta property="og:description" content="Learn VAEs, diffusion models, and generative AI fundamentals." data-rh="true" />
+<meta property="og:description" content="Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/generative-models" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Generative Models | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Learn VAEs, diffusion models, and generative AI fundamentals." data-rh="true" />
+<meta name="twitter:description" content="Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Generative Models","description":"Learn VAEs, diffusion models, and generative AI fundamentals.","url":"https://mlgrind.github.io/section/generative-models","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Generative Models","description":"Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.","url":"https://mlgrind.github.io/section/generative-models","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Learn VAEs, diffusion models, and generative AI fundamentals.</p><div class="prose dark:prose-invert max-w-none"><h2>Generative Models</h2>
-<p>Generative models learn to create new data similar to the training distribution.</p>
-<h2>Key Concepts</h2>
-<h3>Variational Autoencoders (VAEs)</h3>
-<ul>
-<li><strong>Encoder</strong>: Maps input to latent distribution (μ, σ)</li>
-<li><strong>Decoder</strong>: Reconstructs input from latent sample</li>
-<li><strong>Reparameterization trick</strong>: Enable backprop through sampling</li>
-<li><strong>Loss</strong>: Reconstruction + KL divergence</li>
-</ul>
-<h3>VAE Loss (ELBO)</h3>
-<pre><code>L = Reconstruction Loss + KL Divergence
-L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.</p><div class="prose dark:prose-invert max-w-none"><h2>Generative Models</h2>
+<h2>Why it matters</h2>
+<p>Image, audio and video generators (Stable Diffusion, Flux, Sora-style video models) are diffusion or flow-matching models; image and audio tokenizers are VQ-VAEs; and the VAE&#x27;s KL regulariser reappears in RLHF and representation learning. Interviews for generative-AI roles ask you to derive these losses, explain the tricks that make them trainable, and write a sampling step without notes.</p>
+<h2>Core ideas</h2>
+<h3>KL divergence</h3>
+<p><code>KL(P || Q)</code> measures the extra nats paid for using Q in place of P. It is ≥ 0, zero only when P = Q, and <strong>not symmetric</strong>. For Gaussians it has a closed form:</p>
+<pre><code class="language-text">KL(N(μ_p, σ_p²) || N(μ_q, σ_q²)) = log(σ_q/σ_p) + (σ_p² + (μ_p − μ_q)²) / (2σ_q²) − 1/2
 </code></pre>
-<h3>Diffusion Models</h3>
-<ul>
-<li><strong>Forward process</strong>: Gradually add noise to data</li>
-<li><strong>Reverse process</strong>: Learn to denoise</li>
-<li><strong>Noise schedule</strong>: β_t controls noise at each step</li>
-</ul>
-<h3>Key Formulas</h3>
-<pre><code>x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
+<h3>Variational autoencoders</h3>
+<p>An encoder maps <code>x</code> of shape <code>(batch, features)</code> to <code>mu, log_var</code> of shape <code>(batch, latent_dim)</code>; a decoder maps a sample <code>z</code> back to <code>x</code>. Training minimises the negative ELBO:</p>
+<pre><code class="language-text">z        = mu + exp(0.5·log_var) ⊙ ε,   ε ~ N(0, I)           # reparameterization trick
+KL_i     = −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij))
+loss     = mean((x − x_recon)²) + mean_i KL_i                  # KL: sum over latent dims, mean over batch
 </code></pre>
-<h3>KL Divergence</h3>
+<p>The reparameterization trick moves the randomness into ε, so gradients flow to <code>mu</code> and <code>log_var</code>. <strong>VQ-VAEs</strong> swap the Gaussian latent for the nearest of K codebook vectors, trained with a codebook loss and a β-weighted commitment loss.</p>
+<h3>Diffusion (DDPM)</h3>
+<p>Fix a schedule <code>β_0 … β_{T−1}</code>, with <code>α_t = 1 − β_t</code> and <code>ᾱ_t = Π_{s≤t} α_s</code> (0-indexed throughout this section).</p>
+<table><thead><tr><th>Piece</th><th>Formula</th></tr></thead><tbody><tr><td>Forward (closed form)</td><td><code>x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε</code></td></tr><tr><td>Training loss</td><td><code>mean((ε_θ(x_t, t) − ε)²)</code></td></tr><tr><td>Reverse step</td><td><code>x_{t−1} = (x_t − β_t/sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t) + sqrt(β_t)·z</code> (no z at t = 0)</td></tr><tr><td>Classifier-free guidance</td><td><code>ε = ε_u + w·(ε_c − ε_u)</code>; w = 1 is no guidance, w &gt; 1 trades diversity for prompt fidelity</td></tr></tbody></table>
+<h3>Flow matching</h3>
+<p>Regress a velocity field onto straight paths <code>x_t = (1 − t)·x0 + t·x1</code> (t = 0 noise, t = 1 data) with the constant target <code>x1 − x0</code>, then sample by integrating <code>dx/dt = v(x, t)</code> with a few Euler steps.</p>
+<h2>Worked micro-example</h2>
 <ul>
-<li>Measures difference between distributions</li>
-<li>KL(P || Q) ≥ 0, equals 0 iff P = Q</li>
-<li>Not symmetric</li>
+<li><strong>VAE KL</strong> for one latent dim with <code>mu = 1</code>, <code>log_var = log 0.25</code> (σ = 0.5): <code>−0.5·(1 + log 0.25 − 1 − 0.25) = 0.8181</code>, the same as the Gaussian formula for <code>KL(N(1, 0.5²) || N(0, 1))</code>.</li>
+<li><strong>Forward diffusion</strong> with <code>β = [0.1, 0.2, 0.3]</code>: <code>ᾱ = [0.9, 0.72, 0.504]</code>. For <code>x_0 = 1.0</code>, <code>t = 2</code>, <code>ε = 0.5</code>: <code>x_2 = sqrt(0.504)·1 + sqrt(0.496)·0.5 = 0.7099 + 0.3521 = 1.0621</code>.</li>
+<li><strong>CFG</strong> with <code>ε_u = 0.1</code>, <code>ε_c = 0.3</code>, <code>w = 7.5</code>: <code>0.1 + 7.5·0.2 = 1.6</code>, far past the conditional prediction.</li>
 </ul>
-<h3>Interview Topics</h3>
+<h2>Common pitfalls</h2>
 <ul>
-<li>Explain reparameterization trick</li>
-<li>VAE loss components</li>
-<li>Diffusion forward/reverse process</li>
-<li>Compare GANs vs VAEs vs Diffusion</li>
+<li><strong>std vs variance</strong>: <code>exp(log_var)</code> is σ²; the sample needs <code>σ = exp(0.5·log_var)</code>.</li>
+<li><strong>KL reduction</strong>: <code>mean</code> over the whole <code>(batch, latent_dim)</code> array divides by <code>latent_dim</code> and under-weights the KL. Sum over latent dims, then average over the batch.</li>
+<li><strong>Off-by-one in schedules</strong>: decide whether <code>t</code> is 0- or 1-indexed and index <code>betas</code> and <code>ᾱ</code> consistently. Here t = 0 is the least noisy step.</li>
+<li><strong>sqrt of the coefficients</strong>: <code>ᾱ_t</code> and <code>1 − ᾱ_t</code> are variances; the forward process multiplies by their square roots.</li>
+<li><strong>Noise at the last step</strong>: the final reverse step returns the mean.</li>
+<li><strong>Broadcasting per-example t</strong>: reshape a <code>(batch,)</code> vector to <code>(batch, 1, …, 1)</code> before multiplying images.</li>
+<li><strong>Stop-gradients in VQ</strong>: the codebook and commitment losses have the same value but differ in where <code>.detach()</code> goes.</li>
 </ul>
-<h3>Sampling, Guidance and Flow Matching</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>DDPM sampling</strong> runs the reverse process: start from noise and repeatedly subtract the predicted noise, adding a little fresh noise (σ_t² = β_t) until the last step</li>
-<li><strong>Classifier-free guidance</strong> combines conditional and unconditional predictions, <code>ε = ε_u + w·(ε_c − ε_u)</code>, so a guidance scale w &gt; 1 trades diversity for prompt fidelity</li>
-<li><strong>Flow matching / rectified flow</strong> regresses a velocity field onto straight paths <code>x_t = (1 − t)·x0 + t·x1</code> with target <code>x1 − x0</code>, then samples by integrating the ODE with a few Euler steps</li>
+<li>Derive the reparameterization trick and say why <code>log_var</code> is predicted instead of σ.</li>
+<li>Why is the VAE KL analytic but diffusion trained with a simple ε-MSE? (The ε-MSE is a reweighted ELBO.)</li>
+<li>Compare GANs, VAEs, diffusion and flow models on sample quality, diversity, likelihood and sampling speed.</li>
+<li>Cost of sampling: T network evaluations for DDPM (×2 with CFG); DDIM and flow matching cut this to 10–50 steps.</li>
+<li>VQ follow-ups: codebook collapse, EMA updates, the straight-through estimator, memory of the <code>(N, K)</code> distance matrix.</li>
 </ul>
-<p>Let&#x27;s implement generative models!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/generative-models/kl-divergence">KL Divergence (Gaussians) →</a></li><li><a href="/problem/generative-models/vae-reparameterization">VAE Reparameterization Trick →</a></li><li><a href="/problem/generative-models/vae-loss">VAE Loss Function →</a></li><li><a href="/problem/generative-models/vqvae-quantization">VQ-VAE Vector Quantization →</a></li><li><a href="/problem/generative-models/diffusion-noise-schedule">Diffusion Noise Schedule →</a></li><li><a href="/problem/generative-models/diffusion-forward">Diffusion Forward Process →</a></li><li><a href="/problem/generative-models/ddpm-sampling-step">DDPM Reverse Sampling Step →</a></li><li><a href="/problem/generative-models/classifier-free-guidance">Classifier-Free Guidance →</a></li><li><a href="/problem/generative-models/flow-matching">Flow Matching (Rectified Flow) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>KL Divergence (Gaussians)</strong>: closed-form KL between two univariate Gaussians.</li>
+<li><strong>VAE Reparameterization Trick</strong>: differentiable sampling <code>z = μ + σ·ε</code>.</li>
+<li><strong>VAE Loss Function</strong>: MSE reconstruction plus the closed-form KL (sum over latent dims, mean over batch).</li>
+<li><strong>VQ-VAE Vector Quantization</strong>: nearest-code lookup plus codebook and commitment losses.</li>
+<li><strong>Diffusion Noise Schedule</strong>: linear β schedule, α and the cumulative ᾱ.</li>
+<li><strong>Diffusion Forward Process</strong>: noise clean data to any step in one shot.</li>
+<li><strong>DDPM Reverse Sampling Step</strong>: one denoising step with σ_t² = β_t.</li>
+<li><strong>Classifier-Free Guidance</strong>: guided noise and a guided sampling step.</li>
+<li><strong>Flow Matching (Rectified Flow)</strong>: straight-path targets, MSE loss and an Euler sampler.</li>
+</ol>
+<p>The capstones <strong>E2E: Variational Autoencoder</strong>, <strong>E2E: VQ-VAE</strong> and <strong>E2E: Diffusion Model</strong> in End-to-End Implementations assemble these pieces into full models.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/generative-models/kl-divergence">KL Divergence (Gaussians) →</a></li><li><a href="/problem/generative-models/vae-reparameterization">VAE Reparameterization Trick →</a></li><li><a href="/problem/generative-models/vae-loss">VAE Loss Function →</a></li><li><a href="/problem/generative-models/vqvae-quantization">VQ-VAE Vector Quantization →</a></li><li><a href="/problem/generative-models/diffusion-noise-schedule">Diffusion Noise Schedule →</a></li><li><a href="/problem/generative-models/diffusion-forward">Diffusion Forward Process →</a></li><li><a href="/problem/generative-models/ddpm-sampling-step">DDPM Reverse Sampling Step →</a></li><li><a href="/problem/generative-models/classifier-free-guidance">Classifier-Free Guidance →</a></li><li><a href="/problem/generative-models/flow-matching">Flow Matching (Rectified Flow) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

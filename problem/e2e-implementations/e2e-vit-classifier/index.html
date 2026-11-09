@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Tiny Vision Transformer - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier" data-rh="true" />
@@ -100,10 +100,12 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Tiny Vision Transformer - End-to-End Implementations","description":"Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-vit-classifier","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Tiny Vision Transformer - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Tiny Vision Transformer in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Tiny Vision Transformer (ViT)</h2>
-<p>A Vision Transformer treats an image as a <strong>sequence of patches</strong>: cut it into <code>P x P</code> tiles, embed each tile linearly, prepend a learnable <strong>[CLS]</strong> token, add <strong>position embeddings</strong>, run a Transformer encoder, and classify from the final CLS token.</p>
-<p>Build <code>TinyViT</code> with <strong>one pre-norm encoder block</strong>.</p>
+<h3>What you&#x27;ll build</h3>
+<p><code>TinyViT</code>: a Vision Transformer classifier with <strong>one pre-norm encoder block</strong>, including patch extraction, the [CLS] token, position embeddings, the loss and a training step.</p>
+<h3>Background</h3>
+<p>A Vision Transformer (Dosovitskiy et al., 2021) treats an image as a <strong>sequence of patches</strong>: cut it into <code>P × P</code> tiles, embed each tile linearly, prepend a learnable <strong>[CLS]</strong> token, add <strong>position embeddings</strong>, run a Transformer encoder, and classify from the final CLS token. With no convolutions, everything the model knows about 2-D layout comes from the patch order and the position embeddings.</p>
 <h3>Architecture</h3>
-<pre><code>x (B, C, H, W)
+<pre><code class="language-text">x (B, C, H, W)
   │ patchify                  (B, N, P*P*C)       N = (H/P) * (W/P)
   │ @ W_patch + b_patch       (B, N, D)
   │ prepend CLS token         (B, N+1, D)
@@ -125,21 +127,21 @@
 </ul>
 <h3>Why position embeddings matter</h3>
 <p>Self-attention is <strong>permutation-equivariant</strong>, and the CLS token attends to all patches with the same weights regardless of where they are. So <strong>without</strong> position embeddings, shuffling the patches of an image leaves the CLS output (and the prediction) unchanged. Position embeddings are the only source of spatial order.</p>
-<h3>Methods to implement</h3>
+<h3>Method contract</h3>
+<table><thead><tr><th>Method</th><th>Returns</th></tr></thead><tbody><tr><td><code>TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)</code></td><td>creates all parameters (initialization above)</td></tr><tr><td><code>patchify(x)</code></td><td><code>(B, C, H, W) → (B, N, P·P·C)</code></td></tr><tr><td><code>cls_features(x)</code></td><td>final-LayerNormed CLS token, <code>(B, D)</code></td></tr><tr><td><code>forward(x)</code></td><td>logits <code>(B, num_classes)</code></td></tr><tr><td><code>loss(x, y)</code></td><td>float, mean cross-entropy with integer labels <code>y (B,)</code></td></tr><tr><td><code>train_step(x, y, lr=0.1)</code></td><td>float, the loss <strong>before</strong> one plain SGD step</td></tr></tbody></table>
+<p><code>train_step</code> differs by track:</p>
 <ul>
-<li><code>patchify(x)</code>: <code>(B, C, H, W) -&gt; (B, N, P*P*C)</code></li>
-<li><code>cls_features(x)</code>: final-LayerNormed CLS token, <code>(B, D)</code></li>
-<li><code>forward(x)</code>: logits, <code>(B, num_classes)</code></li>
-<li><code>loss(x, y)</code>: mean cross-entropy (float), with integer labels <code>y</code></li>
-<li><code>train_step(x, y, lr)</code>: one plain SGD step on <code>loss(x, y)</code>; returns the loss <strong>before</strong> the step (float).
-<ul>
-<li><strong>NumPy track</strong>: update only the classification head (<code>W_head</code>, <code>b_head</code>); the encoder stays frozen (a <em>linear probe</em>). Its gradient is <code>dlogits = (softmax(logits) - onehot(y)) / B</code>, <code>dW_head = cls^T @ dlogits</code>, <code>db_head = dlogits.sum(0)</code>.</li>
+<li><strong>NumPy track</strong>: update only the classification head (<code>W_head</code>, <code>b_head</code>); the encoder stays frozen (a <em>linear probe</em>). Gradient: <code>dlogits = (softmax(logits) − onehot(y)) / B</code>, <code>dW_head = clsᵀ @ dlogits</code>, <code>db_head = dlogits.sum(0)</code>.</li>
 <li><strong>PyTorch track</strong>: autograd updates <strong>every</strong> parameter.</li>
 </ul>
-</li>
-</ul>
-<h3>Constructor</h3>
-<p><code>TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)</code></p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, num_classes=3).forward(np.random.randn(4, 1, 8, 8))
+<p>In the NumPy track, parameter names and storage are up to you (the tests only use the methods above); the PyTorch starter names the patch embedding <code>patch_embed</code>.</p>
+<h3>Constraints</h3>
+<p>NumPy only, no loops over batch, heads or tokens.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Attention over N patches costs <code>O(N²)</code>: what happens to the cost if you halve the patch size?</li>
+<li>Why do ViTs need more data (or strong augmentation) than CNNs? (They lack the convolutional inductive bias of locality and translation equivariance.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, num_classes=3).forward(np.random.randn(4, 1, 8, 8))
 Output: logits of shape (4, 3)</pre><p>4 patches of 4x4 pixels -&gt; 5 tokens (with CLS) of width 16 -&gt; CLS head.</p></div><div><pre class="overflow-auto">Input: model.patchify(np.arange(32.).reshape(1, 2, 4, 4)) with patch_size=2
 Output: shape (1, 4, 8); first patch [0, 16, 1, 17, 4, 20, 5, 21]</pre><p>Order (p1, p2, c): pixel (0,0) of both channels, then pixel (0,1), then (1,0), then (1,1).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 

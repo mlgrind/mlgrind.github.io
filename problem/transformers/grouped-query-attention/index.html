@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Grouped Query Attention (GQA) - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Grouped Query Attention (GQA) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/grouped-query-attention" data-rh="true" />
@@ -100,29 +100,46 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Grouped Query Attention (GQA) - Transformer Architecture","description":"Implement Grouped Query Attention (GQA) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/grouped-query-attention","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Grouped Query Attention (GQA) - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Grouped Query Attention (GQA) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Grouped Query Attention (GQA)</h2>
-<p>Implement GQA, the efficient attention variant used in LLaMA 2, Mistral, Gemma, and most modern LLMs.</p>
-<h3>Concept</h3>
-<p>In standard Multi-Head Attention (MHA), each head has its own Q, K, and V projections. GQA reduces memory by sharing KV heads across groups of query heads:</p>
-<table><thead><tr><th>Variant</th><th>Q Heads</th><th>KV Heads</th><th>Used In</th></tr></thead><tbody><tr><td>MHA</td><td>H</td><td>H</td><td>Original Transformer</td></tr><tr><td>GQA</td><td>H</td><td>G (1 &lt; G &lt; H)</td><td>LLaMA 2, Mistral</td></tr><tr><td>MQA</td><td>H</td><td>1</td><td>PaLM, Falcon</td></tr></tbody></table>
-<h3>Steps</h3>
+<h3>What you&#x27;ll build</h3>
+<p>Attention where many query heads share a smaller set of key/value heads. LLaMA 2 70B, LLaMA 3, Mistral, Gemma and most modern LLMs use it to shrink the KV cache.</p>
+<h3>Background</h3>
+<p>During generation the model stores every past token&#x27;s keys and values (the <strong>KV cache</strong>, see LLM Generation &amp; Decoding). Its size is <code>2 · n_layers · n_kv_heads · d_head · seq_len</code> numbers per sequence, and reading it every step is what makes decoding memory-bound. GQA keeps all <code>num_q_heads</code> query heads but only <code>num_kv_heads</code> K/V heads, cutting the cache by <code>num_q_heads / num_kv_heads</code> with little quality loss.</p>
+<table><thead><tr><th>Variant</th><th>Query heads</th><th>KV heads</th><th>Used in</th></tr></thead><tbody><tr><td>MHA</td><td>H</td><td>H</td><td>Original Transformer, GPT-2</td></tr><tr><td>GQA</td><td>H</td><td>G (1 &lt; G &lt; H)</td><td>LLaMA 2 70B, LLaMA 3, Mistral</td></tr><tr><td>MQA</td><td>H</td><td>1</td><td>PaLM, Falcon</td></tr></tbody></table>
+<h3>Algorithm</h3>
+<p>With <code>d_head = Q.shape[1] / num_q_heads</code> and <code>group_size = num_q_heads / num_kv_heads</code>:</p>
 <ol>
-<li>Reshape Q into <code>num_q_heads</code> heads of size <code>d_head</code></li>
-<li>Reshape K, V into <code>num_kv_heads</code> heads of size <code>d_head</code></li>
-<li>Repeat each KV head <code>group_size</code> times (group_size = num_q_heads / num_kv_heads)</li>
-<li>Apply scaled dot-product attention per head</li>
-<li>Concatenate all heads</li>
+<li>Split <code>Q</code> into <code>num_q_heads</code> heads and <code>K</code>, <code>V</code> into <code>num_kv_heads</code> heads: shape <code>(heads, seq_len, d_head)</code>, head <code>h</code> taking columns <code>h*d_head : (h+1)*d_head</code>.</li>
+<li><strong>Query head <code>h</code> uses KV head <code>h // group_size</code></strong>: consecutive query heads share a KV head. Repeating each KV head <code>group_size</code> times along the head axis does this.</li>
+<li>Per head: <code>softmax(q_h @ k_h.T / sqrt(d_head)) @ v_h</code>.</li>
+<li>Concatenate the query heads back to <code>(seq_len, num_q_heads * d_head)</code>.</li>
 </ol>
-<h3>Why GQA?</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Reduces KV cache size by <code>num_q_heads / num_kv_heads</code> factor</li>
-<li>Faster inference with minimal quality loss vs MHA</li>
-<li>Key optimization for serving large language models</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q (4, 64), K (4, 16), V (4, 16), num_q_heads=8, num_kv_heads=2
-Output: output (4, 64)</pre><p>8 query heads grouped into 2 KV groups of 4, d_head=8</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>Q</code>: <code>(seq_len, num_q_heads * d_head)</code></li>
+<li><code>K</code>, <code>V</code>: <code>(seq_len, num_kv_heads * d_head)</code></li>
+<li><code>num_q_heads</code>, <code>num_kv_heads</code>: ints, <code>num_kv_heads</code> divides <code>num_q_heads</code></li>
+</ul>
+<h3>Expected Return Format</h3>
+<p><code>output</code>: array <code>(seq_len, num_q_heads * d_head)</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>num_kv_heads == num_q_heads</code> is ordinary multi-head attention; <code>num_kv_heads == 1</code> is MQA.</li>
+<li>Use <code>np.repeat</code> (each head repeated consecutively), not <code>np.tile</code> (which cycles through the heads and pairs query head 1 with KV head 1 instead of 0).</li>
+<li>No causal mask; stable softmax.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (reshape/transpose, <code>np.repeat</code>, batched matmul).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>LLaMA 2 70B has 64 query heads and 8 KV heads. By how much does GQA shrink its KV cache?</li>
+<li>Can you avoid materialising the repeated K and V? (Reshape the query heads to <code>(num_kv_heads, group_size, ...)</code> and broadcast.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q = np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), K = np.eye(2), V = np.array([[1.0, 2.0], [3.0, 4.0]]), num_q_heads = 2, num_kv_heads = 1
+Output: [[1.6605, 2.6605, 2.3395, 3.3395], [2.3395, 3.3395, 1.6605, 2.6605]]</pre><p>Both query heads share the one KV head; head 0 matches key i at row i, head 1 matches the other key.</p></div><div><pre class="overflow-auto">Input: Q (1, 8), K (1, 4), V = np.array([[1.0, 2.0, 3.0, 4.0]]), num_q_heads = 4, num_kv_heads = 2
+Output: [[1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 3.0, 4.0]]</pre><p>One token, so every weight is 1: query heads 0-1 return KV head 0 ([1, 2]) and heads 2-3 return KV head 1 ([3, 4]).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
     &quot;&quot;&quot;
-    Grouped Query Attention.
+    Grouped Query Attention (query head h uses KV head h // group_size).
 
     Args:
         Q: Queries (seq_len, num_q_heads * d_head)
@@ -140,7 +157,7 @@ def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/transformers">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

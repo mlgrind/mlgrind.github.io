@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Convolutional Neural Network - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Convolutional Neural Network in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-cnn" data-rh="true" />
@@ -100,40 +100,27 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Convolutional Neural Network - End-to-End Implementations","description":"Implement E2E: Convolutional Neural Network in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-cnn","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Convolutional Neural Network - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Convolutional Neural Network in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End CNN</h2>
-<p>Implement a complete CNN for image classification.</p>
-<h3>Architecture</h3>
-<pre><code>Input (batch, channels, height, width)
-  ↓
-Conv2D(in_channels, 32, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Conv2D(32, 64, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Flatten
-  ↓
-Linear(flattened_size, 128) + ReLU
-  ↓
-Linear(128, num_classes)
-  ↓
-Softmax
-</code></pre>
-<h3>Components</h3>
+<h3>What you&#x27;ll build</h3>
+<p>A LeNet-style image classifier in NumPy: 2-D convolution, max pooling and flatten as standalone functions, then a <code>CNN</code> class that chains two conv blocks and two fully connected layers into logits.</p>
+<h3>Architecture (input <code>(batch, C, H, W)</code>, e.g. MNIST <code>(batch, 1, 28, 28)</code>)</h3>
+<table><thead><tr><th>Layer</th><th>Operation</th><th>Output shape (28×28 input)</th></tr></thead><tbody><tr><td>conv1</td><td><code>conv2d(x, conv1_w (32, C, 3, 3), conv1_b)</code> + ReLU</td><td><code>(batch, 32, 26, 26)</code></td></tr><tr><td>pool1</td><td><code>maxpool2d(·, 2)</code></td><td><code>(batch, 32, 13, 13)</code></td></tr><tr><td>conv2</td><td><code>conv2d(·, conv2_w (64, 32, 3, 3), conv2_b)</code> + ReLU</td><td><code>(batch, 64, 11, 11)</code></td></tr><tr><td>pool2</td><td><code>maxpool2d(·, 2)</code></td><td><code>(batch, 64, 5, 5)</code></td></tr><tr><td>flatten</td><td><code>flatten(·)</code></td><td><code>(batch, 1600)</code></td></tr><tr><td>fc1</td><td><code>· @ fc1_w + fc1_b</code> + ReLU</td><td><code>(batch, 128)</code></td></tr><tr><td>fc2</td><td><code>· @ fc2_w + fc2_b</code></td><td><code>(batch, num_classes)</code> <strong>logits</strong> (no softmax)</td></tr></tbody></table>
+<p>General sizes: a 3×3 valid conv maps <code>H → H − 2</code>; a 2×2 pool maps <code>H → H // 2</code> (an odd leftover row/column is dropped). So <code>flat_size = 64 · h2 · w2</code> with <code>h1 = (H − 2) // 2</code>, <code>h2 = (h1 − 2) // 2</code> (same for W).</p>
+<h3>Function contract</h3>
+<table><thead><tr><th>Function</th><th>Behaviour</th><th>Returns</th></tr></thead><tbody><tr><td><code>conv2d(x, kernel, bias)</code></td><td>stride 1, no padding, <strong>cross-correlation</strong> (no kernel flip, like every DL framework): <code>out[b, o, i, j] = Σ_{c,u,v} x[b, c, i+u, j+v] · kernel[o, c, u, v] + bias[o]</code></td><td><code>(batch, out_ch, H − kH + 1, W − kW + 1)</code></td></tr><tr><td><code>maxpool2d(x, pool_size=2)</code></td><td>non-overlapping windows (stride = pool_size), max per window and channel</td><td><code>(batch, ch, H // p, W // p)</code></td></tr><tr><td><code>flatten(x)</code></td><td>keep the batch axis, merge the rest</td><td><code>(batch, −1)</code></td></tr><tr><td><code>CNN(input_shape, num_classes)</code></td><td>creates <code>conv1_w/b</code>, <code>conv2_w/b</code> (given, after <code>np.random.seed(42)</code>), then <code>fc1_w (flat_size, 128)</code>, <code>fc1_b</code>, <code>fc2_w (128, num_classes)</code>, <code>fc2_b</code> (weights <code>N(0, 0.1²)</code>, zero biases)</td><td></td></tr><tr><td><code>CNN.forward(x)</code></td><td>the table above</td><td>logits <code>(batch, num_classes)</code></td></tr><tr><td><code>test_cnn()</code></td><td>a smoke test: build <code>CNN((1, 28, 28), 10)</code>, run 4 random images</td><td><code>True</code> if the logits have shape <code>(4, 10)</code></td></tr></tbody></table>
+<h3>Constraints</h3>
+<p>NumPy only. Loops over output positions are acceptable for clarity, but try to vectorise <code>conv2d</code> (<code>np.lib.stride_tricks.sliding_window_view</code> + <code>np.einsum</code>): the naive 4-level loop is very slow in the browser.</p>
+<h3>Follow-up</h3>
 <ul>
-<li>2D Convolution (no padding for simplicity)</li>
-<li>Max Pooling</li>
-<li>Flatten</li>
-<li>Fully Connected layers</li>
-</ul>
-<h3>Task</h3>
-<p>Implement conv2d, maxpool, and combine into CNN.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: CNN on 28x28 grayscale images
-Output: Class probabilities</pre><p>Full CNN forward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>Parameter count of conv1 and fc1 for MNIST? (32·1·9 + 32 = 320 and 1600·128 + 128 = 204,928: the dense layer dominates.)</li>
+<li>How does im2col turn convolution into one matrix multiply?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: conv2d(np.arange(16.0).reshape(1, 1, 4, 4), np.array([[[[1.0, 0.0], [2.0, -1.0]]]]), np.array([0.5]))
+Output: [[[[3.5, 5.5, 7.5], [11.5, 13.5, 15.5], [19.5, 21.5, 23.5]]]]</pre><p>With x[i, j] = 4i + j, each output is x[i, j] + 2·x[i+1, j] − x[i+1, j+1] + 0.5 = 8i + 2j + 3.5</p></div><div><pre class="overflow-auto">Input: maxpool2d(np.array([[[[1, 3, 2, 0], [4, 2, 1, 5], [0, 1, 7, 6], [2, 8, 3, 1]]]]))
+Output: [[[[4.0, 5.0], [8.0, 7.0]]]]</pre><p>The max of each non-overlapping 2×2 block</p></div><div><pre class="overflow-auto">Input: CNN((1, 28, 28), 10).forward(np.random.randn(2, 1, 28, 28)).shape
+Output: (2, 10)</pre><p>28 → 26 → 13 → 11 → 5, so fc1 sees 64·5·5 = 1600 features</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    2D convolution (no padding, stride=1).
+    2D convolution (cross-correlation, no padding, stride=1).
 
     Args:
         x: Input (batch, in_channels, height, width)
@@ -149,14 +136,14 @@ def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -&gt; np.ndarray
 
 def maxpool2d(x: np.ndarray, pool_size: int = 2) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    2D max pooling.
+    2D max pooling with non-overlapping windows (stride = pool_size).
 
     Args:
         x: Input (batch, channels, height, width)
         pool_size: Size of pooling window
 
     Returns:
-        output: Pooled tensor
+        output: (batch, channels, height // pool_size, width // pool_size)
     &quot;&quot;&quot;
     # Your code here
     pass
@@ -188,11 +175,11 @@ class CNN:
         self.conv2_w = np.random.randn(64, 32, 3, 3) * 0.1
         self.conv2_b = np.zeros(64)
 
-        # Calculate flattened size after convolutions and pooling
-        # Your code to compute this
-        pass
+        # Flattened size after conv(3x3) -&gt; pool(2) -&gt; conv(3x3) -&gt; pool(2)
+        # Your code here
 
-        # Fully connected layers
+        # Fully connected layers: fc1_w (flat_size, 128), fc1_b (128,),
+        # fc2_w (128, num_classes), fc2_b (num_classes,); weights * 0.1, biases zero
         # Your code here
         pass
 
@@ -204,17 +191,17 @@ class CNN:
             x: Input images (batch, channels, height, width)
 
         Returns:
-            logits: (batch, num_classes)
+            logits: (batch, num_classes), no softmax
         &quot;&quot;&quot;
         # Your code here
         pass
 
 
 def test_cnn():
-    &quot;&quot;&quot;Test CNN with sample data.&quot;&quot;&quot;
+    &quot;&quot;&quot;Smoke test: CNN((1, 28, 28), 10) on 4 random images; return True if logits are (4, 10).&quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

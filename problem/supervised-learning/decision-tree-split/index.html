@@ -78,57 +78,73 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
-  <title>Gini Impurity - Supervised Learning | ML Grind</title>
-<meta name="description" content="Implement Gini Impurity in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
+  <title>Gini Impurity for Decision-Tree Splits - Supervised Learning | ML Grind</title>
+<meta name="description" content="Implement Gini Impurity for Decision-Tree Splits in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/decision-tree-split" data-rh="true" />
-<meta property="og:title" content="Gini Impurity - Supervised Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Gini Impurity in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Gini Impurity for Decision-Tree Splits - Supervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Gini Impurity for Decision-Tree Splits in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/supervised-learning/decision-tree-split" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Gini Impurity - Supervised Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Gini Impurity in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Gini Impurity for Decision-Tree Splits - Supervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Gini Impurity for Decision-Tree Splits in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gini Impurity - Supervised Learning","description":"Implement Gini Impurity in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/decision-tree-split","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gini Impurity for Decision-Tree Splits - Supervised Learning","description":"Implement Gini Impurity for Decision-Tree Splits in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/decision-tree-split","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gini Impurity - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gini Impurity in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gini Impurity</h2>
-<p>Calculate the Gini impurity for a set of labels. This metric is used in decision trees to determine the best split.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gini Impurity for Decision-Tree Splits - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gini Impurity for Decision-Tree Splits in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gini Impurity for Decision-Tree Splits</h2>
+<p>Compute the <strong>Gini impurity</strong> of a set of class labels, the score a classification tree uses to judge how &quot;mixed&quot; a node is.</p>
+<h3>Background</h3>
+<p>A decision tree grows by picking, at each node, the split that makes the children as pure as possible. Gini impurity is the probability that two labels drawn at random (with replacement) from the node disagree. It is the default criterion of scikit-learn&#x27;s <code>DecisionTreeClassifier</code>, and you will use it to grow full trees in <strong>Decision Tree Classifier with Bagging</strong>.</p>
 <h3>Formula</h3>
-<pre><code>Gini = 1 - sum(p_i^2)
+<pre><code class="language-text">Gini(S) = 1 - sum_c p_c^2,     p_c = (number of labels equal to c) / |S|
 </code></pre>
-<p>Where p_i is the proportion of class i in the set.</p>
-<h3>Properties</h3>
+<p>The sum runs over the classes that appear in <code>S</code>. For a split into <code>L</code> and <code>R</code>, a tree scores the weighted average <code>(|L| * Gini(L) + |R| * Gini(R)) / |S|</code> and picks the split with the lowest value.</p>
+<table><thead><tr><th>Labels</th><th>Proportions</th><th>Gini</th></tr></thead><tbody><tr><td><code>[0, 0, 0, 0]</code></td><td>1.0</td><td>0.0 (pure)</td></tr><tr><td><code>[0, 0, 0, 1]</code></td><td>0.75, 0.25</td><td>0.375</td></tr><tr><td><code>[0, 0, 1, 1]</code></td><td>0.5, 0.5</td><td>0.5 (max for 2 classes)</td></tr><tr><td><code>[0, 1, 2]</code></td><td>1/3 each</td><td>0.6667</td></tr></tbody></table>
+<p>With <code>K</code> classes the maximum is <code>1 - 1/K</code>, so Gini is always in <code>[0, 1)</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li>Gini = 0 means pure (all same class)</li>
-<li>Gini = 0.5 means maximum impurity (for binary classification with equal split)</li>
+<li><code>labels</code>: 1D array of class labels (non-negative integers), shape <code>(n,)</code>. Labels need not be contiguous (<code>[3, 7, 7]</code> is fine).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def gini_impurity(labels: np.ndarray) -&gt; float:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([0, 0, 0, 0])
-Output: 0.0</pre><p>All same class, pure node</p></div><div><pre class="overflow-auto">Input: np.array([0, 0, 1, 1])
-Output: 0.5</pre><p>Equal split, maximum impurity for binary</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A float (Python or NumPy scalar), not rounded.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>An <strong>empty</strong> array has impurity <code>0.0</code>.</li>
+<li>Only the proportions matter, not the label values themselves.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; no sklearn.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Entropy <code>-sum p_c log2 p_c</code> is the other common criterion. Why do Gini and entropy usually pick the same split, and why is Gini slightly cheaper?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gini_impurity(np.array([0, 0, 0, 0]))
+Output: 0.0</pre><p>All labels are the same class: a pure node.</p></div><div><pre class="overflow-auto">Input: gini_impurity(np.array([0, 0, 0, 1]))
+Output: 0.375</pre><p>1 - (0.75^2 + 0.25^2) = 1 - 0.625 = 0.375.</p></div><div><pre class="overflow-auto">Input: gini_impurity(np.array([3, 3, 7, 7, 7]))
+Output: 0.48</pre><p>Label values do not matter, only proportions: 1 - (0.4^2 + 0.6^2) = 0.48.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def gini_impurity(labels: np.ndarray) -&gt; float:
     &quot;&quot;&quot;
-    Calculate Gini impurity for a set of labels.
+    Calculate the Gini impurity of a set of labels.
 
     Args:
-        labels: Array of class labels (integers)
+        labels: 1D array of class labels (non-negative integers), shape (n,)
 
     Returns:
-        Gini impurity value between 0 and 1
+        Gini impurity 1 - sum_c p_c^2, in [0, 1) (0.0 for an empty array)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

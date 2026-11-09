@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals | ML Grind</title>
 <meta name="description" content="Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-internals/rmsnorm-swiglu" data-rh="true" />
@@ -100,35 +100,53 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals","description":"Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-internals/rmsnorm-swiglu","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">SwiGLU Feed-Forward Block (LLaMA MLP) - LLM Internals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement SwiGLU Feed-Forward Block (LLaMA MLP) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>SwiGLU Feed-Forward Block (LLaMA MLP)</h2>
-<p>The original Transformer MLP is <code>ReLU(x W_1) W_2</code>. LLaMA, Mistral, Qwen and PaLM replace it with a <strong>gated</strong> MLP, <strong>SwiGLU</strong> (Shazeer, 2020, &quot;GLU Variants Improve Transformer&quot;): one projection is passed through SiLU and used as a <em>gate</em> that multiplies a second, linear projection elementwise.</p>
-<h3>SiLU (a.k.a. Swish with beta = 1)</h3>
-<pre><code>silu(z) = z * sigmoid(z) = z / (1 + exp(-z))
+<h3>What you&#x27;ll build</h3>
+<p>The MLP half of a LLaMA decoder block: RMSNorm, a SwiGLU gated feed-forward network, and the residual connection around them. Three functions: <code>rms_norm</code>, <code>swiglu_ffn</code> and <code>llama_mlp_block</code>.</p>
+<h3>Background</h3>
+<p>The original Transformer MLP is <code>ReLU(x W_1) W_2</code>. LLaMA, Mistral, Qwen and PaLM use a <strong>gated</strong> MLP instead, SwiGLU (Shazeer, 2020): one projection goes through SiLU and <strong>gates</strong> a second, linear projection elementwise. At equal parameter count it gives lower loss. LLaMA also replaces LayerNorm with <strong>RMSNorm</strong>, which skips the mean subtraction and the bias: cheaper, and empirically just as good. About two thirds of a dense LLM&#x27;s parameters live in these MLPs.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">rms_norm(x)  = x / sqrt(mean(x^2, axis=-1) + eps) * weight
+
+silu(z)      = z * sigmoid(z) = z / (1 + exp(-z))
+gate         = silu(x @ W_gate)                  # (..., d_ff)
+up           = x @ W_up                          # (..., d_ff)
+swiglu_ffn(x) = (gate * up) @ W_down             # (..., d_model)
+
+llama_mlp_block(x) = x + swiglu_ffn(rms_norm(x))
 </code></pre>
-<h3>SwiGLU FFN</h3>
-<pre><code>gate   = silu(x @ W_gate)          # (..., d_ff)
-up     = x @ W_up                  # (..., d_ff)
-ffn(x) = (gate * up) @ W_down      # (..., d_model)
-</code></pre>
-<p>No biases (LLaMA uses none). There are <strong>three</strong> weight matrices instead of two, so to keep the parameter count of a <code>4 * d_model</code> ReLU MLP, LLaMA uses <code>d_ff ≈ (2/3) * 4 * d_model</code>.</p>
-<h3>RMSNorm (brief)</h3>
-<p>LLaMA normalizes with RMSNorm: like LayerNorm but <strong>no mean subtraction and no bias</strong>:</p>
-<pre><code>rms_norm(x) = x / sqrt(mean(x**2, axis=-1) + eps) * weight
-</code></pre>
-<h3>The full pre-norm MLP sub-block</h3>
-<pre><code>llama_mlp_block(x) = x + ffn(rms_norm(x))
-</code></pre>
+<p>No biases anywhere (LLaMA uses none). With three weight matrices instead of two, LLaMA sets <code>d_ff ≈ (2/3) · 4 · d_model</code> to match the parameter count of a <code>4 · d_model</code> ReLU MLP.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>x</code>: float array <code>(..., d_model)</code> (any number of leading axes, e.g. <code>(batch, seq_len, d_model)</code>)</li>
+<li><code>weight</code> / <code>norm_weight</code>: <code>(d_model,)</code></li>
+<li><code>W_gate</code>, <code>W_up</code>: <code>(d_model, d_ff)</code>; <code>W_down</code>: <code>(d_ff, d_model)</code></li>
+<li><code>eps</code>: float, default <code>1e-6</code></li>
+</ul>
 <h3>Expected Return Format</h3>
 <ul>
-<li><code>rms_norm(x, weight, eps=1e-6)</code>: array with the same shape as <code>x</code> (normalized over the last axis)</li>
-<li><code>swiglu_ffn(x, W_gate, W_up, W_down)</code>: <code>W_gate</code>, <code>W_up</code> are <code>(d_model, d_ff)</code>, <code>W_down</code> is <code>(d_ff, d_model)</code>; returns shape <code>(..., d_model)</code></li>
+<li><code>rms_norm(x, weight, eps=1e-6)</code>: same shape as <code>x</code></li>
+<li><code>swiglu_ffn(x, W_gate, W_up, W_down)</code>: shape <code>(..., d_model)</code></li>
 <li><code>llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6)</code>: same shape as <code>x</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>RMSNorm normalizes over the last axis only; <code>eps</code> goes inside the square root.</li>
+<li>The residual adds the <strong>un-normalized</strong> <code>x</code> (pre-norm): <code>x + ffn(norm(x))</code>, not <code>norm(x) + ffn(norm(x))</code>.</li>
+<li>The gate is SiLU, not sigmoid (that would be GLU) and not ReLU (ReGLU).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Count the parameters of the SwiGLU MLP and of a ReLU MLP with <code>d_ff = 4 d_model</code>. What <code>d_ff</code> makes them equal?</li>
+<li>Write the attention half of the LLaMA block (RMSNorm, RoPE, GQA, causal mask). Which earlier problems give you each piece?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: rms_norm(np.array([[3.0, 4.0]]), np.ones(2))
-Output: [[0.8485, 1.1314]]</pre><p>mean(x**2) = 12.5, rms = 3.5355</p></div><div><pre class="overflow-auto">Input: x (4, 8), W_gate/W_up (8, 16), W_down (16, 8)
-Output: llama_mlp_block(...) shape (4, 8)</pre><p>Residual connection keeps the model dimension.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: [[0.8485, 1.1314]]</pre><p>mean(x^2) = 12.5, so the RMS is 3.5355 and x / 3.5355 = [0.8485, 1.1314]. The mean is not subtracted.</p></div><div><pre class="overflow-auto">Input: swiglu_ffn(np.array([[1.0, -1.0]]), np.array([[1.0], [0.0]]), np.array([[2.0], [1.0]]), np.array([[1.0, 0.5]]))
+Output: [[0.7311, 0.3655]]</pre><p>gate = silu(1) = 0.7311, up = 2 - 1 = 1, then (0.7311 * 1) @ [[1, 0.5]].</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def rms_norm(x, weight, eps=1e-6):
     &quot;&quot;&quot;
-    RMSNorm over the last axis.
+    RMSNorm over the last axis: x / sqrt(mean(x**2) + eps) * weight.
 
     Args:
         x: (..., d_model)

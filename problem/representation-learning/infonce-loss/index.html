@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>CLIP Contrastive Loss (InfoNCE) - Representation Learning &amp; Retrieval | ML Grind</title>
 <meta name="description" content="Implement CLIP Contrastive Loss (InfoNCE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/representation-learning/infonce-loss" data-rh="true" />
@@ -99,39 +99,51 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"CLIP Contrastive Loss (InfoNCE) - Representation Learning & Retrieval","description":"Implement CLIP Contrastive Loss (InfoNCE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/representation-learning/infonce-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">CLIP Contrastive Loss (InfoNCE) - Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement CLIP Contrastive Loss (InfoNCE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Symmetric InfoNCE (CLIP)</h2>
-<p>CLIP (Radford et al., 2021) learns a shared embedding space for images and text from (image, caption) pairs. In a batch of N pairs, the i-th image and i-th caption are a <strong>positive</strong> pair, and the other N − 1 captions are <strong>negatives</strong> for that image (and vice versa).</p>
-<h3>Steps</h3>
-<ol>
-<li><strong>L2-normalise</strong> each embedding (rows of both matrices) so dot products are cosine similarities:</li>
-</ol>
-<pre><code>img_n = img / ||img||,   txt_n = txt / ||txt||      (per row; clamp the norm at 1e-12)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">CLIP Contrastive Loss (InfoNCE) - Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement CLIP Contrastive Loss (InfoNCE) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Symmetric InfoNCE (CLIP Loss)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The contrastive loss CLIP is trained with: L2-normalize image and text embeddings, build the temperature-scaled cosine similarity matrix, and average the cross-entropy over both directions with the matching pairs on the diagonal.</p>
+<h3>Background</h3>
+<p>CLIP (Radford et al., 2021) learns one embedding space for images and text from 400M (image, caption) pairs, with no class labels. In a batch of <code>N</code> pairs, image <code>i</code> and caption <code>i</code> are a <strong>positive</strong> pair; the other <code>N - 1</code> captions are <strong>negatives</strong> for that image, and vice versa. The same loss trains text embedding models for retrieval (with (query, passage) pairs), SimCLR (two augmentations of one image) and many more. More negatives make the task harder and the representation better, which is why these models are trained with very large batches.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">img_n  = img / max(||img||, 1e-12)                    # per row, (N, D)
+txt_n  = txt / max(||txt||, 1e-12)                    # per row, (N, D)
+logits = img_n @ txt_n.T / tau                        # (N, N); row = image, column = text
+
+CE(Z)    = mean_i [ logsumexp(Z[i, :]) - Z[i, i] ]    # correct class of row i is column i
+loss_i2t = CE(logits)                                 # each image picks its caption among N
+loss_t2i = CE(logits.T)                               # each caption picks its image among N
+loss     = (loss_i2t + loss_t2i) / 2
 </code></pre>
-<ol start="2">
-<li><strong>Similarity logits</strong>, scaled by a temperature τ:</li>
-</ol>
-<pre><code>logits = img_n @ txt_nᵀ / τ                         (N, N)
-</code></pre>
-<ol start="3">
-<li><strong>Cross-entropy in both directions</strong>, with the correct match on the diagonal (labels = 0, 1, ..., N−1):</li>
-</ol>
-<pre><code>loss_i2t = CE(logits,   labels)    each image picks its caption among N captions (rows)
-loss_t2i = CE(logitsᵀ,  labels)    each caption picks its image among N images (columns)
-CE(Z, y) = mean_i [ logsumexp(Z_i) - Z_{i, y_i} ]
-</code></pre>
-<ol start="4">
-<li><strong>Average</strong> the two: <code>loss = (loss_i2t + loss_t2i) / 2</code></li>
-</ol>
-<p>A lower temperature sharpens the softmax; CLIP learns τ (initialised to 0.07). Use a numerically stable log-sum-exp.</p>
-<h3>Expected Return Format</h3>
-<p><code>clip_loss(img_emb, txt_emb, temperature=0.07)</code> returns a dictionary:</p>
+<p>A lower temperature <code>tau</code> sharpens the softmax; CLIP learns it (initialised to 0.07).</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;logits&#x27;</code>: (N, N) array of scaled cosine similarities (row = image, column = text)</li>
+<li><code>img_emb</code>: float array <code>(N, D)</code>; row <code>i</code> pairs with <code>txt_emb</code> row <code>i</code></li>
+<li><code>txt_emb</code>: float array <code>(N, D)</code></li>
+<li><code>temperature</code>: float <code>&gt; 0</code>, default 0.07</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A dictionary:</p>
+<ul>
+<li><code>&#x27;logits&#x27;</code>: <code>(N, N)</code> array of scaled cosine similarities (row = image, column = text)</li>
 <li><code>&#x27;loss_i2t&#x27;</code>: image-to-text cross-entropy (Python float)</li>
 <li><code>&#x27;loss_t2i&#x27;</code>: text-to-image cross-entropy (Python float)</li>
 <li><code>&#x27;loss&#x27;</code>: their mean (Python float)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: img = txt = [[1, 0], [0, 1]], temperature = 1.0
-Output: {&#x27;loss&#x27;: 0.3133, ...}</pre><p>logits = I, so each row is softmax([1, 0]) and CE = log(1 + e^-1) = 0.3133 in both directions</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Normalize the <strong>rows</strong> (each embedding), not the columns; rescaling an embedding must not change the loss.</li>
+<li>Use a stable log-sum-exp: with <code>tau = 0.07</code> logits reach about 14, and smaller temperatures go higher.</li>
+<li>The matrix is not symmetric in general, so <code>loss_i2t != loss_t2i</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (no loop over the batch).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>With <code>N</code> pairs, the loss of a random model is about <code>log N</code>. Why? What does that say about comparing losses across batch sizes?</li>
+<li>SigLIP replaces the softmax with independent sigmoid losses per pair. What does that buy for distributed training?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: clip_loss(np.eye(2), np.eye(2), temperature=1.0)
+Output: {&#x27;logits&#x27;: [[1.0, 0.0], [0.0, 1.0]], &#x27;loss_i2t&#x27;: 0.3133, &#x27;loss_t2i&#x27;: 0.3133, &#x27;loss&#x27;: 0.3133}</pre><p>Each row is softmax([1, 0]), so CE = log(1 + e^-1) = 0.3133 in both directions.</p></div><div><pre class="overflow-auto">Input: clip_loss(np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]), np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), temperature=0.5)
+Output: {&#x27;loss_i2t&#x27;: 1.1121, &#x27;loss_t2i&#x27;: 1.1433, &#x27;loss&#x27;: 1.1277, ...}</pre><p>logits = [[1.6, 0, 1.4142], [1.92, 1.6, 1.9799], [1.2, 2.0, 1.4142]]: image 1 is closer to captions 0 and 2 than to its own, so the loss is high, and the two directions differ.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def clip_loss(img_emb, txt_emb, temperature=0.07):
     &quot;&quot;&quot;
@@ -140,14 +152,15 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
     Args:
         img_emb: (N, D) image embeddings (row i pairs with txt_emb row i)
         txt_emb: (N, D) text embeddings
-        temperature: softmax temperature τ
+        temperature: softmax temperature tau
 
     Returns:
-        dict with &#x27;logits&#x27; (N, N), &#x27;loss_i2t&#x27;, &#x27;loss_t2i&#x27;, &#x27;loss&#x27; (floats)
+        dict with &#x27;logits&#x27; (N, N) = cos / tau (row = image), and the Python
+        floats &#x27;loss_i2t&#x27;, &#x27;loss_t2i&#x27; and &#x27;loss&#x27; (their mean)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/representation-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/representation-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Decision Tree Classifier with Bagging - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging" data-rh="true" />
@@ -100,34 +100,60 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Decision Tree Classifier with Bagging - Supervised Learning","description":"Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/decision-tree-bagging","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Decision Tree Classifier with Bagging - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Decision Tree Classifier with Bagging in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Decision Tree Classifier with Bagging</h2>
-<p>Build a full classification tree with recursive <strong>Gini</strong> splits, then an ensemble of trees trained on <strong>bootstrap samples</strong> whose predictions are combined by <strong>majority vote</strong> (bagging).</p>
+<p>Grow a full classification tree with recursive <strong>Gini</strong> splits (<code>build_tree</code>, <code>predict_tree</code>), then combine trees trained on <strong>bootstrap samples</strong> by <strong>majority vote</strong> (<code>bagging_predict</code>).</p>
+<h3>Background</h3>
+<p>A single deep tree has low bias but high variance: small changes in the data change the tree. <strong>Bagging</strong> (bootstrap aggregating) averages many such trees to cut the variance; random forests add per-split feature subsampling on top. This problem uses the impurity from <strong>Gini Impurity for Decision-Tree Splits</strong>.</p>
 <h3>Gini impurity</h3>
-<pre><code>gini(S) = 1 - sum_c p_c^2              # p_c = fraction of S with class c
-split impurity = (n_L * gini(L) + n_R * gini(R)) / n
+<pre><code class="language-text">gini(S)          = 1 - sum_c p_c^2            # p_c = fraction of S with class c
+split impurity   = (n_L * gini(L) + n_R * gini(R)) / n
 </code></pre>
 <h3>Growing the tree (<code>build_tree</code>)</h3>
 <p>At a node holding samples <code>S</code> at depth <code>depth</code> (the root has depth 0):</p>
 <ol>
 <li>The node is a <strong>leaf</strong> if <code>max_depth</code> is not None and <code>depth &gt;= max_depth</code>, or <code>len(S) &lt; min_samples_split</code>, or <code>S</code> is pure.</li>
-<li>Otherwise search every feature <code>f</code> (in increasing order) and every threshold <code>t</code> (in increasing order), where the thresholds are the <strong>midpoints between consecutive distinct sorted values</strong> of feature <code>f</code> in <code>S</code>. A sample goes <strong>left if <code>x[f] &lt;= t</code></strong>, right otherwise.</li>
+<li>Otherwise search every feature <code>f</code> (in increasing order) and every threshold <code>t</code> (in increasing order), where the thresholds are the <strong>midpoints between consecutive distinct sorted values</strong> of feature <code>f</code> within <code>S</code>. A sample goes <strong>left if <code>x[f] &lt;= t</code></strong>, right otherwise.</li>
 <li>Start with <code>best = gini(S)</code>. A candidate replaces the current best only if its split impurity is <strong>lower by more than 1e-12</strong>. So ties keep the earlier candidate (smaller feature index, then smaller threshold), and a split is made only if it strictly reduces impurity.</li>
-<li>If no candidate qualified, the node is a leaf; otherwise recurse on both sides.</li>
+<li>If no candidate qualified, the node is a leaf; otherwise recurse on both sides with <code>depth + 1</code>.</li>
 </ol>
-<p>A leaf predicts the <strong>majority class</strong> of its samples; ties go to the smallest class label. Labels are non-negative integers.</p>
+<p>A leaf predicts the <strong>majority class</strong> of its samples; ties go to the smallest class label.</p>
 <h3>Tree format</h3>
 <ul>
 <li>Leaf: <code>{&#x27;leaf&#x27;: True, &#x27;value&#x27;: c}</code> with <code>c</code> a Python int</li>
 <li>Internal node: <code>{&#x27;leaf&#x27;: False, &#x27;feature&#x27;: f, &#x27;threshold&#x27;: t, &#x27;left&#x27;: subtree, &#x27;right&#x27;: subtree}</code> with <code>f</code> an int and <code>t</code> a float</li>
 </ul>
 <h3>Bagging (<code>bagging_predict</code>)</h3>
-<p>Create <code>rng = np.random.default_rng(seed)</code>. For each of the <code>n_estimators</code> trees, draw <code>idx = rng.integers(0, n, size=n)</code> (sampling with replacement), fit <code>build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)</code>, and predict <code>X_test</code>. Each test sample gets the class with the most votes; ties go to the smallest label.</p>
+<ol>
+<li>Create <code>rng = np.random.default_rng(seed)</code> once.</li>
+<li>For each of the <code>n_estimators</code> trees, in order: draw <code>idx = rng.integers(0, n, size=n)</code> (sampling with replacement), fit <code>build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)</code>, and predict <code>X_test</code>.</li>
+<li>Each test sample gets the class with the most votes (<strong>hard voting</strong>); ties go to the smallest label.</li>
+</ol>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>, <code>X_train</code>, <code>X_test</code>: float arrays <code>(n_samples, n_features)</code></li>
+<li><code>y</code>, <code>y_train</code>: non-negative integer labels <code>(n_samples,)</code></li>
+<li><code>max_depth</code>: int or None; <code>min_samples_split</code>: int (default 2); <code>n_estimators</code>, <code>seed</code>: ints</li>
+</ul>
 <h3>Expected Return Format</h3>
 <ul>
-<li><code>build_tree(X, y, max_depth=None, min_samples_split=2)</code>: the root node dict</li>
+<li><code>build_tree(X, y, max_depth=None, min_samples_split=2)</code>: the root node dict (format above)</li>
 <li><code>predict_tree(tree, X)</code>: int array <code>(n_samples,)</code></li>
 <li><code>bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None, min_samples_split=2, seed=0)</code>: int array <code>(n_test,)</code></li>
+</ul>
+<h3>Conventions vs scikit-learn</h3>
+<ul>
+<li>Same as <code>DecisionTreeClassifier(criterion=&#x27;gini&#x27;)</code>: midpoint thresholds, <code>&lt;=</code> goes left, <code>max_depth</code> and <code>min_samples_split</code> mean the same. sklearn shuffles the features at each node, so it breaks exact ties at random (fixed by <code>random_state</code>); here ties are deterministic.</li>
+<li><code>BaggingClassifier</code> averages the trees&#x27; predicted <strong>probabilities</strong> (soft voting) when it can; here you use hard majority voting.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; no sklearn.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>What does a random forest change (<code>max_features</code>), and why does decorrelating the trees help more than adding trees?</li>
+<li>About 63.2% of the distinct samples land in each bootstrap sample. How can the remaining &quot;out-of-bag&quot; samples estimate test error for free?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1]), max_depth=1)
-Output: {&#x27;leaf&#x27;: False, &#x27;feature&#x27;: 0, &#x27;threshold&#x27;: 4.5, &#x27;left&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 0}, &#x27;right&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 1}}</pre><p>x0 &lt;= 4.5 separates the classes perfectly, so its split impurity is 0.</p></div><div><pre class="overflow-auto">Input: predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]]))
+Output: {&#x27;leaf&#x27;: False, &#x27;feature&#x27;: 0, &#x27;threshold&#x27;: 4.5, &#x27;left&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 0}, &#x27;right&#x27;: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: 1}}</pre><p>x0 &lt;= 4.5 separates the classes perfectly, so its split impurity is 0.</p></div><div><pre class="overflow-auto">Input: predict_tree(tree, np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]]))  # tree: same data, no max_depth
 Output: array([0, 0, 0, 1])</pre><p>(4.5, 6) has x0 equal to the threshold 4.5, so it goes left (x[f] &lt;= t).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def build_tree(X, y, max_depth=None, min_samples_split=2):
@@ -143,6 +169,7 @@ def build_tree(X, y, max_depth=None, min_samples_split=2):
     Returns:
         Root node: {&#x27;leaf&#x27;: True, &#x27;value&#x27;: c} or
         {&#x27;leaf&#x27;: False, &#x27;feature&#x27;: f, &#x27;threshold&#x27;: t, &#x27;left&#x27;: ..., &#x27;right&#x27;: ...}
+        (c and f Python ints, t a Python float)
     &quot;&quot;&quot;
     # Your code here
     pass
@@ -155,10 +182,11 @@ def predict_tree(tree, X):
 def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
                     min_samples_split=2, seed=0):
     &quot;&quot;&quot;
-    Bagging: trees on bootstrap samples (np.random.default_rng(seed)), majority vote.
+    Bagging: trees on bootstrap samples drawn with rng = np.random.default_rng(seed)
+    (idx = rng.integers(0, n, size=n) per tree), combined by majority vote.
 
     Returns:
-        Predicted classes for X_test, int array (n_test,)
+        Predicted classes for X_test, int array (n_test,) (vote ties -&gt; smallest label)
     &quot;&quot;&quot;
     # Your code here
     pass

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Diffusion Model - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Diffusion Model in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-diffusion" data-rh="true" />
@@ -99,26 +99,28 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Diffusion Model - End-to-End Implementations","description":"Implement E2E: Diffusion Model in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-diffusion","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Diffusion Model - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Diffusion Model in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Diffusion Model</h2>
-<p>Implement core components of a diffusion model (DDPM-style).</p>
-<h3>Forward Process (Adding Noise)</h3>
-<pre><code>x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-</code></pre>
-<h3>Noise Schedule</h3>
-<pre><code>β_t: Linear from β_start to β_end
-α_t = 1 - β_t
-α_bar_t = cumulative product of α_t
-</code></pre>
-<h3>Training Objective</h3>
-<pre><code>L = ||ε - ε_θ(x_t, t)||²
-</code></pre>
-<p>Model learns to predict the noise added at timestep t.</p>
-<h3>Reverse Process (Sampling)</h3>
-<pre><code>x_{t-1} = (1/sqrt(α_t)) * (x_t - (β_t/sqrt(1-α_bar_t)) * ε_θ(x_t, t)) + σ_t * z
-</code></pre>
-<h3>Task</h3>
-<p>Implement noise schedule, forward process, and reverse sampling.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: DiffusionModel(T=1000)
-Output: Denoised samples</pre><p>Forward and reverse diffusion</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Diffusion Model - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Diffusion Model in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Diffusion Model (DDPM)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The full DDPM machinery as one class: the noise schedule, closed-form forward noising, the ε-prediction training loss, the reverse step and the sampling loop. A real model would plug a neural network in as <code>noise_predictor</code>; here any callable works, so you can test the plumbing. It combines <strong>Diffusion Noise Schedule</strong>, <strong>Diffusion Forward Process</strong> and <strong>DDPM Reverse Sampling Step</strong> from Generative Models.</p>
+<h3>Pipeline</h3>
+<table><thead><tr><th>Phase</th><th>Step</th><th>Formula</th></tr></thead><tbody><tr><td>setup</td><td>schedule (0-indexed <code>t = 0..T−1</code>)</td><td><code>β = linspace(β_start, β_end, T)</code>, <code>α = 1 − β</code>, <code>ᾱ_t = Π_{s≤t} α_s</code></td></tr><tr><td>training</td><td>noise data at a random t</td><td><code>x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε</code></td></tr><tr><td>training</td><td>loss</td><td><code>mean((ε − ε_θ(x_t, t))²)</code></td></tr><tr><td>sampling</td><td>reverse step</td><td><code>mean = (x_t − β_t / sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t)</code>; <code>x_{t−1} = mean + sqrt(β_t)·z</code> for t &gt; 0, <code>mean</code> at t = 0</td></tr><tr><td>sampling</td><td>loop</td><td>start from <code>x ~ N(0, I)</code> and apply the reverse step for <code>t = T−1, T−2, ..., 0</code></td></tr></tbody></table>
+<h3>Method contract</h3>
+<table><thead><tr><th>Method</th><th>Returns</th></tr></thead><tbody><tr><td><code>__init__(T=1000, beta_start=1e-4, beta_end=0.02)</code></td><td>stores <code>self.T</code> and the schedule arrays <code>self.betas</code>, <code>self.alphas</code>, <code>self.alpha_bars</code></td></tr><tr><td><code>get_noise_schedule()</code></td><td>dict <code>{&#x27;betas&#x27;, &#x27;alphas&#x27;, &#x27;alpha_bars&#x27;}</code>, each <code>(T,)</code></td></tr><tr><td><code>forward_diffusion(x_0, t)</code></td><td>tuple <code>(x_t, noise)</code>, both shaped like <code>x_0</code>. Keep the starter&#x27;s <code>np.random.seed(42)</code> and draw <code>noise = np.random.randn(*x_0.shape)</code></td></tr><tr><td><code>reverse_step(x_t, t, predicted_noise)</code></td><td><code>x_{t−1}</code> shaped like <code>x_t</code>. For t &gt; 0 draw <code>z = np.random.randn(*x_t.shape)</code> (no re-seeding); at t = 0 draw nothing</td></tr><tr><td><code>compute_loss(true_noise, predicted_noise)</code></td><td>float, the MSE over all elements</td></tr><tr><td><code>sample(shape, noise_predictor)</code></td><td>final <code>x</code> of the given shape; calls <code>noise_predictor(x, t)</code> once per step with <code>t</code> from <code>T−1</code> down to <code>0</code></td></tr></tbody></table>
+<h3>Inputs</h3>
+<ul>
+<li><code>x_0</code>, <code>x_t</code>, <code>predicted_noise</code>, <code>true_noise</code>: float arrays of any matching shape</li>
+<li><code>t</code>: int in <code>[0, T−1]</code>; <code>shape</code>: tuple; <code>noise_predictor(x, t)</code>: callable returning an array shaped like <code>x</code></li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; vectorised inside each step (the only loop is over timesteps in <code>sample</code>).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Sampling needs T network calls. How do DDIM or a shorter flow-matching ODE cut this to 20–50?</li>
+<li>Why do training batches sample a random <code>t</code> per example instead of looping over all t?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: DiffusionModel(T=3, beta_start=0.1, beta_end=0.3).get_noise_schedule()
+Output: {&#x27;betas&#x27;: [0.1, 0.2, 0.3], &#x27;alphas&#x27;: [0.9, 0.8, 0.7], &#x27;alpha_bars&#x27;: [0.9, 0.72, 0.504]}</pre><p>ᾱ is the running product of α</p></div><div><pre class="overflow-auto">Input: dm.forward_diffusion(np.array([[1.0, -1.0]]), t=1) for the same model
+Output: (array([[1.1114, -0.9217]]), array([[0.4967, -0.1383]]))</pre><p>x_1 = sqrt(0.72)·x_0 + sqrt(0.28)·ε with ε the first draws after seed 42</p></div><div><pre class="overflow-auto">Input: dm.reverse_step(np.array([1.0, -0.5]), t=0, predicted_noise=np.array([0.2, 0.4]))
+Output: array([0.9874, -0.6604])</pre><p>At t = 0 there is no added noise: (x − 0.1 / sqrt(0.1)·ε) / sqrt(0.9)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 class DiffusionModel:
     def __init__(self, T: int = 1000, beta_start: float = 0.0001, beta_end: float = 0.02):
@@ -132,12 +134,12 @@ class DiffusionModel:
         &quot;&quot;&quot;
         self.T = T
 
-        # Compute noise schedule
+        # Compute the linear schedule: self.betas, self.alphas, self.alpha_bars (each (T,))
         # Your code here
         pass
 
     def get_noise_schedule(self) -&gt; dict:
-        &quot;&quot;&quot;Return computed noise schedule parameters.&quot;&quot;&quot;
+        &quot;&quot;&quot;Return {&#x27;betas&#x27;, &#x27;alphas&#x27;, &#x27;alpha_bars&#x27;}.&quot;&quot;&quot;
         # Your code here
         pass
 
@@ -147,13 +149,12 @@ class DiffusionModel:
 
         Args:
             x_0: Original data (batch, ...)
-            t: Timestep
+            t: Timestep (0-indexed)
 
         Returns:
-            x_t: Noisy data
-            noise: The noise that was added
+            (x_t, noise): x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * noise
         &quot;&quot;&quot;
-        np.random.seed(42)
+        np.random.seed(42)  # keep: draw noise once with np.random.randn(*x_0.shape)
         # Your code here
         pass
 
@@ -163,17 +164,18 @@ class DiffusionModel:
 
         Args:
             x_t: Noisy data at timestep t
-            t: Current timestep
-            predicted_noise: Noise predicted by model
+            t: Current timestep (0-indexed)
+            predicted_noise: Noise predicted by the model
 
         Returns:
-            x_{t-1}: Less noisy data
+            x_{t-1}: mean + sqrt(beta_t) * z for t &gt; 0 (z = np.random.randn(*x_t.shape)),
+                     just the mean at t = 0
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def compute_loss(self, true_noise: np.ndarray, predicted_noise: np.ndarray) -&gt; float:
-        &quot;&quot;&quot;Compute MSE loss between true and predicted noise.&quot;&quot;&quot;
+        &quot;&quot;&quot;MSE between true and predicted noise (Python float).&quot;&quot;&quot;
         # Your code here
         pass
 
@@ -186,11 +188,12 @@ class DiffusionModel:
             noise_predictor: Function that predicts noise given (x_t, t)
 
         Returns:
-            Generated samples
+            Generated samples: start from np.random.randn(*shape), then
+            reverse_step for t = T-1, ..., 0
         &quot;&quot;&quot;
         # Your code here
         pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

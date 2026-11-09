@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Nucleus (Top-p) Sampling - LLM Generation &amp; Decoding | ML Grind</title>
 <meta name="description" content="Implement Nucleus (Top-p) Sampling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-top-p-sampling" data-rh="true" />
@@ -100,33 +100,46 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Nucleus (Top-p) Sampling - LLM Generation & Decoding","description":"Implement Nucleus (Top-p) Sampling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-top-p-sampling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Nucleus (Top-p) Sampling - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Nucleus (Top-p) Sampling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Nucleus (Top-p) Sampling</h2>
-<p>Implement nucleus sampling (also called top-p sampling), which dynamically selects the smallest set of tokens whose cumulative probability exceeds a threshold p.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Sample from the <strong>nucleus</strong>: the smallest set of most-likely tokens whose total probability reaches <code>p</code>. Return the sampled token and the filtered, renormalized distribution.</p>
+<h3>Background</h3>
+<p>Top-k keeps a fixed number of tokens. Nucleus sampling (Holtzman et al., 2019) keeps a fixed amount of <strong>probability mass</strong> instead, so the cutoff adapts: after &quot;The capital of France is&quot;, one token holds 95% of the mass and the nucleus is tiny; after &quot;My favourite food is&quot;, the distribution is flat and the nucleus is large. Most chat APIs expose <code>top_p</code> (often 0.9 to 0.95) alongside temperature.</p>
 <h3>Algorithm</h3>
 <ol>
-<li>Compute probabilities from logits (with temperature)</li>
-<li>Sort tokens by probability (descending)</li>
-<li>Compute cumulative sum of sorted probabilities</li>
-<li>Find the cutoff: smallest set where cumulative probability &gt;= p</li>
-<li>Zero out tokens below the cutoff</li>
-<li>Re-normalize and sample</li>
+<li><code>probs = softmax(logits / temperature)</code> (stable).</li>
+<li>Sort the probabilities in descending order and take the cumulative sum <code>c</code>.</li>
+<li>Keep the sorted tokens up to and <strong>including</strong> the first one where <code>c &gt;= p</code> (the token that crosses the threshold is in the nucleus).</li>
+<li>Zero out every other token and renormalize the kept ones to sum to 1.</li>
+<li>Sample one token from the result.</li>
 </ol>
-<h3>Why Top-p?</h3>
-<p>Unlike top-k (fixed number of tokens), top-p <strong>adapts</strong> to the distribution:</p>
+<h3>Inputs</h3>
 <ul>
-<li>Confident prediction (one token at 95%): only 1-2 tokens kept</li>
-<li>Uncertain prediction (flat distribution): many tokens kept</li>
+<li><code>logits</code>: float array <code>(vocab_size,)</code></li>
+<li><code>p</code>: float in <code>(0, 1]</code></li>
+<li><code>temperature</code>: float <code>&gt; 0</code>, default 1.0 (applied before the nucleus is computed)</li>
 </ul>
-<h3>Common Values</h3>
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(token, filtered_probs)</code>:</p>
 <ul>
-<li>GPT-3/4: p = 0.9 or 0.95</li>
-<li>Creative writing: p = 0.95</li>
-<li>Factual tasks: p = 0.7</li>
+<li><code>token</code>: Python <code>int</code>, an index inside the nucleus</li>
+<li><code>filtered_probs</code>: float array <code>(vocab_size,)</code>, non-zero exactly on the nucleus, sums to 1</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def top_p_sampling(logits, p, temperature=1.0):
-    # Returns: sampled_token_index, filtered_probs
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: probs = [0.5, 0.3, 0.1, 0.05, 0.05], p = 0.8
-Output: Tokens with probs [0.5, 0.3] kept (cumsum = 0.8)</pre><p>Only 2 tokens needed to reach the 80% threshold</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>The most likely token is always kept, even if its probability alone exceeds <code>p</code>.</li>
+<li><code>p = 1.0</code> keeps every token with non-zero probability.</li>
+<li>Keep the <code>np.random.seed(42)</code> line and sample with <code>np.random.choice(len(probs), p=probs)</code>.</li>
+<li>Equivalent rule: keep a sorted token if the mass <strong>before</strong> it, <code>c - prob</code>, is still <code>&lt; p</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only: <code>np.argsort</code>, <code>np.cumsum</code>, <code>np.searchsorted</code> (or a boolean mask).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>In practice, frameworks apply temperature, then top-k, then top-p. Does the order of top-k and top-p matter?</li>
+<li>What goes wrong with top-p when the model is over-confident and wrong? (See min-p sampling for one fix.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: top_p_sampling(np.array([2.0, 1.0, 0.5, 0.1, -1.0]), p=0.8)
+Output: filtered_probs = [0.6285, 0.2312, 0.1402, 0.0, 0.0]</pre><p>Probabilities are [0.5585, 0.2055, 0.1246, 0.0835, 0.0278]; the cumulative sum first reaches 0.8 at the third token (0.8886), so three tokens are kept and renormalized.</p></div><div><pre class="overflow-auto">Input: top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), p=0.5)
+Output: (0, [1.0, 0.0, 0.0, 0.0, 0.0])</pre><p>The top token alone has probability 0.8258 &gt;= 0.5, so the nucleus is just token 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def top_p_sampling(logits, p, temperature=1.0):
     &quot;&quot;&quot;
@@ -135,16 +148,16 @@ def top_p_sampling(logits, p, temperature=1.0):
     Args:
         logits: Raw logits (vocab_size,)
         p: Cumulative probability threshold (0 &lt; p &lt;= 1)
-        temperature: Temperature for scaling
+        temperature: Temperature, applied first
 
     Returns:
         token: Sampled token index (int)
-        filtered_probs: Probability distribution after filtering (vocab_size,)
+        filtered_probs: (vocab_size,), non-zero on the nucleus only, sums to 1
     &quot;&quot;&quot;
     np.random.seed(42)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

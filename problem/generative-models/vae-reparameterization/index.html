@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>VAE Reparameterization Trick - Generative Models | ML Grind</title>
 <meta name="description" content="Implement VAE Reparameterization Trick in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/vae-reparameterization" data-rh="true" />
@@ -100,36 +100,60 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"VAE Reparameterization Trick - Generative Models","description":"Implement VAE Reparameterization Trick in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/vae-reparameterization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">VAE Reparameterization Trick - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement VAE Reparameterization Trick in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>VAE Reparameterization Trick</h2>
-<p>Implement the reparameterization trick that allows backpropagation through stochastic sampling in VAEs.</p>
-<h3>The Problem</h3>
-<p>We want to sample z ~ N(μ, σ²), but sampling is not differentiable.</p>
-<h3>The Solution</h3>
-<pre><code>ε ~ N(0, 1)
-z = μ + σ * ε
-</code></pre>
-<h3>Why It Works</h3>
+<h3>What you&#x27;ll build</h3>
+<p>The sampling step of a VAE: draw <code>z ~ N(μ, σ²)</code> in a way that lets gradients flow back into the encoder outputs <code>μ</code> and <code>log σ²</code>.</p>
+<h3>Background</h3>
+<p>A VAE encoder outputs a Gaussian per input, and the decoder needs a sample from it. &quot;Sample from N(μ, σ²)&quot; is not a differentiable operation in μ and σ, so backprop would stop there. The trick moves the randomness into an input that does not depend on the parameters:</p>
 <ul>
-<li>ε is sampled independently of parameters</li>
-<li>z is now a deterministic function of μ, σ, and ε</li>
-<li>Gradients can flow through μ and σ</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: mu = [0, 1], log_var = [0, 0]
-Output: z = mu + exp(0.5 * log_var) * epsilon</pre><p>log_var=0 means σ=1</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>draw <code>ε ~ N(0, I)</code> (independent of μ, σ)</li>
+<li>set <code>z = μ + σ ⊙ ε</code>, a deterministic, differentiable function of μ and σ</li>
+</ul>
+<p>Then <code>∂z/∂μ = 1</code> and <code>∂z/∂σ = ε</code>, so ordinary backprop trains the encoder.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">σ = exp(0.5 · log_var)          # log_var = log σ², so this is sqrt(σ²)
+ε ~ N(0, I)                     # shape (batch, latent_dim)
+z = μ + σ ⊙ ε                   # elementwise
+</code></pre>
+<p>Encoders predict <code>log_var</code> rather than σ because it is unconstrained (any real number) while σ must be positive.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>mu</code>: float array <code>(batch, latent_dim)</code></li>
+<li><code>log_var</code>: float array <code>(batch, latent_dim)</code>, any real values (very negative means σ ≈ 0)</li>
+</ul>
+<h3>Expected return format</h3>
+<ul>
+<li><code>z</code>: float array <code>(batch, latent_dim)</code></li>
+</ul>
+<h3>Conventions (the tests rely on these)</h3>
+<ul>
+<li>The starter code calls <code>np.random.seed(42)</code> first. Keep it, then draw the noise <strong>once</strong> with <code>np.random.randn(*mu.shape)</code>, so the tests can reproduce your ε.</li>
+<li>With <code>log_var</code> very negative, σ underflows to 0 and <code>z = mu</code> exactly.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (no Python loops).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does the KL term in the VAE loss stop σ from collapsing to 0?</li>
+<li>How would you reparameterize a categorical latent? (Gumbel-softmax.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: mu = np.array([[0.0, 1.0]]), log_var = np.array([[0.0, 0.0]])
+Output: array([[0.4967, 0.8617]])</pre><p>log_var = 0 gives σ = 1, so z = mu + ε with ε = [0.4967, -0.1383] (the first two draws after seed 42)</p></div><div><pre class="overflow-auto">Input: mu = np.array([[0.0, 1.0]]), log_var = np.log(np.array([[4.0, 4.0]]))
+Output: array([[0.9934, 0.7235]])</pre><p>σ² = 4 gives σ = 2, so the same ε is doubled before adding mu</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def reparameterize(mu, log_var):
     &quot;&quot;&quot;
-    Sample from latent distribution using reparameterization trick.
+    Sample z ~ N(mu, exp(log_var)) with the reparameterization trick.
 
     Args:
-        mu: Mean of latent distribution (batch, latent_dim)
-        log_var: Log variance of latent distribution (batch, latent_dim)
+        mu: Mean of the latent distribution, shape (batch, latent_dim)
+        log_var: Log variance of the latent distribution, shape (batch, latent_dim)
 
     Returns:
-        z: Sampled latent vectors (batch, latent_dim)
+        z: Sampled latent vectors, shape (batch, latent_dim)
     &quot;&quot;&quot;
-    np.random.seed(42)  # For reproducibility
+    np.random.seed(42)  # keep: draw eps once with np.random.randn(*mu.shape)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

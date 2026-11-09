@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>VAE Loss Function - Generative Models | ML Grind</title>
 <meta name="description" content="Implement VAE Loss Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/vae-loss" data-rh="true" />
@@ -99,39 +99,66 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"VAE Loss Function - Generative Models","description":"Implement VAE Loss Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/vae-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">VAE Loss Function - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement VAE Loss Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>VAE Loss (ELBO)</h2>
-<p>Implement the VAE loss function: reconstruction loss + KL divergence.</p>
-<h3>Loss Components</h3>
-<pre><code>L = L_reconstruction + L_KL
-
-L_reconstruction = MSE(x, x_reconstructed)
-L_KL = -0.5 * sum(1 + log_var - mu² - exp(log_var))   # sum over latent dims, mean over batch
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">VAE Loss Function - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement VAE Loss Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>VAE Loss (Negative ELBO)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The training loss of a Gaussian VAE: a reconstruction term plus the KL divergence between the encoder&#x27;s distribution and the standard-normal prior.</p>
+<h3>Background</h3>
+<p>Maximising the evidence lower bound (ELBO) is the same as minimising</p>
+<pre><code class="language-text">L = E_q[ -log p(x | z) ] + KL( q(z | x) || N(0, I) )
 </code></pre>
-<h3>Intuition</h3>
+<p>The first term makes the decoder reproduce its input; the second keeps every posterior close to the prior, so random <code>z ~ N(0, I)</code> decode to realistic samples. With a Gaussian decoder the first term becomes a squared error; with a diagonal-Gaussian encoder the KL has a closed form.</p>
+<h3>Formula</h3>
+<p>For example <code>i</code> with latent dimension <code>d</code>:</p>
+<pre><code class="language-text">KL_i = -0.5 · Σ_{j=1..d} ( 1 + log_var_ij − mu_ij² − exp(log_var_ij) )
+</code></pre>
+<p>This course uses the standard convention (Kingma &amp; Welling; the official PyTorch VAE example), averaged over the batch:</p>
 <ul>
-<li><strong>Reconstruction loss</strong>: Output should match input</li>
-<li><strong>KL divergence</strong>: Latent distribution should be close to N(0,1)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Perfect reconstruction, mu=0, var=1
-Output: Loss ≈ 0</pre><p>Both terms are minimized</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>recon_loss = mean((x − x_reconstructed)²)</code> over <strong>all</strong> elements (plain MSE)</li>
+<li><code>kl_loss = mean_i KL_i</code>: <strong>sum over latent dims, mean over the batch</strong></li>
+<li><code>total_loss = recon_loss + kl_loss</code></li>
+</ul>
+<p>The capstone <strong>E2E: Variational Autoencoder</strong> uses exactly the same convention.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>x</code>, <code>x_reconstructed</code>: float arrays <code>(batch, features)</code></li>
+<li><code>mu</code>, <code>log_var</code>: float arrays <code>(batch, latent_dim)</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p>A tuple of three Python floats, each rounded to 4 decimals, in this order:
+<code>(total_loss, recon_loss, kl_loss)</code></p>
+<h3>Edge cases</h3>
+<ul>
+<li><code>mu = 0</code>, <code>log_var = 0</code> (posterior equals the prior) gives <code>kl_loss = 0.0</code>.</li>
+<li>Each latent dim&#x27;s KL is ≥ 0, so <code>kl_loss ≥ 0</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why weight the KL with β (β-VAE), and what is &quot;posterior collapse&quot;?</li>
+<li>How does the loss change for binary data (BCE reconstruction)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x = [[1.0, 2.0]], x_reconstructed = [[0.0, 0.0]], mu = [[0.5, -0.5]], log_var = [[0.0, 1.0]]
+Output: (3.1091, 2.5, 0.6091)</pre><p>recon = (1 + 4) / 2 = 2.5; KL = -0.5·[(1 + 0 − 0.25 − 1) + (1 + 1 − 0.25 − e)] = 0.6091</p></div><div><pre class="overflow-auto">Input: x = x_reconstructed = zeros((2, 3)), mu = [[1.0, 1.0], [0.0, 0.0]], log_var = zeros((2, 2))
+Output: (0.5, 0.0, 0.5)</pre><p>Row 0 has KL 0.5 + 0.5 = 1 (summed over latent dims), row 1 has 0; the batch mean is 0.5</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def vae_loss(x, x_reconstructed, mu, log_var):
     &quot;&quot;&quot;
-    Compute VAE loss (negative ELBO).
+    Compute the VAE loss (negative ELBO).
 
     Args:
-        x: Original input (batch, features)
-        x_reconstructed: Reconstructed input (batch, features)
-        mu: Latent mean (batch, latent_dim)
-        log_var: Latent log variance (batch, latent_dim)
+        x: Original input, shape (batch, features)
+        x_reconstructed: Decoder output, shape (batch, features)
+        mu: Latent mean, shape (batch, latent_dim)
+        log_var: Latent log variance, shape (batch, latent_dim)
 
     Returns:
-        total_loss: Combined loss
-        recon_loss: Reconstruction loss
-        kl_loss: KL divergence
+        (total_loss, recon_loss, kl_loss): Python floats rounded to 4 decimals.
+        recon_loss is the MSE over all elements; kl_loss sums over latent dims
+        and averages over the batch; total_loss = recon_loss + kl_loss.
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

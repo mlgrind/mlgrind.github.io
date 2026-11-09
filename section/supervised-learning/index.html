@@ -78,73 +78,81 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Supervised Learning | ML Grind</title>
-<meta name="description" content="Implement core supervised learning algorithms from scratch." data-rh="true" />
+<meta name="description" content="Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/supervised-learning" data-rh="true" />
 <meta property="og:title" content="Supervised Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement core supervised learning algorithms from scratch." data-rh="true" />
+<meta property="og:description" content="Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/supervised-learning" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Supervised Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement core supervised learning algorithms from scratch." data-rh="true" />
+<meta name="twitter:description" content="Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Supervised Learning","description":"Implement core supervised learning algorithms from scratch.","url":"https://mlgrind.github.io/section/supervised-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Supervised Learning","description":"Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.","url":"https://mlgrind.github.io/section/supervised-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement core supervised learning algorithms from scratch.</p><div class="prose dark:prose-invert max-w-none"><h2>Supervised Learning</h2>
-<p>Supervised learning is when you train a model on labeled data to make predictions.</p>
-<h2>Key Concepts</h2>
-<h3>Linear Regression</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.</p><div class="prose dark:prose-invert max-w-none"><h2>Supervised Learning</h2>
+<p>Supervised learning fits a function <code>f(x) ≈ y</code> from labelled examples <code>(x_i, y_i)</code>. Linear and logistic models, trees and their ensembles still power most tabular ML in production (fraud scoring, ranking features, demand forecasting), and they are the standard warm-up in ML coding interviews: &quot;implement logistic regression from scratch&quot; tests your calculus, your NumPy and your feel for numerical stability in one go.</p>
+<h2>Core ideas</h2>
+<p>Almost every model here follows one recipe: pick a <strong>model family</strong>, a <strong>loss</strong> that measures how wrong it is, and an <strong>optimiser</strong> that reduces the loss.</p>
+<table><thead><tr><th>Model</th><th>Prediction</th><th>Loss</th><th>Fitting</th></tr></thead><tbody><tr><td>Linear regression</td><td><code>X @ w + b</code></td><td>MSE <code>mean((y_pred - y)^2)</code></td><td>gradient descent or closed form</td></tr><tr><td>Logistic regression</td><td><code>sigmoid(X @ w + b)</code></td><td>binary cross-entropy</td><td>gradient descent</td></tr><tr><td>Linear SVM</td><td><code>sign(X @ w + b)</code></td><td>hinge <code>max(0, 1 - y*s)</code> + <code>(lam/2)||w||^2</code></td><td>subgradient descent</td></tr><tr><td>Ridge / Lasso</td><td><code>X @ w + b</code></td><td>squared error + L2 / L1 penalty</td><td>closed form / coordinate descent</td></tr><tr><td>k-NN</td><td>majority vote of the k nearest points</td><td>none (lazy)</td><td>store the data</td></tr><tr><td>Gaussian Naive Bayes</td><td><code>argmax_c P(c) * prod_j N(x_j; mean_cj, var_cj)</code></td><td>likelihood</td><td>per-class means and variances</td></tr><tr><td>Trees, boosting, bagging</td><td>piecewise-constant regions</td><td>Gini / squared error</td><td>greedy splits, ensembles</td></tr></tbody></table>
+<p>Shapes used throughout: <code>X</code> is <code>(n_samples, n_features)</code>, <code>y</code> is <code>(n_samples,)</code>, <code>w</code> is <code>(n_features,)</code> and <code>b</code> is a scalar.</p>
+<p><strong>Gradients you should know by heart.</strong> For MSE, <code>dL/dw = (2/n) * X.T @ (y_pred - y)</code>. For BCE with a sigmoid output, the derivatives cancel and <code>dL/dw = (1/n) * X.T @ (y_pred - y)</code>: the same form, without the 2. For the hinge loss only the samples with margin <code>y * s &lt; 1</code> contribute.</p>
+<p><strong>Regularisation</strong> trades training fit for simpler models: L2 (<code>lam * ||w||^2</code>) shrinks every weight; L1 (<code>lam * ||w||_1</code>) drives some weights to exactly zero. The intercept is not penalised.</p>
+<p><strong>Trees and ensembles.</strong> A tree greedily picks the split that most reduces impurity (Gini <code>1 - sum_c p_c^2</code> for classification, squared error for regression). Single deep trees overfit; <strong>bagging</strong> averages trees on bootstrap samples to cut variance, and <strong>boosting</strong> adds small trees one by one, each fit to the residuals (negative gradient) of the current model, to cut bias.</p>
+<h2>Worked micro-example</h2>
+<p>Logistic regression on the AND gate: <code>X = [[0, 0], [0, 1], [1, 0], [1, 1]]</code>, <code>y = [0, 0, 0, 1]</code>, starting at <code>w = [0, 0]</code>, <code>b = 0</code>, learning rate 0.5.</p>
+<pre><code class="language-text">z      = X @ w + b        = [0, 0, 0, 0]
+y_pred = sigmoid(z)       = [0.5, 0.5, 0.5, 0.5]
+BCE    = -mean(log 0.5)   = 0.6931
+error  = y_pred - y       = [0.5, 0.5, 0.5, -0.5]
+dw     = X.T @ error / 4  = [(0.5 - 0.5) / 4, (0.5 - 0.5) / 4] = [0, 0]
+db     = mean(error)      = 0.25
+b      = 0 - 0.5 * 0.25   = -0.125
+</code></pre>
+<p>After one step only the bias moved: the model first learns that most labels are 0. After 1000 steps it reaches <code>w ≈ [6.01, 6.01]</code>, <code>b ≈ -9.20</code>, and only <code>(1, 1)</code> gets a positive logit.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>Goal</strong>: Predict continuous values</li>
-<li><strong>Formula</strong>: y = wx + b</li>
-<li><strong>Training</strong>: Minimize mean squared error (MSE)</li>
-<li><strong>Gradient descent</strong>: Update weights iteratively</li>
+<li><strong>log(0) and overflow</strong>: clip probabilities before <code>log</code> (<code>1e-15</code> in float64, about <code>1e-7</code> in float32), and never exponentiate large numbers. Use the stable sigmoid, and do Naive Bayes in log space with logsumexp.</li>
+<li><strong>Label conventions</strong>: BCE wants <code>{0, 1}</code>, the hinge loss wants <code>{-1, +1}</code>. Mixing them silently breaks training.</li>
+<li><strong>Simultaneous updates</strong>: compute all gradients from the current parameters before changing any of them.</li>
+<li><strong>Shapes</strong>: <code>X.T @ error</code> is <code>(n_features,)</code>; <code>X @ error</code> is a shape error or, worse, a silent bug when the matrix is square.</li>
+<li><strong>Scaling</strong>: k-NN distances and gradient-descent step sizes depend on feature scales; standardise using statistics from the <strong>training</strong> split only.</li>
+<li><strong>Tie-breaking</strong>: k-NN votes, tree splits and majority leaves need a rule. Every problem here states one so results are reproducible.</li>
+<li><strong>Unregularised logistic regression on separable data</strong> never converges: the weights grow forever.</li>
 </ul>
-<h3>Logistic Regression</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>Goal</strong>: Binary classification</li>
-<li><strong>Sigmoid function</strong>: Maps outputs to [0, 1] probabilities</li>
-<li><strong>Loss</strong>: Binary cross-entropy</li>
-<li><strong>Decision boundary</strong>: Linear separation of classes</li>
+<li>Derive the logistic regression gradient, and explain why BCE beats MSE for classification (convexity, gradients that do not vanish).</li>
+<li>&quot;Why does L1 give sparse weights?&quot; (the corners of the L1 ball; the soft-threshold update).</li>
+<li>Bias versus variance: when do bagging and boosting each help?</li>
+<li>Complexity: k-NN costs <code>O(n * d)</code> per query and <code>O(n * d)</code> memory; a split search is <code>O(d * n log n)</code> per node with sorting; gradient descent is <code>O(iterations * n * d)</code>.</li>
+<li>Follow-ups: how does scikit-learn define <code>alpha</code>, <code>C</code> and <code>var_smoothing</code>? The problems state these conventions and match sklearn where they mirror it.</li>
 </ul>
-<h3>Decision Trees</h3>
-<ul>
-<li><strong>Concept</strong>: Recursive binary splits based on features</li>
-<li><strong>Splitting criteria</strong>: Gini impurity, Information gain</li>
-<li><strong>Advantages</strong>: Interpretable, handles non-linear relationships</li>
-</ul>
-<h3>Support Vector Machines (SVMs)</h3>
-<ul>
-<li><strong>Goal</strong>: Find the maximum-margin hyperplane</li>
-<li><strong>Hinge loss</strong>: max(0, 1 - y * score) — penalizes misclassified and low-margin samples</li>
-<li><strong>Regularization</strong>: L2 penalty on weights to maximize margin</li>
-<li><strong>Key insight</strong>: Only &quot;support vectors&quot; (points near the boundary) affect the decision boundary</li>
-</ul>
-<h3>Beyond Linear Models</h3>
-<ul>
-<li><strong>k-Nearest Neighbours</strong>: no training; predict by majority vote of the k closest points</li>
-<li><strong>Gaussian Naive Bayes</strong>: Bayes&#x27; rule with per-class Gaussians, computed in log space with logsumexp</li>
-<li><strong>Ridge &amp; Lasso</strong>: L2 shrinks weights smoothly (closed form); L1 sets some exactly to zero (coordinate descent)</li>
-<li><strong>Gradient Boosting</strong>: add weak learners (stumps) one at a time, each fit to the residuals of the current model</li>
-</ul>
-<h3>The Interview Perspective</h3>
-<p>Interviewers often ask you to:</p>
-<ul>
-<li>Implement gradient descent from scratch</li>
-<li>Explain the math behind these algorithms</li>
-<li>Compute and interpret hinge loss</li>
-<li>Discuss trade-offs between algorithms</li>
-</ul>
-<p>Let&#x27;s build these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/supervised-learning/logistic-regression">Sigmoid Function →</a></li><li><a href="/problem/supervised-learning/binary-cross-entropy">Binary Cross-Entropy Loss →</a></li><li><a href="/problem/supervised-learning/hinge-loss">Hinge Loss →</a></li><li><a href="/problem/supervised-learning/decision-tree-split">Gini Impurity →</a></li><li><a href="/problem/supervised-learning/linear-regression-gd">Linear Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/logistic-regression-full">Logistic Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/linear-svm">Linear SVM with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/knn-classifier">k-Nearest Neighbours Classifier →</a></li><li><a href="/problem/supervised-learning/naive-bayes">Gaussian Naive Bayes →</a></li><li><a href="/problem/supervised-learning/ridge-lasso">Ridge &amp; Lasso Regression →</a></li><li><a href="/problem/supervised-learning/gradient-boosting">Gradient Boosting with Stumps →</a></li><li><a href="/problem/supervised-learning/decision-tree-bagging">Decision Tree Classifier with Bagging →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Sigmoid for Logistic Regression</strong>: a numerically stable logistic function.</li>
+<li><strong>Binary Cross-Entropy Loss</strong>: the log loss with clipping.</li>
+<li><strong>Hinge Loss</strong>: the margin loss behind SVMs.</li>
+<li><strong>Gini Impurity for Decision-Tree Splits</strong>: the impurity a classification tree minimises.</li>
+<li><strong>Linear Regression with Gradient Descent</strong>: the full predict, gradient, update loop.</li>
+<li><strong>Logistic Regression with Gradient Descent</strong>: the previous three problems combined into a classifier.</li>
+<li><strong>Linear SVM with Subgradient Descent</strong>: L2-regularised hinge loss.</li>
+<li><strong>k-Nearest Neighbours Classifier</strong>: vectorised distances and careful tie-breaking.</li>
+<li><strong>Gaussian Naive Bayes</strong>: sklearn&#x27;s <code>GaussianNB</code> in log space.</li>
+<li><strong>Ridge &amp; Lasso Regression</strong>: closed form and coordinate descent, matching sklearn.</li>
+<li><strong>Gradient Boosting with Stumps</strong>: residual fitting, like <code>GradientBoostingRegressor(max_depth=1)</code>.</li>
+<li><strong>Decision Tree Classifier with Bagging</strong>: recursive Gini trees and bootstrap voting.</li>
+</ol>
+<p>Related: <strong>Model Evaluation</strong> covers how to measure these models (precision/recall, ROC, cross-validation), and the softmax and cross-entropy problems in <strong>Neural Networks</strong> extend logistic regression to many classes.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/supervised-learning/logistic-regression">Sigmoid for Logistic Regression →</a></li><li><a href="/problem/supervised-learning/binary-cross-entropy">Binary Cross-Entropy Loss →</a></li><li><a href="/problem/supervised-learning/hinge-loss">Hinge Loss →</a></li><li><a href="/problem/supervised-learning/decision-tree-split">Gini Impurity for Decision-Tree Splits →</a></li><li><a href="/problem/supervised-learning/linear-regression-gd">Linear Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/logistic-regression-full">Logistic Regression with Gradient Descent →</a></li><li><a href="/problem/supervised-learning/linear-svm">Linear SVM with Subgradient Descent →</a></li><li><a href="/problem/supervised-learning/knn-classifier">k-Nearest Neighbours Classifier →</a></li><li><a href="/problem/supervised-learning/naive-bayes">Gaussian Naive Bayes →</a></li><li><a href="/problem/supervised-learning/ridge-lasso">Ridge &amp; Lasso Regression →</a></li><li><a href="/problem/supervised-learning/gradient-boosting">Gradient Boosting with Stumps →</a></li><li><a href="/problem/supervised-learning/decision-tree-bagging">Decision Tree Classifier with Bagging →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

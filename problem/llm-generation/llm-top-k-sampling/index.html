@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Top-k Sampling - LLM Generation &amp; Decoding | ML Grind</title>
 <meta name="description" content="Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling" data-rh="true" />
@@ -100,33 +100,45 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Top-k Sampling - LLM Generation & Decoding","description":"Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-top-k-sampling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Top-k Sampling - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Top-k Sampling in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Top-k Sampling</h2>
-<p>Implement top-k sampling, which restricts token selection to the k most likely tokens.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Sample the next token from only the <code>k</code> most likely tokens: apply temperature, keep the top <code>k</code> logits, renormalize, and draw one token. Return the token and the filtered distribution.</p>
+<h3>Background</h3>
+<p>Pure sampling from the full softmax occasionally picks a token from the long tail of thousands of unlikely tokens, and one bad token can derail the rest of the text. Top-k (Fan et al., 2018; GPT-2 used <code>k = 40</code>) truncates the tail. Its weakness is that <code>k</code> is fixed: when the model is confident, <code>k = 40</code> still admits 39 poor tokens; when it is uncertain, 40 may cut off good ones. <strong>Top-p</strong> (next problem) adapts the cutoff instead.</p>
 <h3>Algorithm</h3>
 <ol>
-<li>Compute probabilities from logits (via softmax)</li>
-<li>Find the top-k tokens by probability</li>
-<li>Zero out all other tokens</li>
-<li>Re-normalize the remaining probabilities</li>
-<li>Sample from the filtered distribution</li>
+<li><code>z = logits / temperature</code>.</li>
+<li>Find the indices of the <code>k</code> largest values of <code>z</code>.</li>
+<li>Set every other logit to <code>-inf</code>.</li>
+<li>Softmax (stable) over the result: the kept tokens renormalize to sum to 1, the rest get exactly 0.</li>
+<li>Sample one token index from that distribution.</li>
 </ol>
-<h3>Why Top-k?</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Prevents sampling extremely unlikely tokens</li>
-<li>Reduces incoherent or nonsensical outputs</li>
-<li>Simple to implement and widely used (GPT-2 used k=40)</li>
+<li><code>logits</code>: float array <code>(vocab_size,)</code></li>
+<li><code>k</code>: int, <code>1 &lt;= k &lt;= vocab_size</code></li>
+<li><code>temperature</code>: float <code>&gt; 0</code>, default 1.0 (applied <strong>before</strong> filtering)</li>
 </ul>
-<h3>Limitation</h3>
-<p>Fixed k doesn&#x27;t adapt to the shape of the distribution:</p>
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(token, filtered_probs)</code>:</p>
 <ul>
-<li>For a confident prediction (one token has 90% probability), k=50 still allows 49 unlikely tokens</li>
-<li>For a flat distribution, k=50 might cut off reasonable options</li>
+<li><code>token</code>: Python <code>int</code>, an index whose filtered probability is <code>&gt; 0</code></li>
+<li><code>filtered_probs</code>: float array <code>(vocab_size,)</code> with exactly <code>k</code> non-zero entries summing to 1</li>
 </ul>
-<p>This motivates <strong>nucleus (top-p) sampling</strong>.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def top_k_sampling(logits, k, temperature=1.0):
-    # Returns: sampled_token_index, filtered_probs
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits = [5.0, 3.0, 2.0, 1.0, 0.1], k = 3
-Output: Only top 3 tokens have non-zero probability</pre><p>Tokens at indices 0, 1, 2 are kept; indices 3, 4 are zeroed</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Keep the <code>np.random.seed(42)</code> line from the starter and sample with <code>np.random.choice(len(probs), p=probs)</code>, so runs are reproducible.</li>
+<li><code>k = 1</code> is greedy decoding: the argmax gets probability 1.</li>
+<li>Tests avoid ties at the <code>k</code>-th largest logit, so any tie-breaking is fine.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. <code>np.argsort</code> or <code>np.argpartition</code> for the top-k.</p>
+<h3>Follow-up</h3>
+<ul>
+<li><code>np.argpartition</code> finds the top-k in <code>O(V)</code> instead of <code>O(V log V)</code>. Does that matter for a 128k vocabulary on a GPU?</li>
+<li>How do top-k and temperature interact if you apply temperature <strong>after</strong> filtering instead?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), k=3)
+Output: (token in {0, 1, 2}, filtered_probs = [0.8438, 0.1142, 0.042, 0.0, 0.0])</pre><p>Only the three largest logits survive; softmax([5, 3, 2]) renormalizes them.</p></div><div><pre class="overflow-auto">Input: top_k_sampling(np.array([2.0, 0.0, 4.0, 1.0, -1.0]), k=3, temperature=2.0)
+Output: filtered_probs = [0.2312, 0.0, 0.6285, 0.1402, 0.0]</pre><p>Temperature first (logits become [1, 0, 2, 0.5, -0.5]), then keep the top 3.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def top_k_sampling(logits, k, temperature=1.0):
     &quot;&quot;&quot;
@@ -135,16 +147,16 @@ def top_k_sampling(logits, k, temperature=1.0):
     Args:
         logits: Raw logits (vocab_size,)
         k: Number of top tokens to keep
-        temperature: Temperature for scaling (applied before filtering)
+        temperature: Temperature, applied before filtering
 
     Returns:
         token: Sampled token index (int)
-        filtered_probs: Probability distribution after filtering (vocab_size,)
+        filtered_probs: (vocab_size,), k non-zero entries summing to 1
     &quot;&quot;&quot;
     np.random.seed(42)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

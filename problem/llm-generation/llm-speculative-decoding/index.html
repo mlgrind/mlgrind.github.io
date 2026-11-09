@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Speculative Decoding - LLM Generation &amp; Decoding | ML Grind</title>
 <meta name="description" content="Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding" data-rh="true" />
@@ -99,62 +99,69 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Speculative Decoding - LLM Generation & Decoding","description":"Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-speculative-decoding","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Speculative Decoding - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Speculative Decoding</h2>
-<p>Implement the core verification step of speculative decoding, a technique that speeds up LLM inference by using a small &quot;draft&quot; model to propose tokens and a large &quot;target&quot; model to verify them.</p>
-<h3>Overview</h3>
-<ol>
-<li><strong>Draft model</strong> (small, fast): Generates K candidate tokens quickly</li>
-<li><strong>Target model</strong> (large, slow): Verifies all K tokens in <strong>one forward pass</strong></li>
-<li><strong>Accept/Reject</strong>: Each draft token is accepted with probability min(1, p_target/p_draft)</li>
-</ol>
-<h3>Verification Algorithm</h3>
-<p>For each draft token i = 0, 1, ..., K-1:</p>
-<pre><code>r = uniform(0, 1)
-if r &lt; min(1, p_target[i] / p_draft[i]):
-    accept token i
-else:
-    reject token i and all subsequent tokens
-    resample from adjusted distribution: max(0, p_target - p_draft)
-    break
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Speculative Decoding - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Speculative Decoding in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Speculative Decoding (Verification Step)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The accept/reject loop of speculative decoding: given the probabilities a small <strong>draft</strong> model and the large <strong>target</strong> model assign to <code>K</code> drafted tokens, decide how many of them to keep.</p>
+<h3>Background</h3>
+<p>Decoding a large model is memory-bound: each step reads every weight to produce one token. Speculative decoding (Leviathan et al., 2023; Chen et al., 2023) lets a cheap draft model propose <code>K</code> tokens, then runs the target model <strong>once</strong> on all of them in parallel. Each drafted token <code>x_i</code> is accepted with probability <code>min(1, p_target(x_i) / p_draft(x_i))</code>; at the first rejection, the rest are thrown away and the target resamples that position from the residual distribution <code>max(0, p_target - p_draft)</code> (normalized). This scheme produces <strong>exactly</strong> the target model&#x27;s distribution, not an approximation, and typically gives a 2 to 3x speedup.</p>
+<p>This problem implements the accept/reject loop only. Resampling the rejected position and the bonus token after a fully accepted draft need the full distributions; they are the follow-up.</p>
+<h3>Algorithm</h3>
+<pre><code class="language-text">np.random.seed(42)                       # once, at the start (in the starter)
+accepted = []
+for i in 0 .. K-1:
+    a = 1.0 if draft_probs[i] == 0 else min(1, target_probs[i] / draft_probs[i])
+    r = np.random.uniform()              # one draw per drafted token, in order
+    if r &lt; a:  accepted.append(draft_tokens[i])
+    else:      break                     # reject token i and everything after it
+return accepted, len(accepted)
 </code></pre>
-<p>If all K tokens accepted, sample one more token from the target model&#x27;s distribution for position K.</p>
-<h3>Why It Works</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Draft model generates tokens cheaply (e.g., 10x faster)</li>
-<li>Target model verifies K tokens at once (parallel, not sequential)</li>
-<li>Accepted tokens are <strong>exactly</strong> distributed as if sampled from the target model</li>
-<li>Expected speedup: ~2-3x for well-matched draft/target pairs</li>
+<li><code>draft_probs</code>: list of <code>K</code> floats, <code>p_draft(x_i)</code> for each drafted token</li>
+<li><code>target_probs</code>: list of <code>K</code> floats, <code>p_target(x_i)</code></li>
+<li><code>draft_tokens</code>: list of <code>K</code> ints</li>
+<li><code>target_dist_next</code>: full target distribution after the last drafted token, or None. <strong>Not used in this problem</strong> (it is only needed for the bonus token).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def speculative_decode(draft_probs, target_probs, draft_tokens):
-    # Returns: accepted_tokens, num_accepted
-</code></pre>
-<h3>Important</h3>
-<p>The output distribution is mathematically guaranteed to match the target model exactly. This is not an approximation.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: draft_probs=[0.8, 0.7], target_probs=[0.9, 0.3], draft_tokens=[5, 12]
-Output: Token 5 likely accepted (0.9/0.8&gt;1), Token 12 may be rejected (0.3/0.7&lt;1)</pre><p>Higher target prob → more likely to accept</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(accepted_tokens, num_accepted)</code>:</p>
+<ul>
+<li><code>accepted_tokens</code>: list of ints, always a <strong>prefix</strong> of <code>draft_tokens</code></li>
+<li><code>num_accepted</code>: int in <code>[0, K]</code>, equal to <code>len(accepted_tokens)</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>target_probs[i] &gt;= draft_probs[i]</code> means certain acceptance (<code>a = 1</code>); <code>target_probs[i] = 0</code> means certain rejection.</li>
+<li>Draw exactly one uniform per token you examine, in order, after the seed, so results are reproducible (with seed 42 the first draws are 0.3745, 0.9507, 0.7320, ...).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Add the residual resampling on rejection and the bonus token from <code>target_dist_next</code> when all <code>K</code> are accepted. Prove that the output token is distributed exactly as <code>p_target</code>.</li>
+<li>If each token is accepted with probability <code>alpha</code>, the expected number of tokens per target pass is <code>(1 - alpha^(K+1)) / (1 - alpha)</code>. How do you choose <code>K</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: speculative_decode([0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [10, 20, 30])
+Output: ([10], 1)</pre><p>Each acceptance probability is 0.8; the draws are 0.3745 (accept) and 0.9507 (reject), so only token 10 is kept.</p></div><div><pre class="overflow-auto">Input: speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3])
+Output: ([1, 2, 3], 3)</pre><p>The target is more confident than the draft on every token, so all are accepted.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
     &quot;&quot;&quot;
-    Verify draft tokens using speculative decoding.
+    Verify draft tokens with the speculative decoding acceptance rule.
 
     Args:
-        draft_probs: Probability the draft model assigned to each drafted token.
-                     List of K floats.
-        target_probs: Probability the target model assigns to each drafted token.
-                      List of K floats.
-        draft_tokens: The K token IDs proposed by the draft model.
-                      List of K ints.
-        target_dist_next: Full target distribution for position after last draft token.
-                          Array of shape (vocab_size,) or None.
+        draft_probs: Draft-model probability of each drafted token (K floats)
+        target_probs: Target-model probability of each drafted token (K floats)
+        draft_tokens: The K drafted token ids
+        target_dist_next: Full target distribution after the last drafted
+                          token, or None (not used in this problem)
 
     Returns:
-        accepted_tokens: List of accepted token IDs
-        num_accepted: Number of accepted tokens (0 to K)
+        accepted_tokens: Accepted prefix of draft_tokens (list of ints)
+        num_accepted: len(accepted_tokens), between 0 and K
     &quot;&quot;&quot;
     np.random.seed(42)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

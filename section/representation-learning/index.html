@@ -78,55 +78,82 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Representation Learning &amp; Retrieval | ML Grind</title>
-<meta name="description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<meta name="description" content="Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/representation-learning" data-rh="true" />
 <meta property="og:title" content="Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
-<meta property="og:description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<meta property="og:description" content="Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/representation-learning" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Representation Learning &amp; Retrieval | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Contrastive learning, embedding search and retrieval for RAG." data-rh="true" />
+<meta name="twitter:description" content="Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Representation Learning & Retrieval","description":"Contrastive learning, embedding search and retrieval for RAG.","url":"https://mlgrind.github.io/section/representation-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Representation Learning & Retrieval","description":"Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.","url":"https://mlgrind.github.io/section/representation-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Contrastive learning, embedding search and retrieval for RAG.</p><div class="prose dark:prose-invert max-w-none"><h2>Representation Learning &amp; Retrieval</h2>
-<p>A good representation maps inputs to vectors (<strong>embeddings</strong>) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.</p>
-<h2>Embeddings and cosine similarity</h2>
-<p>Most embedding models are compared with <strong>cosine similarity</strong>, the dot product of L2-normalised vectors:</p>
-<pre><code>cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.</p><div class="prose dark:prose-invert max-w-none"><h2>Representation Learning &amp; Retrieval</h2>
+<h2>Why it matters</h2>
+<p>A good representation maps inputs to vectors (<strong>embeddings</strong>) where geometry carries meaning: similar things are close, unrelated things are far apart. Once you have that, search, clustering, deduplication, recommendation and retrieval for LLMs all come down to comparing vectors. Retrieval-augmented generation (RAG) is how most production LLM applications ground answers in private or fresh data, and &quot;design a RAG system&quot; is a standard LLM interview question.</p>
+<h2>Where this sits in the LLM pipeline</h2>
+<p>An embedding model is the same Transformer stack as an LLM, stopped before the LM head and pooled into one vector per text. RAG wires it in front of a generator:</p>
+<pre><code class="language-text">offline:  documents ──tokenize──&gt; Transformer encoder ──pool + L2-normalize──&gt; doc vectors (N, D) ──&gt; index
+online:   question  ──same encoder──&gt; query vector (D,)
+          ──retrieve──&gt; top candidates by BM25 and/or cosine        (Cosine Top-k, BM25 stage)
+          ──rerank────&gt; fused scores / cross-encoder                 (Retrieve and Rerank)
+          ──prompt────&gt; [instructions + top passages + question] ──&gt; LLM ──decode──&gt; answer
 </code></pre>
-<p>After normalisation, scoring a query against N documents is a single matrix multiply.</p>
-<h2>Contrastive learning</h2>
-<p>Instead of labels, contrastive methods learn from <strong>pairs</strong>: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the <strong>InfoNCE</strong> loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.</p>
-<table><thead><tr><th>Idea</th><th>Role</th></tr></thead><tbody><tr><td>Positives</td><td>The matching pair (diagonal of the similarity matrix)</td></tr><tr><td>Negatives</td><td>Every other item in the batch, so bigger batches give more negatives</td></tr><tr><td>Temperature τ</td><td>Sharpens or softens the softmax; CLIP learns it</td></tr><tr><td>Symmetric loss</td><td>Average of image→text and text→image cross-entropy</td></tr></tbody></table>
-<h2>Vector search</h2>
-<p>Exact search scores every document and keeps the top-k. Vector databases use <strong>approximate nearest neighbour</strong> indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.</p>
-<h2>Retrieval-augmented generation (RAG)</h2>
-<p>RAG answers a question by retrieving relevant passages and putting them in the LLM&#x27;s prompt:</p>
-<ol>
-<li><strong>Retrieve</strong> candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)</li>
-<li><strong>Rerank</strong> the candidates with a stronger signal (a cross-encoder, or a fusion of scores)</li>
-<li><strong>Generate</strong> with the top passages as context</li>
-</ol>
-<p>Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.</p>
-<h2>Interview Topics</h2>
+<p>The encoder is trained with a <strong>contrastive</strong> loss so that matching pairs (image and caption, query and passage) end up close.</p>
+<h2>Core ideas</h2>
+<p><strong>Cosine similarity</strong> is the dot product of L2-normalized vectors:</p>
+<pre><code class="language-text">cos(a, b) = a · b / (||a|| ||b||)            in [-1, 1]
+scores    = Q_n @ D_n.T                      (num_queries, num_docs), one matmul
+</code></pre>
+<p><strong>Contrastive learning (InfoNCE / CLIP).</strong> In a batch of <code>N</code> pairs, each item must pick its partner out of <code>N</code> candidates: a softmax over cosine similarities divided by a temperature <code>tau</code>.</p>
+<table><thead><tr><th>Idea</th><th>Role</th></tr></thead><tbody><tr><td>Positives</td><td>The matching pair: the diagonal of the <code>(N, N)</code> similarity matrix</td></tr><tr><td>Negatives</td><td>Every other item in the batch, so bigger batches give more (and harder) negatives</td></tr><tr><td>Temperature <code>tau</code></td><td>Sharpens or softens the softmax; CLIP learns it (starting at 0.07)</td></tr><tr><td>Symmetric loss</td><td>Average of image-to-text (rows) and text-to-image (columns) cross-entropy</td></tr></tbody></table>
+<p><strong>Vector search.</strong> Exact search scores every document and keeps the top-k. Vector databases use <strong>approximate nearest neighbour</strong> indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.</p>
+<p><strong>Hybrid retrieval.</strong> Lexical search (BM25) finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. BM25 per query term:</p>
+<pre><code class="language-text">IDF(t) * f(t,d) * (k1 + 1) / (f(t,d) + k1 * (1 - b + b * |d| / avgdl))
+</code></pre>
+<p><code>k1</code> saturates repeated terms, <code>b</code> penalizes long documents.</p>
+<h2>Worked micro-example</h2>
+<p>Two perfectly aligned pairs, <code>img = txt = [[1, 0], [0, 1]]</code>, <code>tau = 1</code>:</p>
+<pre><code class="language-text">logits = img_n @ txt_n.T / 1 = [[1, 0], [0, 1]]
+row 0: softmax([1, 0]) = [0.7311, 0.2689]  -&gt;  CE = -log(0.7311) = 0.3133
+loss_i2t = loss_t2i = 0.3133               -&gt;  loss = 0.3133
+</code></pre>
+<p>Even perfect alignment has a non-zero loss at <code>tau = 1</code>, because a cosine gap of 1 is a small logit gap. At <code>tau = 0.1</code> the gap becomes 10 and the loss drops to about 0.0001 (with 3 pairs), which is why the temperature matters so much.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li>Why normalise embeddings, and what the temperature does in InfoNCE</li>
-<li>Why in-batch negatives make large batches important for CLIP</li>
-<li>BM25&#x27;s term-frequency saturation (k1) and length normalisation (b)</li>
-<li>Exact vs approximate nearest-neighbour search</li>
-<li>How the retrieval stage limits a RAG system&#x27;s answer quality</li>
-</ul></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/representation-learning/infonce-loss">CLIP Contrastive Loss (InfoNCE) →</a></li><li><a href="/problem/representation-learning/embedding-search">Cosine Top-k Embedding Search →</a></li><li><a href="/problem/representation-learning/retrieve-and-rerank">RAG Retrieval: BM25 + Embedding Rerank →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<li><strong>Forgetting to normalize</strong> (or normalizing columns instead of rows): scores then reward vector length, not direction.</li>
+<li><strong>Unstable log-sum-exp</strong> at small temperatures: subtract the row max.</li>
+<li><strong>Asymmetry</strong>: the similarity matrix isn&#x27;t symmetric, so the two CLIP directions give different losses.</li>
+<li><strong>Tie order</strong>: <code>argsort(scores)[::-1]</code> reverses tied items; use a stable sort of <code>-scores</code> when order is specified.</li>
+<li><strong>Exact-token matching</strong>: BM25 doesn&#x27;t stem (<code>cats != cat</code>) and counts each distinct query term once.</li>
+<li><strong>Mixing scales</strong>: raw BM25 is unbounded while cosine is in <code>[-1, 1]</code>; normalize before fusing.</li>
+</ul>
+<h2>Interview angle</h2>
+<ul>
+<li>Why normalize embeddings, and what does the temperature do in InfoNCE?</li>
+<li>Why do in-batch negatives make large batches important for CLIP? What does SigLIP change?</li>
+<li>BM25&#x27;s term-frequency saturation (<code>k1</code>) and length normalization (<code>b</code>); when lexical beats dense retrieval.</li>
+<li>Exact vs approximate nearest-neighbour search: complexity (<code>O(N · D)</code> per query for brute force) and the recall trade-off.</li>
+<li>How the retrieval stage caps a RAG system&#x27;s quality, and how to evaluate it (recall@k, MRR) separately from generation.</li>
+</ul>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>CLIP Contrastive Loss (InfoNCE)</strong>: the symmetric contrastive loss that trains embedding models.</li>
+<li><strong>Cosine Top-k Embedding Search</strong>: exact dense retrieval with a defined tie order.</li>
+<li><strong>RAG Retrieval: BM25 + Embedding Rerank</strong>: lexical candidates, then weighted fusion with cosine.</li>
+</ol>
+<p><strong>Related problems.</strong> The encoder that produces the embeddings is the Transformer stack from <strong>Transformer Architecture</strong> (tokenizers, attention, LayerNorm); the generator that consumes the retrieved passages is the decoding loop from <strong>LLM Generation &amp; Decoding</strong>, scored with <strong>Token Cross-Entropy and Perplexity</strong> (LLM Internals). The cross-entropy inside InfoNCE is the same as <strong>Cross-Entropy Loss</strong> in Neural Networks. For full models, see <strong>E2E: Transformer Encoder</strong> (the kind of encoder used for embeddings) and <strong>Mini GPT</strong> (a decoder-only generator).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/representation-learning/infonce-loss">CLIP Contrastive Loss (InfoNCE) →</a></li><li><a href="/problem/representation-learning/embedding-search">Cosine Top-k Embedding Search →</a></li><li><a href="/problem/representation-learning/retrieve-and-rerank">RAG Retrieval: BM25 + Embedding Rerank →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

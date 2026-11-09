@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Greedy Longest-Match Tokenizer - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/longest-match-tokenizer" data-rh="true" />
@@ -100,26 +100,47 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Greedy Longest-Match Tokenizer - Transformer Architecture","description":"Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/longest-match-tokenizer","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Greedy Longest-Match Tokenizer - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Greedy Longest-Match Tokenizer in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Greedy Longest-Match Tokenizer</h2>
-<p>Given a fixed vocabulary, a simple and widely used way to tokenize text is <strong>greedy longest match</strong> (&quot;maximal munch&quot;): at each position, take the longest vocabulary entry that matches, emit its id, and continue after it. WordPiece (BERT) uses the same idea inside each word.</p>
-<h3>Default mode (<code>wordpiece=False</code>)</h3>
-<p>Scan <code>text</code> from left to right, character positions included as-is (spaces are ordinary characters and can be tokens):</p>
+<h3>What you&#x27;ll build</h3>
+<p>A tokenizer that turns text into token ids with a fixed vocabulary using <strong>greedy longest match</strong> (&quot;maximal munch&quot;), plus a WordPiece mode that works the way BERT&#x27;s tokenizer does.</p>
+<h3>Background</h3>
+<p>Once a vocabulary exists (for example, learned by <strong>BPE Tokenization</strong>), you still need an encoding rule. The simplest rule is to take, at each position, the longest vocabulary entry that matches, emit its id and continue after it. WordPiece (BERT) applies this inside each word, marking pieces that continue a word with <code>##</code>. It&#x27;s fast, but it&#x27;s <strong>not globally optimal</strong>: with tokens <code>{&#x27;ab&#x27;, &#x27;abc&#x27;, &#x27;cd&#x27;, &#x27;d&#x27;}</code>, <code>&quot;abcd&quot;</code> becomes <code>abc + d</code>, even though <code>ab + cd</code> also covers it.</p>
+<h3>Algorithm, default mode (<code>wordpiece=False</code>)</h3>
+<p>Scan <code>text</code> left to right; spaces are ordinary characters and can be tokens.</p>
 <ol>
 <li>At position <code>i</code>, find the <strong>longest</strong> vocabulary token that is a prefix of <code>text[i:]</code>.</li>
 <li>If one exists, emit its id and move past it.</li>
-<li>Otherwise emit <code>vocab[unk_token]</code> for the single character <code>text[i]</code> and move one character on. A run of unknown characters gives one unknown id <strong>per character</strong>.</li>
+<li>Otherwise emit <code>vocab[unk_token]</code> for the single character <code>text[i]</code> and move on by one character. A run of unknown characters gives one unknown id <strong>per character</strong>.</li>
 </ol>
-<p>Greedy is not globally optimal: with tokens <code>{&#x27;ab&#x27;, &#x27;abc&#x27;, &#x27;cd&#x27;, &#x27;d&#x27;}</code>, <code>&quot;abcd&quot;</code> becomes <code>abc + d</code>, even though <code>ab + cd</code> also covers it.</p>
-<h3>WordPiece mode (<code>wordpiece=True</code>)</h3>
+<h3>Algorithm, WordPiece mode (<code>wordpiece=True</code>)</h3>
 <ol>
 <li>Split <code>text</code> on whitespace (<code>text.split()</code>); whitespace never produces tokens.</li>
-<li>Tokenize each word with greedy longest match, where the first piece is looked up as-is and every <strong>later piece with a <code>##</code> prefix</strong> (<code>&quot;playing&quot;</code> becomes <code>play</code>, <code>##ing</code>).</li>
-<li>If at some point no piece matches, the <strong>whole word</strong> becomes a single unknown id (BERT&#x27;s behaviour); pieces already matched in that word are dropped.</li>
+<li>Tokenize each word with greedy longest match. The first piece is looked up as-is; every <strong>later piece is looked up with a <code>##</code> prefix</strong> (<code>&quot;playing&quot;</code> becomes <code>play</code>, <code>##ing</code>).</li>
+<li>If at some point no piece matches, the <strong>whole word</strong> becomes a single unknown id (BERT&#x27;s behaviour), and the pieces already matched in that word are dropped.</li>
 </ol>
+<h3>Inputs</h3>
+<ul>
+<li><code>text</code>: str (may be empty)</li>
+<li><code>vocab</code>: dict token string -&gt; int id; always contains <code>unk_token</code></li>
+<li><code>unk_token</code>: str, default <code>&#x27;[UNK]&#x27;</code></li>
+<li><code>wordpiece</code>: bool, default False</li>
+</ul>
 <h3>Expected Return Format</h3>
-<p>Return a list of token ids (Python ints). <code>unk_token</code> is always in <code>vocab</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: tokenize(&quot;abcab&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;a&#x27;: 1, &#x27;b&#x27;: 2, &#x27;ab&#x27;: 3, &#x27;abc&#x27;: 4, &#x27;c&#x27;: 5, &#x27;bc&#x27;: 6, &#x27; &#x27;: 7, &#x27;the&#x27;: 8, &#x27;th&#x27;: 9, &#x27;t&#x27;: 10, &#x27;h&#x27;: 11, &#x27;e&#x27;: 12})
-Output: [4, 3]</pre><p>&quot;abc&quot; is the longest match at position 0, then &quot;ab&quot;.</p></div><div><pre class="overflow-auto">Input: tokenize(&quot;abxc&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;a&#x27;: 1, &#x27;b&#x27;: 2, &#x27;ab&#x27;: 3, &#x27;abc&#x27;: 4, &#x27;c&#x27;: 5, &#x27;bc&#x27;: 6, &#x27; &#x27;: 7, &#x27;the&#x27;: 8, &#x27;th&#x27;: 9, &#x27;t&#x27;: 10, &#x27;h&#x27;: 11, &#x27;e&#x27;: 12})
+<p>A list of token ids (Python ints), in order. The empty string gives <code>[]</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Default mode never drops characters: unknown characters become one <code>[UNK]</code> each.</li>
+<li>WordPiece mode drops whitespace and collapses an untokenizable word into a single <code>[UNK]</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Plain Python. Bound the inner search by the longest token length, so each position costs <code>O(max_token_len)</code> lookups.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Which tokenization of <code>&quot;abcd&quot;</code> would a dynamic program that minimises the number of tokens choose? What does that cost?</li>
+<li>Why do LLM tokenizers work on bytes rather than characters (no <code>[UNK]</code> at all)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: tokenize(&quot;abcab&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;a&#x27;: 1, &#x27;b&#x27;: 2, &#x27;ab&#x27;: 3, &#x27;abc&#x27;: 4, &#x27;c&#x27;: 5, &#x27;bc&#x27;: 6, &#x27; &#x27;: 7, &#x27;the&#x27;: 8, &#x27;th&#x27;: 9, &#x27;t&#x27;: 10, &#x27;h&#x27;: 11, &#x27;e&#x27;: 12})
+Output: [4, 3]</pre><p>&quot;abc&quot; is the longest match at position 0, then &quot;ab&quot;.</p></div><div><pre class="overflow-auto">Input: tokenize(&quot;abxc&quot;, same vocab)
 Output: [3, 0, 5]</pre><p>No token starts with &quot;x&quot;, so it becomes [UNK] (id 0).</p></div><div><pre class="overflow-auto">Input: tokenize(&quot;unaffable plays&quot;, {&#x27;[UNK]&#x27;: 0, &#x27;un&#x27;: 1, &#x27;##aff&#x27;: 2, &#x27;##able&#x27;: 3, &#x27;play&#x27;: 4, &#x27;##ing&#x27;: 5, &#x27;##s&#x27;: 6, &#x27;u&#x27;: 7, &#x27;##n&#x27;: 8, &#x27;a&#x27;: 9, &#x27;##a&#x27;: 10}, wordpiece=True)
-Output: [1, 2, 3, 4, 6]</pre><p>un, ##aff, ##able, play, ##s</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def tokenize(text, vocab, unk_token=&#x27;[UNK]&#x27;, wordpiece=False):
+Output: [1, 2, 3, 4, 6]</pre><p>un, ##aff, ##able, then play, ##s.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def tokenize(text, vocab, unk_token=&#x27;[UNK]&#x27;, wordpiece=False):
     &quot;&quot;&quot;
     Greedy longest-match (maximal munch) tokenization.
 
@@ -131,7 +152,8 @@ Output: [1, 2, 3, 4, 6]</pre><p>un, ##aff, ##able, play, ##s</p></div><h2 id="pr
                    pieces of a word with a &#x27;##&#x27; prefix
 
     Returns:
-        List of token ids
+        List of token ids (one unk id per unknown character in default mode,
+        one unk id per untokenizable word in WordPiece mode)
     &quot;&quot;&quot;
     # Your code here
     pass

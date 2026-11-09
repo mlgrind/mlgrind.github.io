@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>E2E: Vector Quantized VAE - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae" data-rh="true" />
@@ -100,85 +100,68 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"E2E: Vector Quantized VAE - End-to-End Implementations","description":"Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-vqvae","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">E2E: Vector Quantized VAE - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement E2E: Vector Quantized VAE in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End VQ-VAE</h2>
-<p>Implement a complete VQ-VAE (Vector Quantized Variational Autoencoder) with encoder, vector quantization, and decoder.</p>
-<h3>Architecture</h3>
-<pre><code>Encoder: x → z_e (continuous latents)
-           ↓
-Vector Quantization: z_e → z_q (discrete latents from codebook)
-           ↓
-Decoder: z_q → x_reconstructed
+<h3>What you&#x27;ll build</h3>
+<p>A small but complete VQ-VAE: a vector-quantization layer with its losses, an encoder and decoder around it, the total loss, and codebook-usage statistics. It extends <strong>VQ-VAE Vector Quantization</strong> (Generative Models) into a model.</p>
+<h3>Background</h3>
+<p>A VQ-VAE autoencodes through a <strong>discrete</strong> bottleneck: each encoder vector is replaced by its nearest codebook entry. The indices are a compressed, tokenized version of the input that a Transformer can model later (this is how VQGAN and many audio and image tokenizers work). Unlike a VAE there is no KL term; the codebook and commitment losses keep encoder outputs and codes close.</p>
+<h3>Architecture (simplified to MLPs on 4×4 inputs)</h3>
+<table><thead><tr><th>Stage</th><th>Operation</th><th>Shape</th></tr></thead><tbody><tr><td>input</td><td><code>x</code></td><td><code>(batch, C, 4, 4)</code></td></tr><tr><td>flatten</td><td><code>x.reshape(batch, -1)</code></td><td><code>(batch, 16·C)</code></td></tr><tr><td>encoder</td><td><code>relu(· @ enc_w1 + enc_b1) @ enc_w2 + enc_b2</code></td><td><code>(batch, D)</code></td></tr><tr><td>as a 1×1 latent grid</td><td>reshape</td><td><code>z_e: (batch, 1, 1, D)</code></td></tr><tr><td>quantize</td><td>nearest row of <code>vq.embedding</code></td><td><code>z_q: (batch, 1, 1, D)</code>, <code>indices: (batch, 1, 1)</code></td></tr><tr><td>decoder</td><td><code>relu(flat(z_q) @ dec_w1 + dec_b1) @ dec_w2 + dec_b2</code></td><td><code>(batch, 16·C)</code></td></tr><tr><td>reshape</td><td></td><td><code>x_recon: (batch, C, 4, 4)</code> (no output activation)</td></tr></tbody></table>
+<p><code>D = embedding_dim</code>, <code>K = num_embeddings</code>. Both constructors are given: they seed <code>np.random.seed(42)</code> and create the weights listed above (the codebook <code>vq.embedding</code> is <code>N(0, 0.1²)</code> of shape <code>(K, D)</code>).</p>
+<h3>Losses</h3>
+<p><code>sg[·]</code> is stop-gradient; in a NumPy forward pass the two VQ terms have the same value:</p>
+<pre><code class="language-text">recon_loss      = mean((x − x_recon)²)
+codebook_loss   = mean((sg[z_e] − z_q)²)        # trains the codebook
+commitment_loss = β · mean((z_e − sg[z_q])²)     # trains the encoder; β is already included here
+total_loss      = recon_loss + codebook_loss + commitment_loss
 </code></pre>
-<h3>Key Difference from VAE</h3>
+<p>With autograd, the decoder&#x27;s gradient reaches the encoder through the straight-through estimator <code>z_q_st = z_e + sg[z_q − z_e]</code> (forward value <code>z_q</code>); the PyTorch track implements it.</p>
+<h3>Method contract</h3>
+<table><thead><tr><th>Method</th><th>Returns</th></tr></thead><tbody><tr><td><code>VectorQuantizer.quantize(z_e)</code></td><td>tuple <code>(z_q, indices, distances)</code>: <code>z_q</code> like <code>z_e</code>; <code>indices</code> int <code>(batch, H, W)</code> (ties → lowest index); <code>distances</code> = squared distance to the chosen code, <code>(batch, H, W)</code></td></tr><tr><td><code>VectorQuantizer.compute_loss(z_e, z_q, beta=0.25)</code></td><td>dict <code>{&#x27;codebook_loss&#x27;, &#x27;commitment_loss&#x27;}</code> (floats)</td></tr><tr><td><code>VQVAE.encode(x)</code></td><td><code>z_e (batch, 1, 1, D)</code></td></tr><tr><td><code>VQVAE.decode(z_q)</code></td><td><code>x_recon (batch, C, 4, 4)</code></td></tr><tr><td><code>VQVAE.forward(x)</code></td><td>dict <code>{&#x27;z_e&#x27;, &#x27;z_q&#x27;, &#x27;indices&#x27;, &#x27;x_recon&#x27;}</code> (decode <code>z_q</code>, not <code>z_e</code>)</td></tr><tr><td><code>VQVAE.compute_loss(x, x_recon, z_e, z_q, beta=0.25)</code></td><td>dict <code>{&#x27;total_loss&#x27;, &#x27;recon_loss&#x27;, &#x27;codebook_loss&#x27;, &#x27;commitment_loss&#x27;}</code></td></tr><tr><td><code>VQVAE.get_codebook_usage(indices)</code></td><td>int array <code>(K,)</code>: how many times each code was chosen (zeros for unused codes)</td></tr></tbody></table>
+<h3>Constraints</h3>
+<p>NumPy only; vectorised nearest-neighbour search (no loop over positions or codes).</p>
+<h3>Follow-up</h3>
 <ul>
-<li>VAE: Continuous latent space with KL regularization</li>
-<li>VQ-VAE: Discrete latent space using learned codebook</li>
-</ul>
-<h3>Vector Quantization</h3>
-<ol>
-<li>Encoder outputs continuous vectors z_e</li>
-<li>Find nearest codebook entry for each spatial position</li>
-<li>Replace z_e with quantized z_q from codebook</li>
-<li>Use straight-through estimator for gradients</li>
-</ol>
-<h3>Loss Function</h3>
-<pre><code>L = L_reconstruction + L_codebook + β * L_commitment
-
-L_reconstruction = ||x - x_hat||²
-L_codebook = ||sg[z_e] - e||²  (moves codebook toward encoder output)
-L_commitment = ||z_e - sg[e]||²  (commits encoder to codebook)
-</code></pre>
-<p>Where sg[] is stop-gradient.</p>
-<h3>Codebook EMA Update (Alternative)</h3>
-<p>Instead of gradient updates, codebook can be updated with exponential moving average:</p>
-<pre><code>N_i = γ * N_i + (1 - γ) * n_i     (count of assignments)
-m_i = γ * m_i + (1 - γ) * sum(z_e assigned to i)
-e_i = m_i / N_i
-</code></pre>
-<h3>Task</h3>
-<p>Implement encoder, vector quantization layer, decoder, and all loss components.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: VQVAE(input_dim=784, num_embeddings=512, embedding_dim=64)
-Output: Reconstructed images + discrete codes</pre><p>Full VQ-VAE forward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><strong>Codebook collapse</strong>: few codes get all the assignments. Usage statistics reveal it; dead-code restarts fix it.</li>
+<li><strong>EMA codebook updates</strong> replace the codebook loss: <code>N_k ← γN_k + (1−γ)n_k</code>, <code>m_k ← γm_k + (1−γ)Σ z_e assigned to k</code>, <code>e_k = m_k / N_k</code>.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: vq.embedding = [[0, 0], [10, 10], [5, 5]]; vq.quantize(np.array([[[[1, 1], [9, 8], [4, 6]]]]))
+Output: indices = [[[0, 1, 2]]], distances = [[[2.0, 5.0, 2.0]]]</pre><p>[9, 8] is 1² + 2² = 5 from [10, 10]; the others are 2 from their nearest code</p></div><div><pre class="overflow-auto">Input: vq.compute_loss(z_e, z_q) for the example above
+Output: {&#x27;codebook_loss&#x27;: 1.5, &#x27;commitment_loss&#x27;: 0.375}</pre><p>Mean squared error 9 / 6 = 1.5, and β = 0.25 times that</p></div><div><pre class="overflow-auto">Input: model.get_codebook_usage(np.array([[[0]], [[2]], [[2]]])) with K = 6
+Output: array([1, 0, 2, 0, 0, 0])</pre><p>Code 0 used once, code 2 twice, the rest never</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 class VectorQuantizer:
     def __init__(self, num_embeddings: int, embedding_dim: int):
         &quot;&quot;&quot;
-        Vector Quantization layer.
+        Vector quantization layer (given).
 
         Args:
             num_embeddings: Size of codebook (K)
-            embedding_dim: Dimension of each embedding
+            embedding_dim: Dimension of each embedding (D)
         &quot;&quot;&quot;
         np.random.seed(42)
-        # Initialize codebook with small random values
-        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
+        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1   # (K, D)
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
 
     def quantize(self, z_e: np.ndarray) -&gt; tuple:
         &quot;&quot;&quot;
-        Quantize encoder output to nearest codebook entries.
+        Replace every vector of z_e by its nearest codebook entry.
 
         Args:
-            z_e: Encoder output (batch, height, width, embedding_dim)
+            z_e: Encoder output (batch, H, W, D)
 
         Returns:
             z_q: Quantized vectors (same shape as z_e)
-            indices: Codebook indices (batch, height, width)
-            distances: Distances to nearest embeddings
+            indices: Codebook indices (batch, H, W); ties go to the lowest index
+            distances: Squared distance to the chosen code (batch, H, W)
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -&gt; dict:
         &quot;&quot;&quot;
-        Compute VQ losses.
-
-        Args:
-            z_e: Encoder output
-            z_q: Quantized vectors
-            beta: Commitment loss weight
-
         Returns:
-            Dictionary with codebook_loss and commitment_loss
+            {&#x27;codebook_loss&#x27;: mean((z_e - z_q)**2),
+             &#x27;commitment_loss&#x27;: beta * mean((z_e - z_q)**2)}
         &quot;&quot;&quot;
         # Your code here
         pass
@@ -188,65 +171,54 @@ class VQVAE:
     def __init__(self, input_channels: int, hidden_dim: int,
                  num_embeddings: int, embedding_dim: int):
         &quot;&quot;&quot;
-        Initialize VQ-VAE.
-
-        Args:
-            input_channels: Number of input channels
-            hidden_dim: Hidden layer dimension
-            num_embeddings: Codebook size
-            embedding_dim: Embedding dimension
+        VQ-VAE for (batch, input_channels, 4, 4) inputs, with MLP encoder/decoder (given).
         &quot;&quot;&quot;
         np.random.seed(42)
+        self.input_channels = input_channels
+        self.hidden_dim = hidden_dim
+        self.embedding_dim = embedding_dim
 
-        # Encoder: conv layers to get spatial feature maps
-        self.enc_conv1_w = np.random.randn(hidden_dim, input_channels, 4, 4) * 0.1
-        self.enc_conv1_b = np.zeros(hidden_dim)
-        self.enc_conv2_w = np.random.randn(embedding_dim, hidden_dim, 4, 4) * 0.1
-        self.enc_conv2_b = np.zeros(embedding_dim)
+        # Encoder: (C*16) -&gt; hidden_dim -&gt; embedding_dim
+        self.enc_w1 = np.random.randn(input_channels * 16, hidden_dim) * 0.1
+        self.enc_b1 = np.zeros(hidden_dim)
+        self.enc_w2 = np.random.randn(hidden_dim, embedding_dim) * 0.1
+        self.enc_b2 = np.zeros(embedding_dim)
 
-        # Vector Quantizer
+        # Vector quantizer (re-seeds, so its codebook does not depend on the encoder size)
         self.vq = VectorQuantizer(num_embeddings, embedding_dim)
 
-        # Decoder: transposed conv to reconstruct
-        self.dec_conv1_w = np.random.randn(hidden_dim, embedding_dim, 4, 4) * 0.1
-        self.dec_conv1_b = np.zeros(hidden_dim)
-        self.dec_conv2_w = np.random.randn(input_channels, hidden_dim, 4, 4) * 0.1
-        self.dec_conv2_b = np.zeros(input_channels)
-
-        self.embedding_dim = embedding_dim
+        # Decoder: embedding_dim -&gt; hidden_dim -&gt; (C*16)
+        self.dec_w1 = np.random.randn(embedding_dim, hidden_dim) * 0.1
+        self.dec_b1 = np.zeros(hidden_dim)
+        self.dec_w2 = np.random.randn(hidden_dim, input_channels * 16) * 0.1
+        self.dec_b2 = np.zeros(input_channels * 16)
 
     def encode(self, x: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Encode input to continuous latent representation.
-
-        Args:
-            x: Input (batch, channels, height, width)
+        x: (batch, C, 4, 4) -&gt; flatten -&gt; relu(x @ enc_w1 + enc_b1) @ enc_w2 + enc_b2
 
         Returns:
-            z_e: Encoder output (batch, height&#x27;, width&#x27;, embedding_dim)
+            z_e: (batch, 1, 1, embedding_dim)
         &quot;&quot;&quot;
-        # Your code here (simplified: use strided conv or just reshape for demo)
+        # Your code here
         pass
 
     def decode(self, z_q: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Decode quantized latents to reconstruction.
-
-        Args:
-            z_q: Quantized vectors (batch, height, width, embedding_dim)
+        z_q: (batch, 1, 1, D) -&gt; flatten -&gt; relu(z @ dec_w1 + dec_b1) @ dec_w2 + dec_b2
 
         Returns:
-            x_recon: Reconstructed input
+            x_recon: (batch, C, 4, 4)
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def forward(self, x: np.ndarray) -&gt; dict:
         &quot;&quot;&quot;
-        Full forward pass.
+        Encode, quantize, decode z_q.
 
         Returns:
-            Dictionary with z_e, z_q, indices, x_recon
+            {&#x27;z_e&#x27;, &#x27;z_q&#x27;, &#x27;indices&#x27;, &#x27;x_recon&#x27;}
         &quot;&quot;&quot;
         # Your code here
         pass
@@ -254,24 +226,21 @@ class VQVAE:
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -&gt; dict:
         &quot;&quot;&quot;
-        Compute total VQ-VAE loss.
-
         Returns:
-            Dictionary with total_loss, recon_loss, codebook_loss, commitment_loss
+            {&#x27;total_loss&#x27;, &#x27;recon_loss&#x27;, &#x27;codebook_loss&#x27;, &#x27;commitment_loss&#x27;},
+            total = recon + codebook + commitment (commitment already includes beta)
         &quot;&quot;&quot;
         # Your code here
         pass
 
     def get_codebook_usage(self, indices: np.ndarray) -&gt; np.ndarray:
         &quot;&quot;&quot;
-        Compute codebook usage statistics.
-
         Returns:
-            usage: Count of each codebook entry used
+            usage: int array (num_embeddings,), count of each code in indices
         &quot;&quot;&quot;
         # Your code here
         pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/e2e-implementations">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

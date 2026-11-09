@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>DDPM Reverse Sampling Step - Generative Models | ML Grind</title>
 <meta name="description" content="Implement DDPM Reverse Sampling Step in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/ddpm-sampling-step" data-rh="true" />
@@ -100,30 +100,43 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"DDPM Reverse Sampling Step - Generative Models","description":"Implement DDPM Reverse Sampling Step in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/ddpm-sampling-step","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">DDPM Reverse Sampling Step - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement DDPM Reverse Sampling Step in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>One Reverse Step of DDPM</h2>
-<p>A DDPM (Ho et al., 2020) generates data by starting from pure noise x_T ~ N(0, I) and denoising step by step. A network ε_θ(x_t, t) predicts the noise that was added; each reverse step removes a bit of it.</p>
-<h3>Noise schedule</h3>
-<pre><code>α_t = 1 - β_t
-ᾱ_t = α_0 · α_1 · ... · α_t        (cumulative product)
+<h3>What you&#x27;ll build</h3>
+<p>A single denoising step of DDPM sampling (Ho et al., 2020, Algorithm 2): given the current noisy sample <code>x_t</code> and the network&#x27;s noise prediction, produce <code>x_{t-1}</code>.</p>
+<h3>Background</h3>
+<p>Sampling starts from pure noise <code>x_T ~ N(0, I)</code> and applies this step T times. A network <code>ε_θ(x_t, t)</code> predicts the noise contained in <code>x_t</code>; the step removes the right fraction of it, rescales, and (except at the very end) injects a little fresh noise so the chain stays stochastic.</p>
+<h3>Formula</h3>
+<p>Schedule, with timesteps <strong>0-indexed</strong> into <code>betas</code> (t = 0 is the last, least noisy step):</p>
+<pre><code class="language-text">α_t = 1 − β_t
+ᾱ_t = α_0 · α_1 · ... · α_t                    # cumulative product
 </code></pre>
-<p>Timesteps are <strong>0-indexed</strong> into <code>betas</code>, so t = 0 is the last (least noisy) step.</p>
-<h3>Reverse step (Algorithm 2 of the paper)</h3>
-<pre><code>mean    = 1 / sqrt(α_t) · ( x_t - β_t / sqrt(1 - ᾱ_t) · ε_θ )
-x_{t-1} = mean + σ_t · z          z ~ N(0, I)
+<p>Reverse step:</p>
+<pre><code class="language-text">mean    = ( x_t − β_t / sqrt(1 − ᾱ_t) · ε_θ ) / sqrt(α_t)
+x_{t-1} = mean + σ_t · z,     σ_t = sqrt(β_t),  z ~ N(0, I)
 </code></pre>
 <ul>
-<li>Use <strong>σ_t² = β_t</strong> (the paper&#x27;s first choice; the other one is the posterior variance β̃_t = (1 - ᾱ_{t-1}) / (1 - ᾱ_t) · β_t)</li>
-<li>At <strong>t = 0</strong> no noise is added: return the mean</li>
-<li>The noise z is passed in so the step is deterministic</li>
+<li>Use <strong>σ_t² = β_t</strong> (the paper&#x27;s first choice; the alternative is the posterior variance <code>β̃_t = (1 − ᾱ_{t−1}) / (1 − ᾱ_t) · β_t</code>).</li>
+<li>At <strong>t = 0</strong> add no noise: return <code>mean</code>, and ignore <code>z</code>.</li>
+<li><code>z</code> is passed in, so the step is deterministic and testable.</li>
 </ul>
+<h3>Inputs</h3>
+<ul>
+<li><code>x_t</code>, <code>eps_pred</code>, <code>z</code>: float arrays of the same (any) shape</li>
+<li><code>t</code>: int in <code>[0, T−1]</code></li>
+<li><code>betas</code>: float array <code>(T,)</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p><code>x_{t-1}</code>: float array with the shape of <code>x_t</code>.</p>
 <h3>Sanity check</h3>
-<p>At t = 0, ᾱ_0 = α_0. If x_0&#x27; = sqrt(α_0)·x + sqrt(β_0)·ε and the model predicts ε exactly, the step returns x exactly.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def ddpm_step(x_t, eps_pred, t, betas, z):
-    # x_t, eps_pred, z: arrays of the same shape
-    # t: int timestep (0-indexed); betas: (T,) schedule
-    # returns x_{t-1}, same shape as x_t
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x_t = [1.0, -0.5], eps_pred = [0.2, 0.4], t = 2, betas = [0.1, 0.2, 0.3], z = [0.5, -1.0]
-Output: [1.3673, -1.349]</pre><p>ᾱ_2 = 0.9 · 0.8 · 0.7 = 0.504; mean = (x_t - 0.3 / sqrt(0.496) · ε) / sqrt(0.7), then add sqrt(0.3) · z</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>At t = 0, <code>ᾱ_0 = α_0</code>. If <code>x = sqrt(α_0)·x_0 + sqrt(β_0)·ε</code> and the model predicts ε exactly, the step returns <code>x_0</code> exactly.</p>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised over the sample.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does DDIM allow 50 steps instead of 1000? (A deterministic, non-Markovian sampler on the same trained model.)</li>
+<li>Where would classifier-free guidance plug in? (Replace <code>eps_pred</code>; see the next problem.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x_t = [1.0, -0.5], eps_pred = [0.2, 0.4], t = 2, betas = [0.1, 0.2, 0.3], z = [0.5, -1.0]
+Output: [1.3673, -1.349]</pre><p>ᾱ_2 = 0.9 · 0.8 · 0.7 = 0.504; mean = (x_t − 0.3 / sqrt(0.496) · ε) / sqrt(0.7), then add sqrt(0.3) · z</p></div><div><pre class="overflow-auto">Input: Same inputs with t = 0
+Output: [0.9874, -0.6604]</pre><p>Final step: mean = (x_t − 0.1 / sqrt(0.1) · ε) / sqrt(0.9), and z is ignored</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def ddpm_step(x_t, eps_pred, t, betas, z):
     &quot;&quot;&quot;

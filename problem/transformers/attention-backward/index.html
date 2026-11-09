@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Attention Backward Pass (dQ, dK, dV) - Transformer Architecture | ML Grind</title>
 <meta name="description" content="Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/transformers/attention-backward" data-rh="true" />
@@ -100,31 +100,51 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Attention Backward Pass (dQ, dK, dV) - Transformer Architecture","description":"Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/transformers/attention-backward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Attention Backward Pass (dQ, dK, dV) - Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Attention Backward Pass (dQ, dK, dV) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Attention Backward Pass</h2>
-<p>Implement single-head scaled dot-product attention <strong>and its backward pass by hand</strong>: given the upstream gradient <code>dOut = dL/dOut</code>, return <code>dQ</code>, <code>dK</code> and <code>dV</code>. This is the computation that autograd (and FlashAttention&#x27;s backward kernel) performs for every attention layer.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Single-head scaled dot-product attention <strong>and its backward pass by hand</strong>: given the upstream gradient <code>dOut = dL/dOut</code>, return <code>dQ</code>, <code>dK</code> and <code>dV</code>. This is what autograd (and FlashAttention&#x27;s backward kernel) computes for every attention layer.</p>
+<h3>Background</h3>
+<p>Interviewers ask for this to check that you can backpropagate through a matrix product and a softmax without a framework. The only non-obvious step is the softmax: its Jacobian is <code>diag(p) - p p^T</code>, but you never build it; you apply it to a vector in <code>O(m)</code> per row.</p>
 <h3>Forward</h3>
-<pre><code>S   = Q @ K.T / sqrt(d)          # (n, m), d = Q.shape[-1]
-S   = S masked with -inf where j &gt; i   (only if causal=True; then n == m)
-P   = softmax(S, axis=-1)         # each row sums to 1
-Out = P @ V                       # (n, d_v)
+<p>Shapes: <code>Q (n, d)</code>, <code>K (m, d)</code>, <code>V (m, d_v)</code>.</p>
+<pre><code class="language-text">S   = Q @ K.T / sqrt(d)                   # (n, m), d = Q.shape[-1]
+S   = S with -inf where j &gt; i             # only if causal=True (then n == m)
+P   = softmax(S, axis=-1)                 # each row sums to 1
+Out = P @ V                               # (n, d_v)
 </code></pre>
-<p>Shapes: <code>Q (n, d)</code>, <code>K (m, d)</code>, <code>V (m, d_v)</code>, <code>dOut (n, d_v)</code>.</p>
 <h3>Backward</h3>
-<p>Work backwards through each line:</p>
-<pre><code>dV = P.T @ dOut
-dP = dOut @ V.T
-dS = P * (dP - rowsum(dP * P))    # softmax Jacobian-vector product, row by row
-dQ = dS @ K / sqrt(d)
-dK = dS.T @ Q / sqrt(d)
+<p>Given <code>dOut</code> <code>(n, d_v)</code>, work back through each line:</p>
+<pre><code class="language-text">dV = P.T @ dOut                           # (m, d_v)
+dP = dOut @ V.T                           # (n, m)
+dS = P * (dP - rowsum(dP * P))            # softmax Jacobian-vector product, row by row
+dQ = dS @ K / sqrt(d)                     # (n, d)
+dK = dS.T @ Q / sqrt(d)                   # (m, d)
 </code></pre>
-<p>Masked positions have <code>P = 0</code>, so they get <code>dS = 0</code> automatically: no special case is needed in the backward pass. Use a numerically stable softmax (subtract the row max).</p>
+<p>Masked positions have <code>P = 0</code>, so they get <code>dS = 0</code> automatically: the backward pass needs no special case for the mask.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>Q</code>, <code>K</code>, <code>V</code> as above; <code>dOut</code>: <code>(n, d_v)</code></li>
+<li><code>causal</code>: bool; if True, query <code>i</code> may only attend to keys <code>j &lt;= i</code> (requires <code>n == m</code>)</li>
+</ul>
 <h3>Expected Return Format</h3>
 <ul>
 <li><code>attention_forward(Q, K, V, causal=False)</code>: <code>Out</code>, array <code>(n, d_v)</code></li>
 <li><code>attention_backward(Q, K, V, dOut, causal=False)</code>: tuple <code>(dQ, dK, dV)</code> with the shapes of <code>Q</code>, <code>K</code>, <code>V</code></li>
 </ul>
-<p>The hidden tests compare your gradients with <strong>finite differences</strong> of <code>L = sum(Out * dOut)</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
-Output: array([[3., 4.], [3., 4.]])</pre><p>All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.</p></div><div><pre class="overflow-auto">Input: attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]
-Output: array of shape (3, 2), every entry 2/3</pre><p>dV = P.T @ dOut, and each column of P sums to 2/3.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Use a numerically stable softmax (subtract the row max); the tests use scores of size about 100.</li>
+<li>Recompute <code>P</code> inside the backward pass (FlashAttention does the same instead of storing it).</li>
+<li>The hidden tests compare your gradients with <strong>finite differences</strong> of <code>L = sum(Out * dOut)</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised; no autograd.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>FlashAttention&#x27;s backward pass computes <code>rowsum(dP * P)</code> as <code>rowsum(dOut * Out)</code>. Why are they equal, and why is the second one cheaper?</li>
+<li>What is the memory cost of storing <code>P</code> for a 32k-token context with 32 heads in fp16?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))
+Output: [[3.0, 4.0], [3.0, 4.0]]</pre><p>All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.</p></div><div><pre class="overflow-auto">Input: attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]
+Output: [[0.6667, 0.6667], [0.6667, 0.6667], [0.6667, 0.6667]]</pre><p>dV = P.T @ dOut: each key gets weight 1/3 from each of the 2 queries.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def attention_forward(Q, K, V, causal=False):
     &quot;&quot;&quot;

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Diffusion Forward Process - Generative Models | ML Grind</title>
 <meta name="description" content="Implement Diffusion Forward Process in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/diffusion-forward" data-rh="true" />
@@ -100,37 +100,55 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Diffusion Forward Process - Generative Models","description":"Implement Diffusion Forward Process in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/diffusion-forward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Diffusion Forward Process - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Diffusion Forward Process in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Diffusion Forward Process (Adding Noise)</h2>
-<p>Implement the forward diffusion process that adds noise to data.</p>
+<h3>What you&#x27;ll build</h3>
+<p>The closed-form forward process <code>q(x_t | x_0)</code>: jump straight from clean data to its noisy version at step t, and return the noise you used (it is the training target of the denoiser).</p>
+<h3>Background</h3>
+<p>Adding <code>N(0, β_t)</code> noise T times in a row is equivalent to adding a single Gaussian whose size depends only on <code>ᾱ_t</code>. That is what makes diffusion training cheap: pick a random t, noise the batch in one shot, and train the network to predict ε.</p>
 <h3>Formula</h3>
-<pre><code>x_t = sqrt(ᾱ_t) * x_0 + sqrt(1 - ᾱ_t) * ε
-
-where ε ~ N(0, I)
+<pre><code class="language-text">ε    ~ N(0, I)                                      # same shape as x_0
+x_t  = sqrt(ᾱ_t) · x_0 + sqrt(1 − ᾱ_t) · ε
 </code></pre>
-<h3>Intuition</h3>
 <ul>
-<li>As t increases, ᾱ_t decreases</li>
-<li>More noise is added, signal is reduced</li>
-<li>At t=T, x_T ≈ pure noise</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x_0 (image), t=500, T=1000
-Output: x_t (noisy image)</pre><p>Halfway through diffusion process</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>ᾱ_t = alpha_bars[t]</code> (0-indexed, as in <strong>Diffusion Noise Schedule</strong>)</li>
+<li><code>ᾱ_t = 1</code> returns <code>x_0</code> unchanged; <code>ᾱ_t → 0</code> gives (almost) pure noise</li>
+<li>The variance is preserved: if <code>x_0</code> has unit variance, so does <code>x_t</code></li>
+</ul>
+<h3>Inputs</h3>
+<ul>
+<li><code>x_0</code>: float array of any shape <code>(batch, ...)</code></li>
+<li><code>t</code>: int, an index into <code>alpha_bars</code></li>
+<li><code>alpha_bars</code>: float array <code>(T,)</code> with values in [0, 1]</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A tuple <code>(x_t, noise)</code>, both float arrays with the shape of <code>x_0</code>.</p>
+<h3>Conventions (the tests rely on these)</h3>
+<p>The starter code calls <code>np.random.seed(42)</code>. Keep it and draw the noise <strong>once</strong> with <code>np.random.randn(*x_0.shape)</code>.</p>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>In training, t is sampled per example. How would you vectorise with a <code>(batch,)</code> array of timesteps? (Index <code>alpha_bars[t]</code> and reshape to <code>(batch, 1, ...)</code>.)</li>
+<li>Why predict ε instead of x_0 directly?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x_0 = np.array([[1.0, -1.0]]), t = 1, alpha_bars = np.array([0.9, 0.5])
+Output: x_t = [[1.0583, -0.8049]], noise = [[0.4967, -0.1383]]</pre><p>ᾱ_1 = 0.5, so x_t = sqrt(0.5)·x_0 + sqrt(0.5)·ε with ε the first draws after seed 42</p></div><div><pre class="overflow-auto">Input: x_0 = np.array([[1.0, 2.0, 3.0]]), t = 0, alpha_bars = np.array([1.0, 0.5, 0.1])
+Output: x_t = [[1.0, 2.0, 3.0]]</pre><p>ᾱ = 1 means no noise has been added yet</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def diffusion_forward(x_0, t, alpha_bars):
     &quot;&quot;&quot;
-    Add noise to data using forward diffusion.
+    Sample x_t ~ q(x_t | x_0) in closed form.
 
     Args:
-        x_0: Original data (batch, ...)
-        t: Timestep (int)
-        alpha_bars: Cumulative alpha products (T,)
+        x_0: Clean data, shape (batch, ...)
+        t: Timestep (int, 0-indexed into alpha_bars)
+        alpha_bars: Cumulative alpha products, shape (T,)
 
     Returns:
-        x_t: Noisy data at timestep t
-        noise: The noise that was added
+        (x_t, noise): both with the shape of x_0
     &quot;&quot;&quot;
-    np.random.seed(42)
+    np.random.seed(42)  # keep: draw the noise once with np.random.randn(*x_0.shape)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/generative-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

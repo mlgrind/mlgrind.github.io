@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Mini GPT (Character-Level Language Model) - End-to-End Implementations | ML Grind</title>
 <meta name="description" content="Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/e2e-implementations/e2e-mini-gpt" data-rh="true" />
@@ -100,40 +100,36 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Mini GPT (Character-Level Language Model) - End-to-End Implementations","description":"Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/e2e-implementations/e2e-mini-gpt","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Mini GPT (Character-Level Language Model) - End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Mini GPT (Character-Level Language Model) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Mini GPT: a Character-Level Language Model</h2>
-<p>Put the pieces together into a tiny decoder-only Transformer, the same architecture as GPT-2 (just very small), and run it end to end: forward pass, next-token loss, training and greedy generation.</p>
+<h3>What you&#x27;ll build</h3>
+<p>A tiny decoder-only Transformer with the same architecture as GPT-2 (just very small), run end to end: forward pass, next-token loss, a training loop and greedy generation.</p>
 <h3>Architecture</h3>
-<pre><code>idx (B, T) integer token ids, T &lt;= block_size
-x = tok_emb[idx] + pos_emb[:T]                       # (B, T, C)
-for each block:                                      # pre-norm residual blocks
-    x = x + Attn(LN1(x))                             # causal multi-head self-attention
-    x = x + MLP(LN2(x))                              # MLP(h) = gelu(h W_1 + b_1) W_2 + b_2
-h = LN_f(x)                                          # final LayerNorm
-logits = h @ W_lm                                    # (B, T, V)
-</code></pre>
-<p><strong>Causal self-attention</strong> with <code>H</code> heads, <code>d_head = C / H</code>:</p>
-<pre><code>q, k, v = split(x @ W_qkv, 3, axis=-1)               # each (B, T, C); W_qkv columns are [Q | K | V]
-reshape each to (B, H, T, d_head)                    # head h uses columns h*d_head:(h+1)*d_head
-scores = q @ k^T / sqrt(d_head), masked to -inf where key position &gt; query position
-out = softmax(scores) @ v -&gt; back to (B, T, C) -&gt; @ W_o
-</code></pre>
-<p>LayerNorm uses <code>eps = 1e-5</code>; GELU is the tanh approximation (both helpers are provided).</p>
-<h3>Loss</h3>
-<p>Mean cross-entropy of the next token over all <code>B*T</code> positions: <code>targets[b, t]</code> is the token that follows <code>idx[b, t]</code>. With the small (std 0.02) initialization the logits start near 0, so the <strong>initial loss is about <code>log(V)</code></strong>: the model starts out guessing uniformly.</p>
-<h3>Generation (greedy)</h3>
-<p>Repeat <code>max_new_tokens</code> times: crop the context to the last <code>block_size</code> tokens, run <code>forward</code>, take the <strong>argmax</strong> of the logits at the last position and append it.</p>
-<h3>Training</h3>
-<p><code>train_step</code> (provided in the NumPy track) does one SGD step on the LM head only, using <code>dL/dlogits = (softmax - one_hot) / N</code>. You write the loop.</p>
-<h3>Expected Return Format</h3>
+<table><thead><tr><th>Step</th><th>Operation</th><th>Shape</th></tr></thead><tbody><tr><td>input</td><td><code>idx</code>: integer token ids, <code>T ≤ block_size</code></td><td><code>(B, T)</code></td></tr><tr><td>embeddings</td><td><code>x = tok_emb[idx] + pos_emb[:T]</code></td><td><code>(B, T, C)</code></td></tr><tr><td>per block (pre-norm)</td><td><code>x = x + attention(LN1(x))</code></td><td><code>(B, T, C)</code></td></tr><tr><td>per block (pre-norm)</td><td><code>x = x + gelu(LN2(x) @ W_1 + b_1) @ W_2 + b_2</code></td><td>hidden <code>(B, T, 4C)</code></td></tr><tr><td>final norm</td><td><code>h = LN_f(x)</code> = <code>hidden_states(idx)</code></td><td><code>(B, T, C)</code></td></tr><tr><td>LM head (untied)</td><td><code>logits = h @ W_lm</code></td><td><code>(B, T, V)</code></td></tr></tbody></table>
+<h3>Causal self-attention (per block, <code>H = n_heads</code>, <code>d_head = C / H</code>)</h3>
+<ol>
+<li><code>q, k, v = split(x @ W_qkv, 3, axis=-1)</code>: each <code>(B, T, C)</code>; the columns of <code>W_qkv</code> are <code>[Q | K | V]</code>.</li>
+<li>Reshape each to <code>(B, H, T, d_head)</code>; head <code>h</code> uses columns <code>h·d_head : (h+1)·d_head</code>.</li>
+<li><code>scores = q @ kᵀ / sqrt(d_head)</code>, set to <code>−inf</code> where the key position is <strong>after</strong> the query position.</li>
+<li><code>out = softmax(scores) @ v</code>, merged back to <code>(B, T, C)</code>, then <code>@ W_o</code>. No biases in attention.</li>
+</ol>
+<p>The constructor (given) creates every parameter with GPT-2-style <code>N(0, 0.02²)</code> weights from <code>np.random.default_rng(seed)</code>; LayerNorm (<code>eps = 1e-5</code>), tanh-GELU and softmax helpers are provided.</p>
+<h3>Method contract</h3>
+<table><thead><tr><th>Method</th><th>Returns</th></tr></thead><tbody><tr><td><code>attention(x, blk)</code></td><td><code>(B, T, C)</code>, using the block dict&#x27;s <code>W_qkv</code> and <code>W_o</code></td></tr><tr><td><code>hidden_states(idx)</code></td><td><code>(B, T, C)</code>: embeddings → blocks → final LayerNorm</td></tr><tr><td><code>forward(idx)</code></td><td>logits <code>(B, T, vocab_size)</code></td></tr><tr><td><code>loss(idx, targets)</code></td><td>float: mean cross-entropy over all <code>B·T</code> positions; <code>targets[b, t]</code> is the token after <code>idx[b, t]</code></td></tr><tr><td><code>generate(idx, max_new_tokens)</code></td><td>int array <code>(B, T + max_new_tokens)</code> starting with <code>idx</code></td></tr><tr><td><code>train_step(idx, targets, lr)</code></td><td><em>(provided in the NumPy track)</em> one SGD step on <code>W_lm</code> only, using <code>dL/dlogits = (softmax − one_hot) / N</code></td></tr><tr><td><code>train(model, idx, targets, steps=20, lr=1.0)</code></td><td>list of <code>steps</code> losses, each computed <strong>before</strong> that step&#x27;s update</td></tr></tbody></table>
+<h3>Conventions</h3>
 <ul>
-<li><code>MiniGPT(vocab_size, d_model=16, n_heads=2, n_layers=1, block_size=8)</code></li>
-<li><code>model.forward(idx)</code>: logits <code>(B, T, vocab_size)</code></li>
-<li><code>model.loss(idx, targets)</code>: mean cross-entropy (scalar)</li>
-<li><code>model.generate(idx, max_new_tokens)</code>: integer array <code>(B, T + max_new_tokens)</code> that starts with <code>idx</code></li>
-<li><code>train(model, idx, targets, steps, lr)</code>: list of <code>steps</code> losses, each computed <strong>before</strong> that step&#x27;s update</li>
+<li><strong>Initial loss ≈ log(V)</strong>: with std-0.02 weights the logits start near 0, so the model guesses uniformly.</li>
+<li><strong>Greedy generation</strong>: repeat <code>max_new_tokens</code> times: crop the context to the last <code>block_size</code> tokens, run <code>forward</code>, append the <strong>argmax</strong> of the last position&#x27;s logits.</li>
+<li>Use a numerically stable log-softmax in <code>loss</code> (subtract the max).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; no loops over batch, heads or positions (only over blocks and generation steps).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Generation re-runs the whole context each step: how does a <strong>KV cache</strong> make each new token <code>O(T)</code> instead of <code>O(T²)</code>?</li>
+<li>Why do GPT-2 and most LLMs <strong>tie</strong> the LM head to <code>tok_emb</code>? (See <strong>Transformer Bug Hunt</strong>, which does.)</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: model = MiniGPT(vocab_size=5); model.forward(np.zeros((2, 8), dtype=int)).shape
-Output: (2, 8, 5)</pre><p></p></div><div><pre class="overflow-auto">Input: model.loss(idx, targets)
-Output: ≈ 1.609 (= log 5)</pre><p>Untrained model is close to uniform.</p></div><div><pre class="overflow-auto">Input: model.generate(np.array([[0, 1, 2]]), 5).shape
-Output: (1, 8)</pre><p></p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: (2, 8, 5)</pre><p>One distribution over the 5 tokens for every position of every sequence</p></div><div><pre class="overflow-auto">Input: seq = np.array([[i % 5 for i in range(9)]]); model.loss(seq[:, :-1], seq[:, 1:])
+Output: 1.6769</pre><p>Close to log 5 = 1.6094: the untrained model is nearly uniform over the 5 tokens</p></div><div><pre class="overflow-auto">Input: After train(model, seq[:, :-1], seq[:, 1:], steps=30, lr=2.0) on two shifted copies of the cycle 0→1→2→3→4→0: model.generate(np.array([[0, 1, 2]]), 5)
+Output: [[0, 1, 2, 3, 4, 0, 1, 2]]</pre><p>The prompt is kept and greedy decoding continues the learned cycle</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def layer_norm(x, gamma, beta, eps=1e-5):
     mu = x.mean(axis=-1, keepdims=True)

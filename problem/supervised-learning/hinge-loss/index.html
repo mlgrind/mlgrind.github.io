@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Hinge Loss - Supervised Learning | ML Grind</title>
 <meta name="description" content="Implement Hinge Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/supervised-learning/hinge-loss" data-rh="true" />
@@ -100,28 +100,40 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Hinge Loss - Supervised Learning","description":"Implement Hinge Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/supervised-learning/hinge-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Hinge Loss - Supervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Hinge Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Hinge Loss</h2>
-<p>Implement the hinge loss function used in Support Vector Machines (SVMs).</p>
+<p>Implement the mean <strong>hinge loss</strong>, the loss behind Support Vector Machines (SVMs).</p>
+<h3>Background</h3>
+<p>A linear SVM scores a sample with <code>s = x · w + b</code> and predicts <code>sign(s)</code>. The hinge loss asks for more than the right sign: it wants a <strong>margin</strong> <code>y * s &gt;= 1</code>. Samples beyond the margin cost nothing (that is why only the <em>support vectors</em> near the boundary shape the solution); samples inside the margin or on the wrong side pay linearly. You will minimise this loss in <strong>Linear SVM with Subgradient Descent</strong>.</p>
 <h3>Formula</h3>
-<pre><code>L = (1/n) * sum(max(0, 1 - y * s))
+<pre><code class="language-text">L = (1/n) * sum_i max(0, 1 - y_i * s_i)
 </code></pre>
-<p>Where:</p>
 <ul>
-<li><strong>y</strong>: True labels in {-1, +1}</li>
-<li><strong>s</strong>: Raw model scores (not probabilities)</li>
-<li><strong>n</strong>: Number of samples</li>
+<li><code>y_i</code> in {-1, +1}: the true label (note: <strong>not</strong> 0/1)</li>
+<li><code>s_i</code>: the raw score (a real number, not a probability)</li>
+<li><code>y_i * s_i</code>: the functional margin; positive means correctly classified</li>
+<li><code>n</code>: the number of samples</li>
 </ul>
-<h3>Properties</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Loss is <strong>0</strong> when the prediction has the correct sign AND confidence margin &gt;= 1</li>
-<li>Loss increases linearly when the prediction is wrong or within the margin</li>
-<li>Unlike cross-entropy, hinge loss encourages a &quot;margin&quot; of separation between classes</li>
+<li><code>y_true</code>: array of shape <code>(n,)</code> with values in {-1, +1}</li>
+<li><code>scores</code>: float array of shape <code>(n,)</code></li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def hinge_loss(y_true: np.ndarray, scores: np.ndarray) -&gt; float:
-</code></pre>
-<p>Returns the mean hinge loss rounded to 4 decimal places.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y_true = [1, -1, 1], scores = [0.5, -0.8, 1.5]
-Output: 0.2333</pre><p>Margins: [0.5, 0.2, -0.5] → losses: [0.5, 0.2, 0.0] → mean = 0.2333</p></div><div><pre class="overflow-auto">Input: y_true = [1, -1], scores = [2.0, -3.0]
-Output: 0.0</pre><p>Both predictions correct with margin &gt;= 1, so zero loss</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A Python float: the mean hinge loss <strong>rounded to 4 decimals</strong>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>A margin of <strong>exactly 1</strong> costs 0 (<code>max(0, 0) = 0</code>).</li>
+<li>A correct but unconfident prediction (<code>0 &lt; y*s &lt; 1</code>) still has a positive loss.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Compare the hinge loss with the logistic loss <code>log(1 + exp(-y*s))</code> as functions of the margin. Which one ever reaches exactly 0, and what does that imply for sparsity of the solution?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: hinge_loss([1, -1, 1], [0.5, -0.8, 1.5])
+Output: 0.2333</pre><p>Margins [0.5, 0.8, 1.5] give losses [0.5, 0.2, 0.0]; the mean is 0.7 / 3 = 0.2333.</p></div><div><pre class="overflow-auto">Input: hinge_loss([1, -1], [2.0, -3.0])
+Output: 0.0</pre><p>Both margins (2 and 3) are at least 1, so both losses are 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def hinge_loss(y_true, scores):
     &quot;&quot;&quot;
@@ -132,11 +144,11 @@ def hinge_loss(y_true, scores):
         scores: Raw model scores, shape (n,)
 
     Returns:
-        Mean hinge loss (float, rounded to 4 decimals)
+        Mean hinge loss as a Python float, rounded to 4 decimals
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/supervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval | ML Grind</title>
 <meta name="description" content="Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/representation-learning/retrieve-and-rerank" data-rh="true" />
@@ -99,49 +99,71 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"RAG Retrieval: BM25 + Embedding Rerank - Representation Learning & Retrieval","description":"Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/representation-learning/retrieve-and-rerank","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Hybrid Retrieval for RAG</h2>
-<p>A retrieval-augmented generation (RAG) system first <strong>retrieves</strong> a few passages, then pastes them into the LLM&#x27;s prompt. A common recipe is two-stage: a cheap lexical retriever (BM25) picks candidates, then a semantic signal (embedding similarity) <strong>reranks</strong> them.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">RAG Retrieval: BM25 + Embedding Rerank - Representation Learning &amp; Retrieval</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement RAG Retrieval: BM25 + Embedding Rerank in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Hybrid Retrieval for RAG: BM25 + Embedding Rerank</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A two-stage retriever: score every document with BM25, take the top-<code>n</code> as candidates, then rerank them with a weighted fusion of normalized BM25 and embedding cosine similarity.</p>
+<h3>Background</h3>
+<p>A retrieval-augmented generation (RAG) system answers a question by pasting a few retrieved passages into the LLM&#x27;s prompt, so the answer can only be as good as the retrieval. Lexical search (BM25) finds rare exact terms that embeddings blur (names, error codes, IDs); dense search finds paraphrases that share no words. Production systems combine them: a cheap first stage over the whole corpus, then a more expensive or more semantic second stage over a few candidates (here a score fusion; often a cross-encoder).</p>
 <h3>Stage 1: BM25 (Robertson &amp; Zaragoza)</h3>
-<p>For a query q and document d (both lists of tokens):</p>
-<pre><code>score(q, d) = Σ_{t in unique(q)}  IDF(t) · f(t,d) · (k1 + 1) / ( f(t,d) + k1 · (1 - b + b · |d| / avgdl) )
+<p>For a query <code>q</code> and a document <code>d</code> (both token lists):</p>
+<pre><code class="language-text">score(q, d) = sum over unique terms t of q:
+              IDF(t) * f(t, d) * (k1 + 1) / ( f(t, d) + k1 * (1 - b + b * |d| / avgdl) )
 
 IDF(t) = ln( (N - n_t + 0.5) / (n_t + 0.5) + 1 )
 </code></pre>
 <ul>
-<li>f(t, d): count of term t in d; |d|: number of tokens in d; avgdl: mean document length</li>
-<li>N: number of documents; n_t: number of documents containing t</li>
-<li>The <code>+ 1</code> inside the log (the Lucene variant) keeps IDF positive even for very common terms</li>
-<li>Defaults: <strong>k1 = 1.5</strong> (term-frequency saturation), <strong>b = 0.75</strong> (length normalisation)</li>
-<li>Each distinct query term counts once, in order of first appearance</li>
+<li><code>f(t, d)</code>: count of <code>t</code> in <code>d</code>; <code>|d|</code>: number of tokens in <code>d</code>; <code>avgdl</code>: mean document length</li>
+<li><code>N</code>: number of documents; <code>n_t</code>: number of documents containing <code>t</code></li>
+<li><code>k1</code> (default 1.5) saturates repeated terms; <code>b</code> (default 0.75) normalizes for length</li>
+<li>The <code>+ 1</code> inside the log (Lucene&#x27;s variant) keeps IDF positive even for very common terms</li>
 </ul>
 <h3>Stage 2: candidates</h3>
-<p>Take the top-n documents by BM25 (descending; ties go to the lower document index).</p>
-<h3>Stage 3: rerank with weighted score fusion</h3>
-<p>For each candidate c, with <code>cos_c</code> the cosine similarity between the query embedding and the candidate&#x27;s embedding:</p>
-<pre><code>bm25_norm_c = bm25_c / max_{c&#x27; in candidates} bm25_c&#x27;      (0 for all if that max is 0)
-fused_c     = alpha · bm25_norm_c + (1 - alpha) · cos_c
+<p>The top-<code>n</code> documents by BM25, descending; ties go to the lower document index.</p>
+<h3>Stage 3: rerank by weighted score fusion</h3>
+<p>For each candidate <code>c</code>, with <code>cos_c</code> the cosine similarity between <code>query_emb</code> and <code>doc_embs[c]</code> (denominator <code>||q|| · ||d|| + 1e-12</code>):</p>
+<pre><code class="language-text">bm25_norm_c = bm25_c / max over candidates of bm25     (all 0 if that max is 0)
+fused_c     = alpha * bm25_norm_c + (1 - alpha) * cos_c
 </code></pre>
-<p>Sort candidates by <code>fused</code> descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a [0, 1] scale like cosine. (Reciprocal rank fusion, which adds 1 / (60 + rank) from each ranker, is a common alternative that ignores raw scores; this problem uses the weighted fusion above.)</p>
+<p>Sort the candidates by <code>fused</code>, descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a <code>[0, 1]</code> scale comparable with cosine.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>query_tokens</code>: list of str; <code>docs_tokens</code>: list of <code>N</code> lists of str (no stemming: <code>&#x27;cats&#x27; != &#x27;cat&#x27;</code>)</li>
+<li><code>query_emb</code>: <code>(D,)</code>; <code>doc_embs</code>: <code>(N, D)</code></li>
+<li><code>n</code>: number of candidates (default 3); <code>alpha</code> in <code>[0, 1]</code> (default 0.5); <code>k1</code>, <code>b</code> as above</li>
+</ul>
 <h3>Expected Return Format</h3>
 <ul>
-<li><code>bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)</code> returns an (N,) array of BM25 scores</li>
-<li><code>retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs, n=3, alpha=0.5, k1=1.5, b=0.75)</code> returns a dictionary:
+<li><code>bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)</code>: <code>(N,)</code> float array</li>
+<li><code>retrieve_and_rerank(...)</code>: a dictionary with
 <ul>
-<li><code>&#x27;bm25&#x27;</code>: (N,) BM25 scores of every document</li>
-<li><code>&#x27;candidates&#x27;</code>: (n,) integer array of the top-n document indices by BM25</li>
-<li><code>&#x27;reranked&#x27;</code>: (n,) the same documents in fused order</li>
-<li><code>&#x27;fused&#x27;</code>: (n,) fused scores, aligned with <code>&#x27;reranked&#x27;</code></li>
+<li><code>&#x27;bm25&#x27;</code>: <code>(N,)</code> BM25 scores of every document</li>
+<li><code>&#x27;candidates&#x27;</code>: <code>(n,)</code> integer array, top-<code>n</code> document indices by BM25</li>
+<li><code>&#x27;reranked&#x27;</code>: <code>(n,)</code> the same documents in fused order</li>
+<li><code>&#x27;fused&#x27;</code>: <code>(n,)</code> fused scores, aligned with <code>&#x27;reranked&#x27;</code></li>
 </ul>
 </li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: query = [&#x27;cat&#x27;, &#x27;pet&#x27;], 5 short documents
-Output: bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0], reranked = [0, 2, 4]</pre><p>BM25 ranks doc 4 (it contains both words) first, but doc 0&#x27;s embedding is closest to the query, so the rerank moves it to the top. Doc 1 (&#x27;cats&#x27;, &#x27;pets&#x27;) scores 0 because BM25 matches exact tokens (no stemming)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Each distinct query term counts once (repeating a word in the query doesn&#x27;t double its weight).</li>
+<li><code>alpha = 1</code> keeps the BM25 order; <code>alpha = 0</code> sorts the candidates by cosine alone.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy and plain Python; no retrieval libraries.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Reciprocal rank fusion scores <code>sum over rankers of 1 / (60 + rank)</code> and ignores raw scores. When is it more robust than weighted fusion?</li>
+<li>How would you measure the retriever on its own (recall@k, MRR) before blaming the LLM for a wrong answer?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: query = [&#x27;cat&#x27;, &#x27;pet&#x27;], docs = [&#x27;the cat sat on the mat&#x27;, &#x27;dogs and cats are pets&#x27;, &#x27;the cat chased the mouse&#x27;, &#x27;stock markets fell sharply today&#x27;, &#x27;a cat is a small pet&#x27;] (split on spaces)
+Output: bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0]</pre><p>Doc 4 contains both terms. Doc 1 (&#x27;cats&#x27;, &#x27;pets&#x27;) scores 0: BM25 matches exact tokens only.</p></div><div><pre class="overflow-auto">Input: same query and docs, query_emb = [1.0, 0.5, 0.0], doc_embs rows 0, 2, 4 = [1, 0.5, 0], [0.6, 0.6, 0.4], [0, 0.3, 1]; n=3, alpha=0.5
+Output: reranked = [0, 2, 4], fused = [0.64, 0.5811, 0.5643]</pre><p>Doc 0&#x27;s embedding matches the query exactly (cos = 1), so the rerank lifts it above doc 4, whose embedding is far from the query.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
     &quot;&quot;&quot;
     BM25 score of every document for one query.
 
     Args:
-        query_tokens: list of query tokens
+        query_tokens: list of query tokens (each distinct term counts once)
         docs_tokens: list of N token lists
         k1, b: BM25 parameters
 
@@ -155,7 +177,8 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
 def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
                         n=3, alpha=0.5, k1=1.5, b=0.75):
     &quot;&quot;&quot;
-    BM25 top-n, then rerank by alpha * normalised BM25 + (1 - alpha) * cosine.
+    BM25 top-n, then rerank by alpha * (bm25 / max candidate bm25)
+    + (1 - alpha) * cosine(query_emb, doc_emb).
 
     Args:
         query_emb: (D,) query embedding
@@ -166,7 +189,7 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/representation-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/representation-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

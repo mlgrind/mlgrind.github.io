@@ -78,83 +78,81 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>LLM Generation &amp; Decoding | ML Grind</title>
-<meta name="description" content="Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding." data-rh="true" />
+<meta name="description" content="Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/llm-generation" data-rh="true" />
 <meta property="og:title" content="LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding." data-rh="true" />
+<meta property="og:description" content="Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/llm-generation" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="LLM Generation &amp; Decoding | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding." data-rh="true" />
+<meta name="twitter:description" content="Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"LLM Generation & Decoding","description":"Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.","url":"https://mlgrind.github.io/section/llm-generation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"LLM Generation & Decoding","description":"Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.","url":"https://mlgrind.github.io/section/llm-generation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.</p><div class="prose dark:prose-invert max-w-none"><h2>LLM Generation &amp; Decoding</h2>
-<p>Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.</p>
-<h2>The Autoregressive Pipeline</h2>
-<p>LLMs generate text one token at a time:</p>
-<pre><code>logits = model(input_tokens)        # Raw scores for each vocab token
-probs = softmax(logits / temperature)  # Convert to probabilities
-next_token = sample(probs)          # Pick a token
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.</p><div class="prose dark:prose-invert max-w-none"><h2>LLM Generation &amp; Decoding</h2>
+<h2>Why it matters</h2>
+<p>A trained LLM only outputs a distribution over the next token. Everything users see (how creative, repetitive or fast the model is) is decided by the decoding loop around it. Interviews for LLM roles routinely ask you to implement sampling, explain the KV cache, and reason about why decoding is memory-bound.</p>
+<h2>Where decoding sits in the pipeline</h2>
+<p>The <strong>Transformer Architecture</strong> section builds the model up to the logits. This section is the loop that turns logits into text:</p>
+<pre><code class="language-text">prompt ──tokenize──&gt; ids (1, T)
+       ──prefill───&gt; run all T tokens in parallel, fill the KV cache, logits for the last position
+loop:  logits (vocab,) ──repetition penalty──&gt; ──/ temperature──&gt; ──top-k / top-p filter──&gt;
+       probs ──sample (or argmax, or beam search)──&gt; next id
+       ──decode step──&gt; run ONE new token, reading the KV cache; append k, v
+until EOS or max_new_tokens
 </code></pre>
-<h2>Key Concepts</h2>
-<h3>Temperature Scaling</h3>
-<p>Controls randomness by scaling logits before softmax:</p>
-<pre><code>scaled_logits = logits / T
+<p>Prefill is compute-bound (big matrix multiplies over the prompt). Each decode step processes a single token but must read every weight and the whole KV cache, so it is <strong>memory-bandwidth-bound</strong>. KV caching, grouped-query attention and speculative decoding all attack that cost.</p>
+<h2>Core ideas</h2>
+<p><strong>From logits to a choice.</strong> With logits <code>z</code> of shape <code>(vocab_size,)</code>:</p>
+<table><thead><tr><th>Step</th><th>Formula</th><th>Effect</th></tr></thead><tbody><tr><td>Repetition penalty</td><td><code>z_t / penalty</code> if <code>z_t &gt; 0</code> else <code>z_t * penalty</code>, for generated <code>t</code></td><td>discourages loops</td></tr><tr><td>Temperature</td><td><code>p = softmax(z / T)</code></td><td><code>T &lt; 1</code> sharper, <code>T &gt; 1</code> flatter, ranking unchanged</td></tr><tr><td>Top-k</td><td>keep the <code>k</code> largest logits</td><td>fixed-size candidate set</td></tr><tr><td>Top-p (nucleus)</td><td>keep the smallest prefix with cumulative probability <code>&gt;= p</code></td><td>adaptive candidate set</td></tr><tr><td>Greedy / beam</td><td><code>argmax</code>, or keep the <code>B</code> best partial sequences</td><td>deterministic, used for &quot;one right answer&quot; tasks</td></tr></tbody></table>
+<p><strong>KV cache.</strong> Keys and values of past tokens never change under causal attention, so each step projects only the new token and attends over the cached <code>K, V</code>. Cache size: <code>2 · n_layers · n_kv_heads · d_head · seq_len</code> values per sequence.</p>
+<p><strong>Speculative decoding.</strong> A small draft model proposes <code>K</code> tokens; the target model scores all of them in one pass; token <code>i</code> is accepted with probability <code>min(1, p_target / p_draft)</code>, and the first rejection ends the draft. With residual resampling, the output follows the target distribution exactly.</p>
+<h2>Worked micro-example</h2>
+<p>Logits <code>z = [2.0, 1.0, 0.1]</code>:</p>
+<pre><code class="language-text">T = 1.0 : softmax(z)      = [0.659,  0.2424, 0.0986]
+T = 0.5 : softmax(z / .5) = [0.8638, 0.1169, 0.0193]     sharper
+T = 2.0 : softmax(z / 2)  = [0.5017, 0.3043, 0.194 ]     flatter
+top-k, k = 2 (T = 1)      = [0.7311, 0.2689, 0.0   ]     softmax of [2, 1]
+top-p, p = 0.8 (T = 1)    : cumulative [0.659, 0.9014, 1.0] reaches 0.8 at token 1
+                          = [0.7311, 0.2689, 0.0   ]     same two tokens here
 </code></pre>
+<h2>Common pitfalls</h2>
 <ul>
-<li>T &lt; 1: More deterministic (sharper distribution)</li>
-<li>T &gt; 1: More random (flatter distribution)</li>
-<li>T → 0: Greedy decoding (always pick most likely)</li>
+<li><strong>Overflow</strong>: subtract the max before <code>exp</code>, especially after dividing by a small temperature.</li>
+<li><strong>Top-p off-by-one</strong>: include the token that crosses <code>p</code>, or a confident distribution keeps nothing.</li>
+<li><strong>Order of operations</strong>: temperature before top-k/top-p; filter logits with <code>-inf</code>, then softmax (or renormalize after zeroing).</li>
+<li><strong>Repetition penalty sign</strong>: dividing a negative logit makes the token <em>more</em> likely; and each distinct token is penalized once.</li>
+<li><strong>Beam search underflow</strong>: add log-probabilities; never multiply raw probabilities over long sequences.</li>
+<li><strong>Reproducibility</strong>: seed once, then draw random numbers in a fixed order (the sampling problems here seed inside the function).</li>
 </ul>
-<h3>Sampling Strategies</h3>
-<table><thead><tr><th>Strategy</th><th>How It Works</th><th>When to Use</th></tr></thead><tbody><tr><td><strong>Top-k</strong></td><td>Keep only the k most likely tokens</td><td>Simple, predictable filtering</td></tr><tr><td><strong>Top-p (Nucleus)</strong></td><td>Keep smallest set with cumulative prob ≥ p</td><td>Adaptive, works across distributions</td></tr><tr><td><strong>Repetition Penalty</strong></td><td>Reduce probability of already-generated tokens</td><td>Prevent loops and repetition</td></tr></tbody></table>
-<h3>KV Cache</h3>
-<p>The key optimization for efficient autoregressive generation:</p>
+<h2>Interview angle</h2>
 <ul>
-<li>Cache Key and Value projections from previous tokens</li>
-<li>Only compute Q, K, V for the <strong>new</strong> token at each step</li>
-<li>Reduces per-token cost from O(n²) to O(n)</li>
+<li>Compare greedy, beam search, top-k, top-p. When would you use each?</li>
+<li>Why is decoding memory-bound, and how do KV caching, GQA, quantization and batching help? Estimate the KV cache of a 7B model at 4k tokens.</li>
+<li>Walk through speculative decoding and argue why it preserves the target distribution; what acceptance rate makes it worthwhile?</li>
+<li>Complexity per generated token: <code>O(t · d)</code> attention with a cache vs <code>O(t^2 · d)</code> without.</li>
 </ul>
-<h3>Beam Search</h3>
-<p>Maintain multiple candidate sequences:</p>
-<pre><code>score(sequence) = sum(log P(token_i))
-</code></pre>
-<ul>
-<li>Explores multiple paths simultaneously</li>
-<li>Finds higher-probability sequences than greedy decoding</li>
-<li>Used in translation, summarization, and structured output</li>
-</ul>
-<h3>Speculative Decoding</h3>
-<p>Use a small &quot;draft&quot; model to propose tokens, verified by the large model:</p>
+<h2>Problems in this section</h2>
 <ol>
-<li>Draft model generates K tokens quickly</li>
-<li>Target model verifies all K in one forward pass</li>
-<li>Accept with probability min(1, p_target / p_draft)</li>
+<li><strong>Temperature Scaling</strong>: <code>softmax(logits / T)</code>, stably.</li>
+<li><strong>Top-k Sampling</strong>: keep the <code>k</code> best tokens, renormalize, sample.</li>
+<li><strong>Nucleus (Top-p) Sampling</strong>: keep the smallest prefix with mass <code>&gt;= p</code>.</li>
+<li><strong>Repetition Penalty</strong>: the CTRL / Hugging Face penalty on already-generated tokens.</li>
+<li><strong>KV Cache for Efficient Generation</strong>: one cached decoding step of attention.</li>
+<li><strong>Beam Search Decoding</strong>: keep the <code>B</code> best hypotheses, with EOS handling.</li>
+<li><strong>Speculative Decoding</strong>: the draft-then-verify acceptance loop.</li>
 </ol>
-<ul>
-<li>Mathematically guarantees target model distribution</li>
-<li>2-3x speedup in practice</li>
-</ul>
-<h2>Interview Essentials</h2>
-<ul>
-<li>Explain temperature scaling and its effect on output diversity</li>
-<li>Compare top-k vs top-p sampling trade-offs</li>
-<li>Describe how KV cache reduces inference cost</li>
-<li>Implement beam search with length normalization</li>
-<li>Explain why speculative decoding preserves the target distribution</li>
-</ul>
-<p>Let&#x27;s implement these essential LLM techniques!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/llm-generation/llm-temperature-scaling">Temperature Scaling →</a></li><li><a href="/problem/llm-generation/llm-top-k-sampling">Top-k Sampling →</a></li><li><a href="/problem/llm-generation/llm-top-p-sampling">Nucleus (Top-p) Sampling →</a></li><li><a href="/problem/llm-generation/llm-repetition-penalty">Repetition Penalty →</a></li><li><a href="/problem/llm-generation/llm-kv-cache">KV Cache for Efficient Generation →</a></li><li><a href="/problem/llm-generation/llm-beam-search">Beam Search Decoding →</a></li><li><a href="/problem/llm-generation/llm-speculative-decoding">Speculative Decoding →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p><strong>Related problems.</strong> The logits come from the decoder built in <strong>Transformer Architecture</strong> (causal mask, GQA, RoPE) and measured by <strong>Token Cross-Entropy and Perplexity</strong> in <strong>LLM Internals</strong>, where <strong>Online Softmax</strong> shows how attention itself is made memory-efficient. <strong>Mini GPT</strong> (E2E Implementations) uses greedy generation with context cropping; try swapping in your top-p sampler. <strong>Transformer Bug Hunt</strong> checks the causal masking that makes cached decoding valid.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/llm-generation/llm-temperature-scaling">Temperature Scaling →</a></li><li><a href="/problem/llm-generation/llm-top-k-sampling">Top-k Sampling →</a></li><li><a href="/problem/llm-generation/llm-top-p-sampling">Nucleus (Top-p) Sampling →</a></li><li><a href="/problem/llm-generation/llm-repetition-penalty">Repetition Penalty →</a></li><li><a href="/problem/llm-generation/llm-kv-cache">KV Cache for Efficient Generation →</a></li><li><a href="/problem/llm-generation/llm-beam-search">Beam Search Decoding →</a></li><li><a href="/problem/llm-generation/llm-speculative-decoding">Speculative Decoding →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

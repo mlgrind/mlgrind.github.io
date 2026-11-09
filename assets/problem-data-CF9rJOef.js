@@ -73,51 +73,7 @@ Min-max squashes the four normal values into \`[0, 0.06]\` because the outlier s
 5. **Leakage-Safe Imputation and Scaling**: fit the imputer and scaler on train only, then transform both splits.
 
 Related: the cross-validation and evaluation problems in **Model Evaluation**, and the distance-based models in **Supervised Learning** and **Unsupervised Learning**, which depend on well-scaled features.
-    `,problems:[`normalize-features`,`handle-missing-data`,`one-hot-encode`,`stratified-split`,`leakage-safe-imputation`]},{id:`supervised-learning`,title:`Supervised Learning`,description:`Implement core supervised learning algorithms from scratch.`,icon:`📊`,introduction:`
-# Supervised Learning
-
-Supervised learning is when you train a model on labeled data to make predictions.
-
-## Key Concepts
-
-### Linear Regression
-- **Goal**: Predict continuous values
-- **Formula**: y = wx + b
-- **Training**: Minimize mean squared error (MSE)
-- **Gradient descent**: Update weights iteratively
-
-### Logistic Regression
-- **Goal**: Binary classification
-- **Sigmoid function**: Maps outputs to [0, 1] probabilities
-- **Loss**: Binary cross-entropy
-- **Decision boundary**: Linear separation of classes
-
-### Decision Trees
-- **Concept**: Recursive binary splits based on features
-- **Splitting criteria**: Gini impurity, Information gain
-- **Advantages**: Interpretable, handles non-linear relationships
-
-### Support Vector Machines (SVMs)
-- **Goal**: Find the maximum-margin hyperplane
-- **Hinge loss**: max(0, 1 - y * score) — penalizes misclassified and low-margin samples
-- **Regularization**: L2 penalty on weights to maximize margin
-- **Key insight**: Only "support vectors" (points near the boundary) affect the decision boundary
-
-### Beyond Linear Models
-- **k-Nearest Neighbours**: no training; predict by majority vote of the k closest points
-- **Gaussian Naive Bayes**: Bayes' rule with per-class Gaussians, computed in log space with logsumexp
-- **Ridge & Lasso**: L2 shrinks weights smoothly (closed form); L1 sets some exactly to zero (coordinate descent)
-- **Gradient Boosting**: add weak learners (stumps) one at a time, each fit to the residuals of the current model
-
-### The Interview Perspective
-Interviewers often ask you to:
-- Implement gradient descent from scratch
-- Explain the math behind these algorithms
-- Compute and interpret hinge loss
-- Discuss trade-offs between algorithms
-
-Let's build these algorithms!
-    `,problems:[`logistic-regression`,`binary-cross-entropy`,`hinge-loss`,`decision-tree-split`,`linear-regression-gd`,`logistic-regression-full`,`linear-svm`,`knn-classifier`,`naive-bayes`,`ridge-lasso`,`gradient-boosting`,`decision-tree-bagging`]},{id:`unsupervised-learning`,title:`Unsupervised Learning`,description:`Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.`,icon:`🔍`,introduction:`
+    `,problems:[`normalize-features`,`handle-missing-data`,`one-hot-encode`,`stratified-split`,`leakage-safe-imputation`]},{id:`supervised-learning`,title:`Supervised Learning`,description:`Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.`,icon:`📊`,introduction:'\n# Supervised Learning\n\nSupervised learning fits a function `f(x) ≈ y` from labelled examples `(x_i, y_i)`. Linear and logistic models, trees and their ensembles still power most tabular ML in production (fraud scoring, ranking features, demand forecasting), and they are the standard warm-up in ML coding interviews: "implement logistic regression from scratch" tests your calculus, your NumPy and your feel for numerical stability in one go.\n\n## Core ideas\n\nAlmost every model here follows one recipe: pick a **model family**, a **loss** that measures how wrong it is, and an **optimiser** that reduces the loss.\n\n| Model | Prediction | Loss | Fitting |\n|-------|------------|------|---------|\n| Linear regression | `X @ w + b` | MSE `mean((y_pred - y)^2)` | gradient descent or closed form |\n| Logistic regression | `sigmoid(X @ w + b)` | binary cross-entropy | gradient descent |\n| Linear SVM | `sign(X @ w + b)` | hinge `max(0, 1 - y*s)` + `(lam/2)\\|\\|w\\|\\|^2` | subgradient descent |\n| Ridge / Lasso | `X @ w + b` | squared error + L2 / L1 penalty | closed form / coordinate descent |\n| k-NN | majority vote of the k nearest points | none (lazy) | store the data |\n| Gaussian Naive Bayes | `argmax_c P(c) * prod_j N(x_j; mean_cj, var_cj)` | likelihood | per-class means and variances |\n| Trees, boosting, bagging | piecewise-constant regions | Gini / squared error | greedy splits, ensembles |\n\nShapes used throughout: `X` is `(n_samples, n_features)`, `y` is `(n_samples,)`, `w` is `(n_features,)` and `b` is a scalar.\n\n**Gradients you should know by heart.** For MSE, `dL/dw = (2/n) * X.T @ (y_pred - y)`. For BCE with a sigmoid output, the derivatives cancel and `dL/dw = (1/n) * X.T @ (y_pred - y)`: the same form, without the 2. For the hinge loss only the samples with margin `y * s < 1` contribute.\n\n**Regularisation** trades training fit for simpler models: L2 (`lam * ||w||^2`) shrinks every weight; L1 (`lam * ||w||_1`) drives some weights to exactly zero. The intercept is not penalised.\n\n**Trees and ensembles.** A tree greedily picks the split that most reduces impurity (Gini `1 - sum_c p_c^2` for classification, squared error for regression). Single deep trees overfit; **bagging** averages trees on bootstrap samples to cut variance, and **boosting** adds small trees one by one, each fit to the residuals (negative gradient) of the current model, to cut bias.\n\n## Worked micro-example\n\nLogistic regression on the AND gate: `X = [[0, 0], [0, 1], [1, 0], [1, 1]]`, `y = [0, 0, 0, 1]`, starting at `w = [0, 0]`, `b = 0`, learning rate 0.5.\n\n```text\nz      = X @ w + b        = [0, 0, 0, 0]\ny_pred = sigmoid(z)       = [0.5, 0.5, 0.5, 0.5]\nBCE    = -mean(log 0.5)   = 0.6931\nerror  = y_pred - y       = [0.5, 0.5, 0.5, -0.5]\ndw     = X.T @ error / 4  = [(0.5 - 0.5) / 4, (0.5 - 0.5) / 4] = [0, 0]\ndb     = mean(error)      = 0.25\nb      = 0 - 0.5 * 0.25   = -0.125\n```\n\nAfter one step only the bias moved: the model first learns that most labels are 0. After 1000 steps it reaches `w ≈ [6.01, 6.01]`, `b ≈ -9.20`, and only `(1, 1)` gets a positive logit.\n\n## Common pitfalls\n\n- **log(0) and overflow**: clip probabilities before `log` (`1e-15` in float64, about `1e-7` in float32), and never exponentiate large numbers. Use the stable sigmoid, and do Naive Bayes in log space with logsumexp.\n- **Label conventions**: BCE wants `{0, 1}`, the hinge loss wants `{-1, +1}`. Mixing them silently breaks training.\n- **Simultaneous updates**: compute all gradients from the current parameters before changing any of them.\n- **Shapes**: `X.T @ error` is `(n_features,)`; `X @ error` is a shape error or, worse, a silent bug when the matrix is square.\n- **Scaling**: k-NN distances and gradient-descent step sizes depend on feature scales; standardise using statistics from the **training** split only.\n- **Tie-breaking**: k-NN votes, tree splits and majority leaves need a rule. Every problem here states one so results are reproducible.\n- **Unregularised logistic regression on separable data** never converges: the weights grow forever.\n\n## Interview angle\n\n- Derive the logistic regression gradient, and explain why BCE beats MSE for classification (convexity, gradients that do not vanish).\n- "Why does L1 give sparse weights?" (the corners of the L1 ball; the soft-threshold update).\n- Bias versus variance: when do bagging and boosting each help?\n- Complexity: k-NN costs `O(n * d)` per query and `O(n * d)` memory; a split search is `O(d * n log n)` per node with sorting; gradient descent is `O(iterations * n * d)`.\n- Follow-ups: how does scikit-learn define `alpha`, `C` and `var_smoothing`? The problems state these conventions and match sklearn where they mirror it.\n\n## Problems in this section\n\n1. **Sigmoid for Logistic Regression**: a numerically stable logistic function.\n2. **Binary Cross-Entropy Loss**: the log loss with clipping.\n3. **Hinge Loss**: the margin loss behind SVMs.\n4. **Gini Impurity for Decision-Tree Splits**: the impurity a classification tree minimises.\n5. **Linear Regression with Gradient Descent**: the full predict, gradient, update loop.\n6. **Logistic Regression with Gradient Descent**: the previous three problems combined into a classifier.\n7. **Linear SVM with Subgradient Descent**: L2-regularised hinge loss.\n8. **k-Nearest Neighbours Classifier**: vectorised distances and careful tie-breaking.\n9. **Gaussian Naive Bayes**: sklearn\'s `GaussianNB` in log space.\n10. **Ridge & Lasso Regression**: closed form and coordinate descent, matching sklearn.\n11. **Gradient Boosting with Stumps**: residual fitting, like `GradientBoostingRegressor(max_depth=1)`.\n12. **Decision Tree Classifier with Bagging**: recursive Gini trees and bootstrap voting.\n\nRelated: **Model Evaluation** covers how to measure these models (precision/recall, ROC, cross-validation), and the softmax and cross-entropy problems in **Neural Networks** extend logistic regression to many classes.\n    ',problems:[`logistic-regression`,`binary-cross-entropy`,`hinge-loss`,`decision-tree-split`,`linear-regression-gd`,`logistic-regression-full`,`linear-svm`,`knn-classifier`,`naive-bayes`,`ridge-lasso`,`gradient-boosting`,`decision-tree-bagging`]},{id:`unsupervised-learning`,title:`Unsupervised Learning`,description:`Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.`,icon:`🔍`,introduction:`
 # Unsupervised Learning
 
 ## Why it matters
@@ -287,270 +243,252 @@ Ranking: with labels \`[0, 0, 1, 1]\` and scores \`[0.1, 0.4, 0.35, 0.8]\` there
 6. **Precision-Recall Curve and Best-F1 Threshold**: precision, recall and F1 at every threshold, and the best operating point.
 
 Related: the stratified split and leakage-safe preprocessing in **Data Preprocessing**, and the classifiers in **Supervised Learning** whose scores these metrics evaluate.
-    `,problems:[`precision-recall-f1`,`cross-validation`,`confusion-matrix`,`roc-auc`,`calibration-ece`,`pr-curve-thresholds`]},{id:`deep-learning`,title:`Deep Learning Basics`,description:`ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.`,icon:`⚡`,introduction:'\n# Deep Learning Basics\n\nA neural network is a stack of simple pieces: an **affine map** (`x @ W + b`), a **non-linearity** (ReLU), and at the end a **softmax** that turns scores into probabilities. This section builds those three pieces. Every later section (MLPs, CNNs, transformers) reuses them, and interviewers expect you to write them correctly from memory, including the numerically stable softmax.\n\n## Core Ideas\n\n### 1. The dense (fully-connected) layer\nEach output unit takes a weighted sum of all inputs plus a bias. For a batch, it is one matrix product:\n\n```text\nZ = X @ W + b        X: (batch, in_dim)   W: (in_dim, out_dim)   b: (out_dim,)   Z: (batch, out_dim)\n```\n\nThe bias broadcasts over the batch. The layer has `in_dim * out_dim + out_dim` parameters and costs `batch * in_dim * out_dim` multiply-adds. (PyTorch\'s `nn.Linear` stores the transpose, `weight: (out_dim, in_dim)`, and computes `X @ weight.T + bias`.)\n\n### 2. Non-linearities\nTwo linear layers in a row are still one linear map (`(X @ W1) @ W2 = X @ (W1 @ W2)`), so depth needs a non-linearity between them.\n\n| Activation | Formula | Range | Typical use |\n|------------|---------|-------|-------------|\n| ReLU | `max(0, x)` | `[0, inf)` | Hidden layers (default) |\n| Sigmoid | `1 / (1 + exp(-x))` | `(0, 1)` | Binary output, gates in LSTMs |\n| Tanh | `(e^x - e^-x) / (e^x + e^-x)` | `(-1, 1)` | RNN hidden states |\n| Softmax | `exp(x_i) / sum_j exp(x_j)` | probabilities summing to 1 | Multi-class output |\n\nReLU\'s gradient is exactly 1 for positive inputs, so it does not shrink gradients the way sigmoid (max slope 0.25) and tanh do when they saturate.\n\n### 3. Softmax and its stable form\nSoftmax is invariant to adding a constant to every score: `softmax(x - c) = softmax(x)`. Taking `c = max(x)` makes the largest exponent `exp(0) = 1`, so nothing overflows:\n\n```python\ndef softmax(x):\n    e = np.exp(x - np.max(x))\n    return e / e.sum()\n```\n\n## Worked Micro-Example\n\nOne input `x = [1, 2]`, a hidden layer with 3 ReLU units, and 2 output classes:\n\n```text\nW1 = [[1, -1, 0.5],      b1 = [0, -1, 0.5]\n      [1, 0.5, -1]]\nz  = x @ W1 + b1 = [3, -1, -1]\nh  = relu(z)     = [3, 0, 0]          # two units are inactive for this input\n\nW2 = [[1, -1], [0, 2], [0.5, 0.5]],  b2 = [0, 0]\nlogits = h @ W2 + b2 = [3, -3]\np = softmax(logits)  = [0.9975, 0.0025]\n```\n\nIf the true class is 0, the cross-entropy loss is `-log(0.9975) = 0.0025`.\n\n## Common Pitfalls\n\n- **Overflow in softmax**: `np.exp(1000)` is `inf` and `inf / inf` is `nan`. Always subtract the max first.\n- **Wrong reduction**: `np.max(x)` reduces an array to a scalar; `np.maximum(0, x)` compares element-wise. Mixing them up is a classic ReLU and softmax bug.\n- **Shape and layout**: `X @ W` needs `W` as `(in_dim, out_dim)`; `nn.Linear` uses the transpose. A bias of shape `(out_dim,)` broadcasts over rows; one of shape `(batch,)` does not.\n- **Batched softmax**: for a `(batch, classes)` array, reduce with `axis=-1, keepdims=True`, otherwise you normalise across the whole batch.\n- **In-place edits**: `x[x < 0] = 0` changes the caller\'s array (and breaks autograd in PyTorch).\n\n## Interview Angle\n\n- "Why do we need non-linear activations?" Without them the network is one linear map.\n- "Implement softmax." The follow-up is always "what if the inputs are large?" (the max-shift), then "what is its Jacobian?" (`diag(p) - p pᵀ`) and "what is the gradient of softmax + cross-entropy?" (`p - y`).\n- "ReLU vs sigmoid vs tanh?" Saturation and vanishing gradients, dying ReLUs, zero-centred outputs.\n- Count the parameters and FLOPs of a dense layer.\n\n## Problems in This Section\n\n1. **ReLU Activation**: element-wise `max(0, x)` for arrays of any shape.\n2. **Dense Layer Forward Pass (ReLU)**: `relu(X @ W + b)` for a whole batch.\n3. **Numerically Stable Softmax**: probabilities from logits without overflow.\n\nNext, **Neural Networks** chains these into a full MLP with a hand-written backward pass, cross-entropy, initialization, batch norm and dropout. Leaky ReLU, GELU and temperature softmax are in **PyTorch Basics**.\n    ',problems:[`perceptron`,`neural-network-forward`,`backpropagation`]},{id:`neural-networks`,title:`Neural Networks`,description:`Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.`,icon:`🧠`,introduction:'\n# Neural Networks\n\nThis section turns the building blocks from Deep Learning Basics into a network you can **train**: a loss to minimise, a hand-written backward pass, and the three techniques that make deep networks train reliably (initialization, batch normalization, dropout). "Implement the forward and backward pass of an MLP in NumPy" is one of the most common ML coding interview questions, and every framework bug you will debug later is easier once you have written backprop yourself.\n\n## Core Ideas\n\n### The training loop in one picture\n\n```text\nforward:   X -> Z1 = X @ W1 + b1 -> A1 = relu(Z1) -> Z2 = A1 @ W2 + b2 -> p = softmax(Z2) -> L\nbackward:  dW1, db1 <- dZ1 = dA1 * (Z1 > 0) <- dA1 = dZ2 @ W2.T <- dZ2 = (p - Y) / m <- L\nupdate:    W -= lr * dW        (for every parameter)\n```\n\nShapes: `X (m, n_features)`, `W1 (n_features, n_hidden)`, `W2 (n_hidden, n_classes)`, `Y` one-hot `(m, n_classes)`. Every gradient has the same shape as its parameter.\n\n### Cross-entropy and the `p - y` gradient\nFor one-hot labels, cross-entropy is the negative log-probability of the correct class, averaged over the batch: `L = -(1/m) * sum(Y * log(p))`. Combined with softmax, the gradient with respect to the logits collapses to `(p - Y) / m`, which is why frameworks fuse them (`nn.CrossEntropyLoss` takes logits). For token-level LM losses you also mask padding and often smooth the labels: `q = (1 - eps) * onehot + eps / V`.\n\n### Backprop is the chain rule with matrix shapes\nFor `Z = A @ W + b`: `dW = A.T @ dZ`, `db = dZ.sum(axis=0)`, `dA = dZ @ W.T`. For an element-wise activation: `dZ = dA * f\'(Z)`, with `relu\'(Z) = (Z > 0)`. That is all an MLP needs.\n\n### Making deep networks trainable\n\n| Technique | Formula | What it fixes |\n|-----------|---------|---------------|\n| Xavier init | `W ~ N(0, 2 / (n_in + n_out))` | Keeps activation variance stable with tanh/sigmoid |\n| He init | `W ~ N(0, 2 / n_in)` | Same for ReLU, which zeroes half its inputs |\n| BatchNorm | `gamma * (x - mu_B) / sqrt(var_B + eps) + beta` | Unstable activation scales; allows larger learning rates |\n| Dropout | `x * mask / keep_prob`, `mask ~ Bernoulli(keep_prob)` | Overfitting (co-adapted units) |\n\n## Worked Micro-Example\n\nLogits `z = [2.0, 1.0, 0.1]` for one example whose true class is 0:\n\n```text\np    = softmax(z)       = [0.659, 0.2424, 0.0986]\nL    = -log(p[0])       = 0.417\ndL/dz = p - y           = [-0.341, 0.2424, 0.0986]    # push the true logit up, the others down\nwith label smoothing eps = 0.1:\nL    = 0.9 * 0.417 + 0.1 * mean(-log p) = 0.5137\n```\n\nThe gradient entries sum to 0: raising every logit by the same amount changes nothing (softmax is shift-invariant).\n\n## Common Pitfalls\n\n- **Unstable losses**: `log(softmax(z))` can give `-inf`; work from logits with `logsumexp`, or add a small eps when the input really is probabilities.\n- **Forgetting `1/m`**: gradients of a mean loss are divided by the batch size; mixing sum and mean silently changes the effective learning rate.\n- **Transposes**: `dA1 = dZ2 @ W2.T`, not `dZ2 @ W2`. Check every gradient shape against its parameter.\n- **BatchNorm**: use the biased variance in training, put `eps` inside the square root, reduce over the batch axis (`axis=0`), and remember train vs eval mode (batch statistics vs running averages).\n- **Dropout**: `keep_prob` is not the drop probability `p` that `nn.Dropout(p)` takes; inverted dropout scales at train time so inference is the identity.\n- **Padding in sequence losses**: average over real tokens only, and never index with `ignore_index = -100`.\n\n## Interview Angle\n\n- Derive `dL/dz = p - y` for softmax + cross-entropy, then write the full MLP backward pass. Follow-up: verify it with a finite-difference gradient check.\n- "Why not initialise all weights to zero?" Every unit in a layer gets the same gradient, so symmetry is never broken. "Why He for ReLU?"\n- BatchNorm: what changes at inference, why it interacts badly with small batches, and how LayerNorm differs.\n- Dropout: why scale by `1/keep_prob`, and what the backward pass is (`dX = dout * mask`).\n- Complexity: a forward or backward pass of a dense layer costs `O(m * n_in * n_out)`; backprop costs about twice the forward pass.\n\n## Problems in This Section\n\n1. **Cross-Entropy Loss**: the mean classification loss from probabilities and one-hot labels.\n2. **MLP Forward & Backward Pass**: a 2-layer ReLU/softmax network with hand-derived gradients.\n3. **Xavier/He Weight Initialization**: sample weights at the right scale and measure their std.\n4. **Batch Normalization**: the training-mode forward pass with its cache.\n5. **Dropout**: inverted dropout with its mask, plus inference mode.\n6. **Masked Cross-Entropy with Label Smoothing**: the token-level LM loss, matching `F.cross_entropy`.\n\nRelated: Layer Norm and RMSNorm are in **Transformers** and **PyTorch Basics**; optimizers, gradient clipping and loss scaling are in **Optimization & Training**; the full train-from-scratch MLP is in **E2E Implementations**.\n    ',problems:[`cross-entropy-loss`,`mlp-forward-backward`,`weight-init`,`batch-norm`,`dropout`,`masked-label-smoothing-ce`]},{id:`optimization`,title:`Optimization & Training`,description:`Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.`,icon:`⚙️`,introduction:"\n# Optimization & Training\n\nA model is only as good as the procedure that fits it. This section covers what happens between `loss.backward()` and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging. Most \"my model won't train\" bugs are optimization bugs, and interviews regularly ask you to write Adam from memory or explain why a run produced NaNs.\n\n## Core Ideas\n\n### From SGD to Adam\nEvery optimizer turns a gradient `g` into an update for the parameters `θ`:\n\n| Optimizer | Update | Idea |\n|-----------|--------|------|\n| **SGD** | `θ -= lr * g` | Step down the current gradient |\n| **Momentum** | `v = μv + g;  θ -= lr * v` | Average gradients over time: speed up along consistent directions, damp oscillations |\n| **Nesterov** | `θ -= lr * (g + μv)` | Look ahead along the velocity before stepping |\n| **RMSprop** | `s = ρs + (1-ρ)g²;  θ -= lr * g / (√s + ε)` | Per-parameter step size from recent gradient scale |\n| **Adam** | `m = β1·m + (1-β1)g;  s = β2·s + (1-β2)g²;  θ -= lr * m̂ / (√ŝ + ε)` | Momentum + RMSprop, with bias correction `m̂ = m / (1 - β1^t)`, `ŝ = s / (1 - β2^t)` |\n| **AdamW** | Adam + decoupled weight decay `θ *= 1 - lr·λ` | Default for transformers; L2 added to the loss inside Adam is *not* the same thing |\n\nYou implement SGD with momentum, Adam and learning-rate schedules in **PyTorch Basics** (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).\n\n### Learning-rate schedules\nThe learning rate is the most important hyperparameter, and it rarely stays constant:\n\n```text\nwarmup (linear 0 -> max_lr)  ->  decay (cosine / linear / step)  ->  floor (min_lr)\n```\n\nWarmup protects the first steps, when Adam's statistics are noisy and the weights are random. Decay lets the model settle into a minimum.\n\n### Keeping training stable\n\n| Problem | Symptom | Fix |\n|---------|---------|-----|\n| Exploding gradients | Loss spikes, NaNs | **Gradient clipping** by global norm (`clip_grad_norm_`, usually `max_norm=1.0`) |\n| Batch doesn't fit in memory | OOM errors | **Gradient accumulation**: sum the gradients of k micro-batches (each loss / k) before stepping (practised in PyTorch Basics) |\n| fp16 gradients underflow to 0 | Training stalls in mixed precision | **Dynamic loss scaling**: multiply the loss by S, back off S on overflow, grow it after N clean steps |\n\n```python\n# A typical mixed-precision training step with accumulation\nwith torch.autocast('cuda', dtype=torch.float16):\n    loss = model(x, y) / accum_steps\nscaler.scale(loss).backward()\nif (step + 1) % accum_steps == 0:\n    scaler.unscale_(optimizer)                                # true gradients again\n    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)   # clip the unscaled grads\n    scaler.step(optimizer)                                    # skipped if any grad is inf/NaN\n    scaler.update()                                           # adjust the loss scale\n    optimizer.zero_grad()\n    scheduler.step()\n```\n\n## Worked Micro-Example\n\n**Global-norm clipping.** Two parameters have gradients `g1 = [3, 4]` and `g2 = [12]`, and `max_norm = 1`:\n\n```text\ntotal_norm = sqrt(3² + 4² + 12²) = sqrt(169) = 13\nclip_coef  = 1 / 13 = 0.0769\ng1 -> [0.2308, 0.3077],  g2 -> [0.9231]       # new global norm = 1, direction unchanged\n```\n\nClipping each tensor separately would instead give `[0.6, 0.8]` and `[1.0]`: a different direction.\n\n**Adam's first step.** With `g = 0.5`, `β1 = 0.9`, `β2 = 0.999`: `m = 0.05`, `s = 0.00025`, and after bias correction `m̂ = 0.5`, `ŝ = 0.25`, so the step is `lr * 0.5 / 0.5 = lr`. Adam's early steps have size about `lr` whatever the gradient's scale; without bias correction the first step would be `lr * 0.05 / sqrt(0.00025) ≈ 3.16 * lr`, because the second-moment estimate starts much closer to 0 than the first.\n\n## Common Pitfalls\n\n- **Clipping the scaled gradients** in mixed precision: unscale first, otherwise `max_norm` is compared with `S` times the real norm.\n- **Per-tensor instead of global clipping**: it changes the update direction; `clip_grad_norm_` uses one norm over all parameters.\n- **Gradient accumulation without `1/k`**: the effective learning rate becomes k times larger.\n- **L2 penalty vs weight decay in Adam**: adding `λ‖θ‖²` to the loss gets rescaled by Adam's denominator; AdamW decays the weights directly.\n- **No warmup** with Adam on transformers: early updates are large and noisy and can diverge.\n- **A loss scale that keeps shrinking**: the overflows are real (a numerical bug or a too-high learning rate), not a scaling problem.\n\n## Interview Angle\n\n- Write Adam from memory, including bias correction; explain why the first steps are about `lr` in size and what happens without it.\n- \"Why does AdamW decouple weight decay?\" and \"What does warmup protect against?\"\n- \"Your loss goes to NaN after 10k steps. What do you check?\" Learning rate, clipping, fp16 overflow and loss scale, bad data, log of 0, division by a zero norm.\n- Memory: Adam stores two extra tensors per parameter (`m` and `s`), so optimizer state is 2x the model size in fp32.\n- Clipping costs one pass over all gradients, `O(P)` time for `P` parameters.\n\n## Problems in This Section\n\n1. **Gradient Clipping by Global Norm**: rescale all gradients together when their combined norm is too large, like `clip_grad_norm_`.\n2. **Dynamic Loss Scaling (Mixed Precision)**: simulate `GradScaler`'s backoff and growth of the loss scale and the skipped steps.\n\nRelated: the optimizers and schedules themselves (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling, Gradient Accumulation) are in **PyTorch Basics**; a full training loop is in **PyTorch Basics** (Training Loop) and **E2E Implementations**.\n    ",problems:[`gradient-clipping`,`loss-scaling`]},{id:`cnn`,title:`CNNs & Computer Vision`,description:`Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.`,icon:`🖼️`,introduction:'\n# Convolutional Neural Networks (CNNs)\n\n## Why It Matters\n\nConvolutions are how neural networks see. Image classifiers, object detectors (Faster R-CNN, RetinaNet, YOLO), segmentation models (U-Net, Mask R-CNN) and the image encoders of diffusion models and vision-language models are built from the same few pieces. Interviews test them directly: compute an output shape in your head, write a convolution with loops, implement IoU and NMS without bugs, explain why ResNet trains.\n\n## Core Ideas\n\n### Convolution = a small dense layer slid over the image\nA conv layer applies the **same** small weight tensor (the kernel) at every spatial position. That gives two inductive biases: **locality** (each output looks at a `k x k` patch) and **weight sharing** (a cat ear detector works anywhere in the image). Deep learning "convolution" is really **cross-correlation**: the kernel is not flipped.\n\n```text\nout[n, o, i, j] = b[o] + sum over c, a, b\' of  x[n, c, i*s + a, j*s + b\'] * w[o, c, a, b\']\n```\n\n### Shape conventions (get these right first)\n\n| Name | Layout | Used by |\n|------|--------|---------|\n| **NCHW** | `(batch, channels, height, width)` | PyTorch (`nn.Conv2d`), and the conv problems here |\n| **NHWC** | `(batch, height, width, channels)` | TensorFlow/Keras, image files; used in **Flatten Layer** |\n| Conv weight | `(C_out, C_in // groups, kH, kW)` | PyTorch and **Advanced 2D Convolution** |\n| Single image | `(H, W)` | **2D Convolution** and **Max Pooling** (one channel, no batch) |\n\nBox formats in detection differ too: the problems here use **`xyxy`** = `[x1, y1, x2, y2]` (top-left and bottom-right corners, `x2 > x1`, `y2 > y1`). COCO stores **`xywh`** = `[x, y, width, height]` and YOLO uses **`cxcywh`** (centre plus size), so convert before computing IoU.\n\n### Output size, parameters and compute\n\n```text\nH_out = floor((H + 2*padding - kH) / stride) + 1\nparams = C_out * (C_in // groups) * kH * kW  (+ C_out biases)\nMACs   = params_without_bias * H_out * W_out  (per image)\n```\n\n| Building block | What it does |\n|----------------|--------------|\n| Padding `p = (k-1)/2`, stride 1 | "same" convolution: keeps `H, W` |\n| Stride 2 conv or 2x2 max pool | halves the resolution |\n| Grouped conv (`groups = G`) | `G` independent convs on channel slices, `1/G` of the params |\n| Depthwise conv (`groups = C_in = C_out`) + 1x1 conv | MobileNet\'s depthwise separable conv |\n| Flatten + linear | turn the final feature map into class logits |\n| Residual block | `out = ReLU(F(x) + shortcut(x))`, makes 100+ layers trainable |\n\n### Detection and segmentation\nA detector outputs many scored boxes: **IoU** measures overlap, **NMS** removes duplicates, **focal loss** stops easy background anchors from swamping the classifier, and **smooth L1** regresses box offsets robustly. Segmentation predicts a class per pixel, scored with mask **IoU** and **Dice**.\n\n## Worked Micro-Example\n\nCross-correlate a `3 x 3` image with a `2 x 2` kernel (no padding, stride 1, so the output is `(3 - 2) + 1 = 2` per side):\n\n```text\nimage = [[1, 2, 0],      kernel = [[1,  0],\n         [0, 1, 3],                [0, -1]]\n         [2, 1, 0]]\n\nout[0, 0] = 1*1 + 2*0 + 0*0 + 1*(-1) =  0\nout[0, 1] = 2*1 + 0*0 + 1*0 + 3*(-1) = -1\nout[1, 0] = 0*1 + 1*0 + 2*0 + 1*(-1) = -1\nout[1, 1] = 1*1 + 3*0 + 1*0 + 0*(-1) =  1\n```\n\nShapes through the ResNet stem: a `224 x 224` image, conv 7x7 stride 2 padding 3 gives `(224 + 6 - 7) // 2 + 1 = 112`, then max pool 3x3 stride 2 padding 1 gives `(112 + 2 - 3) // 2 + 1 = 56`. A 3x3 conv from 64 to 128 channels at `56 x 56` has `3*3*64*128 = 73,728` weights and costs about `73,728 * 56 * 56 ≈ 231M` multiply-adds per image.\n\nIoU of `xyxy` boxes `[0, 0, 4, 4]` and `[2, 0, 6, 4]`: the intersection is `2 x 4 = 8`, the union is `16 + 16 - 8 = 24`, so IoU `= 1/3`.\n\n## Common Pitfalls\n\n- **Layout mix-ups**: NCHW vs NHWC, `(H, W)` vs `(W, H)`, `xyxy` vs `xywh`. Write the shape next to every line.\n- **Flipping the kernel**: frameworks compute cross-correlation; flipping gives a different answer for asymmetric kernels.\n- **Truncating floats**: `astype(int)` on a convolution output silently corrupts non-integer results.\n- **Output size**: use floor division; forgetting the `+ 1` or the `2 * padding` is the classic off-by-one.\n- **IoU**: clamp the intersection width and height at 0, or disjoint boxes get a positive "overlap". Guard a zero-area union.\n- **NMS**: suppress with `IoU > threshold` against the box you just kept, not against the original top box only.\n- **Losses**: clip probabilities before `log`; in focal loss, `alpha` weights the **positive** class.\n- **Residual blocks**: the final ReLU comes **after** the addition; the shortcut needs a projection whenever the shape changes.\n\n## Interview Angle\n\n- "What is the output shape and parameter count of this layer?" Answer in seconds with the formulas above.\n- "Write conv2d with loops, then vectorise it" (loop over kernel taps, or im2col + one matmul).\n- "Why do two 3x3 convs beat one 5x5?" (same 5x5 receptive field, `18 C^2` vs `25 C^2` weights, an extra non-linearity.) "What does a 1x1 conv do?"\n- "Implement IoU and NMS." Follow-ups: batched IoU as an `(N, M)` matrix, soft-NMS, class-aware NMS, `O(N^2)` cost.\n- "Why focal loss, and what do `alpha` and `gamma` do?" "Why smooth L1 rather than L2 for boxes?"\n- "Why does ResNet work?" Identity paths keep gradients flowing; a block can fall back to the identity by pushing `F` to 0.\n\n## Problems in This Section\n\n1. **Convolution Output Size**: the `floor((H + 2p - k) / s) + 1` formula.\n2. **2D Convolution**: a single-channel `(H, W)` cross-correlation, no padding, stride 1.\n3. **Max Pooling**: non-overlapping `k x k` max pooling on an `(H, W)` map.\n4. **Flatten Layer**: `(N, H, W, C)` (NHWC) feature maps to `(N, H*W*C)` vectors.\n5. **Advanced 2D Convolution**: NCHW batches with padding, stride and groups (depthwise conv).\n6. **IoU (Intersection over Union)**: overlap of two `xyxy` boxes.\n7. **Non-Maximum Suppression (NMS)**: greedy duplicate removal for detections.\n8. **Focal Loss**: RetinaNet\'s loss for extreme class imbalance.\n9. **Smooth L1 Loss**: the box regression loss of Fast/Faster R-CNN.\n10. **Segmentation Metrics**: IoU, pixel accuracy and Dice for binary masks.\n11. **ResNet Basic Block**: conv-BN-ReLU-conv-BN plus an identity or projection shortcut.\n\nRelated: **Batch Normalization** (Neural Networks), **Precision and Recall** (Model Evaluation, the basis of detection mAP) and **E2E: Convolutional Neural Network** (End-to-End Implementations).\n    ',problems:[`conv-output-size`,`conv2d-forward`,`max-pool`,`flatten-layer`,`conv2d-advanced`,`iou-bounding-box`,`nms`,`focal-loss`,`smooth-l1-loss`,`seg-metrics`,`resnet-block`]},{id:`sequence-models`,title:`Sequence Models`,description:`Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.`,icon:`🔁`,introduction:'\n# Sequence Models\n\n## Why It Matters\n\nText, audio, time series and user sessions are all **sequences**: order matters and length varies. Before transformers, recurrent networks (RNN, LSTM, GRU) were the standard way to model them, and they still power streaming speech recognition, on-device keyboards and many forecasting systems. State-space models (Mamba, RWKV) bring the same recurrent idea back to LLMs, and interviewers still ask you to write an LSTM step or explain vanishing gradients.\n\n## Core Ideas\n\n### The recurrence\nAn RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the **same weights at every step**:\n\n```text\nh_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        x_t: (N, D),  h_t: (N, H)\n```\n\nAll problems here are **batch first**: a batch of sequences is `X` of shape `(N, T, D)` = `(batch, seq_len, features)` and the stacked hidden states are `(N, T, H)`.\n\n### Backpropagation through time (BPTT)\nTraining unrolls the loop and backpropagates through every step. The gradient reaching `h_1` from `h_T` is a product of `T - 1` Jacobians:\n\n```text\ndh_T/dh_1 = prod over t = T..2 of  diag(1 - h_t^2) @ W_hh.T\n```\n\nIf the largest singular value of `W_hh` (times the tanh slope, at most 1) is below 1 the product **vanishes**; above 1 it can **explode**. Gradient clipping fixes explosions but not vanishing, so plain RNNs struggle beyond a few dozen steps.\n\n### Gated cells\nGates are sigmoids in `[0, 1]` that decide, per dimension, how much information flows.\n\n| Cell | State | Gates | Update |\n|------|-------|-------|--------|\n| **RNN** | `h` | none | `h = tanh(x W_xh + h W_hh + b)` |\n| **LSTM** | `h`, `c` | input `i`, forget `f`, output `o` (+ candidate `g`) | `c = f*c_prev + i*g`, `h = o*tanh(c)` |\n| **GRU** | `h` | reset `r`, update `z` (+ candidate `n`) | `h = (1-z)*n + z*h_prev` |\n\nThe LSTM\'s cell state is updated **additively**: when `f ≈ 1`, `dc_t/dc_{t-1} ≈ 1` and gradients travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.\n\n### Conventions used in this section (memorize them)\n\n| | Vanilla RNN problem | LSTM (`nn.LSTMCell`) | GRU (`nn.GRUCell`) |\n|---|---|---|---|\n| Weight layout | `x @ W_xh`, `W_xh: (D, H)`, `W_hh: (H, H)` | `x @ W_ih.T`, `W_ih: (4H, D)`, `W_hh: (4H, H)` | `x @ W_ih.T`, `W_ih: (3H, D)`, `W_hh: (3H, H)` |\n| Biases | one `b: (H,)` | `b_ih`, `b_hh: (4H,)` | `b_ih`, `b_hh: (3H,)` |\n| Gate order (row blocks of `H`) | none | **`i, f, g, o`** | **`r, z, n`** |\n| Parameters | `DH + H^2 + H` | `4(HD + H^2 + 2H)` | `3(HD + H^2 + 2H)` |\n\nNote the layout switch: the RNN problem uses `(in, out)` weights, the LSTM and GRU problems use PyTorch\'s `(out, in)` weights, hence the `.T`. TensorFlow/Keras orders LSTM gates `i, f, c, o` too, but stores kernels as `(D, 4H)`.\n\n## Worked Micro-Example\n\n**RNN**, scalar (`D = H = 1`), `W_xh = 0.5`, `W_hh = 1`, `b = 0`, `h_0 = 0`, input `x_t = 1` for 3 steps:\n\n```text\nh_1 = tanh(0.5)            = 0.4621\nh_2 = tanh(0.5 + 0.4621)   = 0.7452\nh_3 = tanh(0.5 + 0.7452)   = 0.8469\n```\n\n**LSTM**, one step with `H = 1`, `c_prev = 1` and gate pre-activations `(i, f, g, o) = (0, 2, 1, 0)`:\n\n```text\ni = sigmoid(0) = 0.5,  f = sigmoid(2) = 0.8808,  g = tanh(1) = 0.7616,  o = 0.5\nc = 0.8808 * 1 + 0.5 * 0.7616 = 1.2616\nh = 0.5 * tanh(1.2616)       = 0.4258\n```\n\n**Vanishing in numbers**: a per-step gradient factor of 0.5 over 20 steps leaves `0.5^20 ≈ 9.5e-7` of the signal; a factor of 1.1 over 50 steps blows it up to about 117.\n\n## Common Pitfalls\n\n- **Gate order**: splitting an LSTM\'s `4H` block as `i, f, o, g` (or a GRU\'s as `z, r, n`) runs without errors and gives wrong numbers. PyTorch is `i, f, g, o` and `r, z, n`.\n- **Weight orientation**: `x @ W` vs `x @ W.T`. Check the shape table before multiplying.\n- **GRU reset gate**: PyTorch applies `r` *after* the hidden matmul, to `h_prev @ W_hn.T + b_hn`; the original paper applies it to `h_prev` first. The numbers differ.\n- **GRU update gate**: in PyTorch `z = 1` **keeps** `h_prev`; some papers swap `z` and `1 - z`.\n- **BPTT**: weights are shared, so their gradients **accumulate** over time; the gradient into `h_t` has a direct part and a part from `h_{t+1}`.\n- **Batch vs time axis**: `nn.RNN` defaults to `(T, N, D)` unless `batch_first=True`. These problems are batch first.\n\n## Interview Angle\n\n- "Write an LSTM cell from scratch." Then: "count its parameters", "why does the cell state help gradients?", "why initialize the forget bias to 1?"\n- "Explain vanishing and exploding gradients in RNNs and the fixes": gating, clipping, orthogonal init, shorter truncated BPTT windows.\n- "LSTM vs GRU?" GRU has 3 weight blocks instead of 4 (25% fewer parameters) and no separate cell state; quality is usually similar.\n- "RNN vs Transformer?" RNN training is sequential in `T` but inference costs `O(1)` per token; attention trains in parallel but costs `O(T)` per token with a KV cache and `O(T^2)` for the full sequence.\n\n## Problems in This Section\n\n1. **Vanilla RNN: Forward & BPTT**: unroll `h_t = tanh(x_t W_xh + h_{t-1} W_hh + b)` over `(N, T, D)` inputs and backpropagate through time by hand.\n2. **LSTM Cell**: one step of `nn.LSTMCell` with gate order `i, f, g, o`.\n3. **GRU Cell**: one step of `nn.GRUCell` with gate order `r, z, n` and PyTorch\'s reset-gate placement.\n\nRelated: **Gradient Clipping by Global Norm** (Optimization & Training) for exploding gradients, and **Scaled Dot-Product Attention** (Transformer Architecture), which replaced recurrence in most language models.\n    ',problems:[`rnn-forward`,`lstm-cell`,`gru-cell`]},{id:`transformers`,title:`Transformer Architecture`,description:`Master attention, positional encoding, and modern LLM architecture.`,icon:`🤖`,introduction:`
-# Attention and Transformers
-
-Transformers have revolutionized NLP and are now used in vision, speech, and more.
-
-## Key Concepts
-
-### Self-Attention
-- **Query, Key, Value**: Three projections of input
-- **Attention scores**: Q @ K.T / sqrt(d_k)
-- **Output**: Weighted sum of values
-
-### Scaled Dot-Product Attention
-\`\`\`
-Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
-\`\`\`
-
-### Multi-Head Attention
-- **Multiple heads**: Parallel attention with different projections
-- **Concatenate**: Combine all head outputs
-- **Project**: Linear transformation back to model dimension
-
-### Transformer Components
-- **Positional Encoding**: Inject position information
-- **Layer Normalization**: Normalize across features
-- **Feed-Forward Network**: MLP after attention
-- **Residual Connections**: Add input to output
-
-### Causal Masking
-- **Purpose**: Prevent attending to future tokens
-- **Implementation**: Add -inf to upper triangle before softmax
-
-### Modern LLM Architecture
-- **BPE Tokenization**: Subword tokenization used by GPT, LLaMA, and most LLMs
-- **Rotary Positional Embeddings (RoPE)**: Encodes relative positions via rotation, replacing sinusoidal
-- **Grouped Query Attention (GQA)**: Shares KV heads across query head groups for efficient inference
-- **Sliding Window Attention**: Local attention pattern for efficient long-context processing
-
-### Interview Essentials
-- Implement scaled dot-product attention
-- Explain why we scale by sqrt(d_k)
-- Multi-head attention benefits
-- Positional encoding purpose
-- BPE tokenization algorithm
-- RoPE vs sinusoidal positional encoding
-- GQA/MQA for efficient inference
-
-Let's build transformers from scratch!
-    `,problems:[`scaled-dot-product-attention`,`multi-head-attention`,`positional-encoding`,`layer-norm`,`causal-mask`,`bpe-tokenization`,`rope-embeddings`,`grouped-query-attention`,`sliding-window-attention`,`attention-backward`,`longest-match-tokenizer`]},{id:`llm-generation`,title:`LLM Generation & Decoding`,description:`Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.`,icon:`💬`,introduction:`
+    `,problems:[`precision-recall-f1`,`cross-validation`,`confusion-matrix`,`roc-auc`,`calibration-ece`,`pr-curve-thresholds`]},{id:`deep-learning`,title:`Deep Learning Basics`,description:`ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.`,icon:`⚡`,introduction:'\n# Deep Learning Basics\n\nA neural network is a stack of simple pieces: an **affine map** (`x @ W + b`), a **non-linearity** (ReLU), and at the end a **softmax** that turns scores into probabilities. This section builds those three pieces. Every later section (MLPs, CNNs, transformers) reuses them, and interviewers expect you to write them correctly from memory, including the numerically stable softmax.\n\n## Core Ideas\n\n### 1. The dense (fully-connected) layer\nEach output unit takes a weighted sum of all inputs plus a bias. For a batch, it is one matrix product:\n\n```text\nZ = X @ W + b        X: (batch, in_dim)   W: (in_dim, out_dim)   b: (out_dim,)   Z: (batch, out_dim)\n```\n\nThe bias broadcasts over the batch. The layer has `in_dim * out_dim + out_dim` parameters and costs `batch * in_dim * out_dim` multiply-adds. (PyTorch\'s `nn.Linear` stores the transpose, `weight: (out_dim, in_dim)`, and computes `X @ weight.T + bias`.)\n\n### 2. Non-linearities\nTwo linear layers in a row are still one linear map (`(X @ W1) @ W2 = X @ (W1 @ W2)`), so depth needs a non-linearity between them.\n\n| Activation | Formula | Range | Typical use |\n|------------|---------|-------|-------------|\n| ReLU | `max(0, x)` | `[0, inf)` | Hidden layers (default) |\n| Sigmoid | `1 / (1 + exp(-x))` | `(0, 1)` | Binary output, gates in LSTMs |\n| Tanh | `(e^x - e^-x) / (e^x + e^-x)` | `(-1, 1)` | RNN hidden states |\n| Softmax | `exp(x_i) / sum_j exp(x_j)` | probabilities summing to 1 | Multi-class output |\n\nReLU\'s gradient is exactly 1 for positive inputs, so it does not shrink gradients the way sigmoid (max slope 0.25) and tanh do when they saturate.\n\n### 3. Softmax and its stable form\nSoftmax is invariant to adding a constant to every score: `softmax(x - c) = softmax(x)`. Taking `c = max(x)` makes the largest exponent `exp(0) = 1`, so nothing overflows:\n\n```python\ndef softmax(x):\n    e = np.exp(x - np.max(x))\n    return e / e.sum()\n```\n\n## Worked Micro-Example\n\nOne input `x = [1, 2]`, a hidden layer with 3 ReLU units, and 2 output classes:\n\n```text\nW1 = [[1, -1, 0.5],      b1 = [0, -1, 0.5]\n      [1, 0.5, -1]]\nz  = x @ W1 + b1 = [3, -1, -1]\nh  = relu(z)     = [3, 0, 0]          # two units are inactive for this input\n\nW2 = [[1, -1], [0, 2], [0.5, 0.5]],  b2 = [0, 0]\nlogits = h @ W2 + b2 = [3, -3]\np = softmax(logits)  = [0.9975, 0.0025]\n```\n\nIf the true class is 0, the cross-entropy loss is `-log(0.9975) = 0.0025`.\n\n## Common Pitfalls\n\n- **Overflow in softmax**: `np.exp(1000)` is `inf` and `inf / inf` is `nan`. Always subtract the max first.\n- **Wrong reduction**: `np.max(x)` reduces an array to a scalar; `np.maximum(0, x)` compares element-wise. Mixing them up is a classic ReLU and softmax bug.\n- **Shape and layout**: `X @ W` needs `W` as `(in_dim, out_dim)`; `nn.Linear` uses the transpose. A bias of shape `(out_dim,)` broadcasts over rows; one of shape `(batch,)` does not.\n- **Batched softmax**: for a `(batch, classes)` array, reduce with `axis=-1, keepdims=True`, otherwise you normalise across the whole batch.\n- **In-place edits**: `x[x < 0] = 0` changes the caller\'s array (and breaks autograd in PyTorch).\n\n## Interview Angle\n\n- "Why do we need non-linear activations?" Without them the network is one linear map.\n- "Implement softmax." The follow-up is always "what if the inputs are large?" (the max-shift), then "what is its Jacobian?" (`diag(p) - p pᵀ`) and "what is the gradient of softmax + cross-entropy?" (`p - y`).\n- "ReLU vs sigmoid vs tanh?" Saturation and vanishing gradients, dying ReLUs, zero-centred outputs.\n- Count the parameters and FLOPs of a dense layer.\n\n## Problems in This Section\n\n1. **ReLU Activation**: element-wise `max(0, x)` for arrays of any shape.\n2. **Dense Layer Forward Pass (ReLU)**: `relu(X @ W + b)` for a whole batch.\n3. **Numerically Stable Softmax**: probabilities from logits without overflow.\n\nNext, **Neural Networks** chains these into a full MLP with a hand-written backward pass, cross-entropy, initialization, batch norm and dropout. Leaky ReLU, GELU and temperature softmax are in **PyTorch Basics**.\n    ',problems:[`perceptron`,`neural-network-forward`,`backpropagation`]},{id:`neural-networks`,title:`Neural Networks`,description:`Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.`,icon:`🧠`,introduction:'\n# Neural Networks\n\nThis section turns the building blocks from Deep Learning Basics into a network you can **train**: a loss to minimise, a hand-written backward pass, and the three techniques that make deep networks train reliably (initialization, batch normalization, dropout). "Implement the forward and backward pass of an MLP in NumPy" is one of the most common ML coding interview questions, and every framework bug you will debug later is easier once you have written backprop yourself.\n\n## Core Ideas\n\n### The training loop in one picture\n\n```text\nforward:   X -> Z1 = X @ W1 + b1 -> A1 = relu(Z1) -> Z2 = A1 @ W2 + b2 -> p = softmax(Z2) -> L\nbackward:  dW1, db1 <- dZ1 = dA1 * (Z1 > 0) <- dA1 = dZ2 @ W2.T <- dZ2 = (p - Y) / m <- L\nupdate:    W -= lr * dW        (for every parameter)\n```\n\nShapes: `X (m, n_features)`, `W1 (n_features, n_hidden)`, `W2 (n_hidden, n_classes)`, `Y` one-hot `(m, n_classes)`. Every gradient has the same shape as its parameter.\n\n### Cross-entropy and the `p - y` gradient\nFor one-hot labels, cross-entropy is the negative log-probability of the correct class, averaged over the batch: `L = -(1/m) * sum(Y * log(p))`. Combined with softmax, the gradient with respect to the logits collapses to `(p - Y) / m`, which is why frameworks fuse them (`nn.CrossEntropyLoss` takes logits). For token-level LM losses you also mask padding and often smooth the labels: `q = (1 - eps) * onehot + eps / V`.\n\n### Backprop is the chain rule with matrix shapes\nFor `Z = A @ W + b`: `dW = A.T @ dZ`, `db = dZ.sum(axis=0)`, `dA = dZ @ W.T`. For an element-wise activation: `dZ = dA * f\'(Z)`, with `relu\'(Z) = (Z > 0)`. That is all an MLP needs.\n\n### Making deep networks trainable\n\n| Technique | Formula | What it fixes |\n|-----------|---------|---------------|\n| Xavier init | `W ~ N(0, 2 / (n_in + n_out))` | Keeps activation variance stable with tanh/sigmoid |\n| He init | `W ~ N(0, 2 / n_in)` | Same for ReLU, which zeroes half its inputs |\n| BatchNorm | `gamma * (x - mu_B) / sqrt(var_B + eps) + beta` | Unstable activation scales; allows larger learning rates |\n| Dropout | `x * mask / keep_prob`, `mask ~ Bernoulli(keep_prob)` | Overfitting (co-adapted units) |\n\n## Worked Micro-Example\n\nLogits `z = [2.0, 1.0, 0.1]` for one example whose true class is 0:\n\n```text\np    = softmax(z)       = [0.659, 0.2424, 0.0986]\nL    = -log(p[0])       = 0.417\ndL/dz = p - y           = [-0.341, 0.2424, 0.0986]    # push the true logit up, the others down\nwith label smoothing eps = 0.1:\nL    = 0.9 * 0.417 + 0.1 * mean(-log p) = 0.5137\n```\n\nThe gradient entries sum to 0: raising every logit by the same amount changes nothing (softmax is shift-invariant).\n\n## Common Pitfalls\n\n- **Unstable losses**: `log(softmax(z))` can give `-inf`; work from logits with `logsumexp`, or add a small eps when the input really is probabilities.\n- **Forgetting `1/m`**: gradients of a mean loss are divided by the batch size; mixing sum and mean silently changes the effective learning rate.\n- **Transposes**: `dA1 = dZ2 @ W2.T`, not `dZ2 @ W2`. Check every gradient shape against its parameter.\n- **BatchNorm**: use the biased variance in training, put `eps` inside the square root, reduce over the batch axis (`axis=0`), and remember train vs eval mode (batch statistics vs running averages).\n- **Dropout**: `keep_prob` is not the drop probability `p` that `nn.Dropout(p)` takes; inverted dropout scales at train time so inference is the identity.\n- **Padding in sequence losses**: average over real tokens only, and never index with `ignore_index = -100`.\n\n## Interview Angle\n\n- Derive `dL/dz = p - y` for softmax + cross-entropy, then write the full MLP backward pass. Follow-up: verify it with a finite-difference gradient check.\n- "Why not initialise all weights to zero?" Every unit in a layer gets the same gradient, so symmetry is never broken. "Why He for ReLU?"\n- BatchNorm: what changes at inference, why it interacts badly with small batches, and how LayerNorm differs.\n- Dropout: why scale by `1/keep_prob`, and what the backward pass is (`dX = dout * mask`).\n- Complexity: a forward or backward pass of a dense layer costs `O(m * n_in * n_out)`; backprop costs about twice the forward pass.\n\n## Problems in This Section\n\n1. **Cross-Entropy Loss**: the mean classification loss from probabilities and one-hot labels.\n2. **MLP Forward & Backward Pass**: a 2-layer ReLU/softmax network with hand-derived gradients.\n3. **Xavier/He Weight Initialization**: sample weights at the right scale and measure their std.\n4. **Batch Normalization**: the training-mode forward pass with its cache.\n5. **Dropout**: inverted dropout with its mask, plus inference mode.\n6. **Masked Cross-Entropy with Label Smoothing**: the token-level LM loss, matching `F.cross_entropy`.\n\nRelated: Layer Norm and RMSNorm are in **Transformers** and **PyTorch Basics**; optimizers, gradient clipping and loss scaling are in **Optimization & Training**; the full train-from-scratch MLP is in **E2E Implementations**.\n    ',problems:[`cross-entropy-loss`,`mlp-forward-backward`,`weight-init`,`batch-norm`,`dropout`,`masked-label-smoothing-ce`]},{id:`optimization`,title:`Optimization & Training`,description:`Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.`,icon:`⚙️`,introduction:"\n# Optimization & Training\n\nA model is only as good as the procedure that fits it. This section covers what happens between `loss.backward()` and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging. Most \"my model won't train\" bugs are optimization bugs, and interviews regularly ask you to write Adam from memory or explain why a run produced NaNs.\n\n## Core Ideas\n\n### From SGD to Adam\nEvery optimizer turns a gradient `g` into an update for the parameters `θ`:\n\n| Optimizer | Update | Idea |\n|-----------|--------|------|\n| **SGD** | `θ -= lr * g` | Step down the current gradient |\n| **Momentum** | `v = μv + g;  θ -= lr * v` | Average gradients over time: speed up along consistent directions, damp oscillations |\n| **Nesterov** | `θ -= lr * (g + μv)` | Look ahead along the velocity before stepping |\n| **RMSprop** | `s = ρs + (1-ρ)g²;  θ -= lr * g / (√s + ε)` | Per-parameter step size from recent gradient scale |\n| **Adam** | `m = β1·m + (1-β1)g;  s = β2·s + (1-β2)g²;  θ -= lr * m̂ / (√ŝ + ε)` | Momentum + RMSprop, with bias correction `m̂ = m / (1 - β1^t)`, `ŝ = s / (1 - β2^t)` |\n| **AdamW** | Adam + decoupled weight decay `θ *= 1 - lr·λ` | Default for transformers; L2 added to the loss inside Adam is *not* the same thing |\n\nYou implement SGD with momentum, Adam and learning-rate schedules in **PyTorch Basics** (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).\n\n### Learning-rate schedules\nThe learning rate is the most important hyperparameter, and it rarely stays constant:\n\n```text\nwarmup (linear 0 -> max_lr)  ->  decay (cosine / linear / step)  ->  floor (min_lr)\n```\n\nWarmup protects the first steps, when Adam's statistics are noisy and the weights are random. Decay lets the model settle into a minimum.\n\n### Keeping training stable\n\n| Problem | Symptom | Fix |\n|---------|---------|-----|\n| Exploding gradients | Loss spikes, NaNs | **Gradient clipping** by global norm (`clip_grad_norm_`, usually `max_norm=1.0`) |\n| Batch doesn't fit in memory | OOM errors | **Gradient accumulation**: sum the gradients of k micro-batches (each loss / k) before stepping (practised in PyTorch Basics) |\n| fp16 gradients underflow to 0 | Training stalls in mixed precision | **Dynamic loss scaling**: multiply the loss by S, back off S on overflow, grow it after N clean steps |\n\n```python\n# A typical mixed-precision training step with accumulation\nwith torch.autocast('cuda', dtype=torch.float16):\n    loss = model(x, y) / accum_steps\nscaler.scale(loss).backward()\nif (step + 1) % accum_steps == 0:\n    scaler.unscale_(optimizer)                                # true gradients again\n    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)   # clip the unscaled grads\n    scaler.step(optimizer)                                    # skipped if any grad is inf/NaN\n    scaler.update()                                           # adjust the loss scale\n    optimizer.zero_grad()\n    scheduler.step()\n```\n\n## Worked Micro-Example\n\n**Global-norm clipping.** Two parameters have gradients `g1 = [3, 4]` and `g2 = [12]`, and `max_norm = 1`:\n\n```text\ntotal_norm = sqrt(3² + 4² + 12²) = sqrt(169) = 13\nclip_coef  = 1 / 13 = 0.0769\ng1 -> [0.2308, 0.3077],  g2 -> [0.9231]       # new global norm = 1, direction unchanged\n```\n\nClipping each tensor separately would instead give `[0.6, 0.8]` and `[1.0]`: a different direction.\n\n**Adam's first step.** With `g = 0.5`, `β1 = 0.9`, `β2 = 0.999`: `m = 0.05`, `s = 0.00025`, and after bias correction `m̂ = 0.5`, `ŝ = 0.25`, so the step is `lr * 0.5 / 0.5 = lr`. Adam's early steps have size about `lr` whatever the gradient's scale; without bias correction the first step would be `lr * 0.05 / sqrt(0.00025) ≈ 3.16 * lr`, because the second-moment estimate starts much closer to 0 than the first.\n\n## Common Pitfalls\n\n- **Clipping the scaled gradients** in mixed precision: unscale first, otherwise `max_norm` is compared with `S` times the real norm.\n- **Per-tensor instead of global clipping**: it changes the update direction; `clip_grad_norm_` uses one norm over all parameters.\n- **Gradient accumulation without `1/k`**: the effective learning rate becomes k times larger.\n- **L2 penalty vs weight decay in Adam**: adding `λ‖θ‖²` to the loss gets rescaled by Adam's denominator; AdamW decays the weights directly.\n- **No warmup** with Adam on transformers: early updates are large and noisy and can diverge.\n- **A loss scale that keeps shrinking**: the overflows are real (a numerical bug or a too-high learning rate), not a scaling problem.\n\n## Interview Angle\n\n- Write Adam from memory, including bias correction; explain why the first steps are about `lr` in size and what happens without it.\n- \"Why does AdamW decouple weight decay?\" and \"What does warmup protect against?\"\n- \"Your loss goes to NaN after 10k steps. What do you check?\" Learning rate, clipping, fp16 overflow and loss scale, bad data, log of 0, division by a zero norm.\n- Memory: Adam stores two extra tensors per parameter (`m` and `s`), so optimizer state is 2x the model size in fp32.\n- Clipping costs one pass over all gradients, `O(P)` time for `P` parameters.\n\n## Problems in This Section\n\n1. **Gradient Clipping by Global Norm**: rescale all gradients together when their combined norm is too large, like `clip_grad_norm_`.\n2. **Dynamic Loss Scaling (Mixed Precision)**: simulate `GradScaler`'s backoff and growth of the loss scale and the skipped steps.\n\nRelated: the optimizers and schedules themselves (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling, Gradient Accumulation) are in **PyTorch Basics**; a full training loop is in **PyTorch Basics** (Training Loop) and **E2E Implementations**.\n    ",problems:[`gradient-clipping`,`loss-scaling`]},{id:`cnn`,title:`CNNs & Computer Vision`,description:`Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.`,icon:`🖼️`,introduction:'\n# Convolutional Neural Networks (CNNs)\n\n## Why It Matters\n\nConvolutions are how neural networks see. Image classifiers, object detectors (Faster R-CNN, RetinaNet, YOLO), segmentation models (U-Net, Mask R-CNN) and the image encoders of diffusion models and vision-language models are built from the same few pieces. Interviews test them directly: compute an output shape in your head, write a convolution with loops, implement IoU and NMS without bugs, explain why ResNet trains.\n\n## Core Ideas\n\n### Convolution = a small dense layer slid over the image\nA conv layer applies the **same** small weight tensor (the kernel) at every spatial position. That gives two inductive biases: **locality** (each output looks at a `k x k` patch) and **weight sharing** (a cat ear detector works anywhere in the image). Deep learning "convolution" is really **cross-correlation**: the kernel is not flipped.\n\n```text\nout[n, o, i, j] = b[o] + sum over c, a, b\' of  x[n, c, i*s + a, j*s + b\'] * w[o, c, a, b\']\n```\n\n### Shape conventions (get these right first)\n\n| Name | Layout | Used by |\n|------|--------|---------|\n| **NCHW** | `(batch, channels, height, width)` | PyTorch (`nn.Conv2d`), and the conv problems here |\n| **NHWC** | `(batch, height, width, channels)` | TensorFlow/Keras, image files; used in **Flatten Layer** |\n| Conv weight | `(C_out, C_in // groups, kH, kW)` | PyTorch and **Advanced 2D Convolution** |\n| Single image | `(H, W)` | **2D Convolution** and **Max Pooling** (one channel, no batch) |\n\nBox formats in detection differ too: the problems here use **`xyxy`** = `[x1, y1, x2, y2]` (top-left and bottom-right corners, `x2 > x1`, `y2 > y1`). COCO stores **`xywh`** = `[x, y, width, height]` and YOLO uses **`cxcywh`** (centre plus size), so convert before computing IoU.\n\n### Output size, parameters and compute\n\n```text\nH_out = floor((H + 2*padding - kH) / stride) + 1\nparams = C_out * (C_in // groups) * kH * kW  (+ C_out biases)\nMACs   = params_without_bias * H_out * W_out  (per image)\n```\n\n| Building block | What it does |\n|----------------|--------------|\n| Padding `p = (k-1)/2`, stride 1 | "same" convolution: keeps `H, W` |\n| Stride 2 conv or 2x2 max pool | halves the resolution |\n| Grouped conv (`groups = G`) | `G` independent convs on channel slices, `1/G` of the params |\n| Depthwise conv (`groups = C_in = C_out`) + 1x1 conv | MobileNet\'s depthwise separable conv |\n| Flatten + linear | turn the final feature map into class logits |\n| Residual block | `out = ReLU(F(x) + shortcut(x))`, makes 100+ layers trainable |\n\n### Detection and segmentation\nA detector outputs many scored boxes: **IoU** measures overlap, **NMS** removes duplicates, **focal loss** stops easy background anchors from swamping the classifier, and **smooth L1** regresses box offsets robustly. Segmentation predicts a class per pixel, scored with mask **IoU** and **Dice**.\n\n## Worked Micro-Example\n\nCross-correlate a `3 x 3` image with a `2 x 2` kernel (no padding, stride 1, so the output is `(3 - 2) + 1 = 2` per side):\n\n```text\nimage = [[1, 2, 0],      kernel = [[1,  0],\n         [0, 1, 3],                [0, -1]]\n         [2, 1, 0]]\n\nout[0, 0] = 1*1 + 2*0 + 0*0 + 1*(-1) =  0\nout[0, 1] = 2*1 + 0*0 + 1*0 + 3*(-1) = -1\nout[1, 0] = 0*1 + 1*0 + 2*0 + 1*(-1) = -1\nout[1, 1] = 1*1 + 3*0 + 1*0 + 0*(-1) =  1\n```\n\nShapes through the ResNet stem: a `224 x 224` image, conv 7x7 stride 2 padding 3 gives `(224 + 6 - 7) // 2 + 1 = 112`, then max pool 3x3 stride 2 padding 1 gives `(112 + 2 - 3) // 2 + 1 = 56`. A 3x3 conv from 64 to 128 channels at `56 x 56` has `3*3*64*128 = 73,728` weights and costs about `73,728 * 56 * 56 ≈ 231M` multiply-adds per image.\n\nIoU of `xyxy` boxes `[0, 0, 4, 4]` and `[2, 0, 6, 4]`: the intersection is `2 x 4 = 8`, the union is `16 + 16 - 8 = 24`, so IoU `= 1/3`.\n\n## Common Pitfalls\n\n- **Layout mix-ups**: NCHW vs NHWC, `(H, W)` vs `(W, H)`, `xyxy` vs `xywh`. Write the shape next to every line.\n- **Flipping the kernel**: frameworks compute cross-correlation; flipping gives a different answer for asymmetric kernels.\n- **Truncating floats**: `astype(int)` on a convolution output silently corrupts non-integer results.\n- **Output size**: use floor division; forgetting the `+ 1` or the `2 * padding` is the classic off-by-one.\n- **IoU**: clamp the intersection width and height at 0, or disjoint boxes get a positive "overlap". Guard a zero-area union.\n- **NMS**: suppress with `IoU > threshold` against the box you just kept, not against the original top box only.\n- **Losses**: clip probabilities before `log`; in focal loss, `alpha` weights the **positive** class.\n- **Residual blocks**: the final ReLU comes **after** the addition; the shortcut needs a projection whenever the shape changes.\n\n## Interview Angle\n\n- "What is the output shape and parameter count of this layer?" Answer in seconds with the formulas above.\n- "Write conv2d with loops, then vectorise it" (loop over kernel taps, or im2col + one matmul).\n- "Why do two 3x3 convs beat one 5x5?" (same 5x5 receptive field, `18 C^2` vs `25 C^2` weights, an extra non-linearity.) "What does a 1x1 conv do?"\n- "Implement IoU and NMS." Follow-ups: batched IoU as an `(N, M)` matrix, soft-NMS, class-aware NMS, `O(N^2)` cost.\n- "Why focal loss, and what do `alpha` and `gamma` do?" "Why smooth L1 rather than L2 for boxes?"\n- "Why does ResNet work?" Identity paths keep gradients flowing; a block can fall back to the identity by pushing `F` to 0.\n\n## Problems in This Section\n\n1. **Convolution Output Size**: the `floor((H + 2p - k) / s) + 1` formula.\n2. **2D Convolution**: a single-channel `(H, W)` cross-correlation, no padding, stride 1.\n3. **Max Pooling**: non-overlapping `k x k` max pooling on an `(H, W)` map.\n4. **Flatten Layer**: `(N, H, W, C)` (NHWC) feature maps to `(N, H*W*C)` vectors.\n5. **Advanced 2D Convolution**: NCHW batches with padding, stride and groups (depthwise conv).\n6. **IoU (Intersection over Union)**: overlap of two `xyxy` boxes.\n7. **Non-Maximum Suppression (NMS)**: greedy duplicate removal for detections.\n8. **Focal Loss**: RetinaNet\'s loss for extreme class imbalance.\n9. **Smooth L1 Loss**: the box regression loss of Fast/Faster R-CNN.\n10. **Segmentation Metrics**: IoU, pixel accuracy and Dice for binary masks.\n11. **ResNet Basic Block**: conv-BN-ReLU-conv-BN plus an identity or projection shortcut.\n\nRelated: **Batch Normalization** (Neural Networks), **Precision and Recall** (Model Evaluation, the basis of detection mAP) and **E2E: Convolutional Neural Network** (End-to-End Implementations).\n    ',problems:[`conv-output-size`,`conv2d-forward`,`max-pool`,`flatten-layer`,`conv2d-advanced`,`iou-bounding-box`,`nms`,`focal-loss`,`smooth-l1-loss`,`seg-metrics`,`resnet-block`]},{id:`sequence-models`,title:`Sequence Models`,description:`Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.`,icon:`🔁`,introduction:'\n# Sequence Models\n\n## Why It Matters\n\nText, audio, time series and user sessions are all **sequences**: order matters and length varies. Before transformers, recurrent networks (RNN, LSTM, GRU) were the standard way to model them, and they still power streaming speech recognition, on-device keyboards and many forecasting systems. State-space models (Mamba, RWKV) bring the same recurrent idea back to LLMs, and interviewers still ask you to write an LSTM step or explain vanishing gradients.\n\n## Core Ideas\n\n### The recurrence\nAn RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the **same weights at every step**:\n\n```text\nh_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        x_t: (N, D),  h_t: (N, H)\n```\n\nAll problems here are **batch first**: a batch of sequences is `X` of shape `(N, T, D)` = `(batch, seq_len, features)` and the stacked hidden states are `(N, T, H)`.\n\n### Backpropagation through time (BPTT)\nTraining unrolls the loop and backpropagates through every step. The gradient reaching `h_1` from `h_T` is a product of `T - 1` Jacobians:\n\n```text\ndh_T/dh_1 = prod over t = T..2 of  diag(1 - h_t^2) @ W_hh.T\n```\n\nIf the largest singular value of `W_hh` (times the tanh slope, at most 1) is below 1 the product **vanishes**; above 1 it can **explode**. Gradient clipping fixes explosions but not vanishing, so plain RNNs struggle beyond a few dozen steps.\n\n### Gated cells\nGates are sigmoids in `[0, 1]` that decide, per dimension, how much information flows.\n\n| Cell | State | Gates | Update |\n|------|-------|-------|--------|\n| **RNN** | `h` | none | `h = tanh(x W_xh + h W_hh + b)` |\n| **LSTM** | `h`, `c` | input `i`, forget `f`, output `o` (+ candidate `g`) | `c = f*c_prev + i*g`, `h = o*tanh(c)` |\n| **GRU** | `h` | reset `r`, update `z` (+ candidate `n`) | `h = (1-z)*n + z*h_prev` |\n\nThe LSTM\'s cell state is updated **additively**: when `f ≈ 1`, `dc_t/dc_{t-1} ≈ 1` and gradients travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.\n\n### Conventions used in this section (memorize them)\n\n| | Vanilla RNN problem | LSTM (`nn.LSTMCell`) | GRU (`nn.GRUCell`) |\n|---|---|---|---|\n| Weight layout | `x @ W_xh`, `W_xh: (D, H)`, `W_hh: (H, H)` | `x @ W_ih.T`, `W_ih: (4H, D)`, `W_hh: (4H, H)` | `x @ W_ih.T`, `W_ih: (3H, D)`, `W_hh: (3H, H)` |\n| Biases | one `b: (H,)` | `b_ih`, `b_hh: (4H,)` | `b_ih`, `b_hh: (3H,)` |\n| Gate order (row blocks of `H`) | none | **`i, f, g, o`** | **`r, z, n`** |\n| Parameters | `DH + H^2 + H` | `4(HD + H^2 + 2H)` | `3(HD + H^2 + 2H)` |\n\nNote the layout switch: the RNN problem uses `(in, out)` weights, the LSTM and GRU problems use PyTorch\'s `(out, in)` weights, hence the `.T`. TensorFlow/Keras orders LSTM gates `i, f, c, o` too, but stores kernels as `(D, 4H)`.\n\n## Worked Micro-Example\n\n**RNN**, scalar (`D = H = 1`), `W_xh = 0.5`, `W_hh = 1`, `b = 0`, `h_0 = 0`, input `x_t = 1` for 3 steps:\n\n```text\nh_1 = tanh(0.5)            = 0.4621\nh_2 = tanh(0.5 + 0.4621)   = 0.7452\nh_3 = tanh(0.5 + 0.7452)   = 0.8469\n```\n\n**LSTM**, one step with `H = 1`, `c_prev = 1` and gate pre-activations `(i, f, g, o) = (0, 2, 1, 0)`:\n\n```text\ni = sigmoid(0) = 0.5,  f = sigmoid(2) = 0.8808,  g = tanh(1) = 0.7616,  o = 0.5\nc = 0.8808 * 1 + 0.5 * 0.7616 = 1.2616\nh = 0.5 * tanh(1.2616)       = 0.4258\n```\n\n**Vanishing in numbers**: a per-step gradient factor of 0.5 over 20 steps leaves `0.5^20 ≈ 9.5e-7` of the signal; a factor of 1.1 over 50 steps blows it up to about 117.\n\n## Common Pitfalls\n\n- **Gate order**: splitting an LSTM\'s `4H` block as `i, f, o, g` (or a GRU\'s as `z, r, n`) runs without errors and gives wrong numbers. PyTorch is `i, f, g, o` and `r, z, n`.\n- **Weight orientation**: `x @ W` vs `x @ W.T`. Check the shape table before multiplying.\n- **GRU reset gate**: PyTorch applies `r` *after* the hidden matmul, to `h_prev @ W_hn.T + b_hn`; the original paper applies it to `h_prev` first. The numbers differ.\n- **GRU update gate**: in PyTorch `z = 1` **keeps** `h_prev`; some papers swap `z` and `1 - z`.\n- **BPTT**: weights are shared, so their gradients **accumulate** over time; the gradient into `h_t` has a direct part and a part from `h_{t+1}`.\n- **Batch vs time axis**: `nn.RNN` defaults to `(T, N, D)` unless `batch_first=True`. These problems are batch first.\n\n## Interview Angle\n\n- "Write an LSTM cell from scratch." Then: "count its parameters", "why does the cell state help gradients?", "why initialize the forget bias to 1?"\n- "Explain vanishing and exploding gradients in RNNs and the fixes": gating, clipping, orthogonal init, shorter truncated BPTT windows.\n- "LSTM vs GRU?" GRU has 3 weight blocks instead of 4 (25% fewer parameters) and no separate cell state; quality is usually similar.\n- "RNN vs Transformer?" RNN training is sequential in `T` but inference costs `O(1)` per token; attention trains in parallel but costs `O(T)` per token with a KV cache and `O(T^2)` for the full sequence.\n\n## Problems in This Section\n\n1. **Vanilla RNN: Forward & BPTT**: unroll `h_t = tanh(x_t W_xh + h_{t-1} W_hh + b)` over `(N, T, D)` inputs and backpropagate through time by hand.\n2. **LSTM Cell**: one step of `nn.LSTMCell` with gate order `i, f, g, o`.\n3. **GRU Cell**: one step of `nn.GRUCell` with gate order `r, z, n` and PyTorch\'s reset-gate placement.\n\nRelated: **Gradient Clipping by Global Norm** (Optimization & Training) for exploding gradients, and **Scaled Dot-Product Attention** (Transformer Architecture), which replaced recurrence in most language models.\n    ',problems:[`rnn-forward`,`lstm-cell`,`gru-cell`]},{id:`transformers`,title:`Transformer Architecture`,description:`Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.`,icon:`🤖`,introduction:'\n# Transformer Architecture\n\n## Why it matters\nEvery modern LLM (GPT, LLaMA, Mistral, Qwen) is a stack of the same Transformer block, and so are vision transformers and speech models. "Implement attention" is the single most common ML coding interview question, usually followed by "now make it multi-head", "now make it causal" and "how would you make it faster?".\n\n## The pipeline, end to end\nThis section builds every stage of a decoder-only LLM except decoding, which has its own section:\n\n```text\ntext ──tokenize──> ids (batch, seq_len)                     BPE / longest match\n     ──embed────> x   (batch, seq_len, d_model)             lookup table (+ positions)\n     ──N blocks─> x = x + Attn(Norm(x))                      causal multi-head attention, RoPE\n                  x = x + FFN(Norm(x))                       MLP (SwiGLU in LLaMA)\n     ──LM head──> logits (batch, seq_len, vocab)            final norm, x @ W_vocab\n     ──decode───> next token, append, repeat                LLM Generation & Decoding\n```\n\nTraining feeds the whole sequence at once and uses the causal mask so position `t` only sees tokens `0..t`; generation runs the same network one token at a time.\n\n## Core ideas\n\n**Attention** is a soft lookup: each query scores every key, a softmax turns the scores into weights, and the output is the weighted mix of the values.\n\n| Piece | Formula | Shape |\n|-------|---------|-------|\n| Scores | `S = Q K^T / sqrt(d_k)` | `(seq_len, seq_len)` |\n| Causal mask | `S[i, j] = -inf` for `j > i` | same |\n| Weights | `A = softmax(S, axis=-1)` | rows sum to 1 |\n| Output | `A V` | `(seq_len, d_v)` |\n| Multi-head | split `d_model` into `H` heads of `d_k = d_model / H`, attend per head, concatenate | `(seq_len, d_model)` |\n\nThe `sqrt(d_k)` keeps the scores at unit variance so the softmax doesn\'t saturate.\n\n**Positions.** Attention ignores order, so position must be injected: sinusoidal or learned vectors **added** to the embeddings (original Transformer, GPT-2), or **RoPE**, which rotates `q` and `k` so that `q · k` depends only on the relative offset (LLaMA and most current LLMs).\n\n**Normalization and residuals.** Each sub-layer is wrapped as `x + f(Norm(x))` (pre-norm). LayerNorm normalizes each token\'s features: `gamma * (x - mean) / sqrt(var + eps) + beta`.\n\n**Efficient attention variants.** Grouped-query attention shares K/V heads across query heads to shrink the KV cache; sliding-window attention limits each token to the last `W` positions, so cost drops from `O(n^2)` to `O(n · W)`.\n\n## Worked micro-example\nTwo tokens with `Q = K = [[1, 0], [0, 1]]`, `V = [[1, 2], [3, 4]]`, `d_k = 2`:\n\n```text\nS = Q K^T / sqrt(2) = [[0.7071, 0     ], [0,      0.7071]]\nA = softmax(S)      = [[0.6698, 0.3302], [0.3302, 0.6698]]\nout = A V           = [[1.6605, 2.6605], [2.3395, 3.3395]]\n```\n\nEach token leans toward its own value. With a causal mask, row 0 would become `[1, 0]` and its output exactly `[1, 2]`.\n\n## Common pitfalls\n- **Unstable softmax**: subtract the row max before `exp`, or large scores overflow to `inf` and give NaN.\n- **Head reshapes**: go `(seq_len, d_model) -> (seq_len, H, d_k) -> (H, seq_len, d_k)`; reshaping straight to `(H, seq_len, d_k)` mixes tokens across heads.\n- **Wrong scale**: per-head attention divides by `sqrt(d_k)`, not `sqrt(d_model)`.\n- **Mask off-by-one**: the diagonal must stay visible (`np.triu(..., k=1)`); a fully masked row gives NaN.\n- **Biased vs unbiased variance** in LayerNorm (use the biased one, as PyTorch does).\n- **Layouts**: interleaved RoPE pairs vs Hugging Face\'s `rotate_half`; `np.repeat` vs `np.tile` when sharing KV heads. Both give plausible-looking but wrong numbers.\n\n## Interview angle\n- Why scale by `sqrt(d_k)`? Why LayerNorm rather than BatchNorm?\n- Complexity: attention is `O(n^2 · d)` time and `O(n^2)` memory per head; the MLP is `O(n · d^2)`. Which dominates at 128k context?\n- Parameter count of one block: about `4 d^2` (attention) + `8 d^2` (a `4d`-wide MLP) = `12 d^2`.\n- How do RoPE and GQA reduce the cost of serving long contexts? Derive the backward pass of attention.\n\n## Problems in this section\n1. **Scaled Dot-Product Attention**: the core `softmax(QK^T / sqrt(d_k)) V`, returning output and weights.\n2. **Multi-Head Attention**: split into heads, attend in parallel, merge back.\n3. **Sinusoidal Positional Encoding**: the original fixed position table.\n4. **Layer Normalization**: per-token normalization with `gamma` and `beta`.\n5. **Causal Attention Mask**: the `-inf` upper triangle that makes a model autoregressive.\n6. **BPE Tokenization**: learn merge rules, the first stage of the pipeline.\n7. **Rotary Positional Embeddings (RoPE)**: relative positions by rotating `q` and `k`.\n8. **Grouped Query Attention (GQA)**: share K/V heads to shrink the KV cache.\n9. **Sliding Window Attention**: a banded causal mask for long contexts.\n10. **Attention Backward Pass**: `dQ`, `dK`, `dV` by hand, checked against finite differences.\n11. **Greedy Longest-Match Tokenizer**: encode text with a fixed vocabulary (WordPiece style).\n\n**Where this leads.** **LLM Generation & Decoding** turns logits into text and adds the KV cache; **LLM Internals** swaps in RMSNorm + SwiGLU, FlashAttention\'s online softmax, mixture-of-experts and perplexity; **Representation Learning & Retrieval** uses the embeddings for search and RAG. The capstones assemble everything: **E2E: Transformer Encoder** (one encoder block), **Mini GPT** (a full decoder-only LM with training and generation) and **Transformer Bug Hunt** (find the four bugs in a broken mini-GPT).\n    ',problems:[`scaled-dot-product-attention`,`multi-head-attention`,`positional-encoding`,`layer-norm`,`causal-mask`,`bpe-tokenization`,`rope-embeddings`,`grouped-query-attention`,`sliding-window-attention`,`attention-backward`,`longest-match-tokenizer`]},{id:`llm-generation`,title:`LLM Generation & Decoding`,description:`Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.`,icon:`💬`,introduction:`
 # LLM Generation & Decoding
 
-Understanding how LLMs generate text is critical for ML interviews and production deployment. This section covers the decoding pipeline from raw logits to output tokens.
+## Why it matters
+A trained LLM only outputs a distribution over the next token. Everything users see (how creative, repetitive or fast the model is) is decided by the decoding loop around it. Interviews for LLM roles routinely ask you to implement sampling, explain the KV cache, and reason about why decoding is memory-bound.
 
-## The Autoregressive Pipeline
+## Where decoding sits in the pipeline
+The **Transformer Architecture** section builds the model up to the logits. This section is the loop that turns logits into text:
 
-LLMs generate text one token at a time:
+\`\`\`text
+prompt ──tokenize──> ids (1, T)
+       ──prefill───> run all T tokens in parallel, fill the KV cache, logits for the last position
+loop:  logits (vocab,) ──repetition penalty──> ──/ temperature──> ──top-k / top-p filter──>
+       probs ──sample (or argmax, or beam search)──> next id
+       ──decode step──> run ONE new token, reading the KV cache; append k, v
+until EOS or max_new_tokens
 \`\`\`
-logits = model(input_tokens)        # Raw scores for each vocab token
-probs = softmax(logits / temperature)  # Convert to probabilities
-next_token = sample(probs)          # Pick a token
+
+Prefill is compute-bound (big matrix multiplies over the prompt). Each decode step processes a single token but must read every weight and the whole KV cache, so it is **memory-bandwidth-bound**. KV caching, grouped-query attention and speculative decoding all attack that cost.
+
+## Core ideas
+
+**From logits to a choice.** With logits \`z\` of shape \`(vocab_size,)\`:
+
+| Step | Formula | Effect |
+|------|---------|--------|
+| Repetition penalty | \`z_t / penalty\` if \`z_t > 0\` else \`z_t * penalty\`, for generated \`t\` | discourages loops |
+| Temperature | \`p = softmax(z / T)\` | \`T < 1\` sharper, \`T > 1\` flatter, ranking unchanged |
+| Top-k | keep the \`k\` largest logits | fixed-size candidate set |
+| Top-p (nucleus) | keep the smallest prefix with cumulative probability \`>= p\` | adaptive candidate set |
+| Greedy / beam | \`argmax\`, or keep the \`B\` best partial sequences | deterministic, used for "one right answer" tasks |
+
+**KV cache.** Keys and values of past tokens never change under causal attention, so each step projects only the new token and attends over the cached \`K, V\`. Cache size: \`2 · n_layers · n_kv_heads · d_head · seq_len\` values per sequence.
+
+**Speculative decoding.** A small draft model proposes \`K\` tokens; the target model scores all of them in one pass; token \`i\` is accepted with probability \`min(1, p_target / p_draft)\`, and the first rejection ends the draft. With residual resampling, the output follows the target distribution exactly.
+
+## Worked micro-example
+Logits \`z = [2.0, 1.0, 0.1]\`:
+
+\`\`\`text
+T = 1.0 : softmax(z)      = [0.659,  0.2424, 0.0986]
+T = 0.5 : softmax(z / .5) = [0.8638, 0.1169, 0.0193]     sharper
+T = 2.0 : softmax(z / 2)  = [0.5017, 0.3043, 0.194 ]     flatter
+top-k, k = 2 (T = 1)      = [0.7311, 0.2689, 0.0   ]     softmax of [2, 1]
+top-p, p = 0.8 (T = 1)    : cumulative [0.659, 0.9014, 1.0] reaches 0.8 at token 1
+                          = [0.7311, 0.2689, 0.0   ]     same two tokens here
 \`\`\`
 
-## Key Concepts
+## Common pitfalls
+- **Overflow**: subtract the max before \`exp\`, especially after dividing by a small temperature.
+- **Top-p off-by-one**: include the token that crosses \`p\`, or a confident distribution keeps nothing.
+- **Order of operations**: temperature before top-k/top-p; filter logits with \`-inf\`, then softmax (or renormalize after zeroing).
+- **Repetition penalty sign**: dividing a negative logit makes the token *more* likely; and each distinct token is penalized once.
+- **Beam search underflow**: add log-probabilities; never multiply raw probabilities over long sequences.
+- **Reproducibility**: seed once, then draw random numbers in a fixed order (the sampling problems here seed inside the function).
 
-### Temperature Scaling
-Controls randomness by scaling logits before softmax:
-\`\`\`
-scaled_logits = logits / T
-\`\`\`
-- T < 1: More deterministic (sharper distribution)
-- T > 1: More random (flatter distribution)
-- T → 0: Greedy decoding (always pick most likely)
+## Interview angle
+- Compare greedy, beam search, top-k, top-p. When would you use each?
+- Why is decoding memory-bound, and how do KV caching, GQA, quantization and batching help? Estimate the KV cache of a 7B model at 4k tokens.
+- Walk through speculative decoding and argue why it preserves the target distribution; what acceptance rate makes it worthwhile?
+- Complexity per generated token: \`O(t · d)\` attention with a cache vs \`O(t^2 · d)\` without.
 
-### Sampling Strategies
+## Problems in this section
+1. **Temperature Scaling**: \`softmax(logits / T)\`, stably.
+2. **Top-k Sampling**: keep the \`k\` best tokens, renormalize, sample.
+3. **Nucleus (Top-p) Sampling**: keep the smallest prefix with mass \`>= p\`.
+4. **Repetition Penalty**: the CTRL / Hugging Face penalty on already-generated tokens.
+5. **KV Cache for Efficient Generation**: one cached decoding step of attention.
+6. **Beam Search Decoding**: keep the \`B\` best hypotheses, with EOS handling.
+7. **Speculative Decoding**: the draft-then-verify acceptance loop.
 
-| Strategy | How It Works | When to Use |
-|----------|-------------|-------------|
-| **Top-k** | Keep only the k most likely tokens | Simple, predictable filtering |
-| **Top-p (Nucleus)** | Keep smallest set with cumulative prob ≥ p | Adaptive, works across distributions |
-| **Repetition Penalty** | Reduce probability of already-generated tokens | Prevent loops and repetition |
-
-### KV Cache
-The key optimization for efficient autoregressive generation:
-- Cache Key and Value projections from previous tokens
-- Only compute Q, K, V for the **new** token at each step
-- Reduces per-token cost from O(n²) to O(n)
-
-### Beam Search
-Maintain multiple candidate sequences:
-\`\`\`
-score(sequence) = sum(log P(token_i))
-\`\`\`
-- Explores multiple paths simultaneously
-- Finds higher-probability sequences than greedy decoding
-- Used in translation, summarization, and structured output
-
-### Speculative Decoding
-Use a small "draft" model to propose tokens, verified by the large model:
-1. Draft model generates K tokens quickly
-2. Target model verifies all K in one forward pass
-3. Accept with probability min(1, p_target / p_draft)
-- Mathematically guarantees target model distribution
-- 2-3x speedup in practice
-
-## Interview Essentials
-- Explain temperature scaling and its effect on output diversity
-- Compare top-k vs top-p sampling trade-offs
-- Describe how KV cache reduces inference cost
-- Implement beam search with length normalization
-- Explain why speculative decoding preserves the target distribution
-
-Let's implement these essential LLM techniques!
-    `,problems:[`llm-temperature-scaling`,`llm-top-k-sampling`,`llm-top-p-sampling`,`llm-repetition-penalty`,`llm-kv-cache`,`llm-beam-search`,`llm-speculative-decoding`]},{id:`llm-internals`,title:`LLM Internals`,description:`SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.`,icon:`🧩`,introduction:`
+**Related problems.** The logits come from the decoder built in **Transformer Architecture** (causal mask, GQA, RoPE) and measured by **Token Cross-Entropy and Perplexity** in **LLM Internals**, where **Online Softmax** shows how attention itself is made memory-efficient. **Mini GPT** (E2E Implementations) uses greedy generation with context cropping; try swapping in your top-p sampler. **Transformer Bug Hunt** checks the causal masking that makes cached decoding valid.
+    `,problems:[`llm-temperature-scaling`,`llm-top-k-sampling`,`llm-top-p-sampling`,`llm-repetition-penalty`,`llm-kv-cache`,`llm-beam-search`,`llm-speculative-decoding`]},{id:`llm-internals`,title:`LLM Internals`,description:`How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention's online softmax, mixture-of-experts routing and perplexity.`,icon:`🧩`,introduction:`
 # LLM Internals
 
-You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how we measure a language model at all. These are the details LLM engineering interviews probe.
+## Why it matters
+You know how a Transformer block works. This section is about what changes when that block becomes a **production LLM**: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how a language model is measured. LLM engineering interviews probe exactly these details, usually as "why" questions after you've written the code.
 
-Some pieces of the pipeline below have their own problems elsewhere: BPE tokenization, RoPE and grouped-query attention in **Transformer Architecture**, and temperature, top-k/top-p sampling, the KV cache and speculative decoding in **LLM Generation & Decoding**. This section covers the rest.
+## How an LLM works, end to end
+Each stage has a problem somewhere on this site:
 
-## How an LLM generates text, end to end
-
-\`\`\`
-text -> tokenizer -> token ids (B, T)
-     -> embedding lookup                         (B, T, d_model)
+\`\`\`text
+text -> tokenizer -> ids (B, T)                       BPE, longest match       (Transformer Architecture)
+     -> embedding lookup -> h (B, T, d_model)
      -> N x decoder block:
-            h = h + Attention(RMSNorm(h))        causal, multi-head, positions via RoPE
-            h = h + FFN(RMSNorm(h))              SwiGLU MLP, or a mixture of experts
-     -> final RMSNorm -> LM head                 logits (B, T, vocab)
-     -> pick next token (greedy / sampling), append it, repeat
+          h = h + Attention(RMSNorm(h))               causal, RoPE, GQA        (Transformer Architecture)
+                                                      computed with the online softmax (this section)
+          h = h + FFN(RMSNorm(h))                     SwiGLU MLP or a mixture of experts (this section)
+     -> final RMSNorm -> LM head -> logits (B, T, vocab)
+     -> training: next-token cross-entropy / perplexity (this section)
+     -> inference: KV cache + sampling, one token at a time (LLM Generation & Decoding)
 \`\`\`
 
-Training runs the whole sequence at once and minimizes next-token cross-entropy. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
+Training runs the whole sequence at once and is compute-bound. Inference runs one token at a time, so **memory bandwidth** and **cache size** dominate, not FLOPs.
 
-## What each technique solves
+## Core ideas
 
-| Technique | Problem it solves | Axis | Problem here |
-|-----------|-------------------|------|--------------|
-| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality | SwiGLU Feed-Forward Block |
-| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory + speed | Online Softmax |
-| Mixture of experts | More parameters without more compute per token | Speed (compute) | Mixture-of-Experts Routing |
-| Cross-entropy / perplexity | One number to train on and to compare models with | Quality (evaluation) | Token Cross-Entropy and Perplexity |
-
-## Key formulas
+| Technique | Problem it solves | Axis |
+|-----------|-------------------|------|
+| SwiGLU FFN + RMSNorm | Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm | Quality |
+| Online softmax (FlashAttention) | The \`(T, T)\` score matrix doesn't fit in fast memory for long sequences | Memory traffic |
+| Mixture of experts | More parameters without more compute per token | Compute |
+| Cross-entropy / perplexity | One number to train on and to compare models with | Evaluation |
 
 **SwiGLU and RMSNorm** (LLaMA):
-\`\`\`
+
+\`\`\`text
 rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
-ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,   silu(z) = z * sigmoid(z)
+ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,     silu(z) = z * sigmoid(z)
 \`\`\`
 
-**Online softmax**: stream over key blocks, keeping a running max \`m\`, normalizer \`l\` and output \`acc\`:
-\`\`\`
+**Online softmax**: stream over key blocks with a running max \`m\`, normalizer \`l\` and output \`acc\`:
+
+\`\`\`text
 m' = max(m, rowmax(S_b))
 l  = l * exp(m - m') + rowsum(exp(S_b - m'))
-acc = acc * exp(m - m') + exp(S_b - m') @ V_b
-output = acc / l
+acc = acc * exp(m - m') + exp(S_b - m') @ V_b          output = acc / l
 \`\`\`
 
 **MoE routing** (top-k gates, Switch Transformer load-balancing loss):
-\`\`\`
-gates = softmax(top-k router logits)
-y = sum_j gates_j * expert_{i_j}(x)
-aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router prob)
+
+\`\`\`text
+gates    = softmax(top-k router logits)
+y        = sum_j gates_j * expert_{i_j}(x)
+aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router probability)
 \`\`\`
 
 **Perplexity**:
-\`\`\`
-mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)      (padding masked out)
-perplexity = exp(mean_nll)                           (uniform over V tokens -> V)
+
+\`\`\`text
+mean_nll   = -(1 / N) * sum_t log p(x_t | x_<t)        padding masked out
+perplexity = exp(mean_nll)                             uniform over V tokens -> V
 \`\`\`
 
-## Interview essentials
-- Why SwiGLU uses \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`
-- Why FlashAttention is exact (not an approximation) and what it saves: memory traffic, not FLOPs
-- What goes wrong in an MoE without the auxiliary loss (expert collapse) and how capacity factors drop tokens
-- Why perplexity must exclude padding, and why it's only comparable between models with the same tokenizer
+## Worked micro-example
+Online softmax of \`x = [0, 1, 5, 2, 9]\` with blocks of 2:
 
-Then put it all together in the capstone **Mini GPT** problem (E2E Implementations).
-    `,problems:[`rmsnorm-swiglu`,`online-softmax`,`moe-routing`,`perplexity`]},{id:`representation-learning`,title:`Representation Learning & Retrieval`,description:`Contrastive learning, embedding search and retrieval for RAG.`,icon:`🧭`,introduction:`
+\`\`\`text
+block [0, 1]: m = 1, l = e^-1 + e^0                   = 1.3679
+block [5, 2]: m = 5, l = 1.3679 * e^-4 + e^0 + e^-3   = 1.0748   (old sum rescaled by e^(1-5))
+block [9]   : m = 9, l = 1.0748 * e^-4 + e^0          = 1.0197
+softmax(x)  = exp(x - 9) / 1.0197 = [0.0001, 0.0003, 0.018, 0.0009, 0.9807]
+\`\`\`
+
+The same numbers come out of a two-pass softmax; the online version never needed the global max up front. FlashAttention does this for every query row, with \`acc\` carrying the weighted values.
+
+## Common pitfalls
+- **RMSNorm is not LayerNorm**: no mean subtraction and no bias; the residual adds the un-normalized input.
+- **Online softmax**: forgetting to rescale \`acc\` (not just \`l\`) when the max changes, or dividing by \`l\` inside the loop.
+- **MoE**: computing \`f\` from gates instead of routing counts, using the renormalized top-k gates for \`P\`, or running every expert on every token.
+- **Perplexity**: dividing by the number of positions instead of the number of real tokens; comparing perplexities across different tokenizers.
+- **Overflow** everywhere: log-softmax and attention need the max subtracted.
+
+## Interview angle
+- Why does SwiGLU use \`d_ff ≈ (8/3) d_model\` instead of \`4 d_model\`?
+- Why is FlashAttention exact, and what does it save? (Memory traffic and \`O(T^2)\` memory, not FLOPs.)
+- What goes wrong in an MoE without the auxiliary loss (expert collapse)? How do capacity factors drop tokens? Total vs active parameters of Mixtral 8x7B (about 47B vs 13B).
+- Why must perplexity exclude padding, and why is it only comparable between models with the same tokenizer?
+
+## Problems in this section
+1. **SwiGLU Feed-Forward Block (LLaMA MLP)**: RMSNorm, the gated MLP and the residual.
+2. **Online Softmax (the FlashAttention Trick)**: streaming softmax and block-wise exact attention.
+3. **Mixture-of-Experts Routing**: top-k routing, dispatch/combine and the load-balancing loss.
+4. **Token Cross-Entropy and Perplexity**: the LM loss with a padding mask.
+
+**Related problems.** The attention half of the LLaMA block (RoPE, GQA, causal mask) is in **Transformer Architecture**, along with **Attention Backward Pass**, whose \`rowsum(dP * P)\` term FlashAttention's backward pass also needs. Decoding and the KV cache are in **LLM Generation & Decoding**. **Masked Cross-Entropy with Label Smoothing** (Neural Networks) is a close cousin of the perplexity problem. Then assemble a full model in **Mini GPT**, debug one in **Transformer Bug Hunt**, and compare with the post-norm encoder in **E2E: Transformer Encoder** (all in E2E Implementations).
+    `,problems:[`rmsnorm-swiglu`,`online-softmax`,`moe-routing`,`perplexity`]},{id:`representation-learning`,title:`Representation Learning & Retrieval`,description:`Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.`,icon:`🧭`,introduction:`
 # Representation Learning & Retrieval
 
-A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close and unrelated things are far apart. Once you have that, search, clustering, deduplication and retrieval for LLMs come down to comparing vectors.
+## Why it matters
+A good representation maps inputs to vectors (**embeddings**) where geometry carries meaning: similar things are close, unrelated things are far apart. Once you have that, search, clustering, deduplication, recommendation and retrieval for LLMs all come down to comparing vectors. Retrieval-augmented generation (RAG) is how most production LLM applications ground answers in private or fresh data, and "design a RAG system" is a standard LLM interview question.
 
-## Embeddings and cosine similarity
-Most embedding models are compared with **cosine similarity**, the dot product of L2-normalised vectors:
-\`\`\`
-cos(a, b) = a · b / (||a|| ||b||)        in [-1, 1]
-\`\`\`
-After normalisation, scoring a query against N documents is a single matrix multiply.
+## Where this sits in the LLM pipeline
+An embedding model is the same Transformer stack as an LLM, stopped before the LM head and pooled into one vector per text. RAG wires it in front of a generator:
 
-## Contrastive learning
-Instead of labels, contrastive methods learn from **pairs**: pull matching pairs together and push everything else apart. CLIP trains an image encoder and a text encoder on (image, caption) pairs with the **InfoNCE** loss: in a batch of N pairs, each image must pick its caption out of N candidates (a softmax over cosine similarities divided by a temperature τ), and vice versa.
+\`\`\`text
+offline:  documents ──tokenize──> Transformer encoder ──pool + L2-normalize──> doc vectors (N, D) ──> index
+online:   question  ──same encoder──> query vector (D,)
+          ──retrieve──> top candidates by BM25 and/or cosine        (Cosine Top-k, BM25 stage)
+          ──rerank────> fused scores / cross-encoder                 (Retrieve and Rerank)
+          ──prompt────> [instructions + top passages + question] ──> LLM ──decode──> answer
+\`\`\`
+
+The encoder is trained with a **contrastive** loss so that matching pairs (image and caption, query and passage) end up close.
+
+## Core ideas
+
+**Cosine similarity** is the dot product of L2-normalized vectors:
+
+\`\`\`text
+cos(a, b) = a · b / (||a|| ||b||)            in [-1, 1]
+scores    = Q_n @ D_n.T                      (num_queries, num_docs), one matmul
+\`\`\`
+
+**Contrastive learning (InfoNCE / CLIP).** In a batch of \`N\` pairs, each item must pick its partner out of \`N\` candidates: a softmax over cosine similarities divided by a temperature \`tau\`.
 
 | Idea | Role |
 |------|------|
-| Positives | The matching pair (diagonal of the similarity matrix) |
-| Negatives | Every other item in the batch, so bigger batches give more negatives |
-| Temperature τ | Sharpens or softens the softmax; CLIP learns it |
-| Symmetric loss | Average of image→text and text→image cross-entropy |
+| Positives | The matching pair: the diagonal of the \`(N, N)\` similarity matrix |
+| Negatives | Every other item in the batch, so bigger batches give more (and harder) negatives |
+| Temperature \`tau\` | Sharpens or softens the softmax; CLIP learns it (starting at 0.07) |
+| Symmetric loss | Average of image-to-text (rows) and text-to-image (columns) cross-entropy |
 
-## Vector search
-Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
+**Vector search.** Exact search scores every document and keeps the top-k. Vector databases use **approximate nearest neighbour** indexes (HNSW graphs, IVF clustering, product quantization) to search millions of vectors in milliseconds, trading a little recall for speed.
 
-## Retrieval-augmented generation (RAG)
-RAG answers a question by retrieving relevant passages and putting them in the LLM's prompt:
-1. **Retrieve** candidates: lexical (BM25, exact term matches) and/or dense (embedding similarity)
-2. **Rerank** the candidates with a stronger signal (a cross-encoder, or a fusion of scores)
-3. **Generate** with the top passages as context
+**Hybrid retrieval.** Lexical search (BM25) finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. BM25 per query term:
 
-Lexical search finds rare exact terms (names, error codes) that embeddings blur; dense search finds paraphrases that share no words. Hybrid retrieval combines both.
-
-## Interview Topics
-- Why normalise embeddings, and what the temperature does in InfoNCE
-- Why in-batch negatives make large batches important for CLIP
-- BM25's term-frequency saturation (k1) and length normalisation (b)
-- Exact vs approximate nearest-neighbour search
-- How the retrieval stage limits a RAG system's answer quality
-    `,problems:[`infonce-loss`,`embedding-search`,`retrieve-and-rerank`]},{id:`generative-models`,title:`Generative Models`,description:`Learn VAEs, diffusion models, and generative AI fundamentals.`,icon:`🎨`,introduction:`
-# Generative Models
-
-Generative models learn to create new data similar to the training distribution.
-
-## Key Concepts
-
-### Variational Autoencoders (VAEs)
-- **Encoder**: Maps input to latent distribution (μ, σ)
-- **Decoder**: Reconstructs input from latent sample
-- **Reparameterization trick**: Enable backprop through sampling
-- **Loss**: Reconstruction + KL divergence
-
-### VAE Loss (ELBO)
-\`\`\`
-L = Reconstruction Loss + KL Divergence
-L = ||x - x_reconstructed||² + KL(q(z|x) || p(z))
+\`\`\`text
+IDF(t) * f(t,d) * (k1 + 1) / (f(t,d) + k1 * (1 - b + b * |d| / avgdl))
 \`\`\`
 
-### Diffusion Models
-- **Forward process**: Gradually add noise to data
-- **Reverse process**: Learn to denoise
-- **Noise schedule**: β_t controls noise at each step
+\`k1\` saturates repeated terms, \`b\` penalizes long documents.
 
-### Key Formulas
+## Worked micro-example
+Two perfectly aligned pairs, \`img = txt = [[1, 0], [0, 1]]\`, \`tau = 1\`:
+
+\`\`\`text
+logits = img_n @ txt_n.T / 1 = [[1, 0], [0, 1]]
+row 0: softmax([1, 0]) = [0.7311, 0.2689]  ->  CE = -log(0.7311) = 0.3133
+loss_i2t = loss_t2i = 0.3133               ->  loss = 0.3133
 \`\`\`
-x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-\`\`\`
 
-### KL Divergence
-- Measures difference between distributions
-- KL(P || Q) ≥ 0, equals 0 iff P = Q
-- Not symmetric
+Even perfect alignment has a non-zero loss at \`tau = 1\`, because a cosine gap of 1 is a small logit gap. At \`tau = 0.1\` the gap becomes 10 and the loss drops to about 0.0001 (with 3 pairs), which is why the temperature matters so much.
 
-### Interview Topics
-- Explain reparameterization trick
-- VAE loss components
-- Diffusion forward/reverse process
-- Compare GANs vs VAEs vs Diffusion
+## Common pitfalls
+- **Forgetting to normalize** (or normalizing columns instead of rows): scores then reward vector length, not direction.
+- **Unstable log-sum-exp** at small temperatures: subtract the row max.
+- **Asymmetry**: the similarity matrix isn't symmetric, so the two CLIP directions give different losses.
+- **Tie order**: \`argsort(scores)[::-1]\` reverses tied items; use a stable sort of \`-scores\` when order is specified.
+- **Exact-token matching**: BM25 doesn't stem (\`cats != cat\`) and counts each distinct query term once.
+- **Mixing scales**: raw BM25 is unbounded while cosine is in \`[-1, 1]\`; normalize before fusing.
 
-### Sampling, Guidance and Flow Matching
-- **DDPM sampling** runs the reverse process: start from noise and repeatedly subtract the predicted noise, adding a little fresh noise (σ_t² = β_t) until the last step
-- **Classifier-free guidance** combines conditional and unconditional predictions, \`ε = ε_u + w·(ε_c − ε_u)\`, so a guidance scale w > 1 trades diversity for prompt fidelity
-- **Flow matching / rectified flow** regresses a velocity field onto straight paths \`x_t = (1 − t)·x0 + t·x1\` with target \`x1 − x0\`, then samples by integrating the ODE with a few Euler steps
+## Interview angle
+- Why normalize embeddings, and what does the temperature do in InfoNCE?
+- Why do in-batch negatives make large batches important for CLIP? What does SigLIP change?
+- BM25's term-frequency saturation (\`k1\`) and length normalization (\`b\`); when lexical beats dense retrieval.
+- Exact vs approximate nearest-neighbour search: complexity (\`O(N · D)\` per query for brute force) and the recall trade-off.
+- How the retrieval stage caps a RAG system's quality, and how to evaluate it (recall@k, MRR) separately from generation.
 
-Let's implement generative models!
-    `,problems:[`kl-divergence`,`vae-reparameterization`,`vae-loss`,`vqvae-quantization`,`diffusion-noise-schedule`,`diffusion-forward`,`ddpm-sampling-step`,`classifier-free-guidance`,`flow-matching`]},{id:`reinforcement-learning`,title:`Reinforcement Learning`,description:`From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.`,icon:`🎮`,introduction:`
+## Problems in this section
+1. **CLIP Contrastive Loss (InfoNCE)**: the symmetric contrastive loss that trains embedding models.
+2. **Cosine Top-k Embedding Search**: exact dense retrieval with a defined tie order.
+3. **RAG Retrieval: BM25 + Embedding Rerank**: lexical candidates, then weighted fusion with cosine.
+
+**Related problems.** The encoder that produces the embeddings is the Transformer stack from **Transformer Architecture** (tokenizers, attention, LayerNorm); the generator that consumes the retrieved passages is the decoding loop from **LLM Generation & Decoding**, scored with **Token Cross-Entropy and Perplexity** (LLM Internals). The cross-entropy inside InfoNCE is the same as **Cross-Entropy Loss** in Neural Networks. For full models, see **E2E: Transformer Encoder** (the kind of encoder used for embeddings) and **Mini GPT** (a decoder-only generator).
+    `,problems:[`infonce-loss`,`embedding-search`,`retrieve-and-rerank`]},{id:`generative-models`,title:`Generative Models`,description:`Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.`,icon:`🎨`,introduction:"\n# Generative Models\n\n## Why it matters\nImage, audio and video generators (Stable Diffusion, Flux, Sora-style video models) are diffusion or flow-matching models; image and audio tokenizers are VQ-VAEs; and the VAE's KL regulariser reappears in RLHF and representation learning. Interviews for generative-AI roles ask you to derive these losses, explain the tricks that make them trainable, and write a sampling step without notes.\n\n## Core ideas\n\n### KL divergence\n`KL(P || Q)` measures the extra nats paid for using Q in place of P. It is ≥ 0, zero only when P = Q, and **not symmetric**. For Gaussians it has a closed form:\n\n```text\nKL(N(μ_p, σ_p²) || N(μ_q, σ_q²)) = log(σ_q/σ_p) + (σ_p² + (μ_p − μ_q)²) / (2σ_q²) − 1/2\n```\n\n### Variational autoencoders\nAn encoder maps `x` of shape `(batch, features)` to `mu, log_var` of shape `(batch, latent_dim)`; a decoder maps a sample `z` back to `x`. Training minimises the negative ELBO:\n\n```text\nz        = mu + exp(0.5·log_var) ⊙ ε,   ε ~ N(0, I)           # reparameterization trick\nKL_i     = −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij))\nloss     = mean((x − x_recon)²) + mean_i KL_i                  # KL: sum over latent dims, mean over batch\n```\n\nThe reparameterization trick moves the randomness into ε, so gradients flow to `mu` and `log_var`. **VQ-VAEs** swap the Gaussian latent for the nearest of K codebook vectors, trained with a codebook loss and a β-weighted commitment loss.\n\n### Diffusion (DDPM)\nFix a schedule `β_0 … β_{T−1}`, with `α_t = 1 − β_t` and `ᾱ_t = Π_{s≤t} α_s` (0-indexed throughout this section).\n\n| Piece | Formula |\n|-------|---------|\n| Forward (closed form) | `x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε` |\n| Training loss | `mean((ε_θ(x_t, t) − ε)²)` |\n| Reverse step | `x_{t−1} = (x_t − β_t/sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t) + sqrt(β_t)·z` (no z at t = 0) |\n| Classifier-free guidance | `ε = ε_u + w·(ε_c − ε_u)`; w = 1 is no guidance, w > 1 trades diversity for prompt fidelity |\n\n### Flow matching\nRegress a velocity field onto straight paths `x_t = (1 − t)·x0 + t·x1` (t = 0 noise, t = 1 data) with the constant target `x1 − x0`, then sample by integrating `dx/dt = v(x, t)` with a few Euler steps.\n\n## Worked micro-example\n- **VAE KL** for one latent dim with `mu = 1`, `log_var = log 0.25` (σ = 0.5): `−0.5·(1 + log 0.25 − 1 − 0.25) = 0.8181`, the same as the Gaussian formula for `KL(N(1, 0.5²) || N(0, 1))`.\n- **Forward diffusion** with `β = [0.1, 0.2, 0.3]`: `ᾱ = [0.9, 0.72, 0.504]`. For `x_0 = 1.0`, `t = 2`, `ε = 0.5`: `x_2 = sqrt(0.504)·1 + sqrt(0.496)·0.5 = 0.7099 + 0.3521 = 1.0621`.\n- **CFG** with `ε_u = 0.1`, `ε_c = 0.3`, `w = 7.5`: `0.1 + 7.5·0.2 = 1.6`, far past the conditional prediction.\n\n## Common pitfalls\n- **std vs variance**: `exp(log_var)` is σ²; the sample needs `σ = exp(0.5·log_var)`.\n- **KL reduction**: `mean` over the whole `(batch, latent_dim)` array divides by `latent_dim` and under-weights the KL. Sum over latent dims, then average over the batch.\n- **Off-by-one in schedules**: decide whether `t` is 0- or 1-indexed and index `betas` and `ᾱ` consistently. Here t = 0 is the least noisy step.\n- **sqrt of the coefficients**: `ᾱ_t` and `1 − ᾱ_t` are variances; the forward process multiplies by their square roots.\n- **Noise at the last step**: the final reverse step returns the mean.\n- **Broadcasting per-example t**: reshape a `(batch,)` vector to `(batch, 1, …, 1)` before multiplying images.\n- **Stop-gradients in VQ**: the codebook and commitment losses have the same value but differ in where `.detach()` goes.\n\n## Interview angle\n- Derive the reparameterization trick and say why `log_var` is predicted instead of σ.\n- Why is the VAE KL analytic but diffusion trained with a simple ε-MSE? (The ε-MSE is a reweighted ELBO.)\n- Compare GANs, VAEs, diffusion and flow models on sample quality, diversity, likelihood and sampling speed.\n- Cost of sampling: T network evaluations for DDPM (×2 with CFG); DDIM and flow matching cut this to 10–50 steps.\n- VQ follow-ups: codebook collapse, EMA updates, the straight-through estimator, memory of the `(N, K)` distance matrix.\n\n## Problems in this section\n1. **KL Divergence (Gaussians)**: closed-form KL between two univariate Gaussians.\n2. **VAE Reparameterization Trick**: differentiable sampling `z = μ + σ·ε`.\n3. **VAE Loss Function**: MSE reconstruction plus the closed-form KL (sum over latent dims, mean over batch).\n4. **VQ-VAE Vector Quantization**: nearest-code lookup plus codebook and commitment losses.\n5. **Diffusion Noise Schedule**: linear β schedule, α and the cumulative ᾱ.\n6. **Diffusion Forward Process**: noise clean data to any step in one shot.\n7. **DDPM Reverse Sampling Step**: one denoising step with σ_t² = β_t.\n8. **Classifier-Free Guidance**: guided noise and a guided sampling step.\n9. **Flow Matching (Rectified Flow)**: straight-path targets, MSE loss and an Euler sampler.\n\nThe capstones **E2E: Variational Autoencoder**, **E2E: VQ-VAE** and **E2E: Diffusion Model** in End-to-End Implementations assemble these pieces into full models.\n    ",problems:[`kl-divergence`,`vae-reparameterization`,`vae-loss`,`vqvae-quantization`,`diffusion-noise-schedule`,`diffusion-forward`,`ddpm-sampling-step`,`classifier-free-guidance`,`flow-matching`]},{id:`reinforcement-learning`,title:`Reinforcement Learning`,description:`From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.`,icon:`🎮`,introduction:`
 # Reinforcement Learning
 
 ## Why it matters
@@ -703,71 +641,7 @@ Quantize \`[[0.01, -0.02, 0.013], [5.0, -3.0, 1.7]]\` with a **single** scale (5
 2. **Int8 Weight Quantization (absmax)**: per-channel and per-tensor quantization, dequantization and an int8 matmul with int32 accumulation.
 
 The reward-model loss, the KL penalty, the PPO-RLHF objective and DPO are practiced in **Reinforcement Learning** (start with **PPO Clipped Objective** and **KL Divergence Penalty (RLHF)**, which GRPO builds on). The LoRA adapter is in **PyTorch Basics**.
-    `,problems:[`grpo-advantages`,`int8-quantization`]},{id:`e2e-implementations`,title:`End-to-End Implementations`,description:`Build complete ML models from scratch.`,icon:`🏗️`,introduction:`
-# End-to-End Implementations
-
-Put everything together to build complete models from scratch.
-
-## Why Build From Scratch?
-
-1. **Deep Understanding**: Know every component
-2. **Interview Preparation**: Common coding questions
-3. **Debugging Skills**: Understand what can go wrong
-4. **Framework Independence**: Adapt to any library
-
-## Models Covered
-
-### 2-Layer MLP with Backprop
-Complete neural network with:
-- Forward pass through hidden layer
-- Backpropagation of gradients
-- Weight updates via gradient descent
-
-### Transformer Encoder
-Full encoder block with:
-- Multi-head self-attention
-- Positional encoding
-- Layer normalization
-- Feed-forward network
-- Residual connections
-
-### Variational Autoencoder (VAE)
-Generative model with:
-- Encoder → latent distribution
-- Reparameterization trick
-- Decoder → reconstruction
-- ELBO loss (reconstruction + KL)
-
-### Diffusion Model
-DDPM-style diffusion with:
-- Noise schedule (β, α, ᾱ)
-- Forward diffusion process
-- Reverse denoising process
-- Training objective
-
-### Convolutional Neural Network
-Image classifier with:
-- Conv2D layers
-- Max pooling
-- Flatten + FC layers
-- Full forward pass
-
-### Mini GPT
-Character-level decoder-only Transformer with:
-- Token + position embeddings
-- Causal self-attention blocks
-- Next-token cross-entropy loss and training
-- Greedy generation
-
-### Tiny Vision Transformer
-Image classifier with:
-- Patch embeddings + [CLS] token
-- Position embeddings
-- A pre-norm encoder block
-- Classification from the CLS token
-
-Build these models to truly understand deep learning!
-    `,problems:[`e2e-mlp`,`e2e-transformer`,`e2e-vae`,`e2e-vqvae`,`e2e-diffusion`,`e2e-cnn`,`e2e-mini-gpt`,`e2e-vit-classifier`,`transformer-bug-hunt`]}],t=[{id:`foundations`,title:`Foundations`,sectionIds:[`numpy-fundamentals`,`python-basics`,`einsum`,`pytorch-basics`]},{id:`classical-ml`,title:`Classical ML`,sectionIds:[`data-preprocessing`,`supervised-learning`,`unsupervised-learning`,`model-evaluation`]},{id:`deep-learning`,title:`Deep Learning`,sectionIds:[`deep-learning`,`neural-networks`,`optimization`,`cnn`,`sequence-models`]},{id:`transformers-llms`,title:`Transformers & LLMs`,sectionIds:[`transformers`,`llm-generation`,`llm-internals`,`representation-learning`]},{id:`generative-rl`,title:`Generative & RL`,sectionIds:[`generative-models`,`reinforcement-learning`,`post-training`]},{id:`capstone`,title:`Capstone`,sectionIds:[`e2e-implementations`]}],n=t.map(t=>({...t,sections:t.sectionIds.map(t=>e.find(e=>e.id===t)).filter(e=>!!e)}));function r(e){if(e)return t.find(t=>t.sectionIds.includes(e))}function i(e,t){let n=e[t.id];return n?t.problems.filter(e=>n[e]?.status===`completed`).length:0}function a(e,t){return t.sections.reduce((t,n)=>({done:t.done+i(e,n),total:t.total+n.problems.length}),{done:0,total:0})}var o=[{id:`fc-numpy-broadcasting`,sectionId:`numpy-fundamentals`,question:`What are the three rules of NumPy broadcasting?`,answer:`1. If arrays differ in ndim, the shape of the smaller array is padded with 1s on the left.
+    `,problems:[`grpo-advantages`,`int8-quantization`]},{id:`e2e-implementations`,title:`End-to-End Implementations`,description:`Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.`,icon:`🏗️`,introduction:'\n# End-to-End Implementations\n\n## Why it matters\nSingle formulas are only half the job: real bugs live in the glue between layers, in caches, shapes, masks and loss reductions. "Implement a small model from scratch" is a standard ML coding interview, and these capstones are the models interviewers ask for most: an MLP with backprop, a Transformer, a CNN, a GPT and the main generative models.\n\n## Core ideas\n\n### Think in a pipeline of shapes\nWrite the shape after every step before writing code. For a CNN on MNIST:\n\n| Step | Shape |\n|------|-------|\n| input | `(batch, 1, 28, 28)` |\n| conv 3×3 → pool 2 | `(batch, 32, 26, 26)` → `(batch, 32, 13, 13)` |\n| conv 3×3 → pool 2 | `(batch, 64, 11, 11)` → `(batch, 64, 5, 5)` |\n| flatten → fc → fc | `(batch, 1600)` → `(batch, 128)` → `(batch, 10)` |\n\nFor sequence models the residual stream keeps one shape, `(batch, seq_len, d_model)`, and attention scores are `(batch, heads, seq_len, seq_len)`.\n\n### The recurring building blocks\n| Block | Formula | Where it appears |\n|-------|---------|------------------|\n| Softmax cross-entropy | `loss = mean(−log softmax(z)[y])`, `∂loss/∂z = (p − onehot(y)) / N` | MLP, CNN, GPT, ViT |\n| Scaled dot-product attention | `softmax(Q Kᵀ / sqrt(d_k) + mask) V` | Transformer, GPT, ViT, bug hunt |\n| LayerNorm | `γ · (x − mean) / sqrt(var + eps) + β` over the last axis | all Transformers |\n| Residual block | post-norm `LN(x + f(x))` (2017 Transformer) or pre-norm `x + f(LN(x))` (GPT, ViT) | all Transformers |\n| Reparameterization | `z = μ + exp(0.5·log_var) ⊙ ε` | VAE |\n| Vector quantization | nearest code `argmin_k ‖z − e_k‖²`, straight-through gradient | VQ-VAE |\n| Diffusion | `x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε`; reverse step removes predicted ε | DDPM |\n\n### Contracts matter\nEach problem spells out a **method contract**: which dict keys to return, what to cache, which values are floats. Treat it like an API: the tests call your methods exactly as documented. Losses follow one convention across the course: MSE over all elements; the VAE KL summed over latent dims and averaged over the batch.\n\n## Worked micro-example\nSoftmax cross-entropy and its gradient for one example with logits `z = [2.0, 1.0, 0.1]` and label 0:\n- `p = softmax(z) = [0.659, 0.2424, 0.0986]`\n- `loss = −log 0.659 = 0.417`\n- `∂loss/∂z = p − onehot(0) = [−0.341, 0.2424, 0.0986]` (divide by N for a batch mean)\n\nParameter count of the MNIST CNN above: conv1 `32·1·9 + 32 = 320`, conv2 `64·32·9 + 64 = 18,496`, fc1 `1600·128 + 128 = 204,928`, fc2 `1,290`. The dense layer holds over 90% of the weights.\n\n## Common pitfalls\n- **Loss reduction**: a mean loss needs the `/ N` in its gradient; averaging the KL over latent dims shrinks it.\n- **Cache discipline**: backward needs the pre-activation `z1` for the ReLU gate, not just `h`.\n- **Masks**: apply the causal mask as `−inf` **before** the softmax; zeroing probabilities afterwards breaks normalisation.\n- **Residuals**: in pre-norm blocks add to `x`, not to `LN(x)`.\n- **Head reshapes**: transpose heads back before merging, or features from different heads get interleaved.\n- **Positions**: they start at 0, and generation must crop the context to `block_size`.\n- **Stop-gradients**: in a VQ-VAE the codebook and commitment terms differ only in where `.detach()` goes.\n- **Randomness**: draw noise exactly where the contract says, so seeded tests can reproduce it.\n\n## Interview angle\n- Expect "implement it, then extend it": add a mask, a KV cache, weight decay, a second layer, or a training loop.\n- Be ready with complexity: attention is `O(T²·d)` time and `O(T²)` memory per head; a conv layer is `O(B·C_out·C_in·k²·H·W)`.\n- Verify gradients with finite differences, and know the initial-loss sanity check: about `log(num_classes)`.\n- Explain design choices: pre-norm vs post-norm, tied vs untied LM heads, why VAEs predict `log_var`, why DDPM predicts noise.\n\n## Problems in this section\n1. **E2E: 2-Layer MLP with Backprop**: forward, cross-entropy, hand-derived gradients, SGD and a training loop.\n2. **E2E: Transformer Encoder**: layer norm, sinusoidal positions, multi-head attention and a post-norm encoder stack.\n3. **E2E: Variational Autoencoder**: encoder, reparameterization, sigmoid decoder, negative ELBO and prior sampling.\n4. **E2E: Vector Quantized VAE**: codebook lookup, VQ losses, MLP encoder/decoder and codebook usage.\n5. **E2E: Diffusion Model**: schedule, forward noising, ε-MSE loss, reverse step and the sampling loop.\n6. **E2E: Convolutional Neural Network**: conv2d, max pooling, flatten and a two-block classifier.\n7. **Mini GPT (Character-Level Language Model)**: causal pre-norm decoder, next-token loss, training and greedy generation.\n8. **E2E: Tiny Vision Transformer**: patches, [CLS] token, position embeddings and a linear-probe training step.\n9. **Transformer Bug Hunt: Fix a Broken Mini-GPT**: find four silent bugs in a working-looking forward pass.\n\nThe single-concept versions live in earlier sections: **Neural Networks** (backprop, init), **Transformer Architecture** (attention, layer norm, masks), **CNNs & Computer Vision** (convolution, pooling) and **Generative Models** (VAE, VQ, diffusion).\n    ',problems:[`e2e-mlp`,`e2e-transformer`,`e2e-vae`,`e2e-vqvae`,`e2e-diffusion`,`e2e-cnn`,`e2e-mini-gpt`,`e2e-vit-classifier`,`transformer-bug-hunt`]}],t=[{id:`foundations`,title:`Foundations`,sectionIds:[`numpy-fundamentals`,`python-basics`,`einsum`,`pytorch-basics`]},{id:`classical-ml`,title:`Classical ML`,sectionIds:[`data-preprocessing`,`supervised-learning`,`unsupervised-learning`,`model-evaluation`]},{id:`deep-learning`,title:`Deep Learning`,sectionIds:[`deep-learning`,`neural-networks`,`optimization`,`cnn`,`sequence-models`]},{id:`transformers-llms`,title:`Transformers & LLMs`,sectionIds:[`transformers`,`llm-generation`,`llm-internals`,`representation-learning`]},{id:`generative-rl`,title:`Generative & RL`,sectionIds:[`generative-models`,`reinforcement-learning`,`post-training`]},{id:`capstone`,title:`Capstone`,sectionIds:[`e2e-implementations`]}],n=t.map(t=>({...t,sections:t.sectionIds.map(t=>e.find(e=>e.id===t)).filter(e=>!!e)}));function r(e){if(e)return t.find(t=>t.sectionIds.includes(e))}function i(e,t){let n=e[t.id];return n?t.problems.filter(e=>n[e]?.status===`completed`).length:0}function a(e,t){return t.sections.reduce((t,n)=>({done:t.done+i(e,n),total:t.total+n.problems.length}),{done:0,total:0})}var o=[{id:`fc-numpy-broadcasting`,sectionId:`numpy-fundamentals`,question:`What are the three rules of NumPy broadcasting?`,answer:`1. If arrays differ in ndim, the shape of the smaller array is padded with 1s on the left.
 2. Arrays with size 1 along a dimension act as if they had the size of the largest array in that dimension.
 3. If sizes disagree along any dimension and neither is 1, an error is raised.
 
@@ -1909,7 +1783,7 @@ def softmax(x: torch.Tensor) -> torch.Tensor:
     return exp_x / exp_x.sum()
 
 # Time O(n), space O(n).
-`,testCases:[{id:`1`,description:`Basic softmax`,input:`bool(torch.allclose(softmax(torch.tensor([1.0, 2.0, 3.0])), torch.tensor([0.090031, 0.244728, 0.665241]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`2`,description:`Equal inputs`,input:`bool(torch.allclose(softmax(torch.tensor([1.0, 1.0, 1.0])), torch.tensor([0.333333, 0.333333, 0.333333]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values are shift-invariant`,input:`bool(torch.allclose(softmax(torch.tensor([100.0, 101.0, 102.0])), torch.tensor([0.090031, 0.244728, 0.665241]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Numerical stability with very large values`,input:`(lambda: (p := softmax(torch.tensor([1000.0, 1001.0, 1002.0])), bool(torch.isfinite(p).all()) and round(p.sum().item(), 5))[-1])()`,expected:`1.0`,hidden:!0},{id:`5`,description:`Matches F.softmax on random input`,input:`(lambda: (x := torch.randn(7) * 5, bool(torch.allclose(softmax(x), torch.nn.functional.softmax(x, dim=0), atol=1e-6)))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Probabilities rounded to 4 decimals`,input:`[round(v, 4) for v in softmax(torch.tensor([2.0, 5.0, -1.0, 0.5])).tolist()]`,expected:`[0.0468, 0.9404, 0.0023, 0.0104]`,hidden:!0}],hints:[`Softmax has two jobs: make every score positive and make them sum to 1. Which op does each job?`,`Subtract a constant from every score before exponentiating; it cancels between numerator and denominator.`,`Exponentiate x - x.max() with torch.exp, then divide by the .sum() of the result.`,`Without the max-shift, torch.exp(torch.tensor(1000.)) is inf and the result is nan.`]}},u={"e2e-mlp":{note:`MLP is an nn.Module with nn.Parameter weights. Write backward() by hand (no loss.backward() or F.cross_entropy inside the class); a hidden test checks your gradients against autograd. compute_loss returns a scalar tensor.`,starterCode:`import math
+`,testCases:[{id:`1`,description:`Basic softmax`,input:`bool(torch.allclose(softmax(torch.tensor([1.0, 2.0, 3.0])), torch.tensor([0.090031, 0.244728, 0.665241]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`2`,description:`Equal inputs`,input:`bool(torch.allclose(softmax(torch.tensor([1.0, 1.0, 1.0])), torch.tensor([0.333333, 0.333333, 0.333333]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values are shift-invariant`,input:`bool(torch.allclose(softmax(torch.tensor([100.0, 101.0, 102.0])), torch.tensor([0.090031, 0.244728, 0.665241]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Numerical stability with very large values`,input:`(lambda: (p := softmax(torch.tensor([1000.0, 1001.0, 1002.0])), bool(torch.isfinite(p).all()) and round(p.sum().item(), 5))[-1])()`,expected:`1.0`,hidden:!0},{id:`5`,description:`Matches F.softmax on random input`,input:`(lambda: (x := torch.randn(7) * 5, bool(torch.allclose(softmax(x), torch.nn.functional.softmax(x, dim=0), atol=1e-6)))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Probabilities rounded to 4 decimals`,input:`[round(v, 4) for v in softmax(torch.tensor([2.0, 5.0, -1.0, 0.5])).tolist()]`,expected:`[0.0468, 0.9404, 0.0023, 0.0104]`,hidden:!0}],hints:[`Softmax has two jobs: make every score positive and make them sum to 1. Which op does each job?`,`Subtract a constant from every score before exponentiating; it cancels between numerator and denominator.`,`Exponentiate x - x.max() with torch.exp, then divide by the .sum() of the result.`,`Without the max-shift, torch.exp(torch.tensor(1000.)) is inf and the result is nan.`]}},u={"e2e-mlp":{note:`MLP is an nn.Module with nn.Parameter weights. Write backward() by hand: no loss.backward(), autograd.grad or F.cross_entropy inside the class (a hidden test compares your gradients with autograd). compute_loss returns a scalar tensor in this track.`,starterCode:`import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -2071,7 +1945,7 @@ def train_mlp(X_train, y_train, epochs=100, lr=0.01):
             _ := m.compute_loss(m.forward(X), y), g := m.backward(y),
             _ := m.train_step(X, y, lr=0.5),
             bool(isinstance(m, torch.nn.Module) and torch.allclose(m.W2.detach(), W2_before - 0.5 * g['dW2'], atol=1e-5))
-        )[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`train_mlp returns the model and a decreasing loss history`,input:`(lambda: (r := train_mlp(torch.randn(20, 5), torch.tensor([0, 1] * 10), epochs=20, lr=0.1), bool(len(r[1]) == 20 and r[1][-1] < r[1][0]))[-1])()`,expected:`True`,hidden:!0}],hints:[`Cache X, z1 (pre-activation), h and logits in forward`,`Stable log-softmax: logits - torch.logsumexp(logits, dim=-1, keepdim=True)`,`d_logits = (probs - one_hot(y)) / batch_size; dW2 = h.T @ d_logits; d_relu = (d_logits @ W2.T) * (z1 > 0)`,`Update parameters inside torch.no_grad(): self.W1 -= lr * dW1`]},"e2e-transformer":{note:`TransformerEncoderBlock is an nn.Module with nn.Parameter weights. Implement attention and layer norm with tensor ops: don't use nn.MultiheadAttention, F.scaled_dot_product_attention, F.layer_norm/nn.LayerNorm or nn.TransformerEncoderLayer. Hidden tests compare each piece against those built-ins.`,starterCode:`import math
+        )[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`train_mlp returns the model and a decreasing loss history`,input:`(lambda: (r := train_mlp(torch.randn(20, 5), torch.tensor([0, 1] * 10), epochs=20, lr=0.1), bool(len(r[1]) == 20 and r[1][-1] < r[1][0]))[-1])()`,expected:`True`,hidden:!0}],hints:[`Backprop is the chain rule in reverse: save X, z1, h and logits in forward and the softmax probabilities in compute_loss, because backward needs all of them.`,`Order: forward → compute_loss → backward (output layer, then hidden layer) → SGD update inside torch.no_grad().`,`log_probs = logits - torch.logsumexp(logits, dim=-1, keepdim=True); d_logits = (probs - F.one_hot(y, C).float()) / N; dW2 = h.T @ d_logits; d_z1 = (d_logits @ W2.T) * (z1 > 0).float().`,`Pitfall: forgetting / N (the loss is a mean), or updating parameters outside torch.no_grad(); detach the cached tensors before using them in backward.`]},"e2e-transformer":{note:`TransformerEncoderBlock is an nn.Module with nn.Parameter weights. Implement attention and layer norm with tensor ops: don't use nn.MultiheadAttention, F.scaled_dot_product_attention, F.layer_norm/nn.LayerNorm or nn.TransformerEncoderLayer (hidden tests compare each piece against them).`,starterCode:`import math
 import torch
 import torch.nn as nn
 
@@ -2258,7 +2132,7 @@ def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
             x := torch.tensor([[1.0, -2.0]]), W1 := torch.tensor([[1.0, 0.0], [0.0, 1.0]]), W2 := torch.tensor([[2.0], [3.0]]),
             bool(isinstance(blk, torch.nn.Module) and len(list(blk.parameters())) >= 4
                  and torch.allclose(feed_forward(x, W1, torch.zeros(2), W2, torch.tensor([0.5])), torch.tensor([[2.5]])))
-        )[-1])()`,expected:`True`,hidden:!0},{id:`8`,description:`Positional encoding values`,input:`bool(torch.allclose(positional_encoding(3, 4)[2], torch.tensor([0.909297, -0.416147, 0.019999, 0.9998]), atol=1e-5))`,expected:`True`,hidden:!0}],hints:[`Attention: softmax(Q @ K.transpose(-2, -1) / sqrt(d_k) + mask) @ V`,`Heads: reshape to (batch, seq, heads, d_k) and transpose(1, 2); undo it after attention`,`Layer norm: (x - mean) / sqrt(var(unbiased=False) + eps) * gamma + beta over dim=-1`,`Register weights as nn.Parameter in __init__ (after super().__init__())`,`Post-norm block: x = LN(x + MHA(x)); x = LN(x + FFN(x))`]},"e2e-vae":{note:`VAE is an nn.Module built from nn.Linear layers. Write the reparameterization trick and the KL term yourself (no torch.distributions). compute_loss returns tensors so you can call total_loss.backward().`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0},{id:`8`,description:`Positional encoding values`,input:`bool(torch.allclose(positional_encoding(3, 4)[2], torch.tensor([0.909297, -0.416147, 0.019999, 0.9998]), atol=1e-5))`,expected:`True`,hidden:!0}],hints:[`Build bottom-up: layer_norm, positional_encoding and attention first, each checked on tiny inputs; the block is two 'sublayer, add, normalize' steps.`,`Multi-head attention is reshaping: (B, T, D) → (B, T, H, D/H) → transpose(1, 2), attend over the last two dims, transpose back and reshape to (B, T, D).`,`scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k) (+ mask); layer norm uses x.var(dim=-1, keepdim=True, unbiased=False); register weights as nn.Parameter after super().__init__().`,`Pitfall: torch.var is unbiased by default, which is not what LayerNorm uses; add the mask before the softmax, not after.`]},"e2e-vae":{note:`VAE is an nn.Module built from nn.Linear layers. Write the reparameterization trick and the KL term yourself (no torch.distributions). compute_loss returns scalar tensors so total_loss.backward() works; KL sums over latent dims and averages over the batch.`,starterCode:`import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -2301,7 +2175,7 @@ class VAE(nn.Module):
 
     def reparameterize(self, mu: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """
-        Reparameterization trick: z = mu + std * epsilon
+        Reparameterization trick: z = mu + exp(0.5 * log_var) * eps, eps ~ N(0, I)
         """
         # Your code here
         pass
@@ -2326,7 +2200,8 @@ class VAE(nn.Module):
     def compute_loss(self, x: torch.Tensor, x_recon: torch.Tensor,
                      mu: torch.Tensor, log_var: torch.Tensor) -> dict:
         """
-        Compute VAE loss (ELBO): MSE reconstruction + KL (both averaged over all elements).
+        Negative ELBO: MSE reconstruction over all elements + KL summed over
+        latent dims and averaged over the batch.
 
         Returns:
             Dictionary with 'total_loss', 'recon_loss', 'kl_loss' (scalar tensors)
@@ -2377,7 +2252,8 @@ class VAE(nn.Module):
     def compute_loss(self, x: torch.Tensor, x_recon: torch.Tensor,
                      mu: torch.Tensor, log_var: torch.Tensor) -> dict:
         recon_loss = F.mse_loss(x_recon, x)
-        kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+        # KL(q(z|x) || N(0, I)): sum over latent dims, mean over the batch
+        kl_loss = (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean()
         total_loss = recon_loss + kl_loss
         return {'total_loss': total_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
 
@@ -2388,7 +2264,7 @@ class VAE(nn.Module):
 `,testCases:[{id:`1`,description:`Reconstruction shape`,input:`VAE(784, 256, 20).forward(torch.randn(4, 784))["x_recon"].shape`,expected:`(4, 784)`,hidden:!1},{id:`2`,description:`KL divergence non-negative`,input:`(lambda: (vae := VAE(784, 256, 20), x := torch.randn(4, 784), out := vae.forward(x), loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]), bool(loss["kl_loss"] >= 0))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Loss values for fixed inputs`,input:`(lambda: (
             loss := VAE(4, 8, 2).compute_loss(torch.tensor([[1.0, 0.0]]), torch.tensor([[0.5, 0.5]]), torch.ones(1, 2), torch.zeros(1, 2)),
             (round(float(loss["recon_loss"]), 4), round(float(loss["kl_loss"]), 4), round(float(loss["total_loss"]), 4))
-        )[-1])()`,expected:`(0.25, 0.5, 0.75)`,hidden:!1},{id:`4`,description:`Forward uses the reparameterization trick: z = mu + exp(0.5 * log_var) * eps`,input:`(lambda: (
+        )[-1])()`,expected:`(0.25, 1.0, 1.25)`,hidden:!1},{id:`4`,description:`Forward uses the reparameterization trick: z = mu + exp(0.5 * log_var) * eps`,input:`(lambda: (
             vae := VAE(6, 8, 3),
             out := vae.forward(torch.randn(5, 6)),
             eps := (out["z"] - out["mu"]) / torch.exp(0.5 * out["log_var"]),
@@ -2399,7 +2275,7 @@ class VAE(nn.Module):
             loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]),
             loss["total_loss"].backward(),
             bool(isinstance(vae, torch.nn.Module) and all(p.grad is not None for p in vae.parameters()))
-        )[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Samples have the right shape and lie in [0, 1]`,input:`(lambda: (s := VAE(12, 8, 3).sample(5), bool(s.shape == (5, 12) and s.min().item() >= 0 and s.max().item() <= 1))[-1])()`,expected:`True`,hidden:!0}],hints:[`Encoder: h = relu(enc(x)); mu = fc_mu(h); log_var = fc_logvar(h)`,`Reparameterize: std = torch.exp(0.5 * log_var); z = mu + std * torch.randn_like(std)`,`Decoder: sigmoid(dec2(relu(dec1(z))))`,`KL = -0.5 * torch.mean(1 + log_var - mu**2 - log_var.exp()); return tensors so total_loss.backward() works`]},"e2e-vqvae":{note:`Both classes are nn.Modules; the codebook is an nn.Parameter. Use .detach() for stop-gradients and the straight-through estimator z_e + (z_q - z_e).detach() in forward. Don't use torch.cdist.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Samples have the right shape and lie in [0, 1]`,input:`(lambda: (s := VAE(12, 8, 3).sample(5), bool(s.shape == (5, 12) and s.min().item() >= 0 and s.max().item() <= 1))[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`KL sums over latent dims and averages over the batch`,input:`(lambda: (loss := VAE(3, 4, 2).compute_loss(torch.zeros(2, 3), torch.zeros(2, 3), torch.tensor([[1.0, 1.0], [0.0, 0.0]]), torch.zeros(2, 2)), round(float(loss["kl_loss"]), 4))[-1])()`,expected:`0.5`,hidden:!0}],hints:[`A VAE is an autoencoder whose bottleneck is a distribution: encode to (mu, log_var), sample z differentiably, decode; the loss pays for bad reconstructions and for posteriors far from N(0, I).`,`Methods in order: encode → reparameterize → decode → forward (dict) → compute_loss → sample (under torch.no_grad()).`,`h = torch.relu(self.enc(x)); z = mu + torch.exp(0.5 * log_var) * torch.randn_like(mu); decode with torch.sigmoid(self.dec2(torch.relu(self.dec1(z)))); KL = (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean().`,`Pitfall: torch.mean over the whole KL tensor divides by latent_dim too; return tensors (not .item()) from compute_loss so you can backpropagate.`]},"e2e-vqvae":{note:`Both classes are nn.Modules; the codebook is an nn.Parameter. Use .detach() for stop-gradients and decode the straight-through z_e + (z_q - z_e).detach() in forward. Don't use torch.cdist.`,starterCode:`import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -2613,7 +2489,7 @@ class VQVAE(nn.Module):
             loss := m.compute_loss(x, out["x_recon"], out["z_e"], out["z_q"]),
             loss["total_loss"].backward(),
             bool(out["x_recon"].shape == (3, 1, 4, 4) and all(p.grad is not None for p in m.parameters()) and m.vq.embedding.grad.abs().sum().item() > 0)
-        )[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Codebook usage counts`,input:`VQVAE(1, 16, 8, 4).get_codebook_usage(torch.tensor([[0, 1], [1, 3]])).tolist()`,expected:`[1, 2, 0, 1, 0, 0, 0, 0]`,hidden:!0}],hints:[`Flatten z_e to (N, D); distances = (z**2).sum(1, keepdim=True) + (e**2).sum(1) - 2 * z @ e.T`,`argmin over the codebook axis gives indices; self.embedding[indices] gives z_q`,`Losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach())`,`Straight-through: decode z_e + (z_q - z_e).detach()`,`Usage: torch.bincount(indices.flatten(), minlength=K)`]},"e2e-diffusion":{note:`DiffusionModel is an nn.Module that stores its schedule with register_buffer. Use torch.linspace/cumprod and torch.randn_like. Tests use a small T so sampling stays fast.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Codebook usage counts`,input:`VQVAE(1, 16, 8, 4).get_codebook_usage(torch.tensor([[0, 1], [1, 3]])).tolist()`,expected:`[1, 2, 0, 1, 0, 0, 0, 0]`,hidden:!0}],hints:[`Three parts: encoder, nearest-neighbour lookup into the codebook, decoder. Without the straight-through trick no gradient reaches the encoder, because argmin is not differentiable.`,`quantize: flatten to (N, D), (N, K) distances, argmin, gather, reshape. forward: encode, quantize, decode z_e + (z_q - z_e).detach().`,`Distances: (z**2).sum(1, keepdim=True) - 2 * z @ E.T + (E**2).sum(1); losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach()); usage: torch.bincount(indices.flatten(), minlength=K).`,`Pitfall: putting .detach() on the wrong side trains the wrong module; commitment_loss already includes beta, so don't multiply again in the total.`]},"e2e-diffusion":{note:`DiffusionModel is an nn.Module that stores its schedule with register_buffer. Use torch.linspace/cumprod and torch.randn_like; sample runs under torch.no_grad(). Tests use a small T so sampling stays fast.`,starterCode:`import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -2750,7 +2626,7 @@ class DiffusionModel(nn.Module):
             dm := DiffusionModel(10), calls := [],
             s := dm.sample((3, 2), lambda x, t: (calls.append(t), torch.zeros_like(x))[1]),
             bool(s.shape == (3, 2) and calls == list(range(9, -1, -1)) and isinstance(dm, torch.nn.Module) and len(list(dm.buffers())) >= 3)
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`betas = torch.linspace(beta_start, beta_end, T); alpha_bars = torch.cumprod(1 - betas, dim=0)`,`self.register_buffer('betas', betas) makes the schedule part of the module state`,`x_t = sqrt(alpha_bar) * x_0 + sqrt(1 - alpha_bar) * noise`,`Reverse mean: (x_t - beta / sqrt(1 - alpha_bar) * eps) / sqrt(alpha); add sqrt(beta) * z only for t > 0`]},"e2e-cnn":{note:`Write conv2d and maxpool2d with tensor ops: don't use nn.Conv2d, F.conv2d, nn.MaxPool2d, F.max_pool2d or unfold (hidden tests compare against them). CNN is an nn.Module; nn.Linear is fine for the fully connected layers.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Everything derives from the schedule: compute betas, alphas and alpha_bars once in __init__ and reuse them.`,`forward_diffusion is one mixing line; reverse_step computes the mean and adds noise only for t > 0; sample loops t over reversed(range(T)).`,`self.register_buffer('alpha_bars', torch.cumprod(1 - betas, dim=0)); mean = (x_t - beta / torch.sqrt(1 - alpha_bar) * eps) / torch.sqrt(alpha).`,`Pitfall: the outer division uses α_t (this step) while the ε coefficient uses 1 − ᾱ_t (cumulative); don't re-seed inside reverse_step.`]},"e2e-cnn":{note:`Write conv2d and maxpool2d with tensor ops: don't use nn.Conv2d, F.conv2d, nn.MaxPool2d, F.max_pool2d or unfold (hidden tests compare against them). CNN is an nn.Module; nn.Linear is fine for the fully connected layers.`,starterCode:`import torch
 import torch.nn as nn
 
 
@@ -2911,7 +2787,7 @@ def test_cnn():
             m := CNN((1, 12, 12), 3), out := m(torch.randn(2, 1, 12, 12)),
             out.sum().backward(),
             bool(out.shape == (2, 3) and isinstance(m, torch.nn.Module) and all(p.grad is not None for p in m.parameters()))
-        )[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`test_cnn runs on 28x28 inputs`,input:`test_cnn()`,expected:`True`,hidden:!0}],hints:[`Conv output size: (input - kernel + 1) for stride=1, no padding`,`Loop over kernel taps: output += einsum("bchw,oc->bohw", x[:, :, a:a+out_H, b:b+out_W], kernel[:, :, a, b])`,`Pool: reshape to (B, C, out_H, p, out_W, p) and max over the two p axes`,`Flatten: x.reshape(x.shape[0], -1); FC layers: nn.Linear`]},"e2e-mini-gpt":{note:`Build attention yourself (masked_fill + softmax). Don't use nn.TransformerEncoderLayer, nn.TransformerDecoderLayer, nn.MultiheadAttention or F.scaled_dot_product_attention. nn.Embedding, nn.Linear, nn.LayerNorm, nn.GELU, F.cross_entropy and torch.optim are fine.`,starterCode:`import math
+        )[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`test_cnn runs on 28x28 inputs`,input:`test_cnn()`,expected:`True`,hidden:!0}],hints:[`Track shapes first: a 3×3 valid conv maps H → H − 2 and a 2×2 pool maps H → H // 2; that gives fc1's input size.`,`Write conv2d, maxpool2d and flatten as functions, test them on tiny tensors, then chain them in forward with ReLU after each conv and after fc1.`,`Conv by kernel taps: output += torch.einsum('bchw,oc->bohw', x[:, :, a:a+out_H, b:b+out_W], kernel[:, :, a, b]); pool: reshape to (B, C, H//p, p, W//p, p) and max over dims 5 and 3.`,`Pitfall: crop odd sizes before the pooling reshape, don't flip the kernel (frameworks compute cross-correlation), and return logits, not probabilities.`]},"e2e-mini-gpt":{note:`Build attention yourself (masked_fill + softmax). Don't use nn.TransformerEncoderLayer, nn.TransformerDecoderLayer, nn.MultiheadAttention or F.scaled_dot_product_attention. nn.Embedding, nn.Linear, nn.LayerNorm, nn.GELU, F.cross_entropy and torch.optim are fine.`,starterCode:`import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -3053,7 +2929,7 @@ def train(model, idx, targets, steps=20, lr=1e-2):
         optimizer.step()
         losses.append(loss.item())
     return losses
-`,testCases:[{id:`1`,description:`forward returns (B, T, vocab_size)`,input:`MiniGPT(5).forward(torch.randint(0, 5, (2, 8))).shape`,expected:`(2, 8, 5)`,hidden:!1},{id:`2`,description:`Causal: changing a future token leaves earlier logits unchanged`,input:`(lambda m, a: (lambda b: bool(torch.allclose(m(a)[:, :5], m(b)[:, :5], atol=1e-6) and not torch.allclose(m(a)[:, 5:], m(b)[:, 5:])))(torch.cat([a[:, :5], (a[:, 5:] + 1) % 5], dim=1)))(MiniGPT(5, n_layers=2), torch.randint(0, 5, (2, 8)))`,expected:`True`,hidden:!1},{id:`3`,description:`Initial loss is about log(vocab_size)`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), bool(abs(MiniGPT(5).loss(seq[:, :-1], seq[:, 1:]).item() - math.log(5)) < 0.15))[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`generate keeps the prompt and appends max_new_tokens tokens`,input:`(lambda out: (tuple(out.shape), out[:, :3].tolist()))(MiniGPT(5).generate(torch.tensor([[0, 1, 2]]), 5))`,expected:`((1, 8), [[0, 1, 2]])`,hidden:!1},{id:`5`,description:`Training with autograd reduces the loss`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), losses := train(MiniGPT(5), seq[:, :-1], seq[:, 1:], steps=20, lr=1e-2), bool(len(losses) == 20 and losses[-1] < losses[0] - 0.5))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Generation is greedy (argmax of the last-position logits)`,input:`(lambda m, p: bool(m.generate(p, 1)[0, -1].item() == m(p)[0, -1].argmax().item()))(MiniGPT(5), torch.tensor([[4, 1, 3]]))`,expected:`True`,hidden:!0},{id:`7`,description:`After training, generation continues the cycle`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), train(m, seq[:, :-1], seq[:, 1:], steps=40, lr=2e-2), m.generate(torch.tensor([[0, 1, 2]]), 5).tolist())[-1])()`,expected:`[[0, 1, 2, 3, 4, 0, 1, 2]]`,hidden:!0},{id:`8`,description:`generate crops the context to block_size`,input:`tuple(MiniGPT(5, block_size=8).generate(torch.tensor([[0, 1, 2, 3, 4, 0]]), 6).shape)`,expected:`(1, 12)`,hidden:!0},{id:`9`,description:`Every parameter gets a gradient`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), m.loss(seq[:, :-1], seq[:, 1:]).backward(), all(p.grad is not None for p in m.parameters()))[-1])()`,expected:`True`,hidden:!0}],hints:[`Attention: q, k, v = self.qkv(x).split(C, dim=-1); view each as (B, T, H, d_head).transpose(1, 2); mask with masked_fill(~tril[:T, :T], -inf).`,`Init: loop over self.modules() and call nn.init.normal_(m.weight, std=0.02) on Linear/Embedding layers so the initial loss is ~log(V).`,`loss: F.cross_entropy(logits.reshape(-1, V), targets.reshape(-1)).`,`train: optimizer = torch.optim.AdamW(model.parameters(), lr=lr); loop zero_grad, loss.backward(), step; record loss.item().`]},"e2e-vit-classifier":{note:`nn.Linear, nn.LayerNorm and F.gelu(approximate='tanh') are fine; write the multi-head attention yourself (no nn.MultiheadAttention or F.scaled_dot_product_attention). train_step updates every parameter with plain SGD via autograd.`,starterCode:`import math
+`,testCases:[{id:`1`,description:`forward returns (B, T, vocab_size)`,input:`MiniGPT(5).forward(torch.randint(0, 5, (2, 8))).shape`,expected:`(2, 8, 5)`,hidden:!1},{id:`2`,description:`Causal: changing a future token leaves earlier logits unchanged`,input:`(lambda m, a: (lambda b: bool(torch.allclose(m(a)[:, :5], m(b)[:, :5], atol=1e-6) and not torch.allclose(m(a)[:, 5:], m(b)[:, 5:])))(torch.cat([a[:, :5], (a[:, 5:] + 1) % 5], dim=1)))(MiniGPT(5, n_layers=2), torch.randint(0, 5, (2, 8)))`,expected:`True`,hidden:!1},{id:`3`,description:`Initial loss is about log(vocab_size)`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), bool(abs(MiniGPT(5).loss(seq[:, :-1], seq[:, 1:]).item() - math.log(5)) < 0.15))[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`generate keeps the prompt and appends max_new_tokens tokens`,input:`(lambda out: (tuple(out.shape), out[:, :3].tolist()))(MiniGPT(5).generate(torch.tensor([[0, 1, 2]]), 5))`,expected:`((1, 8), [[0, 1, 2]])`,hidden:!1},{id:`5`,description:`Training with autograd reduces the loss`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), losses := train(MiniGPT(5), seq[:, :-1], seq[:, 1:], steps=20, lr=1e-2), bool(len(losses) == 20 and losses[-1] < losses[0] - 0.5))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Generation is greedy (argmax of the last-position logits)`,input:`(lambda m, p: bool(m.generate(p, 1)[0, -1].item() == m(p)[0, -1].argmax().item()))(MiniGPT(5), torch.tensor([[4, 1, 3]]))`,expected:`True`,hidden:!0},{id:`7`,description:`After training, generation continues the cycle`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), train(m, seq[:, :-1], seq[:, 1:], steps=40, lr=2e-2), m.generate(torch.tensor([[0, 1, 2]]), 5).tolist())[-1])()`,expected:`[[0, 1, 2, 3, 4, 0, 1, 2]]`,hidden:!0},{id:`8`,description:`generate crops the context to block_size`,input:`tuple(MiniGPT(5, block_size=8).generate(torch.tensor([[0, 1, 2, 3, 4, 0]]), 6).shape)`,expected:`(1, 12)`,hidden:!0},{id:`9`,description:`Every parameter gets a gradient`,input:`(lambda: (seq := torch.tensor([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), m.loss(seq[:, :-1], seq[:, 1:]).backward(), all(p.grad is not None for p in m.parameters()))[-1])()`,expected:`True`,hidden:!0}],hints:[`Build it in the order data flows: attention, then the block, then forward, loss and generate. Test causality early: changing a later token must not change earlier logits.`,`Attention: q, k, v = self.qkv(x).split(C, dim=-1); view each as (B, T, H, d_head).transpose(1, 2); mask with masked_fill(~tril[:T, :T], float('-inf')) before the softmax.`,`Init every Linear/Embedding weight with nn.init.normal_(w, std=0.02) so the initial loss is about log(V); loss = F.cross_entropy(logits.reshape(-1, V), targets.reshape(-1)).`,`Pitfalls: pre-norm residuals add to x, not LN(x); generate under torch.no_grad() and crop to idx[:, -block_size:]; in train, record loss.item() before optimizer.step().`]},"e2e-vit-classifier":{note:`nn.Linear, nn.LayerNorm and F.gelu(approximate='tanh') are fine; write the multi-head attention yourself (no nn.MultiheadAttention or F.scaled_dot_product_attention). train_step updates every parameter with plain SGD via autograd.`,starterCode:`import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -3062,8 +2938,9 @@ class TinyViT(nn.Module):
     def __init__(self, img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2,
                  mlp_dim=32, num_classes=2, use_pos_emb=True):
         """
-        Patch embedding (nn.Linear), CLS token and position embeddings (nn.Parameter,
-        ~ N(0, 0.02^2)), one pre-norm encoder block, final LayerNorm and a linear head.
+        Patch embedding self.patch_embed = nn.Linear(P*P*C, dim) (a test uses this name),
+        CLS token and position embeddings (nn.Parameter, ~ N(0, 0.02^2)), one pre-norm
+        encoder block, final LayerNorm and a linear head.
         """
         super().__init__()
         self.patch_size = patch_size
@@ -3182,7 +3059,7 @@ class TinyViT(nn.Module):
     y := torch.arange(8) % 2,
     losses := [m.train_step(x, y, 0.1) for _ in range(15)],
     bool(len(losses) == 15 and m.loss(x, y) < 0.5 * losses[0] and all(p.grad is not None for p in m.parameters()))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`patchify: x.reshape(B, C, H//P, P, W//P, P).permute(0, 2, 4, 3, 5, 1).reshape(B, N, P*P*C).`,`Prepend CLS with torch.cat([self.cls.expand(B, 1, -1), tokens], dim=1).`,`Attention: self.qkv(h).chunk(3, dim=-1), reshape to (B, T, heads, d_head).transpose(1, 2), softmax(Q @ K^T / sqrt(d_head)) @ V.`,`train_step: zero_grad, loss.backward(), then under torch.no_grad() do p -= lr * p.grad for every parameter.`]},"transformer-bug-hunt":{note:`Fix the 4 bugs in gpt_forward; don't replace the attention with F.scaled_dot_product_attention or nn.MultiheadAttention. The bugs are the same as in the NumPy track.`,starterCode:`import math
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Follow the shapes: an image becomes N patch vectors, then N + 1 tokens with the CLS token in front; only token 0 is classified.`,`patchify is pure reshaping: x.reshape(B, C, H//P, P, W//P, P).permute(0, 2, 4, 3, 5, 1).reshape(B, N, P*P*C); then patch_embed, prepend CLS, add pos, one pre-norm block, LayerNorm the CLS row.`,`torch.cat([self.cls.expand(B, 1, -1), tokens], dim=1); attention: self.qkv(h).chunk(3, dim=-1), heads via view(B, T, nh, hd).transpose(1, 2), softmax(q @ k.transpose(-2, -1) / sqrt(hd)) @ v.`,`Pitfall: the permute order decides the (p1, p2, c) flattening. train_step: zero_grad, loss.backward(), then p -= lr * p.grad under torch.no_grad() for every parameter.`]},"transformer-bug-hunt":{note:`Fix the 4 bugs in gpt_forward; don't replace the attention with F.scaled_dot_product_attention or nn.MultiheadAttention. The bugs are the same as in the NumPy track.`,starterCode:`import math
 import numpy as np
 import torch
 
@@ -3573,7 +3450,7 @@ def einsum_equivalence(A: torch.Tensor, B: torch.Tensor) -> dict:
     )
 
     return {'results': results, 'all_match': all_match}
-`,testCases:[{id:`1`,description:`All results match`,input:`bool(einsum_equivalence(torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))["all_match"])`,expected:`True`,hidden:!1},{id:`2`,description:`Matrix multiplication matches`,input:`einsum_equivalence(torch.tensor([[1.0, 2.0], [3.0, 4.0]]), torch.tensor([[5.0, 6.0], [7.0, 8.0]]))["results"]["matmul"]["einsum"]`,expected:`[[19.0, 22.0], [43.0, 50.0]]`,hidden:!1},{id:`3`,description:`All five operations present`,input:`sorted(einsum_equivalence(torch.ones(2, 3), torch.ones(3, 2))["results"].keys())`,expected:`["hadamard_sum", "matmul", "row_sum", "sum", "transpose"]`,hidden:!0},{id:`4`,description:`Hadamard sum and row sums`,input:`(lambda r: (float(r["hadamard_sum"]["einsum"]), r["row_sum"]["numpy"].tolist()))(einsum_equivalence(torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))["results"])`,expected:`(91.0, [6.0, 15.0])`,hidden:!0}],hints:[`Build one small dict per operation holding both versions, then check them all at the end.`,`Use the table in the description: the einsum string on one side, the familiar op on the other (torch.sum, torch.sum(A, dim=1), A @ B, A.T, torch.sum(A * A)). 'hadamard_sum' uses A twice.`,`all_match = all(torch.allclose(r['einsum'], r['numpy']) for r in results.values()) gives a Python bool.`,`Pitfall: keep the key name 'numpy' even though the values are torch tensors, and compare with torch.allclose rather than ==.`]}},te={"vae-reparameterization":{note:`Sample eps with torch.randn_like. Don't use torch.distributions.Normal(...).rsample(), which does the trick for you. Hidden tests check that gradients flow to mu and log_var.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`All results match`,input:`bool(einsum_equivalence(torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))["all_match"])`,expected:`True`,hidden:!1},{id:`2`,description:`Matrix multiplication matches`,input:`einsum_equivalence(torch.tensor([[1.0, 2.0], [3.0, 4.0]]), torch.tensor([[5.0, 6.0], [7.0, 8.0]]))["results"]["matmul"]["einsum"]`,expected:`[[19.0, 22.0], [43.0, 50.0]]`,hidden:!1},{id:`3`,description:`All five operations present`,input:`sorted(einsum_equivalence(torch.ones(2, 3), torch.ones(3, 2))["results"].keys())`,expected:`["hadamard_sum", "matmul", "row_sum", "sum", "transpose"]`,hidden:!0},{id:`4`,description:`Hadamard sum and row sums`,input:`(lambda r: (float(r["hadamard_sum"]["einsum"]), r["row_sum"]["numpy"].tolist()))(einsum_equivalence(torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))["results"])`,expected:`(91.0, [6.0, 15.0])`,hidden:!0}],hints:[`Build one small dict per operation holding both versions, then check them all at the end.`,`Use the table in the description: the einsum string on one side, the familiar op on the other (torch.sum, torch.sum(A, dim=1), A @ B, A.T, torch.sum(A * A)). 'hadamard_sum' uses A twice.`,`all_match = all(torch.allclose(r['einsum'], r['numpy']) for r in results.values()) gives a Python bool.`,`Pitfall: keep the key name 'numpy' even though the values are torch tensors, and compare with torch.allclose rather than ==.`]}},te={"vae-reparameterization":{note:`Sample eps with torch.randn_like; don't use torch.distributions.Normal(...).rsample(), which does the trick for you. Hidden tests check that gradients reach mu and log_var.`,starterCode:`import torch
 
 def reparameterize(mu, log_var):
     """
@@ -3606,7 +3483,7 @@ def reparameterize(mu, log_var):
             z := reparameterize(mu, lv),
             z.sum().backward(),
             bool(torch.allclose(mu.grad, torch.ones(2, 3)) and torch.allclose(lv.grad, 0.5 * (z - mu).detach(), atol=1e-5))
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`std = torch.exp(0.5 * log_var)`,`eps = torch.randn_like(std) is constant w.r.t. mu and log_var`,`z = mu + std * eps lets autograd differentiate through the sample`]},"vae-loss":{note:`F.mse_loss is fine for the reconstruction term; write the KL term yourself with tensor ops.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Autograd can differentiate through mu and log_var only if the random draw does not depend on them.`,`Turn log_var into a standard deviation, draw unit noise of the same shape, then shift and scale it.`,`std = torch.exp(0.5 * log_var); eps = torch.randn_like(std); return mu + std * eps.`,`Pitfall: don't wrap eps in requires_grad or detach mu; and torch.exp(log_var) is the variance, not the std.`]},"vae-loss":{note:`F.mse_loss is fine for the reconstruction term; write the KL with tensor ops (no torch.distributions.kl_divergence). KL sums over latent dims and averages over the batch.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def vae_loss(x, x_reconstructed, mu, log_var):
@@ -3620,7 +3497,9 @@ def vae_loss(x, x_reconstructed, mu, log_var):
         log_var: Latent log variance (batch, latent_dim)
 
     Returns:
-        (total_loss, recon_loss, kl_loss) as Python floats rounded to 4 decimals
+        (total_loss, recon_loss, kl_loss): Python floats rounded to 4 decimals.
+        recon_loss is the MSE over all elements; kl_loss sums over latent dims
+        and averages over the batch; total_loss = recon_loss + kl_loss.
     """
     # Your code here
     pass
@@ -3636,21 +3515,20 @@ def vae_loss(x, x_reconstructed, mu, log_var):
 
     total_loss = recon_loss + kl_loss
     return round(total_loss.item(), 4), round(recon_loss.item(), 4), round(kl_loss.item(), 4)
-`,testCases:[{id:`1`,description:`Perfect case`,input:`vae_loss(torch.zeros(2, 4), torch.zeros(2, 4), torch.zeros(2, 2), torch.zeros(2, 2))`,expected:`(0.0, 0.0, 0.0)`,hidden:!1},{id:`2`,description:`Non-zero reconstruction and KL`,input:`vae_loss(torch.tensor([[1.0, 2.0]]), torch.zeros(1, 2), torch.tensor([[0.5, -0.5]]), torch.tensor([[0.0, 1.0]]))`,expected:`(3.1091, 2.5, 0.6091)`,hidden:!1},{id:`3`,description:`Non-zero KL`,input:`vae_loss(torch.zeros(1, 4), torch.zeros(1, 4), torch.ones(1, 2), torch.zeros(1, 2))`,expected:`(1.0, 0.0, 1.0)`,hidden:!0},{id:`4`,description:`KL sums over latent dims and averages over the batch`,input:`vae_loss(torch.zeros(2, 3), torch.zeros(2, 3), torch.tensor([[1.0, 1.0], [0.0, 0.0]]), torch.zeros(2, 2))`,expected:`(0.5, 0.0, 0.5)`,hidden:!0}],hints:[`Reconstruction: F.mse_loss(x_reconstructed, x) or ((x - x_reconstructed) ** 2).mean()`,`KL per sample: -0.5 * (1 + log_var - mu**2 - log_var.exp()).sum(dim=1)`,`Average the KL over the batch, then return Python floats with round(t.item(), 4)`]},"diffusion-noise-schedule":{note:`Use torch.linspace and torch.cumprod.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Perfect case`,input:`vae_loss(torch.zeros(2, 4), torch.zeros(2, 4), torch.zeros(2, 2), torch.zeros(2, 2))`,expected:`(0.0, 0.0, 0.0)`,hidden:!1},{id:`2`,description:`Non-zero reconstruction and KL`,input:`vae_loss(torch.tensor([[1.0, 2.0]]), torch.zeros(1, 2), torch.tensor([[0.5, -0.5]]), torch.tensor([[0.0, 1.0]]))`,expected:`(3.1091, 2.5, 0.6091)`,hidden:!1},{id:`3`,description:`Non-zero KL`,input:`vae_loss(torch.zeros(1, 4), torch.zeros(1, 4), torch.ones(1, 2), torch.zeros(1, 2))`,expected:`(1.0, 0.0, 1.0)`,hidden:!0},{id:`4`,description:`KL sums over latent dims and averages over the batch`,input:`vae_loss(torch.zeros(2, 3), torch.zeros(2, 3), torch.tensor([[1.0, 1.0], [0.0, 0.0]]), torch.zeros(2, 2))`,expected:`(0.5, 0.0, 0.5)`,hidden:!0}],hints:[`Two terms: the reconstruction error of the decoder and the closed-form KL of each posterior from N(0, I).`,`Reconstruction is a mean over all elements; the KL is one number per example (summed over latent dims), then averaged over the batch.`,`F.mse_loss(x_reconstructed, x); (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean().`,`Pitfall: .mean() over the whole KL tensor also divides by latent_dim. Return Python floats: round(t.item(), 4).`]},"diffusion-noise-schedule":{note:`Use torch.linspace and torch.cumprod (dim=0).`,starterCode:`import torch
 
 def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
     """
-    Create linear noise schedule for diffusion.
+    Create the linear DDPM noise schedule (0-indexed timesteps).
 
     Args:
-        T: Number of diffusion steps
-        beta_start: Starting beta value
-        beta_end: Ending beta value
+        T: Number of diffusion steps (int)
+        beta_start: beta_0
+        beta_end: beta_{T-1}
 
     Returns:
-        betas: Beta values (T,)
-        alphas: Alpha values (T,)
-        alpha_bars: Cumulative alpha product (T,)
+        (betas, alphas, alpha_bars): float tensors of shape (T,), where
+        alphas = 1 - betas and alpha_bars is the cumulative product of alphas
     """
     # Your code here
     pass
@@ -3667,7 +3545,7 @@ def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
         )[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Alpha bar decreases - last < first`,input:`bool(linear_noise_schedule(50, 0.001, 0.01)[2][-1] < linear_noise_schedule(50, 0.001, 0.01)[2][0])`,expected:`True`,hidden:!0},{id:`4`,description:`Standard DDPM schedule endpoints`,input:`(lambda: (
             s := linear_noise_schedule(1000),
             bool(abs(s[0][0].item() - 0.0001) < 1e-7 and abs(s[0][-1].item() - 0.02) < 1e-7 and abs(s[2][-1].item() - 4.036e-05) < 1e-6)
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`torch.linspace(beta_start, beta_end, T) gives T evenly spaced betas`,`alphas = 1 - betas`,`torch.cumprod(alphas, dim=0) gives the running product`]},"diffusion-forward":{note:`Sample the noise with torch.randn_like. Tests check the formula exactly, so return the same noise you used.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`β grows linearly from beta_start to beta_end with both endpoints included; everything else derives from it.`,`Build betas, then alphas = 1 − betas, then the running product of alphas.`,`torch.linspace(beta_start, beta_end, T), 1 - betas, torch.cumprod(alphas, dim=0).`,`Pitfall: torch.arange with a float step drops the endpoint and drifts; torch.cumprod needs dim=0.`]},"diffusion-forward":{note:`Sample the noise with torch.randn_like after the seed in the starter. Tests check the formula against the noise you return, so return the same tensor you used.`,starterCode:`import torch
 
 def diffusion_forward(x_0, t, alpha_bars):
     """
@@ -3707,7 +3585,7 @@ def diffusion_forward(x_0, t, alpha_bars):
         )[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Noise is standard normal`,input:`(lambda: (
             n := diffusion_forward(torch.zeros(100, 100), 0, torch.tensor([0.5]))[1],
             bool(abs(n.mean().item()) < 0.05 and abs(n.std().item() - 1.0) < 0.05)
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`alpha_bar_t = alpha_bars[t]`,`noise = torch.randn_like(x_0)`,`x_t = torch.sqrt(alpha_bar_t) * x_0 + torch.sqrt(1 - alpha_bar_t) * noise`]},"vqvae-quantization":{note:`Compute distances with tensor ops and pick codes with argmin. Don't use torch.cdist. For the losses, use .detach() as the stop-gradient.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`All the noise added up to step t is summarised by the single number alpha_bars[t]; no loop over steps.`,`Look up ᾱ_t, draw ε shaped like x_0, then mix signal and noise.`,`noise = torch.randn_like(x_0); x_t = torch.sqrt(ab) * x_0 + torch.sqrt(1 - ab) * noise.`,`Pitfall: the coefficients are square roots (ᾱ and 1 − ᾱ are variances).`]},"vqvae-quantization":{note:`Compute distances with tensor ops and pick codes with argmin; don't use torch.cdist. Use .detach() as the stop-gradient sg[·] in the losses.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def vq_quantize(z_e, codebook):
@@ -3719,8 +3597,7 @@ def vq_quantize(z_e, codebook):
         codebook: Embedding vectors (num_embeddings, embedding_dim)
 
     Returns:
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        indices: Codebook indices used (batch, H, W), int64
+x; ties go to the lowest index
     """
     # Your code here
     pass
@@ -3771,7 +3648,7 @@ def vq_loss(z_e, z_q, beta=0.25):
             z := torch.randn(2, 4, 4, 8), cb := torch.randn(16, 8),
             q := vq_quantize(z, cb),
             bool(torch.allclose(q[0], cb[q[1]]))
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Reshape z_e to (batch*H*W, D) to compute all distances at once`,`Distances: (z**2).sum(1, keepdim=True) + (codebook**2).sum(1) - 2 * z @ codebook.T`,`distances.argmin(dim=1) gives indices; codebook[indices] gives z_q`,`Losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach())`]},"kl-divergence":{note:`Inputs are scalar tensors. Write the closed form with torch.log; return a Python float.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Quantization is a nearest-neighbour lookup of every encoder vector in the codebook.`,`Flatten z_e to (N, D), build an (N, K) squared-distance matrix, argmin per row, index the codebook, reshape back.`,`(z**2).sum(1, keepdim=True) - 2 * z @ codebook.T + (codebook**2).sum(1); distances.argmin(dim=1); codebook[idx].`,`Pitfall: put .detach() on the right side: F.mse_loss(z_q, z_e.detach()) trains the codes, beta * F.mse_loss(z_e, z_q.detach()) trains the encoder.`]},"kl-divergence":{note:`Inputs are scalar tensors. Write the closed form with torch.log (no torch.distributions); return a Python float.`,starterCode:`import torch
 
 def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
     """
@@ -3793,7 +3670,7 @@ def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
     term2 = (sigma_p ** 2 + (mu_p - mu_q) ** 2) / (2 * sigma_q ** 2)
     kl = term1 + term2 - 0.5
     return round(kl.item(), 4)
-`,testCases:[{id:`1`,description:`Same distribution`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Different means`,input:`kl_divergence_gaussian(torch.tensor(1.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.5`,hidden:!1},{id:`3`,description:`Different variances`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(2.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.8069`,hidden:!0},{id:`4`,description:`Not symmetric: KL(Q || P) for the previous pair`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(2.0))`,expected:`0.3181`,hidden:!0}],hints:[`KL = log(sigma_q / sigma_p) + (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2) - 0.5`,`torch.log works on scalar tensors`,`Return round(kl.item(), 4)`]},"ddpm-sampling-step":{note:`Use torch.cumprod for ᾱ and torch.sqrt; t is a Python int. Return a tensor.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Same distribution`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Different means`,input:`kl_divergence_gaussian(torch.tensor(1.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.5`,hidden:!1},{id:`3`,description:`Different variances`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(2.0), torch.tensor(0.0), torch.tensor(1.0))`,expected:`0.8069`,hidden:!0},{id:`4`,description:`Not symmetric: KL(Q || P) for the previous pair`,input:`kl_divergence_gaussian(torch.tensor(0.0), torch.tensor(1.0), torch.tensor(0.0), torch.tensor(2.0))`,expected:`0.3181`,hidden:!0}],hints:[`KL compares a width ratio and a mean gap, both measured relative to Q.`,`Three terms: a log ratio of standard deviations, a squared term over 2σ_q², and the constant −1/2.`,`torch.log(sigma_q / sigma_p) + (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2) - 0.5.`,`Pitfall: the sigmas are standard deviations, not variances. Return round(kl.item(), 4).`]},"ddpm-sampling-step":{note:`Use torch.cumprod for ᾱ and torch.sqrt; t is a Python int. Return a tensor. The reference works in float64 so values match the NumPy track.`,starterCode:`import torch
 
 def ddpm_step(x_t: torch.Tensor, eps_pred: torch.Tensor, t: int,
               betas: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
@@ -3833,7 +3710,7 @@ def ddpm_step(x_t: torch.Tensor, eps_pred: torch.Tensor, t: int,
     betas := torch.linspace(1e-4, 0.02, 50, dtype=torch.float64),
     x1 := torch.sqrt(1 - betas[0]) * x0 + torch.sqrt(betas[0]) * eps,
     bool(torch.allclose(ddpm_step(x1, eps, 0, betas, torch.randn(3, 4)), x0))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`alphas = 1 - betas; alpha_bar = torch.cumprod(alphas, dim=0)`,`mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * eps_pred) / torch.sqrt(alphas[t])`,`Return mean when t == 0, otherwise mean + torch.sqrt(betas[t]) * z`]},"classifier-free-guidance":{note:`Pure tensor arithmetic; torch.cumprod for ᾱ. Return tensors.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`A deterministic mean that strips out the predicted noise, then fresh noise except at the final step.`,`Compute alphas and alpha_bar from betas, then the mean, then branch on t == 0.`,`alpha_bar = torch.cumprod(1 - betas, dim=0); mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * eps_pred) / torch.sqrt(1 - betas[t]).`,`Pitfall: the noise coefficient uses 1 − ᾱ_t (cumulative) but the outer division uses α_t; add torch.sqrt(betas[t]) * z only when t > 0.`]},"classifier-free-guidance":{note:`Pure tensor arithmetic; torch.cumprod for ᾱ. Return tensors.`,starterCode:`import torch
 
 def guided_noise(eps_uncond: torch.Tensor, eps_cond: torch.Tensor, w: float) -> torch.Tensor:
     """eps_uncond + w * (eps_cond - eps_uncond)"""
@@ -3885,7 +3762,7 @@ def cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z):
     b := cfg_step(x, torch.randn(4) * 10, c, 1.0, 4, betas, torch.ones(4)),
     e := cfg_step(x, torch.zeros(4), c, 2.0, 0, betas, torch.randn(4)),
     (bool(torch.allclose(a, b)), bool(torch.allclose(e, (x - betas[0] / torch.sqrt(betas[0]) * 2 * c) / torch.sqrt(1 - betas[0]))))
-)[-1])()`,expected:`(True, True)`,hidden:!0}],hints:[`guided = eps_uncond + w * (eps_cond - eps_uncond)`,`alphas = 1 - betas; alpha_bar = torch.cumprod(alphas, dim=0)`,`mean = (x_t - betas[t] / torch.sqrt(1 - alpha_bar[t]) * guided) / torch.sqrt(alphas[t]); add torch.sqrt(betas[t]) * z only if t > 0`]},"flow-matching":{note:`F.mse_loss is fine for the loss (the point is the path and the target). Return the loss as a Python float; velocity_fn receives a tensor x and a Python float t.`,starterCode:`import torch
+)[-1])()`,expected:`(True, True)`,hidden:!0}],hints:[`Guidance extrapolates from the unconditional prediction through the conditional one; check that w = 0 and w = 1 give the two inputs.`,`Write guided_noise first, then call it inside cfg_step and run the ordinary DDPM step.`,`eps_uncond + w * (eps_cond - eps_uncond); alpha_bar = torch.cumprod(1 - betas, dim=0).`,`Pitfall: add torch.sqrt(betas[t]) * z only when t > 0; w = 1 means no guidance.`]},"flow-matching":{note:`F.mse_loss is fine for the loss (the point is the path and the target). Return the loss as a Python float; velocity_fn receives a tensor x and a Python float t.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def flow_matching_loss(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor, v_pred: torch.Tensor) -> dict:
@@ -3952,7 +3829,7 @@ def euler_sample(x0: torch.Tensor, velocity_fn, n_steps: int) -> torch.Tensor:
     x0 := torch.randn(2, 5), x1 := torch.randn(2, 5),
     r := flow_matching_loss(x0, x1, torch.tensor([0.0, 1.0]), x1 - x0),
     (bool(torch.allclose(r['x_t'][0], x0[0]) and torch.allclose(r['x_t'][1], x1[1])), r['loss'])
-)[-1])()`,expected:`(True, 0.0)`,hidden:!0}],hints:[`Reshape t with t.view(-1, *([1] * (x0.dim() - 1)))`,`x_t = (1 - t) * x0 + t * x1 and target = x1 - x0`,`loss = F.mse_loss(v_pred, target).item()`,`euler_sample: dt = 1 / n_steps; for i in range(n_steps): x = euler_step(x, velocity_fn(x, i * dt), dt)`]}},ne={"llm-temperature-scaling":{note:`F.softmax is fine here: the point is where the temperature goes.`,starterCode:`import torch
+)[-1])()`,expected:`(True, 0.0)`,hidden:!0}],hints:[`On a straight line from x0 to x1, the velocity is constant in t.`,`flow_matching_loss: broadcast t, interpolate, form the target, MSE. euler_sample: loop over steps calling euler_step.`,`t.view(-1, *([1] * (x0.dim() - 1))); (1 - t) * x0 + t * x1; target = x1 - x0; F.mse_loss(v_pred, target).item().`,`Pitfall: step i uses time i * dt (start of the interval); an un-reshaped (B,) t broadcasts against the last axis, not the batch.`]}},ne={"llm-temperature-scaling":{note:`F.softmax is fine here (it is numerically stable): the point is where the temperature goes.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def temperature_scaling(logits, temperature=1.0):
@@ -3964,7 +3841,7 @@ def temperature_scaling(logits, temperature=1.0):
         temperature: Temperature parameter (T > 0)
 
     Returns:
-        probs: Probability distribution over vocabulary, tensor (vocab_size,)
+        probs: softmax(logits / T), tensor (vocab_size,), sums to 1
     """
     # Your code here
     pass
@@ -3983,7 +3860,7 @@ def temperature_scaling(logits, temperature=1.0):
     probs_low := temperature_scaling(logits, 0.5),
     probs_high := temperature_scaling(logits, 2.0),
     bool(probs_low.max() > probs_high.max())
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Probabilities sum to 1`,input:`round(temperature_scaling(torch.tensor([1.0, 2.0, 3.0, 4.0]), 0.7).sum().item(), 4)`,expected:`1.0`,hidden:!1},{id:`4`,description:`Very low temperature approaches argmax`,input:`bool(temperature_scaling(torch.tensor([3.0, 1.0, 0.5]), 0.01)[0] > 0.99)`,expected:`True`,hidden:!0},{id:`5`,description:`Values at T=2`,input:`[round(v, 4) for v in temperature_scaling(torch.tensor([2.0, 1.0, 0.1]), 2.0).tolist()]`,expected:`[0.5017, 0.3043, 0.194]`,hidden:!0}],hints:[`Divide the logits by the temperature before the softmax`,`F.softmax(scaled, dim=-1) is numerically stable`]},"llm-top-k-sampling":{note:`Use torch.topk to find the top tokens and torch.multinomial to sample. Keep the torch.manual_seed(42) line.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Probabilities sum to 1`,input:`round(temperature_scaling(torch.tensor([1.0, 2.0, 3.0, 4.0]), 0.7).sum().item(), 4)`,expected:`1.0`,hidden:!1},{id:`4`,description:`Very low temperature approaches argmax`,input:`bool(temperature_scaling(torch.tensor([3.0, 1.0, 0.5]), 0.01)[0] > 0.99)`,expected:`True`,hidden:!0},{id:`5`,description:`Values at T=2`,input:`[round(v, 4) for v in temperature_scaling(torch.tensor([2.0, 1.0, 0.1]), 2.0).tolist()]`,expected:`[0.5017, 0.3043, 0.194]`,hidden:!0}],hints:[`Temperature acts on the logits, before the softmax. What does dividing by T < 1 do to the gaps between logits?`,`Two steps: scale, then softmax over the vocabulary dimension.`,`F.softmax(logits / temperature, dim=-1).`,`Divide the logits, not the probabilities: probs ** (1/T) renormalized is equivalent, but softmax(logits) / T is not a distribution.`]},"llm-top-k-sampling":{note:`Use torch.topk to find the top tokens and torch.multinomial to sample. Keep the torch.manual_seed(42) line.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def top_k_sampling(logits, k, temperature=1.0):
@@ -3997,7 +3874,7 @@ def top_k_sampling(logits, k, temperature=1.0):
 
     Returns:
         token: Sampled token index (Python int)
-        filtered_probs: Probability distribution after filtering, tensor (vocab_size,)
+        filtered_probs: tensor (vocab_size,), k non-zero entries summing to 1
     """
     torch.manual_seed(42)
     # Your code here
@@ -4023,7 +3900,7 @@ def top_k_sampling(logits, k, temperature=1.0):
     logits := torch.tensor([5.0, 3.0, 2.0, 1.0, 0.1]),
     result := top_k_sampling(logits, 3),
     result[0] in torch.topk(logits, 3).indices.tolist()
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`k=1 is greedy`,input:`top_k_sampling(torch.tensor([1.0, 5.0, 2.0, 0.5]), 1)[0]`,expected:`1`,hidden:!0},{id:`5`,description:`Filtered distribution values (k=2)`,input:`[round(v, 4) for v in top_k_sampling(torch.tensor([1.0, 5.0, 2.0, 0.5]), 2)[1].tolist()]`,expected:`[0.0, 0.9526, 0.0474, 0.0]`,hidden:!0},{id:`6`,description:`Temperature is applied before filtering (k=3, T=2)`,input:`[round(v, 4) for v in top_k_sampling(torch.tensor([2.0, 0.0, 4.0, 1.0, -1.0]), 3, 2.0)[1].tolist()]`,expected:`[0.2312, 0.0, 0.6285, 0.1402, 0.0]`,hidden:!0}],hints:[`Scale first: scaled = logits / temperature`,`top_vals, top_idx = torch.topk(scaled, k); build torch.full_like(scaled, float("-inf")) and write the top values back at top_idx`,`F.softmax over the filtered logits renormalizes automatically`,`torch.multinomial(probs, num_samples=1).item() samples a token`]},"llm-top-p-sampling":{note:`Use torch.sort and torch.cumsum to find the nucleus and torch.multinomial to sample. Keep the torch.manual_seed(42) line.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`k=1 is greedy`,input:`top_k_sampling(torch.tensor([1.0, 5.0, 2.0, 0.5]), 1)[0]`,expected:`1`,hidden:!0},{id:`5`,description:`Filtered distribution values (k=2)`,input:`[round(v, 4) for v in top_k_sampling(torch.tensor([1.0, 5.0, 2.0, 0.5]), 2)[1].tolist()]`,expected:`[0.0, 0.9526, 0.0474, 0.0]`,hidden:!0},{id:`6`,description:`Temperature is applied before filtering (k=3, T=2)`,input:`[round(v, 4) for v in top_k_sampling(torch.tensor([2.0, 0.0, 4.0, 1.0, -1.0]), 3, 2.0)[1].tolist()]`,expected:`[0.2312, 0.0, 0.6285, 0.1402, 0.0]`,hidden:!0}],hints:[`You need the k surviving tokens and a renormalized distribution over them.`,`Scale by the temperature, set every logit outside the top k to -inf, softmax, then sample.`,`top_vals, top_idx = torch.topk(scaled, k); filtered = torch.full_like(scaled, float('-inf')); filtered[top_idx] = top_vals; token = torch.multinomial(probs, 1).item().`,`Apply the temperature before filtering, and return a Python int (int(token)), not a tensor.`]},"llm-top-p-sampling":{note:`Use torch.sort and torch.cumsum to find the nucleus and torch.multinomial to sample. Keep the torch.manual_seed(42) line.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def top_p_sampling(logits, p, temperature=1.0):
@@ -4037,7 +3914,7 @@ def top_p_sampling(logits, p, temperature=1.0):
 
     Returns:
         token: Sampled token index (Python int)
-        filtered_probs: Probability distribution after filtering, tensor (vocab_size,)
+        filtered_probs: tensor (vocab_size,), non-zero on the nucleus only, sums to 1
     """
     torch.manual_seed(42)
     # Your code here
@@ -4072,7 +3949,7 @@ def top_p_sampling(logits, p, temperature=1.0):
 )[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Confident distribution keeps few tokens`,input:`int((top_p_sampling(torch.tensor([10.0, 1.0, 0.5, 0.1]), 0.5)[1] > 0).sum())`,expected:`1`,hidden:!0},{id:`5`,description:`Nucleus includes the token that crosses p`,input:`[round(v, 4) for v in top_p_sampling(torch.tensor([2.0, 1.0, 0.5, 0.1, -1.0]), 0.8)[1].tolist()]`,expected:`[0.6285, 0.2312, 0.1402, 0.0, 0.0]`,hidden:!0},{id:`6`,description:`Sampled token lies in the nucleus`,input:`(lambda: (
     result := top_p_sampling(torch.tensor([0.5, 3.0, 2.5, -1.0, 0.0]), 0.7, 1.5),
     bool(result[1][result[0]] > 0)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`probs = F.softmax(logits / temperature, dim=-1)`,`sorted_probs, sorted_idx = torch.sort(probs, descending=True); cumsum = torch.cumsum(sorted_probs, dim=-1)`,`A token is in the nucleus if the cumulative mass before it, cumsum - sorted_probs, is still < p`,`Zero the rest, renormalize, then torch.multinomial(filtered, 1).item()`]},"llm-repetition-penalty":{starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`The nucleus is a prefix of the tokens sorted by probability; find where it ends.`,`Softmax with temperature, sort descending, cumulative sum, keep the prefix that first reaches p, renormalize, sample.`,`sorted_probs, sorted_idx = torch.sort(probs, descending=True); cumsum = torch.cumsum(sorted_probs, dim=-1); keep = (cumsum - sorted_probs) < p.`,`Keep the token that crosses p (mass before it < p), so the top token is always kept; renormalize before torch.multinomial.`]},"llm-repetition-penalty":{note:`Each distinct generated token is penalized once (as in Hugging Face's RepetitionPenaltyLogitsProcessor). Return a new tensor; don't modify the input.`,starterCode:`import torch
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
     """
@@ -4080,27 +3957,27 @@ def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
 
     Args:
         logits: Raw logits, tensor (vocab_size,)
-        generated_tokens: List of previously generated token indices
+        generated_tokens: List of previously generated token ids (may repeat)
         penalty: Repetition penalty factor (>= 1.0)
 
     Returns:
-        penalized_logits: New tensor with the penalty applied (vocab_size,);
-                          the input tensor must not be modified
+        penalized_logits: New tensor (vocab_size,); each distinct generated
+                          token: positive logit / penalty, else * penalty.
+                          The input tensor must not be modified.
     """
     # Your code here
     pass
 `,solution:`import torch
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
-    logits = logits.clone()  # don't modify the caller's tensor
-
-    for token_id in generated_tokens:
-        if logits[token_id] > 0:
-            logits[token_id] = logits[token_id] / penalty
-        else:
-            logits[token_id] = logits[token_id] * penalty
-
-    return logits
+    out = logits.clone()  # don't modify the caller's tensor
+    if len(generated_tokens) == 0:
+        return out
+    ids = torch.unique(torch.tensor(generated_tokens))  # each distinct token once
+    vals = out[ids]
+    # Both branches lower the logit when penalty > 1
+    out[ids] = torch.where(vals > 0, vals / penalty, vals * penalty)
+    return out
 `,testCases:[{id:`1`,description:`Positive logit is divided`,input:`round(apply_repetition_penalty(torch.tensor([2.0, 1.0, 3.0]), [0], 1.5)[0].item(), 4)`,expected:`1.3333`,hidden:!1},{id:`2`,description:`Negative logit is multiplied`,input:`round(apply_repetition_penalty(torch.tensor([2.0, -1.0, 3.0]), [1], 1.5)[1].item(), 4)`,expected:`-1.5`,hidden:!1},{id:`3`,description:`Other tokens are unchanged`,input:`apply_repetition_penalty(torch.tensor([2.0, -1.0, 3.0]), [0], 1.5)[1:].tolist()`,expected:`[-1.0, 3.0]`,hidden:!1},{id:`4`,description:`penalty=1.0 has no effect`,input:`(lambda: (
     logits := torch.tensor([2.0, -1.0, 3.0, 0.5]),
     bool(torch.allclose(apply_repetition_penalty(logits, [0, 1, 2], 1.0), logits))
@@ -4108,7 +3985,7 @@ def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
     logits := torch.tensor([2.0, -1.0, 3.0]),
     out := apply_repetition_penalty(logits, [0, 1], 2.0),
     logits.tolist() + out.tolist()
-)[-1])()`,expected:`[2.0, -1.0, 3.0, 1.0, -2.0, 3.0]`,hidden:!0}],hints:[`Start with logits = logits.clone() so the caller's tensor is untouched`,`Loop over generated_tokens and check logits[token_id] > 0`,`Positive: divide by penalty; otherwise multiply by penalty`]},"llm-kv-cache":{note:`Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention or nn.MultiheadAttention.`,starterCode:`import math
+)[-1])()`,expected:`[2.0, -1.0, 3.0, 1.0, -2.0, 3.0]`,hidden:!0},{id:`7`,description:`Repeated tokens are penalized only once`,input:`apply_repetition_penalty(torch.tensor([2.0, -1.0, 3.0]), [0, 0, 1, 1, 1], 2.0).tolist()`,expected:`[1.0, -2.0, 3.0]`,hidden:!0},{id:`8`,description:`No generated tokens: logits unchanged`,input:`apply_repetition_penalty(torch.tensor([0.5, -0.5]), [], 1.3).tolist()`,expected:`[0.5, -0.5]`,hidden:!0}],hints:[`With penalty > 1 every generated token must become less likely. What happens to a positive logit, and to a negative one?`,`Clone the logits, find the distinct generated ids, update those entries depending on their sign.`,`ids = torch.unique(torch.tensor(generated_tokens)); vals = out[ids]; out[ids] = torch.where(vals > 0, vals / penalty, vals * penalty).`,`Handle an empty list, don't divide negative logits (that raises them), and don't penalize a repeated token twice.`]},"llm-kv-cache":{note:`Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention or nn.MultiheadAttention.`,starterCode:`import math
 import torch
 import torch.nn.functional as F
 
@@ -4180,7 +4057,7 @@ def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     r1 := kv_cache_attention(torch.tensor([[1.0, 0.0]]), I, I, I),
     r2 := kv_cache_attention(torch.tensor([[0.0, 1.0]]), I, I, I, r1[1], r1[2]),
     [round(v, 4) for v in r1[0][0].tolist() + r2[0][0].tolist()]
-)[-1])()`,expected:`[1.0, 0.0, 0.3302, 0.6698]`,hidden:!0}],hints:[`Project only the new token: q = x_new @ W_Q, and likewise k, v`,`If the cache is None, start it with k and v; otherwise torch.cat([k_cache, k], dim=0)`,`scores = q @ k_cache.T / math.sqrt(d_k); output = F.softmax(scores, dim=-1) @ v_cache`]},"llm-beam-search":{note:`Use torch.topk to keep the best candidates at each step.`,starterCode:`import torch
+)[-1])()`,expected:`[1.0, 0.0, 0.3302, 0.6698]`,hidden:!0}],hints:[`Only the new token needs projecting: cached keys and values never change.`,`Project q, k, v for x_new; append k and v to the caches (or start them); attend with q over the whole cache.`,`k_cache = k if k_cache is None else torch.cat([k_cache, k], dim=0); output = F.softmax(q @ k_cache.T / math.sqrt(d_k), dim=-1) @ v_cache.`,`Append along dim=0 at the end, and scale by sqrt(d_k), not d_model.`]},"llm-beam-search":{note:`Use torch.topk to keep the best candidates at each step.`,starterCode:`import torch
 
 def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
     """
@@ -4191,7 +4068,8 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
                    log_probs[t] gives log probs for step t.
         beam_width: Number of beams to maintain
         max_length: Maximum sequence length (defaults to num_steps)
-        eos_token: End-of-sequence token ID (optional)
+        eos_token: End-of-sequence token id (optional); a beam ending with it
+                   is carried forward unchanged
 
     Returns:
         best_sequence: List of token indices (Python ints) for the best beam
@@ -4231,7 +4109,7 @@ def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
     r1 := beam_search(log_probs, 1),
     r2 := beam_search(log_probs, 3),
     bool(r2[1] >= r1[1] - 1e-6)
-)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`max_length truncates decoding`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.4, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), 2, max_length=2)`,expected:`([0, 1], -1.0498)`,hidden:!0},{id:`6`,description:`A beam that ends with EOS stops accumulating log-probs`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 2, eos_token=1)`,expected:`([1], -0.7985)`,hidden:!0},{id:`7`,description:`Beam width 1 cannot keep the EOS beam`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 1, eos_token=1)`,expected:`([0, 2, 2], -2.5257)`,hidden:!0}],hints:[`Keep a list of (sequence, score) beams, starting from ([], 0)`,`Expanding a beam with every token is one tensor op: score + log_probs[step]`,`Concatenate all candidate scores and keep the best with torch.topk(scores, beam_width)`,`Carry a beam that already ends in eos_token forward unchanged`]},"llm-speculative-decoding":{note:`Draw each uniform number with torch.rand. Keep the torch.manual_seed(42) line.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`max_length truncates decoding`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.4, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), 2, max_length=2)`,expected:`([0, 1], -1.0498)`,hidden:!0},{id:`6`,description:`A beam that ends with EOS stops accumulating log-probs`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 2, eos_token=1)`,expected:`([1], -0.7985)`,hidden:!0},{id:`7`,description:`Beam width 1 cannot keep the EOS beam`,input:`beam_search(torch.log(torch.tensor([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 1, eos_token=1)`,expected:`([0, 2, 2], -2.5257)`,hidden:!0}],hints:[`Each beam is (token list, total log-prob); all beams grow together, one step at a time.`,`Each step: carry EOS beams unchanged, expand the rest with every token, keep the beam_width best candidates.`,`Expanding one beam is a single tensor op, score + log_probs[step]; torch.cat the candidate scores and torch.topk(scores, beam_width).`,`Add log-probs (don't multiply probabilities), and round only the final score: round(best_score.item(), 4).`]},"llm-speculative-decoding":{note:`Draw one torch.rand(1) per examined token, in order, after the torch.manual_seed(42) line. target_dist_next is not used here.`,starterCode:`import torch
 
 def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
     """
@@ -4243,12 +4121,12 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
         target_probs: Probability the target model assigns to each drafted token,
                       tensor (K,).
         draft_tokens: The K token IDs proposed by the draft model, tensor (K,).
-        target_dist_next: Full target distribution for position after last draft token,
-                          tensor (vocab_size,) or None.
+        target_dist_next: Full target distribution after the last drafted token,
+                          tensor (vocab_size,) or None (not used in this problem).
 
     Returns:
-        accepted_tokens: List of accepted token IDs (Python ints)
-        num_accepted: Number of accepted tokens (0 to K)
+        accepted_tokens: Accepted prefix of draft_tokens (list of Python ints)
+        num_accepted: len(accepted_tokens), between 0 and K
     """
     torch.manual_seed(42)
     # Your code here
@@ -4280,7 +4158,7 @@ def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next
 )[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Count stays within [0, K]`,input:`(lambda: (
     result := speculative_decode(torch.tensor([0.8, 0.8, 0.8]), torch.tensor([0.2, 0.2, 0.2]), torch.tensor([1, 2, 3])),
     0 <= result[1] <= 3 and len(result[0]) == result[1]
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Always accepts when target >= draft`,input:`all(speculative_decode(torch.tensor([0.01]), torch.tensor([0.99]), torch.tensor([42]))[1] == 1 for _ in range(10))`,expected:`True`,hidden:!0},{id:`5`,description:`Zero target probability rejects that token and everything after`,input:`speculative_decode(torch.tensor([0.5, 0.5, 0.5]), torch.tensor([1.0, 1.0, 0.0]), torch.tensor([10, 20, 30]))`,expected:`([10, 20], 2)`,hidden:!0},{id:`6`,description:`First token rejected: nothing accepted`,input:`speculative_decode(torch.tensor([0.4, 0.2]), torch.tensor([0.0, 0.9]), torch.tensor([7, 8]))`,expected:`([], 0)`,hidden:!0}],hints:[`accept_prob = (target_probs / draft_probs).clamp(max=1.0), with torch.where for p_draft == 0`,`For each token draw r = torch.rand(1).item() and accept if r < accept_prob[i]`,`Stop at the first rejection; return the accepted prefix as Python ints and its length`]}},d={"rmsnorm-swiglu":{note:`Implement RMSNorm and the gated MLP with tensor ops. Don't use nn.RMSNorm or F.rms_norm; F.silu (or x * torch.sigmoid(x)) is fine. A hidden test compares against nn.RMSNorm.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Always accepts when target >= draft`,input:`all(speculative_decode(torch.tensor([0.01]), torch.tensor([0.99]), torch.tensor([42]))[1] == 1 for _ in range(10))`,expected:`True`,hidden:!0},{id:`5`,description:`Zero target probability rejects that token and everything after`,input:`speculative_decode(torch.tensor([0.5, 0.5, 0.5]), torch.tensor([1.0, 1.0, 0.0]), torch.tensor([10, 20, 30]))`,expected:`([10, 20], 2)`,hidden:!0},{id:`6`,description:`First token rejected: nothing accepted`,input:`speculative_decode(torch.tensor([0.4, 0.2]), torch.tensor([0.0, 0.9]), torch.tensor([7, 8]))`,expected:`([], 0)`,hidden:!0}],hints:[`Tokens are checked in order and the first rejection ends the loop, so the answer is a prefix of draft_tokens.`,`For each token: acceptance probability, one uniform draw, accept or stop.`,`accept_prob = (target_probs / draft_probs).clamp(max=1.0), with torch.where for draft_probs == 0; accept if torch.rand(1).item() < accept_prob[i].`,`Return Python ints (int(draft_tokens[i])) and the count; don't keep checking tokens after a rejection.`]}},d={"rmsnorm-swiglu":{note:`Implement RMSNorm and the gated MLP with tensor ops. Don't use nn.RMSNorm or F.rms_norm; F.silu (or x * torch.sigmoid(x)) is fine. A hidden test compares against nn.RMSNorm.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def rms_norm(x, weight, eps=1e-6):
@@ -4336,7 +4214,7 @@ def swiglu_ffn(x, W_gate, W_up, W_down):
 
 def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
     return x + swiglu_ffn(rms_norm(x, norm_weight, eps), W_gate, W_up, W_down)
-`,testCases:[{id:`1`,description:`rms_norm values`,input:`np.round(rms_norm(torch.tensor([[3.0, 4.0]]), torch.ones(2)).double().numpy(), 4).tolist()`,expected:`[[0.8485, 1.1314]]`,hidden:!1},{id:`2`,description:`Block output shape`,input:`llama_mlp_block(torch.randn(4, 8), torch.ones(8), torch.randn(8, 16), torch.randn(8, 16), torch.randn(16, 8)).shape`,expected:`(4, 8)`,hidden:!1},{id:`3`,description:`SwiGLU on a hand-checkable input`,input:`np.round(swiglu_ffn(torch.tensor([[1.0, -1.0]]), torch.tensor([[1.0], [0.0]]), torch.tensor([[2.0], [1.0]]), torch.tensor([[1.0, 0.5]])).double().numpy(), 4).tolist()`,expected:`[[0.7311, 0.3655]]`,hidden:!1},{id:`4`,description:`rms_norm matches nn.RMSNorm`,input:`(lambda x, w: (lambda ref: (ref.weight.data.copy_(w), bool(torch.allclose(rms_norm(x, w), ref(x), atol=1e-5)))[-1])(torch.nn.RMSNorm(6, eps=1e-6)))(torch.randn(3, 6), torch.rand(6) + 0.5)`,expected:`True`,hidden:!0},{id:`5`,description:`SwiGLU matches a reference`,input:`(lambda x, Wg, Wu, Wd: bool(torch.allclose(swiglu_ffn(x, Wg, Wu, Wd), ((x @ Wg) * torch.sigmoid(x @ Wg) * (x @ Wu)) @ Wd, atol=1e-4)))(torch.randn(2, 3, 8), torch.randn(8, 12), torch.randn(8, 12), torch.randn(12, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`Gate is SiLU, not sigmoid or ReLU`,input:`round(float(swiglu_ffn(torch.tensor([[-1.0]]), torch.tensor([[1.0]]), torch.tensor([[1.0]]), torch.tensor([[1.0]]))[0, 0]), 4)`,expected:`0.2689`,hidden:!0},{id:`7`,description:`Block has a residual connection (W_down = 0 gives x back)`,input:`(lambda x: bool(torch.allclose(llama_mlp_block(x, torch.ones(8), torch.randn(8, 16), torch.randn(8, 16), torch.zeros(16, 8)), x)))(torch.randn(3, 8))`,expected:`True`,hidden:!0},{id:`8`,description:`Block output values`,input:`(lambda f: round(float(llama_mlp_block(f(4, 8), torch.linspace(0.5, 1.5, 8), f(8, 16) * 0.3, f(8, 16) * 0.3, f(16, 8) * 0.3).sum()), 3))(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`13.739`,hidden:!0},{id:`9`,description:`Gradients flow to all three weight matrices`,input:`(lambda Ws: (llama_mlp_block(torch.randn(2, 4), torch.ones(4), *Ws).sum().backward(), all(W.grad is not None and W.grad.abs().sum().item() > 0 for W in Ws))[-1])([torch.randn(4, 6, requires_grad=True), torch.randn(4, 6, requires_grad=True), torch.randn(6, 4, requires_grad=True)])`,expected:`True`,hidden:!0}],hints:[`RMSNorm: x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps) * weight`,`SwiGLU: (F.silu(x @ W_gate) * (x @ W_up)) @ W_down`,`Block: x + swiglu_ffn(rms_norm(x, norm_weight, eps), ...)`]},"online-softmax":{note:`Process the keys block by block with torch.maximum, torch.exp and matmul. Don't call torch.softmax / F.softmax on a full row, or F.scaled_dot_product_attention; a hidden test compares against F.scaled_dot_product_attention.`,starterCode:`import math
+`,testCases:[{id:`1`,description:`rms_norm values`,input:`np.round(rms_norm(torch.tensor([[3.0, 4.0]]), torch.ones(2)).double().numpy(), 4).tolist()`,expected:`[[0.8485, 1.1314]]`,hidden:!1},{id:`2`,description:`Block output shape`,input:`llama_mlp_block(torch.randn(4, 8), torch.ones(8), torch.randn(8, 16), torch.randn(8, 16), torch.randn(16, 8)).shape`,expected:`(4, 8)`,hidden:!1},{id:`3`,description:`SwiGLU on a hand-checkable input`,input:`np.round(swiglu_ffn(torch.tensor([[1.0, -1.0]]), torch.tensor([[1.0], [0.0]]), torch.tensor([[2.0], [1.0]]), torch.tensor([[1.0, 0.5]])).double().numpy(), 4).tolist()`,expected:`[[0.7311, 0.3655]]`,hidden:!1},{id:`4`,description:`rms_norm matches nn.RMSNorm`,input:`(lambda x, w: (lambda ref: (ref.weight.data.copy_(w), bool(torch.allclose(rms_norm(x, w), ref(x), atol=1e-5)))[-1])(torch.nn.RMSNorm(6, eps=1e-6)))(torch.randn(3, 6), torch.rand(6) + 0.5)`,expected:`True`,hidden:!0},{id:`5`,description:`SwiGLU matches a reference`,input:`(lambda x, Wg, Wu, Wd: bool(torch.allclose(swiglu_ffn(x, Wg, Wu, Wd), ((x @ Wg) * torch.sigmoid(x @ Wg) * (x @ Wu)) @ Wd, atol=1e-4)))(torch.randn(2, 3, 8), torch.randn(8, 12), torch.randn(8, 12), torch.randn(12, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`Gate is SiLU, not sigmoid or ReLU`,input:`round(float(swiglu_ffn(torch.tensor([[-1.0]]), torch.tensor([[1.0]]), torch.tensor([[1.0]]), torch.tensor([[1.0]]))[0, 0]), 4)`,expected:`0.2689`,hidden:!0},{id:`7`,description:`Block has a residual connection (W_down = 0 gives x back)`,input:`(lambda x: bool(torch.allclose(llama_mlp_block(x, torch.ones(8), torch.randn(8, 16), torch.randn(8, 16), torch.zeros(16, 8)), x)))(torch.randn(3, 8))`,expected:`True`,hidden:!0},{id:`8`,description:`Block output values`,input:`(lambda f: round(float(llama_mlp_block(f(4, 8), torch.linspace(0.5, 1.5, 8), f(8, 16) * 0.3, f(8, 16) * 0.3, f(16, 8) * 0.3).sum()), 3))(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`13.739`,hidden:!0},{id:`9`,description:`Gradients flow to all three weight matrices`,input:`(lambda Ws: (llama_mlp_block(torch.randn(2, 4), torch.ones(4), *Ws).sum().backward(), all(W.grad is not None and W.grad.abs().sum().item() > 0 for W in Ws))[-1])([torch.randn(4, 6, requires_grad=True), torch.randn(4, 6, requires_grad=True), torch.randn(6, 4, requires_grad=True)])`,expected:`True`,hidden:!0}],hints:[`Three small pieces that compose: a normalizer, a gated MLP and a residual add. Get each one right on its own.`,`RMSNorm divides by the root-mean-square of the last dim (no mean subtraction, no bias); SwiGLU multiplies F.silu(x @ W_gate) by x @ W_up elementwise, then projects down.`,`x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps) * weight; (F.silu(x @ W_gate) * (x @ W_up)) @ W_down.`,`The residual adds the original x, not rms_norm(x); keepdim=True keeps the RMS broadcastable over any leading dims.`]},"online-softmax":{note:`Process the keys block by block with torch.maximum, torch.exp and matmul. Don't call torch.softmax / F.softmax on a full row, or F.scaled_dot_product_attention; a hidden test compares against F.scaled_dot_product_attention.`,starterCode:`import math
 import torch
 
 def online_softmax(x, block_size):
@@ -4395,7 +4273,7 @@ def online_attention(Q, K, V, block_size):
         acc = acc * scale + P @ V_b
         m = m_new
     return acc / l
-`,testCases:[{id:`1`,description:`online_softmax matches torch.softmax`,input:`(lambda x: bool(torch.allclose(online_softmax(x, 3), torch.softmax(x, dim=0), atol=1e-6)))(torch.randn(10))`,expected:`True`,hidden:!1},{id:`2`,description:`online_attention output shape`,input:`online_attention(torch.randn(3, 4), torch.randn(10, 4), torch.randn(10, 2), 4).shape`,expected:`(3, 2)`,hidden:!1},{id:`3`,description:`online_attention matches standard attention`,input:`(lambda Q, K, V: bool(torch.allclose(online_attention(Q, K, V, 4), torch.softmax(Q @ K.T / 2.0, dim=-1) @ V, atol=1e-5)))(torch.randn(3, 4), torch.randn(10, 4), torch.randn(10, 2))`,expected:`True`,hidden:!1},{id:`4`,description:`Stable for huge logits`,input:`np.round(online_softmax(torch.tensor([1000.0, 1001.0, 1002.0]), 2).double().numpy(), 4).tolist()`,expected:`[0.09, 0.2447, 0.6652]`,hidden:!0},{id:`5`,description:`Max in a later block (old sum must be rescaled)`,input:`np.round(online_softmax(torch.tensor([0.0, 1.0, 5.0, 2.0, 9.0]), 2).double().numpy(), 4).tolist()`,expected:`[0.0001, 0.0003, 0.018, 0.0009, 0.9807]`,hidden:!0},{id:`6`,description:`Any block size gives the same answer`,input:`(lambda Q, K, V: bool(all(torch.allclose(online_attention(Q, K, V, b), online_attention(Q, K, V, 7), atol=1e-5) for b in [1, 2, 3, 7, 50])))(torch.randn(2, 4), torch.randn(7, 4), torch.randn(7, 3))`,expected:`True`,hidden:!0},{id:`7`,description:`Matches F.scaled_dot_product_attention`,input:`(lambda Q, K, V: bool(torch.allclose(online_attention(Q, K, V, 4), torch.nn.functional.scaled_dot_product_attention(Q[None], K[None], V[None])[0], atol=1e-4)))(torch.randn(4, 8) * 3, torch.randn(9, 8) * 3, torch.randn(9, 5))`,expected:`True`,hidden:!0}],hints:[`m = torch.full((n_q, 1), float("-inf")); l = torch.zeros(n_q, 1); acc = torch.zeros(n_q, d_v)`,`Row max of a block: S.max(dim=1, keepdim=True).values; combine with torch.maximum(m, ...).`,`scale = torch.exp(m - m_new) rescales both l and acc before adding the new block.`,`Return acc / l.`]},"moe-routing":{note:`Route with torch.topk and gather/dispatch tokens per expert yourself (torch.where + index_add). Return 'aux_loss' as a 0-d tensor so it can be added to the training loss. Don't compute every expert on every token.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`online_softmax matches torch.softmax`,input:`(lambda x: bool(torch.allclose(online_softmax(x, 3), torch.softmax(x, dim=0), atol=1e-6)))(torch.randn(10))`,expected:`True`,hidden:!1},{id:`2`,description:`online_attention output shape`,input:`online_attention(torch.randn(3, 4), torch.randn(10, 4), torch.randn(10, 2), 4).shape`,expected:`(3, 2)`,hidden:!1},{id:`3`,description:`online_attention matches standard attention`,input:`(lambda Q, K, V: bool(torch.allclose(online_attention(Q, K, V, 4), torch.softmax(Q @ K.T / 2.0, dim=-1) @ V, atol=1e-5)))(torch.randn(3, 4), torch.randn(10, 4), torch.randn(10, 2))`,expected:`True`,hidden:!1},{id:`4`,description:`Stable for huge logits`,input:`np.round(online_softmax(torch.tensor([1000.0, 1001.0, 1002.0]), 2).double().numpy(), 4).tolist()`,expected:`[0.09, 0.2447, 0.6652]`,hidden:!0},{id:`5`,description:`Max in a later block (old sum must be rescaled)`,input:`np.round(online_softmax(torch.tensor([0.0, 1.0, 5.0, 2.0, 9.0]), 2).double().numpy(), 4).tolist()`,expected:`[0.0001, 0.0003, 0.018, 0.0009, 0.9807]`,hidden:!0},{id:`6`,description:`Any block size gives the same answer`,input:`(lambda Q, K, V: bool(all(torch.allclose(online_attention(Q, K, V, b), online_attention(Q, K, V, 7), atol=1e-5) for b in [1, 2, 3, 7, 50])))(torch.randn(2, 4), torch.randn(7, 4), torch.randn(7, 3))`,expected:`True`,hidden:!0},{id:`7`,description:`Matches F.scaled_dot_product_attention`,input:`(lambda Q, K, V: bool(torch.allclose(online_attention(Q, K, V, 4), torch.nn.functional.scaled_dot_product_attention(Q[None], K[None], V[None])[0], atol=1e-4)))(torch.randn(4, 8) * 3, torch.randn(9, 8) * 3, torch.randn(9, 5))`,expected:`True`,hidden:!0}],hints:[`With the global max known in advance, softmax is one pass. What must be fixed up when a later block reveals a bigger max?`,`Everything accumulated so far was computed relative to the old max m; multiplying by exp(m - m_new) re-bases it to the new max. Apply that to both l and acc.`,`m = torch.full((n_q, 1), float('-inf')); l = torch.zeros(n_q, 1); acc = torch.zeros(n_q, d_v); m_new = torch.maximum(m, S.max(dim=1, keepdim=True).values).`,`Rescale before adding the new block, and divide acc / l once at the end; exp(-inf) = 0 makes the first block work without a special case.`]},"moe-routing":{note:`Route with torch.topk and gather/dispatch tokens per expert yourself (torch.where + index_add). Return 'aux_loss' as a 0-d tensor so it can be added to the training loss. Don't compute every expert on every token.`,starterCode:`import torch
 
 def moe_layer(x, W_router, expert_weights, top_k):
     """
@@ -4408,8 +4286,9 @@ def moe_layer(x, W_router, expert_weights, top_k):
         top_k: experts per token
 
     Returns:
-        dict with 'output' (T, d_out), 'expert_indices' (T, k),
-        'gates' (T, k) and 'aux_loss' (0-d tensor)
+        dict with 'output' (T, d_out), 'expert_indices' (T, k) sorted by
+        descending logit, 'gates' (T, k) rows summing to 1, and
+        'aux_loss' (0-d tensor) = E * sum_e f_e * P_e
     """
     # Your code here
     pass
@@ -4442,7 +4321,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
     aux_loss = E * (f * P).sum()
 
     return {'output': output, 'expert_indices': expert_indices, 'gates': gates, 'aux_loss': aux_loss}
-`,testCases:[{id:`1`,description:`Shapes, and gates sum to 1`,input:`(lambda r: (tuple(r['output'].shape), tuple(r['expert_indices'].shape), bool(torch.allclose(r['gates'].sum(-1), torch.ones(6)))))(moe_layer(torch.randn(6, 4), torch.randn(4, 4), torch.randn(4, 4, 3), 2))`,expected:`((6, 3), (6, 2), True)`,hidden:!1},{id:`2`,description:`Uniform router gives aux_loss = 1`,input:`round(float(moe_layer(torch.randn(6, 4), torch.zeros(4, 4), torch.randn(4, 4, 4), 2)['aux_loss']), 4)`,expected:`1.0`,hidden:!1},{id:`3`,description:`Output equals the dense per-token reference`,input:`(lambda x, Wr, We: (lambda r: bool(torch.allclose(r['output'], torch.stack([sum(r['gates'][t, j] * (x[t] @ We[r['expert_indices'][t, j]]) for j in range(2)) for t in range(6)]), atol=1e-5)))(moe_layer(x, Wr, We, 2)))(torch.randn(6, 4), torch.randn(4, 4), torch.randn(4, 4, 3))`,expected:`True`,hidden:!1},{id:`4`,description:`Experts are chosen by descending router logit`,input:`(lambda f: moe_layer(f(5, 4), f(4, 6), f(6, 4, 2), 3)['expert_indices'].tolist())(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`[[5, 4, 2], [4, 2, 1], [5, 0, 1], [4, 2, 5], [4, 2, 1]]`,hidden:!0},{id:`5`,description:`Gates are a softmax over the top-k logits only`,input:`(lambda x, Wr: (lambda r, L: bool(torch.allclose(r['gates'][:, 0], torch.sigmoid(L.gather(-1, r['expert_indices'])[:, 0] - L.gather(-1, r['expert_indices'])[:, 1]), atol=1e-5)))(moe_layer(x, Wr, torch.randn(5, 4, 4), 2), x @ Wr))(torch.randn(7, 4), torch.randn(4, 5))`,expected:`True`,hidden:!0},{id:`6`,description:`Collapsed routing pushes aux_loss toward E`,input:`round(float(moe_layer(torch.ones(6, 4), torch.cat([torch.full((4, 1), 10.0), torch.zeros(4, 3)], dim=1), torch.randn(4, 4, 4), 1)['aux_loss']), 4)`,expected:`4.0`,hidden:!0},{id:`7`,description:`top_k = 1: gate is 1 and output is the chosen expert`,input:`(lambda x, Wr, We: (lambda r: bool(torch.allclose(r['gates'], torch.ones(8, 1)) and torch.allclose(r['output'], torch.einsum('td,tdo->to', x, We[(x @ Wr).argmax(dim=1)]), atol=1e-5)))(moe_layer(x, Wr, We, 1)))(torch.randn(8, 4), torch.randn(4, 3), torch.randn(3, 4, 2))`,expected:`True`,hidden:!0},{id:`8`,description:`aux_loss value`,input:`(lambda f: round(float(moe_layer(f(10, 4), f(4, 4), f(4, 4, 4), 2)['aux_loss']), 4))(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`1.3995`,hidden:!0},{id:`9`,description:`aux_loss is differentiable w.r.t. the router`,input:`(lambda Wr: (moe_layer(torch.randn(10, 4), Wr, torch.randn(4, 4, 4), 2)['aux_loss'].backward(), bool(Wr.grad is not None and Wr.grad.abs().sum().item() > 0))[-1])(torch.randn(4, 4, requires_grad=True))`,expected:`True`,hidden:!0}],hints:[`topk_logits, expert_indices = torch.topk(logits, k, dim=-1); gates = torch.softmax(topk_logits, dim=-1)`,`token_ids, slot = torch.where(expert_indices == e) lists the (token, slot) pairs routed to expert e.`,`output = output.index_add(0, token_ids, gates[token_ids, slot].unsqueeze(-1) * (x[token_ids] @ expert_weights[e]))`,`f = torch.bincount(expert_indices.flatten(), minlength=E).float() / (T * k); aux = E * (f * probs.mean(0)).sum()`]},perplexity:{note:`Implement the cross-entropy yourself with F.log_softmax (or torch.logsumexp) and gather. Don't use F.cross_entropy or nn.CrossEntropyLoss; a hidden test compares against F.cross_entropy with ignore_index. 'mean_nll' and 'perplexity' may be 0-d tensors.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Shapes, and gates sum to 1`,input:`(lambda r: (tuple(r['output'].shape), tuple(r['expert_indices'].shape), bool(torch.allclose(r['gates'].sum(-1), torch.ones(6)))))(moe_layer(torch.randn(6, 4), torch.randn(4, 4), torch.randn(4, 4, 3), 2))`,expected:`((6, 3), (6, 2), True)`,hidden:!1},{id:`2`,description:`Uniform router gives aux_loss = 1`,input:`round(float(moe_layer(torch.randn(6, 4), torch.zeros(4, 4), torch.randn(4, 4, 4), 2)['aux_loss']), 4)`,expected:`1.0`,hidden:!1},{id:`3`,description:`Output equals the dense per-token reference`,input:`(lambda x, Wr, We: (lambda r: bool(torch.allclose(r['output'], torch.stack([sum(r['gates'][t, j] * (x[t] @ We[r['expert_indices'][t, j]]) for j in range(2)) for t in range(6)]), atol=1e-5)))(moe_layer(x, Wr, We, 2)))(torch.randn(6, 4), torch.randn(4, 4), torch.randn(4, 4, 3))`,expected:`True`,hidden:!1},{id:`4`,description:`Experts are chosen by descending router logit`,input:`(lambda f: moe_layer(f(5, 4), f(4, 6), f(6, 4, 2), 3)['expert_indices'].tolist())(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`[[5, 4, 2], [4, 2, 1], [5, 0, 1], [4, 2, 5], [4, 2, 1]]`,hidden:!0},{id:`5`,description:`Gates are a softmax over the top-k logits only`,input:`(lambda x, Wr: (lambda r, L: bool(torch.allclose(r['gates'][:, 0], torch.sigmoid(L.gather(-1, r['expert_indices'])[:, 0] - L.gather(-1, r['expert_indices'])[:, 1]), atol=1e-5)))(moe_layer(x, Wr, torch.randn(5, 4, 4), 2), x @ Wr))(torch.randn(7, 4), torch.randn(4, 5))`,expected:`True`,hidden:!0},{id:`6`,description:`Collapsed routing pushes aux_loss toward E`,input:`round(float(moe_layer(torch.ones(6, 4), torch.cat([torch.full((4, 1), 10.0), torch.zeros(4, 3)], dim=1), torch.randn(4, 4, 4), 1)['aux_loss']), 4)`,expected:`4.0`,hidden:!0},{id:`7`,description:`top_k = 1: gate is 1 and output is the chosen expert`,input:`(lambda x, Wr, We: (lambda r: bool(torch.allclose(r['gates'], torch.ones(8, 1)) and torch.allclose(r['output'], torch.einsum('td,tdo->to', x, We[(x @ Wr).argmax(dim=1)]), atol=1e-5)))(moe_layer(x, Wr, We, 1)))(torch.randn(8, 4), torch.randn(4, 3), torch.randn(3, 4, 2))`,expected:`True`,hidden:!0},{id:`8`,description:`aux_loss value`,input:`(lambda f: round(float(moe_layer(f(10, 4), f(4, 4), f(4, 4, 4), 2)['aux_loss']), 4))(lambda *s: torch.from_numpy(np.random.randn(*s)).float())`,expected:`1.3995`,hidden:!0},{id:`9`,description:`aux_loss is differentiable w.r.t. the router`,input:`(lambda Wr: (moe_layer(torch.randn(10, 4), Wr, torch.randn(4, 4, 4), 2)['aux_loss'].backward(), bool(Wr.grad is not None and Wr.grad.abs().sum().item() > 0))[-1])(torch.randn(4, 4, requires_grad=True))`,expected:`True`,hidden:!0}],hints:[`Four steps: router softmax, top-k selection with renormalized gates, per-expert dispatch/combine, aux loss.`,`torch.topk returns the k largest logits already sorted in descending order; the gates are a softmax over just those k values.`,`token_ids, slot = torch.where(expert_indices == e); output = output.index_add(0, token_ids, gates[token_ids, slot].unsqueeze(-1) * (x[token_ids] @ expert_weights[e])).`,`f comes from routing counts, torch.bincount(expert_indices.flatten(), minlength=E).float() / (T * k), and P from the full softmax over all E experts, not from the gates.`]},perplexity:{note:`Implement the cross-entropy yourself with F.log_softmax (or torch.logsumexp) and gather. Don't use F.cross_entropy or nn.CrossEntropyLoss; a hidden test compares against F.cross_entropy with ignore_index. 'mean_nll' and 'perplexity' may be 0-d tensors.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def perplexity(logits, targets, mask=None):
@@ -4474,7 +4353,7 @@ def perplexity(logits, targets, mask=None):
 
     mean_nll = token_nll.sum() / mask.sum()
     return {'token_nll': token_nll, 'mean_nll': mean_nll, 'perplexity': torch.exp(mean_nll)}
-`,testCases:[{id:`1`,description:`Uniform logits give perplexity = vocab size`,input:`round(float(perplexity(torch.zeros(3, 5), torch.tensor([0, 1, 2]))['perplexity']), 4)`,expected:`5.0`,hidden:!1},{id:`2`,description:`Per-token NLL values`,input:`np.round(perplexity(torch.tensor([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), torch.tensor([0, 2]))['token_nll'].double().numpy(), 4).tolist()`,expected:`[0.4076, 0.0949]`,hidden:!1},{id:`3`,description:`Matches F.cross_entropy with ignore_index on padding`,input:`(lambda L, y, mask: bool(abs(float(perplexity(L, y, mask)['mean_nll']) - torch.nn.functional.cross_entropy(L.reshape(-1, 4), y.masked_fill(mask == 0, -100).reshape(-1), ignore_index=-100).item()) < 1e-5))(torch.randn(2, 3, 4), torch.tensor([[0, 3, 1], [2, 2, 0]]), torch.tensor([[1, 1, 1], [1, 1, 0]]))`,expected:`True`,hidden:!0},{id:`4`,description:`Masked positions have token_nll = 0`,input:`np.round(perplexity(torch.tensor([[[1.0, 0.0], [0.0, 1.0]]]), torch.tensor([[0, 0]]), torch.tensor([[1, 0]]))['token_nll'].double().numpy(), 4).tolist()`,expected:`[[0.3133, 0.0]]`,hidden:!0},{id:`5`,description:`Stable for huge logits`,input:`round(float(perplexity(torch.tensor([[1000.0, 999.0, 0.0]]), torch.tensor([1]))['mean_nll']), 4)`,expected:`1.3133`,hidden:!0},{id:`6`,description:`perplexity = exp(mean_nll), values`,input:`(lambda r: (round(float(r['mean_nll']), 4), round(float(r['perplexity']), 3)))(perplexity(torch.from_numpy(np.random.randn(2, 5, 6) * 2).float(), torch.from_numpy(np.random.randint(0, 6, size=(2, 5)))))`,expected:`(3.8495, 46.971)`,hidden:!0}],hints:[`log_probs = F.log_softmax(logits, dim=-1)`,`token_nll = -log_probs.gather(-1, targets.unsqueeze(-1)).squeeze(-1)`,`Multiply by mask.float(), divide the sum by mask.sum(), and torch.exp the mean.`]}},f={"precision-recall-f1":{note:`Count with boolean masks and .sum().item(); don't use sklearn or torchmetrics. Return Python floats.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Uniform logits give perplexity = vocab size`,input:`round(float(perplexity(torch.zeros(3, 5), torch.tensor([0, 1, 2]))['perplexity']), 4)`,expected:`5.0`,hidden:!1},{id:`2`,description:`Per-token NLL values`,input:`np.round(perplexity(torch.tensor([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), torch.tensor([0, 2]))['token_nll'].double().numpy(), 4).tolist()`,expected:`[0.4076, 0.0949]`,hidden:!1},{id:`3`,description:`Matches F.cross_entropy with ignore_index on padding`,input:`(lambda L, y, mask: bool(abs(float(perplexity(L, y, mask)['mean_nll']) - torch.nn.functional.cross_entropy(L.reshape(-1, 4), y.masked_fill(mask == 0, -100).reshape(-1), ignore_index=-100).item()) < 1e-5))(torch.randn(2, 3, 4), torch.tensor([[0, 3, 1], [2, 2, 0]]), torch.tensor([[1, 1, 1], [1, 1, 0]]))`,expected:`True`,hidden:!0},{id:`4`,description:`Masked positions have token_nll = 0`,input:`np.round(perplexity(torch.tensor([[[1.0, 0.0], [0.0, 1.0]]]), torch.tensor([[0, 0]]), torch.tensor([[1, 0]]))['token_nll'].double().numpy(), 4).tolist()`,expected:`[[0.3133, 0.0]]`,hidden:!0},{id:`5`,description:`Stable for huge logits`,input:`round(float(perplexity(torch.tensor([[1000.0, 999.0, 0.0]]), torch.tensor([1]))['mean_nll']), 4)`,expected:`1.3133`,hidden:!0},{id:`6`,description:`perplexity = exp(mean_nll), values`,input:`(lambda r: (round(float(r['mean_nll']), 4), round(float(r['perplexity']), 3)))(perplexity(torch.from_numpy(np.random.randn(2, 5, 6) * 2).float(), torch.from_numpy(np.random.randint(0, 6, size=(2, 5)))))`,expected:`(3.8495, 46.971)`,hidden:!0}],hints:[`Perplexity is exp of the average per-token loss; the work is a stable per-token loss averaged over the right positions.`,`Log-softmax over the vocabulary, gather the target log-prob, negate, mask, average over real tokens.`,`log_probs = F.log_softmax(logits, dim=-1); token_nll = -log_probs.gather(-1, targets.unsqueeze(-1)).squeeze(-1).`,`Multiply by mask.float() and divide by mask.sum(), not by the number of positions; gather needs int64 targets.`]}},f={"precision-recall-f1":{note:`Count with boolean masks and .sum().item(); don't use sklearn or torchmetrics. Return Python floats.`,starterCode:`import torch
 
 def precision_recall(y_true: torch.Tensor, y_pred: torch.Tensor) -> tuple:
     """
@@ -7304,7 +7183,7 @@ def clip_loss(img_emb: torch.Tensor, txt_emb: torch.Tensor, temperature: float =
     L := an @ bn.T / 0.3,
     ref := -(torch.log_softmax(L, dim=1).diag().mean() + torch.log_softmax(L, dim=0).diag().mean()) / 2,
     bool(abs(clip_loss(a, b, 0.3)['loss'] - ref.item()) < 1e-6)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`F.normalize(x, dim=-1) L2-normalises each row`,`logits = img @ txt.T / temperature; labels = torch.arange(N)`,`loss = (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2`]},"embedding-search":{note:`Don't use torch.topk: it doesn't guarantee the order of tied scores. Use torch.sort(..., descending=True, stable=True).`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`This is ordinary classification twice: each image's N classes are the captions (and vice versa), and the correct class sits on the diagonal.`,`Normalize both embedding matrices, build the (N, N) logits, take a cross-entropy over rows and another over the transposed matrix, average them.`,`F.normalize(x, dim=-1); logits = img @ txt.T / temperature; labels = torch.arange(N); (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2.`,`Normalize along dim=-1 (each embedding), not dim=0; return the losses as Python floats with .item().`]},"embedding-search":{note:`Don't use torch.topk: it doesn't guarantee the order of tied scores. Use torch.sort(..., descending=True, stable=True).`,starterCode:`import torch
 import torch.nn.functional as F
 
 def cosine_topk(queries: torch.Tensor, docs: torch.Tensor, k: int):
@@ -7341,7 +7220,7 @@ def cosine_topk(queries: torch.Tensor, docs: torch.Tensor, k: int):
     cos := torch.nn.functional.cosine_similarity(Q.double().unsqueeze(1), Dm.double().unsqueeze(0), dim=-1),
     bool((r[1][:, 1:] <= r[1][:, :-1]).all()) and bool(torch.allclose(cos.gather(1, r[0]), r[1].double(), atol=1e-6))
     and bool(torch.allclose(r[1][:, 0].double(), cos.max(dim=1).values, atol=1e-6))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`F.normalize both matrices along dim=-1, then scores = q @ d.T`,`torch.sort(scores, dim=1, descending=True, stable=True) returns (values, indices)`,`Slice the first k columns of both`]},"retrieve-and-rerank":{note:`Tokens are plain Python lists, so the counting is ordinary Python; keep the scores in tensors (torch.log, torch.sort with stable=True, F.cosine_similarity or a manual dot product).`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Cosine similarity of unit vectors is a dot product, so every query-document score comes from one matmul.`,`Normalize both matrices row-wise, compute the (Q, N) scores, sort each row in descending order, keep k columns.`,`values, idx = torch.sort(q @ d.T, dim=1, descending=True, stable=True); return idx[:, :k], values[:, :k].`,`torch.topk doesn't guarantee the order of tied scores; a stable descending sort keeps the lower index first.`]},"retrieve-and-rerank":{note:`Tokens are plain Python lists, so the counting is ordinary Python; keep the scores in tensors (torch.log, torch.sort with stable=True, F.cosine_similarity or a manual dot product).`,starterCode:`import torch
 import torch.nn.functional as F
 
 def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75) -> torch.Tensor:
@@ -7426,7 +7305,7 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
     retrieve_and_rerank(['cat'], docs, torch.tensor([0.0, 1.0]), E, n=3, alpha=1.0)['reranked'].tolist(),
     retrieve_and_rerank(['cat'], docs, torch.tensor([0.0, 1.0]), E, n=3, alpha=0.0)['reranked'].tolist(),
 ))([s.split() for s in ['cat cat dog', 'cat', 'dog bird', 'a cat b c']],
-   torch.tensor([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]]))`,expected:`([1, 0, 3], [3, 1, 0])`,hidden:!0}],hints:[`Build tf with torch.tensor([d.count(t) for d in docs], dtype=torch.float64) for each unique query term`,`idf = math.log((N - n_t + 0.5) / (n_t + 0.5) + 1); n_t = number of documents with tf > 0`,`torch.sort(bm25, descending=True, stable=True)[1][:n] gives the candidates`,`F.cosine_similarity(doc_embs[candidates], query_emb.unsqueeze(0), dim=-1) for the semantic score`]}},x={"rnn-forward":{note:`Implement both functions from scratch with tensor ops; nn.RNN isn't allowed (and isn't in the browser shim). Weights are (in, out) here, used as x @ W_xh; nn.RNN stores the transpose. Write rnn_backward by hand: a hidden test checks it against autograd.`,starterCode:`import torch
+   torch.tensor([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]]))`,expected:`([1, 0, 3], [3, 1, 0])`,hidden:!0}],hints:[`Two pieces: a lexical scorer over the whole corpus, then a small rerank over n candidates. Check the BM25 numbers first.`,`For each distinct query term: term frequencies in every document, document frequency n_t, IDF, then the saturated, length-normalized contribution.`,`tf = torch.tensor([d.count(t) for d in docs], dtype=torch.float64); idf = math.log((N - n_t + 0.5) / (n_t + 0.5) + 1); candidates = torch.sort(bm25, descending=True, stable=True)[1][:n].`,`Normalize BM25 by the candidates' max (guard against 0), use F.cosine_similarity(doc_embs[candidates], query_emb.unsqueeze(0), dim=-1), and sort fused scores stably.`]}},x={"rnn-forward":{note:`Implement both functions from scratch with tensor ops; nn.RNN isn't allowed (and isn't in the browser shim). Weights are (in, out) here, used as x @ W_xh; nn.RNN stores the transpose. Write rnn_backward by hand: a hidden test checks it against autograd.`,starterCode:`import torch
 
 def rnn_forward(X, h0, W_xh, W_hh, b):
     """
@@ -7593,17 +7472,17 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
 )[-1])()`,expected:`([[0.4, -0.9]], [[0.2913, 0.2913]])`,hidden:!0},{id:`4`,description:`Random inputs and weights`,input:`(lambda: (
     t := lambda *s: torch.from_numpy(np.random.randn(*s)).float(),
     np.round(gru_cell(t(2, 3), t(2, 2), t(6, 3) * 0.5, t(6, 2) * 0.5, t(6) * 0.1, t(6) * 0.1).double().numpy(), 5).tolist()
-)[-1])()`,expected:`[[0.95395, -0.69198], [-0.29984, -0.87107]]`,hidden:!0},{id:`5`,description:`Worked example with distinct r, z and n`,input:`round(gru_cell(torch.tensor([[1.0]]), torch.tensor([[0.5]]), torch.tensor([[0.0], [1.0], [1.0]]), torch.tensor([[1.0], [0.0], [2.0]]), torch.zeros(3), torch.zeros(3)).item(), 5)`,expected:`0.61429`,hidden:!0}],hints:[`z decides how much of the old state to keep, r decides how much of it feeds the candidate. The new state interpolates between h_prev and the candidate.`,`Keep the projections separate: (x @ W_ih.T + b_ih).chunk(3, dim=-1) and (h_prev @ W_hh.T + b_hh).chunk(3, dim=-1).`,`r = torch.sigmoid(i_r + h_r), z = torch.sigmoid(i_z + h_z), n = torch.tanh(i_n + r * h_n), h = (1 - z) * n + z * h_prev.`,`Pitfalls: order r, z, n (not z, r, n); r multiplies h_n including b_hn; and (1 - z) goes with n, not with h_prev.`]}},S={"logistic-regression":{note:`Implement it with torch.exp; don't call torch.sigmoid or F.sigmoid.`,starterCode:`import torch
+)[-1])()`,expected:`[[0.95395, -0.69198], [-0.29984, -0.87107]]`,hidden:!0},{id:`5`,description:`Worked example with distinct r, z and n`,input:`round(gru_cell(torch.tensor([[1.0]]), torch.tensor([[0.5]]), torch.tensor([[0.0], [1.0], [1.0]]), torch.tensor([[1.0], [0.0], [2.0]]), torch.zeros(3), torch.zeros(3)).item(), 5)`,expected:`0.61429`,hidden:!0}],hints:[`z decides how much of the old state to keep, r decides how much of it feeds the candidate. The new state interpolates between h_prev and the candidate.`,`Keep the projections separate: (x @ W_ih.T + b_ih).chunk(3, dim=-1) and (h_prev @ W_hh.T + b_hh).chunk(3, dim=-1).`,`r = torch.sigmoid(i_r + h_r), z = torch.sigmoid(i_z + h_z), n = torch.tanh(i_n + r * h_n), h = (1 - z) * n + z * h_prev.`,`Pitfalls: order r, z, n (not z, r, n); r multiplies h_n including b_hn; and (1 - z) goes with n, not with h_prev.`]}},S={"logistic-regression":{note:`Implement it with torch.exp; don't call torch.sigmoid, F.sigmoid or nn.Sigmoid. For a stable version, only ever exponentiate -|x|.`,starterCode:`import torch
 
 def sigmoid(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute the sigmoid activation function.
+    Compute the sigmoid activation function element-wise.
 
     Args:
         x: Float tensor of any shape
 
     Returns:
-        Tensor of same shape with sigmoid applied element-wise
+        Float tensor of the same shape, with 1 / (1 + exp(-x)) applied element-wise
     """
     # Your code here
     pass
@@ -7611,21 +7490,31 @@ def sigmoid(x: torch.Tensor) -> torch.Tensor:
 
 def sigmoid(x: torch.Tensor) -> torch.Tensor:
     """
-    Compute the sigmoid activation function.
+    Numerically stable sigmoid, applied element-wise.
+
+    Returns:
+        Float tensor of the same shape as x
     """
-    return 1 / (1 + torch.exp(-x))
-`,testCases:[{id:`1`,description:`Zero input`,input:`sigmoid(torch.tensor([0.0]))`,expected:`[0.5]`,hidden:!1},{id:`2`,description:`Positive and negative`,input:`bool(torch.allclose(sigmoid(torch.tensor([-1.0, 0.0, 1.0])), torch.tensor([0.268941, 0.5, 0.731059]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values`,input:`bool(torch.allclose(sigmoid(torch.tensor([-10.0, 10.0])), torch.tensor([4.5e-05, 0.999955]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Matches torch.sigmoid on a 2D input`,input:`(lambda x: bool(torch.allclose(sigmoid(x), torch.sigmoid(x), atol=1e-6)))(torch.randn(3, 4))`,expected:`True`,hidden:!0}],hints:[`Use torch.exp() for the exponential function.`,`The formula is 1 / (1 + exp(-x)); it broadcasts over any shape.`]},"binary-cross-entropy":{note:`Implement the formula with tensor ops (F.binary_cross_entropy is the built-in). In float32, 1 - 1e-15 rounds to 1.0, so clamp with eps = 1e-7.`,starterCode:`import torch
+    x = x.float()
+    # exp(-|x|) is in (0, 1], so it can never overflow
+    e = torch.exp(-x.abs())
+    # x >= 0: 1 / (1 + exp(-x));  x < 0: exp(x) / (1 + exp(x))
+    return torch.where(x >= 0, 1 / (1 + e), e / (1 + e))
+
+# Time O(N), extra space O(N)
+`,testCases:[{id:`1`,description:`Zero input`,input:`sigmoid(torch.tensor([0.0]))`,expected:`[0.5]`,hidden:!1},{id:`2`,description:`Positive and negative`,input:`bool(torch.allclose(sigmoid(torch.tensor([-1.0, 0.0, 1.0])), torch.tensor([0.268941, 0.5, 0.731059]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values`,input:`bool(torch.allclose(sigmoid(torch.tensor([-10.0, 10.0])), torch.tensor([4.5e-05, 0.999955]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Matches torch.sigmoid on a 2D input`,input:`(lambda x: bool(torch.allclose(sigmoid(x), torch.sigmoid(x), atol=1e-6)))(torch.randn(3, 4))`,expected:`True`,hidden:!0},{id:`5`,description:`2D input keeps its shape and values`,input:`bool(torch.allclose(sigmoid(torch.tensor([[2.0, -3.0], [0.5, 0.0]])), torch.tensor([[0.880797, 0.047426], [0.622459, 0.5]]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`6`,description:`Extreme inputs saturate to 0 and 1 (no nan)`,input:`sigmoid(torch.tensor([-1000.0, 1000.0])).tolist()`,expected:`[0.0, 1.0]`,hidden:!0}],hints:[`The sigmoid maps any real number to (0, 1); think about what happens at x = 0, x -> +inf and x -> -inf.`,`Tensor arithmetic is element-wise and broadcasts, so one expression handles any shape.`,`torch.exp(-x) is the only non-trivial piece: 1 / (1 + torch.exp(-x)).`,`torch.exp overflows to inf for large arguments. Stable trick: e = torch.exp(-x.abs()), then torch.where(x >= 0, 1 / (1 + e), e / (1 + e)).`]},"binary-cross-entropy":{note:`Implement the formula with tensor ops (F.binary_cross_entropy is the built-in). In float32, 1 - 1e-15 rounds to 1.0, so clamp with eps = 1e-7.`,starterCode:`import torch
 
 def binary_cross_entropy(y_true, y_pred):
     """
     Compute binary cross-entropy loss.
 
     Args:
-        y_true: True labels (0 or 1), tensor
-        y_pred: Predicted probabilities, tensor
+        y_true: True labels (0 or 1), tensor of shape (m,)
+        y_pred: Predicted probabilities in [0, 1], float tensor of shape (m,)
 
     Returns:
-        loss: Scalar BCE loss (Python float rounded to 4 decimals)
+        loss: Mean BCE as a Python float, rounded to 4 decimals
+              (clamp y_pred to [1e-7, 1 - 1e-7] before the logs)
     """
     # Your code here
     pass
@@ -7642,7 +7531,7 @@ def binary_cross_entropy(y_true, y_pred):
     loss = -torch.mean(y_true * torch.log(y_pred) + (1 - y_true) * torch.log(1 - y_pred))
 
     return round(loss.item(), 4)
-`,testCases:[{id:`1`,description:`Perfect predictions`,input:`binary_cross_entropy(torch.tensor([1.0, 0.0, 1.0, 0.0]), torch.tensor([1.0, 0.0, 1.0, 0.0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Typical case`,input:`binary_cross_entropy(torch.tensor([1.0, 0.0, 1.0]), torch.tensor([0.9, 0.1, 0.8]))`,expected:`0.1446`,hidden:!1},{id:`3`,description:`Less confident predictions`,input:`binary_cross_entropy(torch.tensor([1.0, 1.0, 0.0]), torch.tensor([0.7, 0.5, 0.2]))`,expected:`0.4243`,hidden:!0},{id:`4`,description:`Integer labels`,input:`binary_cross_entropy(torch.tensor([0, 1]), torch.tensor([0.25, 0.75]))`,expected:`0.2877`,hidden:!0}],hints:[`Clamp predictions with torch.clamp(y_pred, eps, 1 - eps)`,`Apply the formula element-wise with torch.log`,`Take the mean, then .item() and round to 4 decimals`]},"hinge-loss":{note:`Use tensor ops: torch.clamp(..., min=0) is max(0, ...).`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Perfect predictions`,input:`binary_cross_entropy(torch.tensor([1.0, 0.0, 1.0, 0.0]), torch.tensor([1.0, 0.0, 1.0, 0.0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Typical case`,input:`binary_cross_entropy(torch.tensor([1.0, 0.0, 1.0]), torch.tensor([0.9, 0.1, 0.8]))`,expected:`0.1446`,hidden:!1},{id:`3`,description:`Less confident predictions`,input:`binary_cross_entropy(torch.tensor([1.0, 1.0, 0.0]), torch.tensor([0.7, 0.5, 0.2]))`,expected:`0.4243`,hidden:!0},{id:`4`,description:`Integer labels`,input:`binary_cross_entropy(torch.tensor([0, 1]), torch.tensor([0.25, 0.75]))`,expected:`0.2877`,hidden:!0},{id:`5`,description:`Mixed confidence`,input:`binary_cross_entropy(torch.tensor([1.0, 1.0, 0.0, 0.0]), torch.tensor([0.7, 0.5, 0.2, 0.4]))`,expected:`0.4459`,hidden:!0}],hints:[`Each sample contributes -log of the probability given to the true class: -log(p) if y = 1, -log(1 - p) if y = 0.`,`Cast the labels to float (integer labels are allowed), clamp the predictions, compute the per-sample terms, then average.`,`torch.clamp(y_pred, eps, 1 - eps), then -torch.mean(y * torch.log(p) + (1 - y) * torch.log(1 - p)); finish with round(loss.item(), 4).`,`In float32, 1 - 1e-15 is exactly 1.0, so a 1e-15 clamp does nothing at the top end and log(1 - p) becomes log(0). Use eps = 1e-7.`]},"hinge-loss":{note:`Use tensor ops: torch.clamp(..., min=0) (or torch.relu) is max(0, ...). Don't use nn.HingeEmbeddingLoss or nn.MultiMarginLoss.`,starterCode:`import torch
 
 def hinge_loss(y_true, scores):
     """
@@ -7667,7 +7556,7 @@ def hinge_loss(y_true, scores):
     losses = torch.clamp(1 - y_true * scores, min=0)
 
     return round(losses.mean().item(), 4)
-`,testCases:[{id:`1`,description:`Perfect predictions with large margin`,input:`hinge_loss(torch.tensor([1.0, -1.0]), torch.tensor([2.0, -3.0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Partial margin violations`,input:`hinge_loss(torch.tensor([1.0, -1.0, 1.0]), torch.tensor([0.5, -0.8, 1.5]))`,expected:`0.2333`,hidden:!1},{id:`3`,description:`All misclassified`,input:`hinge_loss(torch.tensor([1.0, 1.0]), torch.tensor([-1.0, -2.0]))`,expected:`2.5`,hidden:!1},{id:`4`,description:`On the decision boundary (margin = 1)`,input:`hinge_loss(torch.tensor([1.0, -1.0]), torch.tensor([1.0, -1.0]))`,expected:`0.0`,hidden:!0},{id:`5`,description:`Integer labels`,input:`hinge_loss(torch.tensor([1, -1, -1, 1]), torch.tensor([0.25, 0.5, -2.0, 3.0]))`,expected:`0.5625`,hidden:!0}],hints:[`Compute element-wise margins: y_true * scores`,`Apply max(0, 1 - margin) using torch.clamp(..., min=0)`,`Return the mean of the losses with .item(), rounded to 4 decimals`]},"decision-tree-split":{note:`torch.bincount counts each integer label in one call (classes that never appear count 0 and add nothing to the sum).`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Perfect predictions with large margin`,input:`hinge_loss(torch.tensor([1.0, -1.0]), torch.tensor([2.0, -3.0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Partial margin violations`,input:`hinge_loss(torch.tensor([1.0, -1.0, 1.0]), torch.tensor([0.5, -0.8, 1.5]))`,expected:`0.2333`,hidden:!1},{id:`3`,description:`All misclassified`,input:`hinge_loss(torch.tensor([1.0, 1.0]), torch.tensor([-1.0, -2.0]))`,expected:`2.5`,hidden:!1},{id:`4`,description:`On the decision boundary (margin = 1)`,input:`hinge_loss(torch.tensor([1.0, -1.0]), torch.tensor([1.0, -1.0]))`,expected:`0.0`,hidden:!0},{id:`5`,description:`Integer labels`,input:`hinge_loss(torch.tensor([1, -1, -1, 1]), torch.tensor([0.25, 0.5, -2.0, 3.0]))`,expected:`0.5625`,hidden:!0},{id:`6`,description:`Mix of inside-margin, wrong-side and safe samples`,input:`hinge_loss(torch.tensor([1.0, -1.0, 1.0, -1.0]), torch.tensor([0.3, 0.2, -0.5, -1.5]))`,expected:`0.85`,hidden:!0}],hints:[`The loss only cares about the margin y * s: how far on the correct side of the boundary each sample is.`,`Compute all margins at once, turn each into a loss, then average.`,`torch.clamp(1 - y_true * scores, min=0).mean().item(), rounded to 4 decimals.`,`Labels must be +1/-1, not 0/1. torch.max(a, 0) is a reduction over dim 0, not an element-wise max with 0: use torch.clamp(..., min=0) or torch.relu.`]},"decision-tree-split":{note:`torch.bincount counts each integer label in one call (classes that never appear count 0 and add nothing to the sum).`,starterCode:`import torch
 
 def gini_impurity(labels: torch.Tensor) -> float:
     """
@@ -7677,7 +7566,8 @@ def gini_impurity(labels: torch.Tensor) -> float:
         labels: 1D int64 tensor of class labels (non-negative integers)
 
     Returns:
-        Gini impurity value between 0 and 1 (Python float)
+        Gini impurity 1 - sum_c p_c^2 as a Python float, in [0, 1)
+        (0.0 for an empty tensor)
     """
     # Your code here
     pass
@@ -7698,7 +7588,7 @@ def gini_impurity(labels: torch.Tensor) -> float:
 
     # Gini = 1 - sum(p^2)
     return (1 - (probabilities ** 2).sum()).item()
-`,testCases:[{id:`1`,description:`Pure node`,input:`gini_impurity(torch.tensor([0, 0, 0, 0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Maximum impurity`,input:`gini_impurity(torch.tensor([0, 0, 1, 1]))`,expected:`0.5`,hidden:!1},{id:`3`,description:`Unequal split`,input:`gini_impurity(torch.tensor([0, 0, 0, 1]))`,expected:`0.375`,hidden:!0},{id:`4`,description:`Three classes`,input:`gini_impurity(torch.tensor([2, 0, 1, 2]))`,expected:`0.625`,hidden:!0}],hints:[`torch.bincount(labels) counts each class.`,`Divide by labels.numel() to get proportions (convert to float first).`,`Gini = 1 - sum of squared probabilities; return it with .item().`]},"linear-regression-gd":{note:`Let autograd compute dw and db: build the MSE loss, call loss.backward(), update under torch.no_grad(), then zero the gradients.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Pure node`,input:`gini_impurity(torch.tensor([0, 0, 0, 0]))`,expected:`0.0`,hidden:!1},{id:`2`,description:`Maximum impurity`,input:`gini_impurity(torch.tensor([0, 0, 1, 1]))`,expected:`0.5`,hidden:!1},{id:`3`,description:`Unequal split`,input:`gini_impurity(torch.tensor([0, 0, 0, 1]))`,expected:`0.375`,hidden:!0},{id:`4`,description:`Three classes`,input:`gini_impurity(torch.tensor([2, 0, 1, 2]))`,expected:`0.625`,hidden:!0},{id:`5`,description:`Non-contiguous labels`,input:`gini_impurity(torch.tensor([3, 3, 7, 7, 7]))`,expected:`0.48`,hidden:!0},{id:`6`,description:`Three unbalanced classes`,input:`gini_impurity(torch.tensor([0, 0, 1, 1, 1, 2]))`,expected:`0.611111`,hidden:!0}],hints:[`Gini only depends on the fraction of samples in each class, not on the label values or their order.`,`Count each class, divide by the number of samples, then combine the proportions.`,`torch.bincount(labels) counts every label (missing labels count 0); p = counts.float() / labels.numel(); return (1 - (p ** 2).sum()).item().`,`Integer division or forgetting .float() gives all-zero proportions; also guard the empty tensor before dividing.`]},"linear-regression-gd":{note:`Let autograd compute dw and db: build the MSE loss, call loss.backward(), update under torch.no_grad(), then zero the gradients.`,starterCode:`import torch
 
 def linear_regression(X: torch.Tensor, y: torch.Tensor,
                       learning_rate: float = 0.01,
@@ -7707,13 +7597,13 @@ def linear_regression(X: torch.Tensor, y: torch.Tensor,
     Train a simple linear regression model using gradient descent.
 
     Args:
-        X: Input features (1D float tensor)
-        y: Target values (1D float tensor)
+        X: Input features, 1D float tensor of shape (n,)
+        y: Target values, 1D float tensor of shape (n,)
         learning_rate: Step size for gradient descent
-        iterations: Number of training iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        Tuple of (weight, bias) as Python floats rounded to 2 decimals
+        Tuple (w, b) as Python floats, each rounded to 2 decimals
     """
     # Initialize parameters (autograd tracks them)
     w = torch.tensor(0.0, requires_grad=True)
@@ -7750,7 +7640,7 @@ def linear_regression(X: torch.Tensor, y: torch.Tensor,
             b.grad.zero_()
 
     return (round(w.item(), 2), round(b.item(), 2))
-`,testCases:[{id:`1`,description:`Perfect linear relationship`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([2.0, 4.0, 6.0, 8.0]), 0.1, 1000)`,expected:`(2.0, 0.0)`,hidden:!1},{id:`2`,description:`With intercept`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([3.0, 5.0, 7.0, 9.0]), 0.1, 1000)`,expected:`(2.0, 1.0)`,hidden:!1},{id:`3`,description:`Different slope`,input:`linear_regression(torch.tensor([0.0, 1.0, 2.0, 3.0]), torch.tensor([1.0, 4.0, 7.0, 10.0]), 0.1, 1000)`,expected:`(3.0, 1.0)`,hidden:!0},{id:`4`,description:`Noisy data converges to the least-squares fit`,input:`linear_regression(torch.tensor([0.0, 1.0, 2.0, 3.0, 4.0]), torch.tensor([1.1, 2.9, 5.2, 7.1, 8.8]), 0.05, 2000)`,expected:`(1.96, 1.1)`,hidden:!0},{id:`5`,description:`Few iterations (checks the update rule, not just the optimum)`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([2.0, 4.0, 6.0, 8.0]), 0.01, 10)`,expected:`(1.51, 0.49)`,hidden:!0}],hints:[`Forward: y_pred = w * X + b, loss = ((y_pred - y) ** 2).mean()`,`loss.backward() fills w.grad and b.grad`,`Inside torch.no_grad(): w -= learning_rate * w.grad, then w.grad.zero_() (gradients accumulate otherwise)`]},"logistic-regression-full":{note:`Let autograd compute the gradients of the mean BCE loss (F.binary_cross_entropy_with_logits is fine for the loss); update under torch.no_grad().`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Perfect linear relationship`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([2.0, 4.0, 6.0, 8.0]), 0.1, 1000)`,expected:`(2.0, 0.0)`,hidden:!1},{id:`2`,description:`With intercept`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([3.0, 5.0, 7.0, 9.0]), 0.1, 1000)`,expected:`(2.0, 1.0)`,hidden:!1},{id:`3`,description:`Different slope`,input:`linear_regression(torch.tensor([0.0, 1.0, 2.0, 3.0]), torch.tensor([1.0, 4.0, 7.0, 10.0]), 0.1, 1000)`,expected:`(3.0, 1.0)`,hidden:!0},{id:`4`,description:`Noisy data converges to the least-squares fit`,input:`linear_regression(torch.tensor([0.0, 1.0, 2.0, 3.0, 4.0]), torch.tensor([1.1, 2.9, 5.2, 7.1, 8.8]), 0.05, 2000)`,expected:`(1.96, 1.1)`,hidden:!0},{id:`5`,description:`Few iterations (checks the update rule, not just the optimum)`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([2.0, 4.0, 6.0, 8.0]), 0.01, 10)`,expected:`(1.51, 0.49)`,hidden:!0},{id:`6`,description:`Negative slope`,input:`linear_regression(torch.tensor([1.0, 2.0, 3.0, 4.0]), torch.tensor([8.0, 6.0, 4.0, 2.0]), 0.1, 1000)`,expected:`(-2.0, 10.0)`,hidden:!0}],hints:[`Each iteration: predict with the current parameters, measure the loss, let autograd compute the gradients, step downhill.`,`Forward: y_pred = w * X + b and loss = ((y_pred - y) ** 2).mean(); loss.backward() fills w.grad and b.grad with exactly the (2/n) formulas.`,`Update inside torch.no_grad(): w -= learning_rate * w.grad (same for b), so the update is not recorded in the graph.`,`Gradients accumulate across backward() calls: zero them (w.grad.zero_()) after every update, or every step uses the sum of all past gradients.`]},"logistic-regression-full":{note:`Let autograd compute the gradients of the mean BCE loss (F.binary_cross_entropy_with_logits is fine for the loss) and update under torch.no_grad(). Don't use nn.Linear or torch.optim: the point is the update rule.`,starterCode:`import torch
 import torch.nn.functional as F
 
 def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
@@ -7758,10 +7648,10 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     Train logistic regression using gradient descent.
 
     Args:
-        X: Float features (m samples, n features)
-        y: Binary float labels (m,)
+        X: Float features, shape (m, n)
+        y: Binary float labels in {0, 1}, shape (m,)
         learning_rate: Step size
-        iterations: Number of iterations
+        iterations: Number of full-batch updates
 
     Returns:
         w: Learned weights (n,), rounded to 4 decimals
@@ -7799,18 +7689,18 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
             b.grad.zero_()
 
     return torch.round(w.detach(), decimals=4), round(b.item(), 4)
-`,testCases:[{id:`1`,description:`Simple separable data (AND)`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([6.0141, 6.0141]), atol=1e-3) and abs(r[1] - (-9.1984)) < 1e-3))(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0]), 0.5, 1000))`,expected:`True`,hidden:!1},{id:`2`,description:`OR data`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([7.2375, 7.2375]), atol=1e-3) and abs(r[1] - (-3.1461)) < 1e-3))(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 1.0, 1.0, 1.0]), 0.5, 1000))`,expected:`True`,hidden:!0},{id:`3`,description:`Two clusters, fewer iterations`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([0.988, 0.0689]), atol=1e-3) and abs(r[1] - (-4.2202)) < 1e-3))(logistic_regression(torch.tensor([[1.0, 2.0], [2.0, 1.0], [3.0, 3.0], [6.0, 5.0], [7.0, 8.0], [8.0, 6.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), 0.1, 500))`,expected:`True`,hidden:!0}],hints:[`Forward: z = X @ w + b; loss = F.binary_cross_entropy_with_logits(z, y) (mean over samples)`,`loss.backward() gives exactly dw = (1/m) X^T (y_pred - y) and db = mean(y_pred - y)`,`Update inside torch.no_grad(), then zero w.grad and b.grad`]},"linear-svm":{note:`Write the objective (λ/2)·||w||² + mean(relu(1 - margins)) and let autograd differentiate it. torch.relu has gradient 0 at the hinge (margin exactly 1), matching the strict margin < 1 rule.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Simple separable data (AND)`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([6.0141, 6.0141]), atol=1e-3) and abs(r[1] - (-9.1984)) < 1e-3))(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0]), 0.5, 1000))`,expected:`True`,hidden:!1},{id:`2`,description:`OR data`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([7.2375, 7.2375]), atol=1e-3) and abs(r[1] - (-3.1461)) < 1e-3))(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 1.0, 1.0, 1.0]), 0.5, 1000))`,expected:`True`,hidden:!0},{id:`3`,description:`Two clusters, fewer iterations`,input:`(lambda r: bool(torch.allclose(r[0], torch.tensor([0.988, 0.0689]), atol=1e-3) and abs(r[1] - (-4.2202)) < 1e-3))(logistic_regression(torch.tensor([[1.0, 2.0], [2.0, 1.0], [3.0, 3.0], [6.0, 5.0], [7.0, 8.0], [8.0, 6.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), 0.1, 500))`,expected:`True`,hidden:!0},{id:`4`,description:`Weight vector shape`,input:`tuple(logistic_regression(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]), torch.tensor([0.0, 0.0, 0.0, 1.0]), 0.5, 10)[0].shape)`,expected:`(2,)`,hidden:!1}],hints:[`Same loop as linear regression with autograd: forward, loss, backward, update, zero the gradients.`,`Forward: z = X @ w + b, then loss = F.binary_cross_entropy_with_logits(z, y), which is the mean BCE of sigmoid(z) computed stably from the logits.`,`loss.backward() gives exactly dw = X.T @ (sigmoid(z) - y) / m and db = mean(sigmoid(z) - y); update w and b inside torch.no_grad().`,`Pass the logits z (not sigmoid(z)) to binary_cross_entropy_with_logits, use float labels, and zero w.grad and b.grad after every step.`]},"linear-svm":{note:`Write the objective (λ/2)·||w||² + mean(relu(1 - margins)) and let autograd differentiate it; don't use torch.optim or nn.Linear. torch.relu has gradient 0 at the hinge (margin exactly 1), matching the strict margin < 1 rule.`,starterCode:`import torch
 
 def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     """
     Train a linear SVM using gradient descent on hinge loss + L2 regularization.
 
     Args:
-        X: Float features (m samples, n features)
+        X: Float features, shape (m, n)
         y: Float labels in {-1, +1}, shape (m,)
-        learning_rate: Step size for gradient descent
-        lambda_param: L2 regularization strength
-        iterations: Number of training iterations
+        learning_rate: Step size
+        lambda_param: L2 regularization strength (bias not regularized)
+        iterations: Number of full-batch updates
 
     Returns:
         w: Learned weights (n,), rounded to 4 decimals
@@ -7871,7 +7761,7 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     y := torch.tensor([1.0, 1.0, -1.0, -1.0]),
     result := linear_svm(X, y, 0.05, 0.1, 200),
     bool(torch.allclose(result[0], torch.tensor([0.5321, 0.4822]), atol=1e-3) and abs(result[1] - (-0.2375)) < 1e-3)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`margins = y * (X @ w + b)`,`loss = lambda_param / 2 * (w ** 2).sum() + torch.relu(1 - margins).mean()`,`loss.backward(), then update w and b inside torch.no_grad() and zero their gradients`]},"knn-classifier":{note:`Use torch.cdist or broadcasting for the distances, torch.argsort(..., stable=True) for the neighbour order and torch.bincount for the vote.`,starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`One step from zero (every sample violates the margin)`,input:`(lambda r: (r[0].tolist(), r[1]))(linear_svm(torch.tensor([[2.0, 1.0], [3.0, 2.0], [-2.0, -1.0], [-3.0, -2.0]]), torch.tensor([1.0, 1.0, -1.0, -1.0]), 0.1, 0.01, 1))`,expected:`([0.25, 0.15], 0.0)`,hidden:!0}],hints:[`Write down the objective as a tensor expression and let autograd produce the subgradient.`,`margins = y * (X @ w + b); loss = lambda_param / 2 * (w ** 2).sum() + torch.relu(1 - margins).mean().`,`loss.backward(), then w -= learning_rate * w.grad and b -= learning_rate * b.grad inside torch.no_grad(), then zero both gradients.`,`Use .mean() over all m samples for the hinge part (not a mean over the violators) and do not put b in the L2 term. torch.relu has gradient 0 at exactly 0, matching the strict margin < 1 rule.`]},"knn-classifier":{note:`Use torch.cdist or broadcasting for the distances, torch.argsort(..., stable=True) for the neighbour order and torch.bincount for the vote. No sklearn.`,starterCode:`import torch
 
 def knn_predict(X_train, y_train, X_test, k=3):
     """
@@ -7913,7 +7803,7 @@ def knn_predict(X_train, y_train, X_test, k=3):
     Xte := torch.randn(15, 3),
     ref := [int(torch.bincount(ytr[torch.argsort((Xtr - q).norm(dim=1), stable=True)[:5]], minlength=3).argmax()) for q in Xte],
     knn_predict(Xtr, ytr, Xte, 5).tolist() == ref
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`(X_test.unsqueeze(1) - X_train.unsqueeze(0)) has shape (m, n, d); square, sum over dim=-1, sqrt.`,`torch.argsort(D, dim=1, stable=True)[:, :k] keeps training order for equal distances.`,`torch.bincount(labels, minlength=n_classes).argmax() picks the smallest label among tied counts.`]},"naive-bayes":{note:`Compute in log space and normalize with torch.logsumexp (or F.log_softmax). Return tensors.`,starterCode:`import math
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Split the problem in two: an (m, n) distance matrix between queries and training points, then a vote per query.`,`(X_test.unsqueeze(1) - X_train.unsqueeze(0)) has shape (m, n, d); square, sum over dim=-1, sqrt. torch.cdist(X_test, X_train) gives the same matrix.`,`torch.argsort(D, dim=1, stable=True)[:, :k] gives the k nearest indices with distance ties in training order; torch.bincount(y_train[idx], minlength=n_classes).argmax() picks the smallest label among tied counts.`,`Without stable=True, equal distances can come out in any order. torch.topk(-D, k) is not guaranteed to keep index order on ties either.`]},"naive-bayes":{note:`Compute in log space and normalize with torch.logsumexp (or F.log_softmax). Return tensors. Use var(unbiased=False): torch defaults to the n - 1 estimator. No sklearn.`,starterCode:`import math
 import torch
 
 def gaussian_nb_fit(X, y, var_smoothing=1e-9):
@@ -7968,7 +7858,7 @@ def gaussian_nb_predict_proba(model, X):
     jll = torch.log(model['priors']) + log_norm - 0.5 * sq
 
     return torch.exp(jll - torch.logsumexp(jll, dim=1, keepdim=True))
-`,testCases:[{id:`1`,description:`Priors and means`,input:`(lambda m: (np.round(m["priors"].numpy(), 6).tolist(), np.round(m["means"].numpy(), 6).tolist()))(gaussian_nb_fit(torch.tensor([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), torch.tensor([0, 0, 0, 1, 1, 1])))`,expected:`([0.5, 0.5], [[2.0], [7.0]])`,hidden:!1},{id:`2`,description:`Midpoint between symmetric classes is 50/50`,input:`bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), torch.tensor([0, 0, 0, 1, 1, 1])), torch.tensor([[4.5]])), torch.tensor([[0.5, 0.5]]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Rows sum to 1, shape (m, C)`,input:`(lambda X, y: (lambda P: (tuple(P.shape), bool(torch.allclose(P.sum(1), torch.ones(20), atol=1e-5))))(gaussian_nb_predict_proba(gaussian_nb_fit(X, y), X)))(torch.randn(20, 3), torch.arange(20) % 4)`,expected:`((20, 4), True)`,hidden:!1},{id:`4`,description:`var_smoothing adds epsilon = s * max feature variance`,input:`bool(torch.allclose(gaussian_nb_fit(torch.tensor([[0.0, 1.0], [0.0, 3.0], [2.0, 5.0], [2.0, 9.0]]), torch.tensor([0, 0, 1, 1]), var_smoothing=0.1)["vars"], torch.tensor([[0.875, 1.875], [0.875, 4.875]]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`5`,description:`Posteriors match scikit-learn GaussianNB`,input:`bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[1.0, 2.0], [2.0, 3.0], [3.0, 3.0], [2.0, 1.0], [4.0, 5.0], [5.0, 4.0], [6.0, 6.0], [4.0, 3.0], [7.0, 2.0], [6.0, 1.0], [8.0, 3.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2])), torch.tensor([[3.0, 3.0], [5.0, 3.5], [6.0, 2.0], [4.0, 4.0]])), torch.tensor([[0.891447, 0.101141, 0.007411], [9.1e-05, 0.927174, 0.072735], [0.0, 0.024231, 0.975769], [0.005153, 0.991937, 0.002909]]), atol=1e-4))`,expected:`True`,hidden:!0},{id:`6`,description:`Log-space: far-away points still give valid probabilities`,input:`(lambda P: bool(torch.isfinite(P).all() and torch.allclose(P, torch.tensor([[1.0, 0.0], [0.0, 1.0]]), atol=1e-6)))(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[0.0], [1.0], [10.0], [11.0]]), torch.tensor([0, 0, 1, 1])), torch.tensor([[-500.0], [600.0]])))`,expected:`True`,hidden:!0}],hints:[`X[y == c].mean(dim=0) and X[y == c].var(dim=0, unbiased=False) per class; torch.stack the results.`,`epsilon = var_smoothing * X.var(dim=0, unbiased=False).max()`,`jll - torch.logsumexp(jll, dim=1, keepdim=True) is the log posterior.`]},"ridge-lasso":{note:`Ridge: torch.linalg.solve. Lasso: loop over coordinates with tensor ops; torch.sign(a) * torch.clamp(a.abs() - lam, min=0) is the soft-threshold.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Priors and means`,input:`(lambda m: (np.round(m["priors"].numpy(), 6).tolist(), np.round(m["means"].numpy(), 6).tolist()))(gaussian_nb_fit(torch.tensor([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), torch.tensor([0, 0, 0, 1, 1, 1])))`,expected:`([0.5, 0.5], [[2.0], [7.0]])`,hidden:!1},{id:`2`,description:`Midpoint between symmetric classes is 50/50`,input:`bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), torch.tensor([0, 0, 0, 1, 1, 1])), torch.tensor([[4.5]])), torch.tensor([[0.5, 0.5]]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Rows sum to 1, shape (m, C)`,input:`(lambda X, y: (lambda P: (tuple(P.shape), bool(torch.allclose(P.sum(1), torch.ones(20), atol=1e-5))))(gaussian_nb_predict_proba(gaussian_nb_fit(X, y), X)))(torch.randn(20, 3), torch.arange(20) % 4)`,expected:`((20, 4), True)`,hidden:!1},{id:`4`,description:`var_smoothing adds epsilon = s * max feature variance`,input:`bool(torch.allclose(gaussian_nb_fit(torch.tensor([[0.0, 1.0], [0.0, 3.0], [2.0, 5.0], [2.0, 9.0]]), torch.tensor([0, 0, 1, 1]), var_smoothing=0.1)["vars"], torch.tensor([[0.875, 1.875], [0.875, 4.875]]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`5`,description:`Posteriors match scikit-learn GaussianNB`,input:`bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[1.0, 2.0], [2.0, 3.0], [3.0, 3.0], [2.0, 1.0], [4.0, 5.0], [5.0, 4.0], [6.0, 6.0], [4.0, 3.0], [7.0, 2.0], [6.0, 1.0], [8.0, 3.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2])), torch.tensor([[3.0, 3.0], [5.0, 3.5], [6.0, 2.0], [4.0, 4.0]])), torch.tensor([[0.891447, 0.101141, 0.007411], [9.1e-05, 0.927174, 0.072735], [0.0, 0.024231, 0.975769], [0.005153, 0.991937, 0.002909]]), atol=1e-4))`,expected:`True`,hidden:!0},{id:`6`,description:`Log-space: far-away points still give valid probabilities`,input:`(lambda P: bool(torch.isfinite(P).all() and torch.allclose(P, torch.tensor([[1.0, 0.0], [0.0, 1.0]]), atol=1e-6)))(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[0.0], [1.0], [10.0], [11.0]]), torch.tensor([0, 0, 1, 1])), torch.tensor([[-500.0], [600.0]])))`,expected:`True`,hidden:!0},{id:`7`,description:`Unequal priors shift the posterior`,input:`bool(torch.allclose(gaussian_nb_predict_proba(gaussian_nb_fit(torch.tensor([[0.0], [2.0], [0.5], [1.5], [3.0], [5.0]]), torch.tensor([0, 0, 0, 0, 1, 1])), torch.tensor([[2.5]])), torch.tensor([[0.562951, 0.437049]]), atol=1e-5))`,expected:`True`,hidden:!0}],hints:[`Fitting is counting and averaging per class; prediction is log prior + sum of per-feature log densities, then normalise.`,`Per class: X[y == c].mean(dim=0) and X[y == c].var(dim=0, unbiased=False); torch.stack the results. epsilon = var_smoothing * X.var(dim=0, unbiased=False).max(), once over all samples.`,`Build the (m, C) joint log-likelihood with X.unsqueeze(1) - means.unsqueeze(0); jll - torch.logsumexp(jll, dim=1, keepdim=True) is the log posterior.`,`torch.var defaults to the unbiased (n - 1) estimator; sklearn and this problem use unbiased=False. Never exponentiate jll before normalising: it underflows to 0 and gives nan.`]},"ridge-lasso":{note:`Ridge: torch.linalg.solve. Lasso: loop over coordinates with tensor ops; torch.sign(a) * torch.clamp(a.abs() - lam, min=0) is the soft-threshold. No sklearn, and no autograd/optim (L1 has no gradient at 0, which is exactly why coordinate descent is used).`,starterCode:`import torch
 
 def ridge_fit(X, y, lam):
     """
@@ -8043,7 +7933,7 @@ def lasso_fit(X, y, lam, n_sweeps=100):
     y := 3 * X[:, 0] - 2 * X[:, 1] + 0.1 * torch.randn(40) + 4,
     w := lasso_fit(X, y, 0.3)[0],
     (int((w == 0).sum()), bool((w[2:] == 0).all()), bool((w[:2].abs() > 1).all()))
-)[-1])()`,expected:`(3, True, True)`,hidden:!1},{id:`4`,description:`Ridge matches scikit-learn Ridge(alpha=2)`,input:`(lambda wb: bool(torch.allclose(wb[0], torch.tensor([0.501562, 1.054956, 0.469557]), atol=1e-4) and abs(wb[1] - 1.770184) < 1e-4))(ridge_fit(torch.tensor([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), torch.tensor([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 2.0))`,expected:`True`,hidden:!0},{id:`5`,description:`Lasso matches scikit-learn Lasso(alpha=0.1) after convergence`,input:`(lambda wb: bool(torch.allclose(wb[0], torch.tensor([0.614221, 1.30941, 0.65289]), atol=1e-3) and abs(wb[1] - 1.30584) < 1e-3))(lasso_fit(torch.tensor([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), torch.tensor([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 0.1, 500))`,expected:`True`,hidden:!0},{id:`6`,description:`Large lam gives all-zero weights and b = mean(y)`,input:`(lambda wb: (bool((wb[0] == 0).all()), round(wb[1], 5)))(lasso_fit(torch.tensor([[1.0, 0.5], [2.0, -1.0], [0.0, 1.0], [3.0, 2.0]]), torch.tensor([4.0, 1.0, 3.0, 6.0]), 10.0))`,expected:`(True, 3.5)`,hidden:!0},{id:`7`,description:`Lasso weights after 3 sweeps (in-order coordinate updates)`,input:`bool(torch.allclose(lasso_fit(torch.tensor([[1.0, 2.0], [2.0, 1.0], [3.0, 4.0], [4.0, 3.0]]), torch.tensor([1.0, 2.0, 2.0, 4.0]), 0.05, 3)[0], torch.tensor([1.003616, -0.26217]), atol=1e-5))`,expected:`True`,hidden:!0}],hints:[`Centre with X.mean(dim=0) and y.mean(); b = (y_mean - x_mean @ w).item().`,`torch.linalg.solve(Xc.T @ Xc + lam * torch.eye(d), Xc.T @ yc)`,`In the lasso loop, update the residual r = r - Xc[:, j] * (w_new - w[j]) before writing w[j] = w_new.`]},"gradient-boosting":{note:`Same algorithm with tensor ops; thresholds and leaf values are returned as Python floats, predictions as a tensor.`,starterCode:`import torch
+)[-1])()`,expected:`(3, True, True)`,hidden:!1},{id:`4`,description:`Ridge matches scikit-learn Ridge(alpha=2)`,input:`(lambda wb: bool(torch.allclose(wb[0], torch.tensor([0.501562, 1.054956, 0.469557]), atol=1e-4) and abs(wb[1] - 1.770184) < 1e-4))(ridge_fit(torch.tensor([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), torch.tensor([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 2.0))`,expected:`True`,hidden:!0},{id:`5`,description:`Lasso matches scikit-learn Lasso(alpha=0.1) after convergence`,input:`(lambda wb: bool(torch.allclose(wb[0], torch.tensor([0.614221, 1.30941, 0.65289]), atol=1e-3) and abs(wb[1] - 1.30584) < 1e-3))(lasso_fit(torch.tensor([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), torch.tensor([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 0.1, 500))`,expected:`True`,hidden:!0},{id:`6`,description:`Large lam gives all-zero weights and b = mean(y)`,input:`(lambda wb: (bool((wb[0] == 0).all()), round(wb[1], 5)))(lasso_fit(torch.tensor([[1.0, 0.5], [2.0, -1.0], [0.0, 1.0], [3.0, 2.0]]), torch.tensor([4.0, 1.0, 3.0, 6.0]), 10.0))`,expected:`(True, 3.5)`,hidden:!0},{id:`7`,description:`Lasso weights after 3 sweeps (in-order coordinate updates)`,input:`bool(torch.allclose(lasso_fit(torch.tensor([[1.0, 2.0], [2.0, 1.0], [3.0, 4.0], [4.0, 3.0]]), torch.tensor([1.0, 2.0, 2.0, 4.0]), 0.05, 3)[0], torch.tensor([1.003616, -0.26217]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`8`,description:`One-feature lasso is a soft-thresholded least-squares slope`,input:`(lambda wb: bool(torch.allclose(wb[0], torch.tensor([1.6]), atol=1e-5) and abs(wb[1] - 2.0) < 1e-5))(lasso_fit(torch.tensor([[1.0], [2.0], [3.0], [4.0]]), torch.tensor([3.0, 5.0, 7.0, 9.0]), 0.5))`,expected:`True`,hidden:!0}],hints:[`Both problems become intercept-free after centring: X.mean(dim=0) and y.mean(); b = (y_mean - x_mean @ w).item().`,`Ridge is one linear solve; lasso optimises one weight at a time, each with a closed-form soft-threshold update.`,`Ridge: torch.linalg.solve(Xc.T @ Xc + lam * torch.eye(d), Xc.T @ yc). Soft-threshold: torch.sign(a) * torch.clamp(a.abs() - lam, min=0).`,`In the lasso loop, update the residual r = r - Xc[:, j] * (w_new - w[j]) before writing w[j] = w_new; never form the matrix inverse with torch.linalg.inv.`]},"gradient-boosting":{note:`Same algorithm with tensor ops; no sklearn. Thresholds and leaf values are returned as Python floats, predictions as a tensor.`,starterCode:`import torch
 
 def fit_stump(X, r):
     """
@@ -8127,7 +8017,7 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
     y := torch.sin(4 * X[:, 0]) + X[:, 1] ** 2 + 0.1 * torch.randn(30),
     L := gradient_boosting(X, y, 15, 0.3)["losses"],
     bool(len(L) == 15 and all(b <= a + 1e-6 for a, b in zip(L, L[1:])) and L[-1] < y.var(unbiased=False).item())
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Stump picks the better feature and midpoint`,input:`fit_stump(torch.tensor([[1.0, 5.0], [2.0, 1.0], [3.0, 4.0], [4.0, 2.0]]), torch.tensor([1.0, -1.0, 1.0, -1.0]))`,expected:`(1, 3.0, -1.0, 1.0)`,hidden:!0},{id:`5`,description:`Tie: the first feature / smallest threshold wins`,input:`fit_stump(torch.tensor([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]), torch.tensor([0.0, 0.0, 4.0, 4.0]))`,expected:`(0, 1.5, 0.0, 4.0)`,hidden:!0},{id:`6`,description:`Predictions and losses on a 2-feature problem`,input:`(lambda m: bool(torch.allclose(m["predictions"], torch.tensor([1.583789, 2.435352, 2.435352, 5.610156, 3.935352]), atol=1e-4) and np.allclose(m["losses"], [1.3400000000000003, 0.6631250000000002, 0.31504882812500024, 0.20106521606445332], atol=1e-4)))(gradient_boosting(torch.tensor([[1.0, 3.0], [2.0, 1.0], [3.0, 2.0], [4.0, 5.0], [5.0, 4.0]]), torch.tensor([1.0, 3.0, 2.0, 6.0, 4.0]), 4, 0.5))`,expected:`True`,hidden:!0}],hints:[`torch.unique(X[:, j]) is sorted; midpoints are (u[:-1] + u[1:]) / 2.`,`Score all thresholds at once with a (T, n) mask: X[:, j].unsqueeze(0) <= thresholds.unsqueeze(1).`,`torch.where(X[:, j] <= t, left, right) evaluates a stump.`]},"decision-tree-bagging":{note:`A tree is plain Python control flow over tensors: use torch.unique, torch.bincount and boolean masks. Bootstrap indices come from np.random.default_rng(seed) in both tracks, so the trees match the NumPy track. Don't use sklearn.`,starterCode:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Stump picks the better feature and midpoint`,input:`fit_stump(torch.tensor([[1.0, 5.0], [2.0, 1.0], [3.0, 4.0], [4.0, 2.0]]), torch.tensor([1.0, -1.0, 1.0, -1.0]))`,expected:`(1, 3.0, -1.0, 1.0)`,hidden:!0},{id:`5`,description:`Tie: the first feature / smallest threshold wins`,input:`fit_stump(torch.tensor([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]), torch.tensor([0.0, 0.0, 4.0, 4.0]))`,expected:`(0, 1.5, 0.0, 4.0)`,hidden:!0},{id:`6`,description:`Predictions and losses on a 2-feature problem`,input:`(lambda m: bool(torch.allclose(m["predictions"], torch.tensor([1.583789, 2.435352, 2.435352, 5.610156, 3.935352]), atol=1e-4) and np.allclose(m["losses"], [1.3400000000000003, 0.6631250000000002, 0.31504882812500024, 0.20106521606445332], atol=1e-4)))(gradient_boosting(torch.tensor([[1.0, 3.0], [2.0, 1.0], [3.0, 2.0], [4.0, 5.0], [5.0, 4.0]]), torch.tensor([1.0, 3.0, 2.0, 6.0, 4.0]), 4, 0.5))`,expected:`True`,hidden:!0},{id:`7`,description:`Constant features: no candidate split`,input:`(lambda s: (s[0], s[1] == float("inf"), s[2], s[3]))(fit_stump(torch.tensor([[2.0, 7.0], [2.0, 7.0], [2.0, 7.0]]), torch.tensor([1.0, 2.0, 6.0])))`,expected:`(0, True, 3.0, 3.0)`,hidden:!0}],hints:[`Get fit_stump right first: the boosting loop is "fit a stump to the residuals, add learning_rate times its prediction".`,`torch.unique(X[:, j]) is sorted, so the candidate thresholds are (u[:-1] + u[1:]) / 2.`,`Score all thresholds of a feature at once with a (T, n) mask X[:, j].unsqueeze(0) <= thresholds.unsqueeze(1): SSE = sum(r^2) - s_l^2 / n_l - s_r^2 / n_r. torch.where(X[:, j] <= t, left, right) evaluates a stump.`,`Replace the best only on a strictly smaller SSE, return Python numbers with .item(), and fit each stump to y - F, not to y.`]},"decision-tree-bagging":{note:`A tree is plain Python control flow over tensors: use torch.unique, torch.bincount and boolean masks. Bootstrap indices come from np.random.default_rng(seed) in both tracks, so the trees match the NumPy track. Don't use sklearn.`,starterCode:`import numpy as np
 import torch
 
 def build_tree(X, y, max_depth=None, min_samples_split=2):
@@ -8226,7 +8116,7 @@ def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
     n_classes = int(y_train.max().item()) + 1
     return torch.tensor([int(torch.bincount(votes[:, j], minlength=n_classes).argmax().item())
                          for j in range(votes.shape[1])], dtype=torch.long)
-`,testCases:[{id:`1`,description:`Fully grown tree fits the training data`,input:`predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]])).tolist()`,expected:`[0, 0, 0, 1, 1, 1, 0, 1]`,hidden:!1},{id:`2`,description:`Root split (feature, threshold)`,input:`(lambda: (r := build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 4.5)`,hidden:!1},{id:`3`,description:`Predictions on new points`,input:`predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]])).tolist()`,expected:`[0, 0, 0, 1]`,hidden:!1},{id:`4`,description:`XOR-like data: stump vs full tree`,input:`(lambda: (predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=1), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist(), predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0])), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()))()`,expected:`([1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 1, 1, 0])`,hidden:!0},{id:`5`,description:`Equal impurity ties go to feature 0`,input:`(lambda: (r := build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 2.5)`,hidden:!0},{id:`6`,description:`max_depth=0 is a majority leaf (ties to the smaller label)`,input:`build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1]), max_depth=0)`,expected:`{'leaf': True, 'value': 0}`,hidden:!0},{id:`7`,description:`min_samples_split stops splitting`,input:`predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), min_samples_split=8), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()`,expected:`[1, 1, 1, 1, 1, 1, 1]`,hidden:!0},{id:`8`,description:`Depth-2 tree structure`,input:`build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=2)`,expected:`{'leaf': False, 'feature': 0, 'threshold': 0.5, 'left': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}, 'right': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 1}, 'right': {'leaf': True, 'value': 0}}}`,hidden:!0},{id:`9`,description:`Bagging predictions on noisy data`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), bagging_predict(torch.from_numpy(D[0]).float(), torch.from_numpy(D[1]), torch.from_numpy(D[2]).float(), n_estimators=7, max_depth=3, seed=0).tolist())[-1])()`,expected:`[0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1]`,hidden:!0},{id:`10`,description:`One bagged tree = a tree on the bootstrap sample`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), X := torch.from_numpy(D[0]).float(), y := torch.from_numpy(D[1]), Xq := torch.from_numpy(D[2]).float(), idx := torch.from_numpy(np.random.default_rng(3).integers(0, 40, size=40)), bagging_predict(X, y, Xq, n_estimators=1, seed=3).tolist() == predict_tree(build_tree(X[idx], y[idx]), Xq).tolist())[-1])()`,expected:`True`,hidden:!0}]}},C={"scaled-dot-product-attention":{note:`Implement with matmul and softmax. Don't use F.scaled_dot_product_attention or nn.MultiheadAttention; a hidden test compares against F.scaled_dot_product_attention.`,starterCode:`import math
+`,testCases:[{id:`1`,description:`Fully grown tree fits the training data`,input:`predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]])).tolist()`,expected:`[0, 0, 0, 1, 1, 1, 0, 1]`,hidden:!1},{id:`2`,description:`Root split (feature, threshold)`,input:`(lambda: (r := build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 4.5)`,hidden:!1},{id:`3`,description:`Predictions on new points`,input:`predict_tree(build_tree(torch.tensor([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), torch.tensor([0, 0, 0, 1, 1, 1, 0, 1])), torch.tensor([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]])).tolist()`,expected:`[0, 0, 0, 1]`,hidden:!1},{id:`4`,description:`XOR-like data: stump vs full tree`,input:`(lambda: (predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=1), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist(), predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0])), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()))()`,expected:`([1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 1, 1, 0])`,hidden:!0},{id:`5`,description:`Equal impurity ties go to feature 0`,input:`(lambda: (r := build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 2.5)`,hidden:!0},{id:`6`,description:`max_depth=0 is a majority leaf (ties to the smaller label)`,input:`build_tree(torch.tensor([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), torch.tensor([0, 0, 1, 1]), max_depth=0)`,expected:`{'leaf': True, 'value': 0}`,hidden:!0},{id:`7`,description:`min_samples_split stops splitting`,input:`predict_tree(build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), min_samples_split=8), torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()`,expected:`[1, 1, 1, 1, 1, 1, 1]`,hidden:!0},{id:`8`,description:`Depth-2 tree structure`,input:`build_tree(torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), torch.tensor([0, 1, 1, 0, 1, 1, 0]), max_depth=2)`,expected:`{'leaf': False, 'feature': 0, 'threshold': 0.5, 'left': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}, 'right': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 1}, 'right': {'leaf': True, 'value': 0}}}`,hidden:!0},{id:`9`,description:`Bagging predictions on noisy data`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), bagging_predict(torch.from_numpy(D[0]).float(), torch.from_numpy(D[1]), torch.from_numpy(D[2]).float(), n_estimators=7, max_depth=3, seed=0).tolist())[-1])()`,expected:`[0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1]`,hidden:!0},{id:`10`,description:`One bagged tree = a tree on the bootstrap sample`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), X := torch.from_numpy(D[0]).float(), y := torch.from_numpy(D[1]), Xq := torch.from_numpy(D[2]).float(), idx := torch.from_numpy(np.random.default_rng(3).integers(0, 40, size=40)), bagging_predict(X, y, Xq, n_estimators=1, seed=3).tolist() == predict_tree(build_tree(X[idx], y[idx]), Xq).tolist())[-1])()`,expected:`True`,hidden:!0}],hints:[`Think recursively: a node either stops (leaf with the majority class) or picks the single best split and asks the same question of each half.`,`Scan every (feature, threshold) pair with best starting at the node's own Gini and replace only if imp < best - 1e-12. Thresholds: v = torch.unique(X[:, f]) (sorted); midpoints (v[:-1] + v[1:]) / 2.`,`torch.bincount(y).argmax() is the majority class with ties to the smallest label; the same idiom per column of the stacked (n_estimators, n_test) votes does the bagging vote.`,`Draw bootstrap indices from one np.random.default_rng(seed) created outside the tree loop, and convert with torch.from_numpy. Store feature, label and threshold as Python int/float (.item(), .tolist()), not 0-d tensors.`]}},C={"scaled-dot-product-attention":{note:`Implement with matmul and softmax. Don't use F.scaled_dot_product_attention or nn.MultiheadAttention; a hidden test compares against F.scaled_dot_product_attention.`,starterCode:`import math
 import torch
 
 def scaled_dot_product_attention(Q, K, V):
@@ -8240,7 +8130,7 @@ def scaled_dot_product_attention(Q, K, V):
 
     Returns:
         output: Attention output (seq_len, d_v)
-        attention_weights: Attention weights (seq_len, seq_len)
+        attention_weights: Attention weights (seq_len, seq_len), rows sum to 1
     """
     # Your code here
     pass
@@ -8267,7 +8157,7 @@ def scaled_dot_product_attention(Q, K, V):
         )[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Scaling by sqrt(d_k) is applied`,input:`(lambda: (
             Q := torch.tensor([[2.0, 0.0, 0.0, 0.0]]), K := torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]),
             round(scaled_dot_product_attention(Q, K, torch.randn(2, 2))[1][0, 0].item(), 4)
-        )[-1])()`,expected:`0.7311`,hidden:!0}],hints:[`scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k)`,`torch.softmax(scores, dim=-1) normalizes each query row`,`Return (weights @ V, weights)`]},"multi-head-attention":{note:`Split heads with view/transpose and implement attention yourself. Don't use nn.MultiheadAttention or F.scaled_dot_product_attention.`,starterCode:`import math
+        )[-1])()`,expected:`0.7311`,hidden:!0}],hints:[`Every query is scored against every key: one matmul gives the whole (seq_len, seq_len) score matrix.`,`Three steps: scores, softmax over the key axis, weighted sum of V. Return (output, weights).`,`scores = Q @ K.transpose(-2, -1) / math.sqrt(Q.shape[-1]); weights = torch.softmax(scores, dim=-1); output = weights @ V.`,`Softmax over dim=-1 (keys), not dim=0; and divide by sqrt(d_k), not d_k.`]},"multi-head-attention":{note:`Split heads with view/transpose and implement attention yourself. Don't use nn.MultiheadAttention or F.scaled_dot_product_attention.`,starterCode:`import math
 import torch
 
 def multi_head_attention(Q, K, V, num_heads):
@@ -8319,7 +8209,7 @@ def multi_head_attention(Q, K, V, num_heads):
         )[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`One head equals plain scaled dot-product attention`,input:`(lambda: (
             Q := torch.randn(4, 8), K := torch.randn(4, 8), V := torch.randn(4, 8),
             bool(torch.allclose(multi_head_attention(Q, K, V, 1), torch.softmax(Q @ K.T / 8 ** 0.5, dim=-1) @ V, atol=1e-5))
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Reshape to (seq_len, num_heads, d_k), then transpose(0, 1) to (num_heads, seq_len, d_k)`,`Batched matmul handles all heads at once: Qh @ Kh.transpose(-2, -1)`,`Transpose back and reshape to (seq_len, d_model)`]},"positional-encoding":{note:`Build the table with torch.arange, torch.exp, torch.sin/cos and strided slice assignment (PE[:, 0::2] = ...).`,starterCode:`import math
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Each head is plain attention on a d_k-wide slice of the columns; put the heads on a leading axis so one batched matmul handles them all.`,`Split: .reshape(seq_len, num_heads, d_k).transpose(0, 1) gives (num_heads, seq_len, d_k). Attend, then undo both steps.`,`scores = Qh @ Kh.transpose(-2, -1) / math.sqrt(d_k); heads = torch.softmax(scores, dim=-1) @ Vh.`,`Merge with heads.transpose(0, 1).reshape(seq_len, d_model). Reshaping without the transpose mixes tokens across heads.`]},"positional-encoding":{note:`Build the table with torch.arange, torch.exp, torch.sin/cos and strided slice assignment (PE[:, 0::2] = ...).`,starterCode:`import math
 import torch
 
 def positional_encoding(max_len, d_model):
@@ -8351,7 +8241,7 @@ def positional_encoding(max_len, d_model):
 `,testCases:[{id:`1`,description:`Correct shape`,input:`positional_encoding(50, 64).shape`,expected:`(50, 64)`,hidden:!1},{id:`2`,description:`Position 1 = [sin(1), cos(1), sin(0.01), cos(0.01)] for d_model=4`,input:`bool(torch.allclose(positional_encoding(10, 4)[1], torch.tensor([0.841471, 0.540302, 0.0099998, 0.99995]), atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Position 0 alternates sin(0)=0 and cos(0)=1`,input:`positional_encoding(10, 6)[0].tolist()`,expected:`[0.0, 1.0, 0.0, 1.0, 0.0, 1.0]`,hidden:!0},{id:`4`,description:`Values for a larger table`,input:`(lambda: (
             PE := positional_encoding(20, 8),
             bool(abs(PE[7, 2].item() - 0.6442177) < 1e-5 and abs(PE[19, 5].item() - 0.9820042) < 1e-5)
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`position = torch.arange(max_len).float().unsqueeze(1)`,`div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))`,`PE[:, 0::2] = torch.sin(position * div_term); PE[:, 1::2] = torch.cos(position * div_term)`]},"layer-norm":{note:`Implement with mean and var(unbiased=False) over the last dim. Don't use F.layer_norm or nn.LayerNorm; a hidden test compares against F.layer_norm.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Each column pair (2i, 2i+1) shares one frequency; the table is sin/cos of an outer product of positions and frequencies.`,`position = torch.arange(max_len).float().unsqueeze(1) (max_len, 1); div_term has shape (d_model/2,).`,`div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)); PE[:, 0::2] = torch.sin(position * div_term); PE[:, 1::2] = torch.cos(position * div_term).`,`Call .float() on the aranges: integer tensors times a float tensor work, but integer division or exponent tricks silently truncate.`]},"layer-norm":{note:`Implement with mean and var(unbiased=False) over the last dim. Don't use F.layer_norm or nn.LayerNorm; a hidden test compares against F.layer_norm.`,starterCode:`import torch
 
 def layer_norm(X, gamma, beta, eps=1e-5):
     """
@@ -8380,7 +8270,7 @@ def layer_norm(X, gamma, beta, eps=1e-5):
 `,testCases:[{id:`1`,description:`Output mean near zero`,input:`bool(torch.allclose(layer_norm(torch.tensor([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), torch.ones(4), torch.zeros(4)).mean(dim=-1), torch.zeros(2), atol=1e-5))`,expected:`True`,hidden:!1},{id:`2`,description:`Gamma and beta work`,input:`bool(torch.allclose(layer_norm(torch.tensor([[0.0, 0.0, 2.0, 2.0]]), torch.tensor([1.0, 2.0, 1.0, 2.0]), torch.tensor([0.5, 0.0, 0.0, 0.0])), torch.tensor([[-0.5, -2.0, 1.0, 2.0]]), atol=1e-4))`,expected:`True`,hidden:!1},{id:`3`,description:`Uses the biased variance (unit variance output)`,input:`round(layer_norm(torch.tensor([[1.0, 2.0, 3.0, 4.0]]), torch.ones(4), torch.zeros(4)).var(unbiased=False).item(), 3)`,expected:`1.0`,hidden:!0},{id:`4`,description:`Matches F.layer_norm on a 3-D input`,input:`(lambda: (
             X := torch.randn(2, 5, 8) * 2 + 1, g := torch.randn(8), b := torch.randn(8),
             bool(torch.allclose(layer_norm(X, g, b), torch.nn.functional.layer_norm(X, (8,), g, b, eps=1e-5), atol=1e-5))
-        )[-1])()`,expected:`True`,hidden:!0}],hints:[`X.mean(dim=-1, keepdim=True) and X.var(dim=-1, keepdim=True, unbiased=False)`,`keepdim=True keeps the shapes broadcastable`,`Normalize, then gamma * X_norm + beta`]},"causal-mask":{note:`Use torch.triu / torch.full (or masked_fill). The mask is additive: 0 where attention is allowed, -inf above the diagonal.`,starterCode:`import torch
+        )[-1])()`,expected:`True`,hidden:!0}],hints:[`Each position is normalized on its own, over the feature (last) dimension.`,`Mean and variance over dim=-1 with keepdim=True, normalize, then gamma * x_hat + beta.`,`X.mean(dim=-1, keepdim=True) and X.var(dim=-1, keepdim=True, unbiased=False); torch.sqrt(var + eps).`,`Tensor.var defaults to the unbiased (N-1) estimator; LayerNorm uses the biased one, so pass unbiased=False.`]},"causal-mask":{note:`Use torch.triu / torch.full (or masked_fill). The mask is additive: 0 where attention is allowed, -inf above the diagonal.`,starterCode:`import torch
 
 def create_causal_mask(seq_len):
     """
@@ -8400,7 +8290,7 @@ def create_causal_mask(seq_len):
 def create_causal_mask(seq_len):
     # -inf strictly above the diagonal, 0 on and below it
     return torch.triu(torch.full((seq_len, seq_len), float('-inf')), diagonal=1)
-`,testCases:[{id:`1`,description:`Correct shape`,input:`create_causal_mask(4).shape`,expected:`(4, 4)`,hidden:!1},{id:`2`,description:`Upper triangle is -inf`,input:`torch.isinf(create_causal_mask(3)).tolist()`,expected:`[[False, True, True], [False, False, True], [False, False, False]]`,hidden:!1},{id:`3`,description:`Lower triangle (incl. diagonal) is 0, upper is -inf`,input:`bool(torch.allclose(create_causal_mask(3), torch.tensor([[0.0, float("-inf"), float("-inf")], [0.0, 0.0, float("-inf")], [0.0, 0.0, 0.0]])))`,expected:`True`,hidden:!0},{id:`4`,description:`After softmax, row 1 attends equally to positions 0 and 1 only`,input:`torch.softmax(create_causal_mask(4), dim=-1)[1].tolist()`,expected:`[0.5, 0.5, 0.0, 0.0]`,hidden:!0}],hints:[`torch.full((n, n), float('-inf')) fills a matrix with -inf`,`torch.triu(x, diagonal=1) keeps only the part strictly above the diagonal (the rest becomes 0)`,`Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float("-inf"))`]},"bpe-tokenization":{note:`Tokenizer training is string processing: no tensors are involved, so this track is plain Python.`,starterCode:`from collections import Counter
+`,testCases:[{id:`1`,description:`Correct shape`,input:`create_causal_mask(4).shape`,expected:`(4, 4)`,hidden:!1},{id:`2`,description:`Upper triangle is -inf`,input:`torch.isinf(create_causal_mask(3)).tolist()`,expected:`[[False, True, True], [False, False, True], [False, False, False]]`,hidden:!1},{id:`3`,description:`Lower triangle (incl. diagonal) is 0, upper is -inf`,input:`bool(torch.allclose(create_causal_mask(3), torch.tensor([[0.0, float("-inf"), float("-inf")], [0.0, 0.0, float("-inf")], [0.0, 0.0, 0.0]])))`,expected:`True`,hidden:!0},{id:`4`,description:`After softmax, row 1 attends equally to positions 0 and 1 only`,input:`torch.softmax(create_causal_mask(4), dim=-1)[1].tolist()`,expected:`[0.5, 0.5, 0.0, 0.0]`,hidden:!0}],hints:[`Query i may see keys j <= i: everything strictly above the diagonal is forbidden.`,`Start from a matrix filled with -inf and keep only its strict upper triangle; the rest becomes 0.`,`torch.triu(torch.full((n, n), float('-inf')), diagonal=1). Alternative: torch.zeros(n, n).masked_fill(torch.ones(n, n).triu(1).bool(), float('-inf')).`,`Use diagonal=1, not 0: masking the diagonal hides each token from itself and makes row 0 all -inf (NaN after softmax).`]},"bpe-tokenization":{note:`Tokenizer training is string processing: no tensors are involved, so this track is plain Python.`,starterCode:`from collections import Counter
 
 def bpe_train(word_freqs, num_merges):
     """
@@ -8412,7 +8302,8 @@ def bpe_train(word_freqs, num_merges):
         num_merges: Number of merge operations to perform
 
     Returns:
-        merges: List of (token_a, token_b) tuples merged, in order
+        merges: List of (token_a, token_b) tuples, in the order merged
+                (ties: the pair seen first, scanning words in dict order)
     """
     # Your code here
     pass
@@ -8451,19 +8342,19 @@ def bpe_train(word_freqs, num_merges):
             splits[word] = new_tokens
 
     return merges
-`,testCases:[{id:`1`,description:`First merge is the most frequent pair`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[0]`,expected:`('u', 'g')`,hidden:!1},{id:`2`,description:`Number of merges`,input:`len(bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3))`,expected:`3`,hidden:!1},{id:`3`,description:`Second merge uses the merged token`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[1]`,expected:`('ug', '</w>')`,hidden:!0},{id:`4`,description:`Different corpus`,input:`bpe_train({"a b c </w>": 10, "a b </w>": 7, "b c </w>": 3}, 2)[0]`,expected:`('a', 'b')`,hidden:!0},{id:`5`,description:`Full merge list, stopping when no pairs are left`,input:`bpe_train({"l o w </w>": 5, "l o w e r </w>": 2, "n e w </w>": 6}, 20)`,expected:`[('w', '</w>'), ('l', 'o'), ('n', 'e'), ('ne', 'w</w>'), ('lo', 'w</w>'), ('lo', 'w'), ('low', 'e'), ('lowe', 'r'), ('lower', '</w>')]`,hidden:!0}]},"rope-embeddings":{note:`Implement the rotation with tensor ops (slicing, torch.stack). Complex-number tricks such as torch.view_as_complex aren't supported in the browser.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`First merge is the most frequent pair`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[0]`,expected:`('u', 'g')`,hidden:!1},{id:`2`,description:`Number of merges`,input:`len(bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3))`,expected:`3`,hidden:!1},{id:`3`,description:`Second merge uses the merged token`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[1]`,expected:`('ug', '</w>')`,hidden:!0},{id:`4`,description:`Different corpus`,input:`bpe_train({"a b c </w>": 10, "a b </w>": 7, "b c </w>": 3}, 2)[0]`,expected:`('a', 'b')`,hidden:!0},{id:`5`,description:`Full merge list, stopping when no pairs are left`,input:`bpe_train({"l o w </w>": 5, "l o w e r </w>": 2, "n e w </w>": 6}, 20)`,expected:`[('w', '</w>'), ('l', 'o'), ('n', 'e'), ('ne', 'w</w>'), ('lo', 'w</w>'), ('lo', 'w'), ('low', 'e'), ('lowe', 'r'), ('lower', '</w>')]`,hidden:!0}],hints:[`Keep the current token list of every word and recount pair frequencies from scratch after each merge.`,`Each iteration: count weighted adjacent pairs, pick the best, record it, rewrite every word with the pair merged.`,`for a, b in zip(tokens, tokens[1:]): counts[(a, b)] += freq; best = max(counts, key=counts.get) (first seen wins ties).`,`Merge left to right and skip ahead by 2 after a merge; stop early when the counter is empty.`]},"rope-embeddings":{note:`Implement the rotation with tensor ops (slicing, torch.stack). Complex-number tricks such as torch.view_as_complex aren't supported in the browser.`,starterCode:`import torch
 
 def apply_rope(Q, K):
     """
-    Apply Rotary Positional Embeddings to Q and K.
+    Apply Rotary Positional Embeddings to Q and K (interleaved pairs).
 
     Args:
         Q: Queries, tensor (seq_len, d_model) where d_model is even
         K: Keys, tensor (seq_len, d_model)
 
     Returns:
-        Q_rot: Rotated queries (seq_len, d_model)
-        K_rot: Rotated keys (seq_len, d_model)
+        (Q_rot, K_rot): pair (2i, 2i+1) of row pos rotated by pos * theta_i,
+                        theta_i = 1 / 10000^(2i / d_model)
     """
     # Your code here
     pass
@@ -8500,13 +8391,13 @@ def apply_rope(Q, K):
     k := torch.from_numpy(np.random.randn(1, 8)).float().repeat(6, 1),
     out := apply_rope(q, k),
     bool(torch.allclose((out[0][4] * out[1][1]).sum(), (out[0][5] * out[1][2]).sum(), atol=1e-4))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d); angles = positions[:, None] * theta`,`Split the pairs with x[:, 0::2] and x[:, 1::2]`,`Rotate: (even*cos - odd*sin, even*sin + odd*cos), then torch.stack(..., dim=-1).flatten(1) to interleave`]},"grouped-query-attention":{note:`Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention (or its enable_gqa flag) or nn.MultiheadAttention.`,starterCode:`import math
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Each row is d/2 two-dimensional points; point i of row pos is rotated by pos * theta_i.`,`Build angles (seq_len, d/2) = positions.unsqueeze(1) * theta, then rotate every (even, odd) pair at once.`,`theta = 1.0 / torch.pow(10000.0, torch.arange(0, d, 2).float() / d); rotated pairs = (even*cos - odd*sin, even*sin + odd*cos); torch.stack(..., dim=-1).flatten(1) interleaves them back.`,`Don't write the even half in place and then read it for the odd half; build a new tensor. Use the interleaved layout, not rotate_half.`]},"grouped-query-attention":{note:`Implement the attention with tensor ops. Don't use F.scaled_dot_product_attention (or its enable_gqa flag) or nn.MultiheadAttention.`,starterCode:`import math
 import torch
 import torch.nn.functional as F
 
 def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
     """
-    Grouped Query Attention.
+    Grouped Query Attention (query head h uses KV head h // group_size).
 
     Args:
         Q: Queries, tensor (seq_len, num_q_heads * d_head)
@@ -8557,7 +8448,7 @@ def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
     v := V.reshape(5, 2, 4).transpose(0, 1).repeat_interleave(3, dim=0),
     ref := torch.nn.functional.scaled_dot_product_attention(q, k, v).transpose(0, 1).reshape(5, 24),
     bool(torch.allclose(grouped_query_attention(Q, K, V, 6, 2), ref, atol=1e-5))
-)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`MHA case (num_kv_heads == num_q_heads) values`,input:`[round(v, 4) for v in grouped_query_attention(torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0]]), 2, 2).flatten().tolist()]`,expected:`[1.5379, 3.0, 2.0, 3.4621]`,hidden:!0}],hints:[`Reshape Q to (seq_len, num_q_heads, d_head) and .transpose(0, 1) to put heads first; same for K, V with num_kv_heads`,`k.repeat_interleave(group_size, dim=0) gives query head h the KV head h // group_size`,`F.softmax(q @ k.transpose(-2, -1) / math.sqrt(d_head), dim=-1) @ v`,`Transpose back and reshape to (seq_len, num_q_heads * d_head)`]},"sliding-window-attention":{starterCode:`import torch
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`MHA case (num_kv_heads == num_q_heads) values`,input:`[round(v, 4) for v in grouped_query_attention(torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 2.0], [3.0, 4.0]]), 2, 2).flatten().tolist()]`,expected:`[1.5379, 3.0, 2.0, 3.4621]`,hidden:!0}],hints:[`Multi-head attention where consecutive query heads share a K/V head: query head h reads KV head h // group_size.`,`Reshape Q to (num_q_heads, seq_len, d_head) and K, V to (num_kv_heads, seq_len, d_head) with reshape + transpose(0, 1); expand K, V to one head per query head.`,`k.repeat_interleave(group_size, dim=0) does the expansion; then F.softmax(q @ k.transpose(-2, -1) / math.sqrt(d_head), dim=-1) @ v.`,`k.repeat(group_size, 1, 1) cycles the heads (wrong grouping); scale by sqrt(d_head), not the full width.`]},"sliding-window-attention":{note:`Build the mask from index comparisons (torch.arange, broadcasting, masked_fill). The result is a float mask: 0 where allowed, -inf where masked.`,starterCode:`import torch
 
 def sliding_window_mask(seq_len, window_size):
     """
@@ -8583,7 +8474,7 @@ def sliding_window_mask(seq_len, window_size):
     allowed = (cols <= rows) & (rows - cols < window_size)
 
     return torch.zeros(seq_len, seq_len).masked_fill(~allowed, float('-inf'))
-`,testCases:[{id:`1`,description:`Output shape`,input:`tuple(sliding_window_mask(6, 3).shape)`,expected:`(6, 6)`,hidden:!1},{id:`2`,description:`Outside the window is masked`,input:`bool(sliding_window_mask(4, 2)[2, 0] == float("-inf"))`,expected:`True`,hidden:!1},{id:`3`,description:`Inside the window is allowed`,input:`bool(sliding_window_mask(4, 2)[2, 1] == 0.0)`,expected:`True`,hidden:!0},{id:`4`,description:`Window larger than the sequence is a plain causal mask`,input:`bool(torch.equal(sliding_window_mask(4, 10), torch.zeros(4, 4).masked_fill(torch.triu(torch.ones(4, 4), diagonal=1).bool(), float("-inf"))))`,expected:`True`,hidden:!0},{id:`5`,description:`Window 1 allows only the diagonal`,input:`(sliding_window_mask(4, 1) == 0).int().tolist()`,expected:`[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]`,hidden:!0},{id:`6`,description:`Full pattern for seq_len=5, window=3`,input:`(sliding_window_mask(5, 3) == 0).int().tolist()`,expected:`[[1, 0, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1]]`,hidden:!0}],hints:[`rows = torch.arange(seq_len).unsqueeze(1), cols = torch.arange(seq_len).unsqueeze(0)`,`allowed = (cols <= rows) & (rows - cols < window_size)`,`torch.zeros(seq_len, seq_len).masked_fill(~allowed, float("-inf"))`]},"attention-backward":{note:`Compute the gradients by hand with tensor ops: don't call .backward() or torch.autograd in your solution (the hidden tests use autograd as the reference), and don't use F.scaled_dot_product_attention.`,starterCode:`import math
+`,testCases:[{id:`1`,description:`Output shape`,input:`tuple(sliding_window_mask(6, 3).shape)`,expected:`(6, 6)`,hidden:!1},{id:`2`,description:`Outside the window is masked`,input:`bool(sliding_window_mask(4, 2)[2, 0] == float("-inf"))`,expected:`True`,hidden:!1},{id:`3`,description:`Inside the window is allowed`,input:`bool(sliding_window_mask(4, 2)[2, 1] == 0.0)`,expected:`True`,hidden:!0},{id:`4`,description:`Window larger than the sequence is a plain causal mask`,input:`bool(torch.equal(sliding_window_mask(4, 10), torch.zeros(4, 4).masked_fill(torch.triu(torch.ones(4, 4), diagonal=1).bool(), float("-inf"))))`,expected:`True`,hidden:!0},{id:`5`,description:`Window 1 allows only the diagonal`,input:`(sliding_window_mask(4, 1) == 0).int().tolist()`,expected:`[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]`,hidden:!0},{id:`6`,description:`Full pattern for seq_len=5, window=3`,input:`(sliding_window_mask(5, 3) == 0).int().tolist()`,expected:`[[1, 0, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1]]`,hidden:!0}],hints:[`Two conditions must hold: the key is not in the future, and it is within the last window_size positions.`,`A column of row indices and a row of column indices broadcast to every (i, j) pair.`,`rows = torch.arange(n).unsqueeze(1); cols = torch.arange(n).unsqueeze(0); allowed = (cols <= rows) & (rows - cols < window_size); torch.zeros(n, n).masked_fill(~allowed, float('-inf')).`,`The window includes the token itself: rows - cols < window_size, not <=.`]},"attention-backward":{note:`Compute the gradients by hand with tensor ops: don't call .backward() or torch.autograd in your solution (the hidden tests use autograd as the reference), and don't use F.scaled_dot_product_attention.`,starterCode:`import math
 import torch
 
 def attention_forward(Q, K, V, causal=False):
@@ -8665,7 +8556,7 @@ def attention_backward(Q, K, V, dOut, causal=False):
     bool(torch.allclose(grads[0], Q.grad, atol=1e-5)
          and torch.allclose(grads[1], K.grad, atol=1e-5)
          and torch.allclose(grads[2], V.grad, atol=1e-5))
-)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Causal: the first query only sees the first key`,input:`(lambda: (Q := torch.from_numpy(np.random.randn(4, 4)).float(), V := torch.from_numpy(np.random.randn(4, 3)).float(), bool(torch.allclose(attention_forward(Q, torch.from_numpy(np.random.randn(4, 4)).float(), V, causal=True)[0], V[0], atol=1e-6)))[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`Exact gradient values`,input:`(lambda: (Q := torch.from_numpy(np.random.randn(2, 4)).float(), K := torch.from_numpy(np.random.randn(3, 4)).float(), V := torch.from_numpy(np.random.randn(3, 2)).float(), G := torch.from_numpy(np.random.randn(2, 2)).float(), [[[round(v, 3) for v in row] for row in g.tolist()] for g in attention_backward(Q, K, V, G)])[-1])()`,expected:`[[[0.073, -0.027, 0.014, -0.101], [0.287, -0.113, 0.018, -0.422]], [[-0.389, 0.124, -0.203, -0.111], [-0.059, 0.072, -0.027, 0.079], [0.447, -0.196, 0.23, 0.032]], [[0.151, 0.027], [0.43, 0.333], [0.998, 0.921]]]`,hidden:!0},{id:`8`,description:`Large scores stay finite (stable softmax)`,input:`bool(all(not (torch.isnan(g).any().item() or torch.isinf(g).any().item()) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float())))`,expected:`True`,hidden:!0}]},"longest-match-tokenizer":{note:`Tokenization is string processing: no tensors are involved, so this track is plain Python with the same function as the NumPy track.`,starterCode:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Causal: the first query only sees the first key`,input:`(lambda: (Q := torch.from_numpy(np.random.randn(4, 4)).float(), V := torch.from_numpy(np.random.randn(4, 3)).float(), bool(torch.allclose(attention_forward(Q, torch.from_numpy(np.random.randn(4, 4)).float(), V, causal=True)[0], V[0], atol=1e-6)))[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`Exact gradient values`,input:`(lambda: (Q := torch.from_numpy(np.random.randn(2, 4)).float(), K := torch.from_numpy(np.random.randn(3, 4)).float(), V := torch.from_numpy(np.random.randn(3, 2)).float(), G := torch.from_numpy(np.random.randn(2, 2)).float(), [[[round(v, 3) for v in row] for row in g.tolist()] for g in attention_backward(Q, K, V, G)])[-1])()`,expected:`[[[0.073, -0.027, 0.014, -0.101], [0.287, -0.113, 0.018, -0.422]], [[-0.389, 0.124, -0.203, -0.111], [-0.059, 0.072, -0.027, 0.079], [0.447, -0.196, 0.23, 0.032]], [[0.151, 0.027], [0.43, 0.333], [0.998, 0.921]]]`,hidden:!0},{id:`8`,description:`Large scores stay finite (stable softmax)`,input:`bool(all(not (torch.isnan(g).any().item() or torch.isinf(g).any().item()) for g in attention_backward(torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 4)).float() * 100, torch.from_numpy(np.random.randn(3, 2)).float(), torch.from_numpy(np.random.randn(3, 2)).float())))`,expected:`True`,hidden:!0}],hints:[`Every gradient is written in terms of P, so share a helper that computes P (with the optional mask) between forward and backward.`,`Go backwards: Out = P @ V gives dV and dP; P = softmax(S) gives dS; S = Q @ K.T / sqrt(d) gives dQ and dK.`,`dS = P * (dP - (dP * P).sum(dim=-1, keepdim=True)); dQ = dS @ K / math.sqrt(d); dK = dS.T @ Q / math.sqrt(d).`,`Mask with masked_fill(torch.triu(torch.ones(n, m), diagonal=1).bool(), float('-inf')) before the softmax; masked entries then get P = 0 and need no special case in the backward.`]},"longest-match-tokenizer":{note:`Tokenization is string processing: no tensors are involved, so this track is plain Python with the same function as the NumPy track.`,starterCode:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
     """
     Greedy longest-match (maximal munch) tokenization.
 
@@ -8717,7 +8608,7 @@ def attention_backward(Q, K, V, dOut, causal=False):
                 break
         ids.extend(pieces)
     return ids
-`,testCases:[{id:`1`,description:`Longest match wins`,input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[4, 3]`,hidden:!1},{id:`2`,description:`Unknown character falls back to [UNK]`,input:`tokenize("abxc", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[3, 0, 5]`,hidden:!1},{id:`3`,description:`Spaces are ordinary characters`,input:`tokenize("the cab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[8, 7, 5, 3]`,hidden:!1},{id:`4`,description:`Greedy, not globally optimal`,input:`tokenize("abcd", {'[UNK]': 0, 'ab': 1, 'abc': 2, 'cd': 3, 'd': 4, 'a': 5, 'b': 6, 'c': 7})`,expected:`[2, 4]`,hidden:!0},{id:`5`,description:`One [UNK] per unknown character`,input:`tokenize("xyz", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[0, 0, 0]`,hidden:!0},{id:`6`,description:`Empty string`,input:`tokenize("", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[]`,hidden:!0},{id:`7`,description:`Custom unknown token`,input:`tokenize("aXa", {'<unk>': 5, 'a': 1}, unk_token='<unk>')`,expected:`[1, 5, 1]`,hidden:!0},{id:`8`,description:`WordPiece with ## continuations`,input:`tokenize("unaffable playing plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[1, 2, 3, 4, 5, 4, 6]`,hidden:!0},{id:`9`,description:`WordPiece: an unmatched word becomes a single [UNK]`,input:`tokenize("playx un aaa", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[0, 1, 9, 10, 10]`,hidden:!0},{id:`10`,description:`WordPiece ignores extra whitespace`,input:`tokenize("  play   un  ", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[4, 1]`,hidden:!0}]}},w={"kmeans-clustering":{note:`Practise the broadcasting pattern (unsqueeze, then reduce over the feature dim); torch.cdist would hide it. Return the int64 result of argmin.`,starterCode:`import torch
+`,testCases:[{id:`1`,description:`Longest match wins`,input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[4, 3]`,hidden:!1},{id:`2`,description:`Unknown character falls back to [UNK]`,input:`tokenize("abxc", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[3, 0, 5]`,hidden:!1},{id:`3`,description:`Spaces are ordinary characters`,input:`tokenize("the cab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[8, 7, 5, 3]`,hidden:!1},{id:`4`,description:`Greedy, not globally optimal`,input:`tokenize("abcd", {'[UNK]': 0, 'ab': 1, 'abc': 2, 'cd': 3, 'd': 4, 'a': 5, 'b': 6, 'c': 7})`,expected:`[2, 4]`,hidden:!0},{id:`5`,description:`One [UNK] per unknown character`,input:`tokenize("xyz", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[0, 0, 0]`,hidden:!0},{id:`6`,description:`Empty string`,input:`tokenize("", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[]`,hidden:!0},{id:`7`,description:`Custom unknown token`,input:`tokenize("aXa", {'<unk>': 5, 'a': 1}, unk_token='<unk>')`,expected:`[1, 5, 1]`,hidden:!0},{id:`8`,description:`WordPiece with ## continuations`,input:`tokenize("unaffable playing plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[1, 2, 3, 4, 5, 4, 6]`,hidden:!0},{id:`9`,description:`WordPiece: an unmatched word becomes a single [UNK]`,input:`tokenize("playx un aaa", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[0, 1, 9, 10, 10]`,hidden:!0},{id:`10`,description:`WordPiece ignores extra whitespace`,input:`tokenize("  play   un  ", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[4, 1]`,hidden:!0}],hints:[`At each position try candidate lengths from the longest token length down to 1; the first hit is the longest match.`,`Default mode is a while loop over a position i; WordPiece mode runs the same loop on each word of text.split() with a different lookup key.`,`for ... else: the else branch runs when nothing matched. In WordPiece mode the key is word[i:end] for the first piece and '##' + word[i:end] afterwards.`,`Default mode: one [UNK] per unknown character. WordPiece mode: an unmatched word becomes a single [UNK], dropping its partial pieces.`]}},w={"kmeans-clustering":{note:`Practise the broadcasting pattern (unsqueeze, then reduce over the feature dim); torch.cdist would hide it. Return the int64 result of argmin.`,starterCode:`import torch
 
 def assign_clusters(X: torch.Tensor, centroids: torch.Tensor) -> torch.Tensor:
     """
@@ -9336,121 +9227,73 @@ def fit_transform_train_test(X_train, X_test, strategy='median'):
     }
 
 # Time O((n_train + n_test) * d) plus the median sorts, space O((n_train + n_test) * d).
-`}],O=[{id:`logistic-regression`,title:`Sigmoid Function`,section:`supervised-learning`,difficulty:`easy`,description:`
-## Sigmoid Function
-
-Implement the sigmoid activation function used in logistic regression.
-
-### Formula
-\`\`\`
-sigmoid(x) = 1 / (1 + exp(-x))
-\`\`\`
-
-### Properties
-- Output is always between 0 and 1
-- sigmoid(0) = 0.5
-- Monotonically increasing
-
-### Function Signature
-\`\`\`python
-def sigmoid(x: np.ndarray) -> np.ndarray:
-\`\`\`
-    `,examples:[{input:`np.array([0, 1, -1])`,output:`[0.5, 0.731059, 0.268941]`,explanation:`sigmoid(0)=0.5, sigmoid(1)≈0.73, sigmoid(-1)≈0.27`}],starterCode:`import numpy as np
+`}],O=[{id:`logistic-regression`,title:`Sigmoid for Logistic Regression`,section:`supervised-learning`,difficulty:`easy`,description:"\n## Sigmoid for Logistic Regression\n\nImplement the **sigmoid** (logistic) function, the piece that turns a linear score into a probability in logistic regression.\n\n### Background\nLogistic regression computes a real-valued score `z = x · w + b` (the *logit*) and squashes it into `(0, 1)` with the sigmoid, so the output can be read as `P(y = 1 | x)`. The sigmoid is also the inverse of the log-odds: if `p = sigmoid(z)` then `z = log(p / (1 - p))`. You will reuse it in **Logistic Regression with Gradient Descent** later in this section.\n\n### Formula\n```text\nsigmoid(z) = 1 / (1 + exp(-z))\n```\nUseful properties:\n- `sigmoid(0) = 0.5`, and the output is strictly between 0 and 1 for finite `z`\n- Symmetry: `sigmoid(-z) = 1 - sigmoid(z)`\n- Derivative: `sigmoid'(z) = sigmoid(z) * (1 - sigmoid(z))` (at most 0.25, at `z = 0`)\n\n### Inputs\n- `x`: a NumPy array of any shape (ints or floats)\n\n### Expected Return Format\nA float NumPy array with the **same shape** as `x`, with the sigmoid applied element-wise.\n\n### Edge Cases and Conventions\n- For very negative inputs, `exp(-z)` overflows to `inf` (NumPy warns, and the result is still 0). A **numerically stable** version uses `1 / (1 + exp(-z))` for `z >= 0` and the equivalent `exp(z) / (1 + exp(z))` for `z < 0`, so `exp` only ever sees non-positive numbers.\n- Tests compare with a tolerance of about `1e-5`.\n\n### Constraints\n- NumPy only, vectorised (no Python loop over elements).\n\n### Follow-up\n- Why is `sigmoid(z)` used for binary classification while softmax is used for `K > 2` classes? Show that a 2-class softmax reduces to a sigmoid of the logit difference.\n    ",examples:[{input:`sigmoid(np.array([0, 1, -1]))`,output:`array([0.5, 0.731059, 0.268941])`,explanation:`sigmoid(0) = 0.5, and sigmoid(-1) = 1 - sigmoid(1) by symmetry.`},{input:`sigmoid(np.array([[2.0, -3.0]]))`,output:`array([[0.880797, 0.047426]])`,explanation:`The shape (1, 2) is preserved; large |z| pushes the output towards 0 or 1.`}],starterCode:`import numpy as np
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
     """
-    Compute the sigmoid activation function.
+    Compute the sigmoid activation function element-wise.
 
     Args:
         x: Input array of any shape
 
     Returns:
-        Array of same shape with sigmoid applied element-wise
+        Float array of the same shape, with 1 / (1 + exp(-x)) applied element-wise
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Zero input`,input:`[0]`,expected:`[0.5]`,hidden:!1},{id:`2`,description:`Positive and negative`,input:`bool(np.allclose(sigmoid(np.array([-1, 0, 1])), [0.268941, 0.5, 0.731059], atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values`,input:`bool(np.allclose(sigmoid(np.array([-10, 10])), [4.5e-05, 0.999955], atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Symmetry property`,input:`bool(np.allclose(sigmoid(np.array([2.0])) + sigmoid(np.array([-2.0])), [1.0]))`,expected:`True`,hidden:!0}],hints:[`Use np.exp() for the exponential function.`,`The formula is 1 / (1 + exp(-x))`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Zero input`,input:`[0]`,expected:`[0.5]`,hidden:!1},{id:`2`,description:`Positive and negative`,input:`bool(np.allclose(sigmoid(np.array([-1, 0, 1])), [0.268941, 0.5, 0.731059], atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Large values`,input:`bool(np.allclose(sigmoid(np.array([-10, 10])), [4.5e-05, 0.999955], atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Symmetry property`,input:`bool(np.allclose(sigmoid(np.array([2.0])) + sigmoid(np.array([-2.0])), [1.0]))`,expected:`True`,hidden:!0},{id:`5`,description:`2D input keeps its shape and values`,input:`np.round(sigmoid(np.array([[2.0, -3.0], [0.5, 0.0]])), 6).tolist()`,expected:`[[0.880797, 0.047426], [0.622459, 0.5]]`,hidden:!0},{id:`6`,description:`Extreme inputs saturate to 0 and 1 (no nan)`,input:`sigmoid(np.array([-1000.0, 1000.0])).tolist()`,expected:`[0.0, 1.0]`,hidden:!0}],hints:[`The sigmoid maps any real number to (0, 1); think about what happens at z = 0, z -> +inf and z -> -inf.`,`Apply the formula to the whole array at once: NumPy operations are element-wise and preserve the shape.`,`np.exp(-x) is the only non-trivial piece: 1 / (1 + np.exp(-x)).`,`np.exp overflows for very negative x. For a stable version, use a boolean mask: 1 / (1 + exp(-x)) where x >= 0 and exp(x) / (1 + exp(x)) elsewhere.`],solution:`import numpy as np
 
 def sigmoid(x: np.ndarray) -> np.ndarray:
     """
-    Compute the sigmoid activation function.
+    Numerically stable sigmoid, applied element-wise.
+
+    Returns:
+        Float array of the same shape as x
     """
-    return 1 / (1 + np.exp(-x))
-`},{id:`binary-cross-entropy`,title:`Binary Cross-Entropy Loss`,section:`supervised-learning`,difficulty:`easy`,description:`
-## Binary Cross-Entropy Loss
+    x = np.asarray(x, dtype=float)
+    out = np.empty_like(x)
+    pos = x >= 0
+    # For x >= 0, exp(-x) <= 1 cannot overflow
+    out[pos] = 1.0 / (1.0 + np.exp(-x[pos]))
+    # For x < 0, rewrite as exp(x) / (1 + exp(x)) so exp only sees negative numbers
+    ex = np.exp(x[~pos])
+    out[~pos] = ex / (1.0 + ex)
+    return out
 
-Implement the binary cross-entropy (log loss) function.
-
-### Formula
-\`\`\`
-BCE = -1/m * sum(y * log(p) + (1-y) * log(1-p))
-\`\`\`
-
-Where:
-- y: True labels (0 or 1)
-- p: Predicted probabilities
-- m: Number of samples
-
-### Numerical Stability
-Clip predictions to avoid log(0):
-\`\`\`python
-p = np.clip(p, 1e-15, 1 - 1e-15)
-\`\`\`
-    `,examples:[{input:`y = [1, 0, 1], p = [0.9, 0.1, 0.8]`,output:`0.1446`,explanation:`Low loss for confident correct predictions`}],starterCode:`import numpy as np
+# Time O(N), extra space O(N) for N elements
+`},{id:`binary-cross-entropy`,title:`Binary Cross-Entropy Loss`,section:`supervised-learning`,difficulty:`easy`,description:"\n## Binary Cross-Entropy Loss\n\nImplement the mean **binary cross-entropy** (log loss) between 0/1 labels and predicted probabilities.\n\n### Background\nBCE is the negative log-likelihood of Bernoulli labels, so minimising it is maximum-likelihood training of a binary classifier (logistic regression, the output head of a binary neural net). It punishes confident mistakes hard: predicting 0.01 for a true positive costs `-log(0.01) ≈ 4.6`, while 0.9 costs only 0.105.\n\n### Formula\n```text\np_i   = clip(y_pred_i, eps, 1 - eps),   eps = 1e-15\nBCE   = -(1/m) * sum_i [ y_i * log(p_i) + (1 - y_i) * log(1 - p_i) ]\n```\n- `y_i` in {0, 1}: the true label of sample `i`\n- `y_pred_i` in [0, 1]: the predicted probability that `y_i = 1`\n- `m`: the number of samples\n\n### Inputs\n- `y_true`: array of shape `(m,)` with 0/1 labels (ints or floats)\n- `y_pred`: array of shape `(m,)` with probabilities in `[0, 1]`\n\n### Expected Return Format\nA Python float: the mean loss **rounded to 4 decimals**.\n\n### Edge Cases and Conventions\n- **Clip first**: `log(0)` is `-inf`, so clip `y_pred` to `[1e-15, 1 - 1e-15]` before taking logs. With clipping, perfect predictions give a loss that rounds to `0.0`, and a prediction of exactly the wrong value costs about `34.54` instead of `inf`.\n- Average over samples (mean, not sum).\n\n### Constraints\n- NumPy only, vectorised.\n\n### Follow-up\n- When you have logits `z` rather than probabilities, why is `max(z, 0) - z*y + log(1 + exp(-|z|))` preferred over `BCE(y, sigmoid(z))`?\n    ",examples:[{input:`binary_cross_entropy([1, 0, 1], [0.9, 0.1, 0.8])`,output:`0.1446`,explanation:`Per-sample losses are -log(0.9), -log(0.9), -log(0.8) = 0.1054, 0.1054, 0.2231; their mean is 0.1446.`},{input:`binary_cross_entropy([1, 0], [0.5, 0.5])`,output:`0.6931`,explanation:`An uninformative 0.5 prediction costs log(2) per sample.`}],starterCode:`import numpy as np
 
 def binary_cross_entropy(y_true, y_pred):
     """
-    Compute binary cross-entropy loss.
+    Compute the mean binary cross-entropy loss.
 
     Args:
-        y_true: True labels (0 or 1)
-        y_pred: Predicted probabilities
+        y_true: True labels (0 or 1), shape (m,)
+        y_pred: Predicted probabilities in [0, 1], shape (m,)
 
     Returns:
-        loss: Scalar BCE loss
+        loss: Mean BCE as a Python float, rounded to 4 decimals
+              (clip y_pred to [1e-15, 1 - 1e-15] before the logs)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Perfect predictions`,input:`([1, 0, 1, 0], [1.0, 0.0, 1.0, 0.0])`,expected:`0.0`,hidden:!1},{id:`2`,description:`Typical case`,input:`([1, 0, 1], [0.9, 0.1, 0.8])`,expected:`0.1446`,hidden:!1},{id:`3`,description:`All wrong predictions`,input:`([1, 1, 0], [0.1, 0.1, 0.9])`,expected:`2.3026`,hidden:!0},{id:`4`,description:`Uniform predictions (0.5)`,input:`([1, 0], [0.5, 0.5])`,expected:`0.6931`,hidden:!0}],hints:[`Clip predictions for numerical stability`,`Apply the formula element-wise`,`Take the mean over all samples`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Perfect predictions`,input:`([1, 0, 1, 0], [1.0, 0.0, 1.0, 0.0])`,expected:`0.0`,hidden:!1},{id:`2`,description:`Typical case`,input:`([1, 0, 1], [0.9, 0.1, 0.8])`,expected:`0.1446`,hidden:!1},{id:`3`,description:`All wrong predictions`,input:`([1, 1, 0], [0.1, 0.1, 0.9])`,expected:`2.3026`,hidden:!0},{id:`4`,description:`Uniform predictions (0.5)`,input:`([1, 0], [0.5, 0.5])`,expected:`0.6931`,hidden:!0},{id:`5`,description:`Mixed confidence`,input:`([1, 1, 0, 0], [0.7, 0.5, 0.2, 0.4])`,expected:`0.4459`,hidden:!0},{id:`6`,description:`Clipping keeps a certain-but-wrong prediction finite`,input:`([1, 0], [0.0, 1.0])`,expected:`34.5392`,hidden:!0}],hints:[`Each sample contributes -log of the probability the model gave to the true class: -log(p) if y = 1, -log(1 - p) if y = 0.`,`Convert both inputs to float arrays, clip the predictions, compute the per-sample terms, then average.`,`np.clip(y_pred, 1e-15, 1 - 1e-15), then -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)).`,`Forgetting to clip turns a 0 or 1 prediction into log(0) = -inf (and 0 * -inf = nan). Remember to round the final mean to 4 decimals.`],solution:`import numpy as np
 
 def binary_cross_entropy(y_true, y_pred):
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+    """
+    Mean binary cross-entropy, rounded to 4 decimals.
+    """
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
 
-    # Clip for numerical stability
-    y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
+    # Clip so log never sees exactly 0
+    p = np.clip(y_pred, 1e-15, 1 - 1e-15)
 
-    # BCE formula
-    loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+    loss = -np.mean(y_true * np.log(p) + (1 - y_true) * np.log(1 - p))
+    return round(float(loss), 4)
 
-    return round(loss, 4)
-`},{id:`hinge-loss`,title:`Hinge Loss`,section:`supervised-learning`,difficulty:`easy`,description:`
-## Hinge Loss
-
-Implement the hinge loss function used in Support Vector Machines (SVMs).
-
-### Formula
-\`\`\`
-L = (1/n) * sum(max(0, 1 - y * s))
-\`\`\`
-
-Where:
-- **y**: True labels in {-1, +1}
-- **s**: Raw model scores (not probabilities)
-- **n**: Number of samples
-
-### Properties
-- Loss is **0** when the prediction has the correct sign AND confidence margin >= 1
-- Loss increases linearly when the prediction is wrong or within the margin
-- Unlike cross-entropy, hinge loss encourages a "margin" of separation between classes
-
-### Function Signature
-\`\`\`python
-def hinge_loss(y_true: np.ndarray, scores: np.ndarray) -> float:
-\`\`\`
-
-Returns the mean hinge loss rounded to 4 decimal places.
-    `,examples:[{input:`y_true = [1, -1, 1], scores = [0.5, -0.8, 1.5]`,output:`0.2333`,explanation:`Margins: [0.5, 0.2, -0.5] → losses: [0.5, 0.2, 0.0] → mean = 0.2333`},{input:`y_true = [1, -1], scores = [2.0, -3.0]`,output:`0.0`,explanation:`Both predictions correct with margin >= 1, so zero loss`}],starterCode:`import numpy as np
+# Time O(m), space O(m)
+`},{id:`hinge-loss`,title:`Hinge Loss`,section:`supervised-learning`,difficulty:`easy`,description:"\n## Hinge Loss\n\nImplement the mean **hinge loss**, the loss behind Support Vector Machines (SVMs).\n\n### Background\nA linear SVM scores a sample with `s = x · w + b` and predicts `sign(s)`. The hinge loss asks for more than the right sign: it wants a **margin** `y * s >= 1`. Samples beyond the margin cost nothing (that is why only the *support vectors* near the boundary shape the solution); samples inside the margin or on the wrong side pay linearly. You will minimise this loss in **Linear SVM with Subgradient Descent**.\n\n### Formula\n```text\nL = (1/n) * sum_i max(0, 1 - y_i * s_i)\n```\n- `y_i` in {-1, +1}: the true label (note: **not** 0/1)\n- `s_i`: the raw score (a real number, not a probability)\n- `y_i * s_i`: the functional margin; positive means correctly classified\n- `n`: the number of samples\n\n### Inputs\n- `y_true`: array of shape `(n,)` with values in {-1, +1}\n- `scores`: float array of shape `(n,)`\n\n### Expected Return Format\nA Python float: the mean hinge loss **rounded to 4 decimals**.\n\n### Edge Cases and Conventions\n- A margin of **exactly 1** costs 0 (`max(0, 0) = 0`).\n- A correct but unconfident prediction (`0 < y*s < 1`) still has a positive loss.\n\n### Constraints\n- NumPy only, vectorised.\n\n### Follow-up\n- Compare the hinge loss with the logistic loss `log(1 + exp(-y*s))` as functions of the margin. Which one ever reaches exactly 0, and what does that imply for sparsity of the solution?\n    ",examples:[{input:`hinge_loss([1, -1, 1], [0.5, -0.8, 1.5])`,output:`0.2333`,explanation:`Margins [0.5, 0.8, 1.5] give losses [0.5, 0.2, 0.0]; the mean is 0.7 / 3 = 0.2333.`},{input:`hinge_loss([1, -1], [2.0, -3.0])`,output:`0.0`,explanation:`Both margins (2 and 3) are at least 1, so both losses are 0.`}],starterCode:`import numpy as np
 
 def hinge_loss(y_true, scores):
     """
@@ -9461,117 +9304,71 @@ def hinge_loss(y_true, scores):
         scores: Raw model scores, shape (n,)
 
     Returns:
-        Mean hinge loss (float, rounded to 4 decimals)
+        Mean hinge loss as a Python float, rounded to 4 decimals
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Perfect predictions with large margin`,input:`([1, -1], [2.0, -3.0])`,expected:`0.0`,hidden:!1},{id:`2`,description:`Partial margin violations`,input:`([1, -1, 1], [0.5, -0.8, 1.5])`,expected:`0.2333`,hidden:!1},{id:`3`,description:`All misclassified`,input:`([1, 1], [-1.0, -2.0])`,expected:`2.5`,hidden:!1},{id:`4`,description:`On the decision boundary (margin = 1)`,input:`([1, -1], [1.0, -1.0])`,expected:`0.0`,hidden:!0}],hints:[`Compute element-wise margins: y_true * scores`,`Apply max(0, 1 - margin) using np.maximum`,`Return the mean of the losses, rounded to 4 decimals`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Perfect predictions with large margin`,input:`([1, -1], [2.0, -3.0])`,expected:`0.0`,hidden:!1},{id:`2`,description:`Partial margin violations`,input:`([1, -1, 1], [0.5, -0.8, 1.5])`,expected:`0.2333`,hidden:!1},{id:`3`,description:`All misclassified`,input:`([1, 1], [-1.0, -2.0])`,expected:`2.5`,hidden:!1},{id:`4`,description:`On the decision boundary (margin = 1)`,input:`([1, -1], [1.0, -1.0])`,expected:`0.0`,hidden:!0},{id:`5`,description:`Mix of inside-margin, wrong-side and safe samples`,input:`([1, -1, 1, -1], [0.3, 0.2, -0.5, -1.5])`,expected:`0.85`,hidden:!0}],hints:[`The loss only cares about the margin y * s: how far on the correct side of the boundary each sample is.`,`Compute all margins at once, turn each into a loss, then average.`,`np.maximum(0, 1 - y_true * scores) is the element-wise hinge; np.mean averages it.`,`Labels must be +1/-1, not 0/1 (a 0 label would make every margin 0). Use np.maximum (element-wise), not np.max (a reduction), and round to 4 decimals.`],solution:`import numpy as np
 
 def hinge_loss(y_true, scores):
     """
-    Compute the mean hinge loss.
+    Mean hinge loss, rounded to 4 decimals.
     """
-    y_true = np.array(y_true, dtype=float)
-    scores = np.array(scores, dtype=float)
+    y_true = np.asarray(y_true, dtype=float)
+    scores = np.asarray(scores, dtype=float)
 
-    # Compute hinge loss for each sample
-    losses = np.maximum(0, 1 - y_true * scores)
-
+    # max(0, 1 - margin) per sample
+    losses = np.maximum(0.0, 1.0 - y_true * scores)
     return round(float(np.mean(losses)), 4)
-`},{id:`decision-tree-split`,title:`Gini Impurity`,section:`supervised-learning`,difficulty:`medium`,description:`
-## Gini Impurity
 
-Calculate the Gini impurity for a set of labels. This metric is used in decision trees to determine the best split.
-
-### Formula
-\`\`\`
-Gini = 1 - sum(p_i^2)
-\`\`\`
-
-Where p_i is the proportion of class i in the set.
-
-### Properties
-- Gini = 0 means pure (all same class)
-- Gini = 0.5 means maximum impurity (for binary classification with equal split)
-
-### Function Signature
-\`\`\`python
-def gini_impurity(labels: np.ndarray) -> float:
-\`\`\`
-    `,examples:[{input:`np.array([0, 0, 0, 0])`,output:`0.0`,explanation:`All same class, pure node`},{input:`np.array([0, 0, 1, 1])`,output:`0.5`,explanation:`Equal split, maximum impurity for binary`}],starterCode:`import numpy as np
+# Time O(n), space O(n)
+`},{id:`decision-tree-split`,title:`Gini Impurity for Decision-Tree Splits`,section:`supervised-learning`,difficulty:`medium`,description:'\n## Gini Impurity for Decision-Tree Splits\n\nCompute the **Gini impurity** of a set of class labels, the score a classification tree uses to judge how "mixed" a node is.\n\n### Background\nA decision tree grows by picking, at each node, the split that makes the children as pure as possible. Gini impurity is the probability that two labels drawn at random (with replacement) from the node disagree. It is the default criterion of scikit-learn\'s `DecisionTreeClassifier`, and you will use it to grow full trees in **Decision Tree Classifier with Bagging**.\n\n### Formula\n```text\nGini(S) = 1 - sum_c p_c^2,     p_c = (number of labels equal to c) / |S|\n```\nThe sum runs over the classes that appear in `S`. For a split into `L` and `R`, a tree scores the weighted average `(|L| * Gini(L) + |R| * Gini(R)) / |S|` and picks the split with the lowest value.\n\n| Labels | Proportions | Gini |\n|--------|-------------|------|\n| `[0, 0, 0, 0]` | 1.0 | 0.0 (pure) |\n| `[0, 0, 0, 1]` | 0.75, 0.25 | 0.375 |\n| `[0, 0, 1, 1]` | 0.5, 0.5 | 0.5 (max for 2 classes) |\n| `[0, 1, 2]` | 1/3 each | 0.6667 |\n\nWith `K` classes the maximum is `1 - 1/K`, so Gini is always in `[0, 1)`.\n\n### Inputs\n- `labels`: 1D array of class labels (non-negative integers), shape `(n,)`. Labels need not be contiguous (`[3, 7, 7]` is fine).\n\n### Expected Return Format\nA float (Python or NumPy scalar), not rounded.\n\n### Edge Cases and Conventions\n- An **empty** array has impurity `0.0`.\n- Only the proportions matter, not the label values themselves.\n\n### Constraints\n- NumPy only; no sklearn.\n\n### Follow-up\n- Entropy `-sum p_c log2 p_c` is the other common criterion. Why do Gini and entropy usually pick the same split, and why is Gini slightly cheaper?\n    ',examples:[{input:`gini_impurity(np.array([0, 0, 0, 0]))`,output:`0.0`,explanation:`All labels are the same class: a pure node.`},{input:`gini_impurity(np.array([0, 0, 0, 1]))`,output:`0.375`,explanation:`1 - (0.75^2 + 0.25^2) = 1 - 0.625 = 0.375.`},{input:`gini_impurity(np.array([3, 3, 7, 7, 7]))`,output:`0.48`,explanation:`Label values do not matter, only proportions: 1 - (0.4^2 + 0.6^2) = 0.48.`}],starterCode:`import numpy as np
 
 def gini_impurity(labels: np.ndarray) -> float:
     """
-    Calculate Gini impurity for a set of labels.
+    Calculate the Gini impurity of a set of labels.
 
     Args:
-        labels: Array of class labels (integers)
+        labels: 1D array of class labels (non-negative integers), shape (n,)
 
     Returns:
-        Gini impurity value between 0 and 1
+        Gini impurity 1 - sum_c p_c^2, in [0, 1) (0.0 for an empty array)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Pure node`,input:`[0, 0, 0, 0]`,expected:`0.0`,hidden:!1},{id:`2`,description:`Maximum impurity`,input:`[0, 0, 1, 1]`,expected:`0.5`,hidden:!1},{id:`3`,description:`Unequal split`,input:`[0, 0, 0, 1]`,expected:`0.375`,hidden:!0},{id:`4`,description:`Three classes equally split`,input:`round(gini_impurity(np.array([0, 1, 2])), 4)`,expected:`0.6667`,hidden:!0}],hints:[`Count the occurrences of each class.`,`Calculate the proportion (probability) of each class.`,`Gini = 1 - sum of squared probabilities.`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Pure node`,input:`[0, 0, 0, 0]`,expected:`0.0`,hidden:!1},{id:`2`,description:`Maximum impurity`,input:`[0, 0, 1, 1]`,expected:`0.5`,hidden:!1},{id:`3`,description:`Unequal split`,input:`[0, 0, 0, 1]`,expected:`0.375`,hidden:!0},{id:`4`,description:`Three classes equally split`,input:`round(gini_impurity(np.array([0, 1, 2])), 4)`,expected:`0.6667`,hidden:!0},{id:`5`,description:`Non-contiguous labels`,input:`round(gini_impurity(np.array([3, 3, 7, 7, 7])), 6)`,expected:`0.48`,hidden:!0},{id:`6`,description:`Three unbalanced classes`,input:`round(gini_impurity(np.array([0, 0, 1, 1, 1, 2])), 6)`,expected:`0.611111`,hidden:!0}],hints:[`Gini only depends on the fraction of samples in each class, not on the label values or their order.`,`Count how many times each class appears, divide by the number of samples, then combine the proportions.`,`np.unique(labels, return_counts=True) gives the counts; Gini = 1 - np.sum((counts / n) ** 2).`,`Guard against an empty array (division by zero). np.bincount also counts, but it adds zero counts for missing labels, which is harmless here.`],solution:`import numpy as np
 
 def gini_impurity(labels: np.ndarray) -> float:
     """
-    Calculate Gini impurity for a set of labels.
+    Gini impurity 1 - sum_c p_c^2 (0.0 for an empty array).
     """
-    if len(labels) == 0:
+    labels = np.asarray(labels)
+    if labels.size == 0:
         return 0.0
 
-    # Count occurrences of each class
+    # Class proportions
     _, counts = np.unique(labels, return_counts=True)
+    p = counts / labels.size
 
-    # Calculate probabilities
-    probabilities = counts / len(labels)
+    return float(1.0 - np.sum(p ** 2))
 
-    # Gini = 1 - sum(p^2)
-    return 1 - np.sum(probabilities ** 2)
-`},{id:`linear-regression-gd`,title:`Linear Regression with Gradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:`
-## Linear Regression with Gradient Descent
-
-Implement simple linear regression using gradient descent optimization.
-
-### Model
-\`\`\`
-y = w * x + b
-\`\`\`
-
-### Gradient Descent Updates
-\`\`\`
-w = w - learning_rate * dw
-b = b - learning_rate * db
-\`\`\`
-
-Where:
-- dw = (2/n) * sum((y_pred - y) * x)
-- db = (2/n) * sum(y_pred - y)
-
-### Function Signature
-\`\`\`python
-def linear_regression(X: np.ndarray, y: np.ndarray,
-                      learning_rate: float, iterations: int) -> tuple:
-\`\`\`
-
-Returns (w, b) - the learned weight and bias.
-    `,examples:[{input:`X = [1, 2, 3, 4], y = [2, 4, 6, 8], lr = 0.1, iters = 1000`,output:`w ≈ 2.0, b ≈ 0.0`,explanation:`The true relationship is y = 2x, so w should be close to 2`}],starterCode:`import numpy as np
+# Time O(n log n) for np.unique (O(n) with np.bincount), space O(K)
+`},{id:`linear-regression-gd`,title:`Linear Regression with Gradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:"\n## Linear Regression with Gradient Descent\n\nFit a one-feature linear model `y ≈ w * x + b` by running **batch gradient descent** on the mean squared error.\n\n### Background\nLinear regression has a closed-form solution, but gradient descent is how almost every other model (and every neural network) is trained. Implementing it on the simplest model shows the full loop: predict, measure the loss, compute gradients, step.\n\n### Formula\nLoss (mean squared error over the `n` samples):\n```text\nJ(w, b) = (1/n) * sum_i (y_pred_i - y_i)^2,     y_pred_i = w * x_i + b\n```\nGradients:\n```text\ndJ/dw = (2/n) * sum_i (y_pred_i - y_i) * x_i\ndJ/db = (2/n) * sum_i (y_pred_i - y_i)\n```\nAlgorithm:\n1. Start from `w = 0`, `b = 0`.\n2. Repeat `iterations` times: compute `y_pred` with the **current** `w, b`, compute both gradients, then update **both** parameters simultaneously: `w -= learning_rate * dJ/dw`, `b -= learning_rate * dJ/db`.\n3. Return the final `(w, b)`.\n\n### Inputs\n- `X`: 1D float array of inputs, shape `(n,)`\n- `y`: 1D float array of targets, shape `(n,)`\n- `learning_rate`: step size (float, e.g. 0.01 to 0.1)\n- `iterations`: number of full-batch updates (int)\n\n### Expected Return Format\nA tuple `(w, b)` with both values **rounded to 2 decimals**.\n\n### Edge Cases and Conventions\n- Use the exact update order above: the tests include a 10-iteration run, which checks the update rule itself, not just the optimum it converges to.\n- Too large a learning rate makes the iterates diverge; the tests use stable values.\n\n### Constraints\n- NumPy only; no `np.polyfit` or closed-form least squares. Vectorise each step over the samples (one Python loop over iterations is expected).\n\n### Follow-up\n- Derive the closed form `w = cov(x, y) / var(x)`, `b = mean(y) - w * mean(x)`, and explain when gradient descent is still preferable.\n- Why does standardising `x` let you use a larger learning rate?\n    ",examples:[{input:`linear_regression(np.array([1, 2, 3, 4]), np.array([2, 4, 6, 8]), 0.1, 1000)`,output:`(2.0, 0.0)`,explanation:`The data lie exactly on y = 2x, and 1000 steps are enough to converge.`},{input:`linear_regression(np.array([1, 2, 3, 4]), np.array([2, 4, 6, 8]), 0.01, 1)`,output:`(0.3, 0.1)`,explanation:`One step from (0, 0): dJ/dw = (2/4) * (-60) = -30 and dJ/db = (2/4) * (-20) = -10, so w = 0.3 and b = 0.1.`}],starterCode:`import numpy as np
 
 def linear_regression(X: np.ndarray, y: np.ndarray,
                       learning_rate: float = 0.01,
                       iterations: int = 1000) -> tuple:
     """
-    Train a simple linear regression model using gradient descent.
+    Train y = w * x + b with batch gradient descent on the MSE.
 
     Args:
-        X: Input features (1D array)
-        y: Target values (1D array)
+        X: Input features, 1D array of shape (n,)
+        y: Target values, 1D array of shape (n,)
         learning_rate: Step size for gradient descent
-        iterations: Number of training iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        Tuple of (weight, bias)
+        Tuple (w, b), each rounded to 2 decimals
     """
     # Initialize parameters
     w = 0.0
@@ -9582,70 +9379,51 @@ def linear_regression(X: np.ndarray, y: np.ndarray,
     pass
 
     return (round(w, 2), round(b, 2))
-`,testCases:[{id:`1`,description:`Perfect linear relationship`,input:`([1, 2, 3, 4], [2, 4, 6, 8], 0.1, 1000)`,expected:`(2.0, 0.0)`,hidden:!1},{id:`2`,description:`With intercept`,input:`([1, 2, 3, 4], [3, 5, 7, 9], 0.1, 1000)`,expected:`(2.0, 1.0)`,hidden:!1},{id:`3`,description:`Different slope`,input:`([0, 1, 2, 3], [1, 4, 7, 10], 0.1, 1000)`,expected:`(3.0, 1.0)`,hidden:!0},{id:`4`,description:`Negative slope`,input:`([1, 2, 3, 4], [8, 6, 4, 2], 0.1, 1000)`,expected:`(-2.0, 10.0)`,hidden:!0}],hints:[`First compute predictions: y_pred = w * X + b`,`Then compute gradients: dw = (2/n) * sum((y_pred - y) * X)`,`Update weights: w = w - learning_rate * dw`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Perfect linear relationship`,input:`([1, 2, 3, 4], [2, 4, 6, 8], 0.1, 1000)`,expected:`(2.0, 0.0)`,hidden:!1},{id:`2`,description:`With intercept`,input:`([1, 2, 3, 4], [3, 5, 7, 9], 0.1, 1000)`,expected:`(2.0, 1.0)`,hidden:!1},{id:`3`,description:`Different slope`,input:`([0, 1, 2, 3], [1, 4, 7, 10], 0.1, 1000)`,expected:`(3.0, 1.0)`,hidden:!0},{id:`4`,description:`Negative slope`,input:`([1, 2, 3, 4], [8, 6, 4, 2], 0.1, 1000)`,expected:`(-2.0, 10.0)`,hidden:!0},{id:`5`,description:`Few iterations (checks the update rule, not just the optimum)`,input:`([1, 2, 3, 4], [2, 4, 6, 8], 0.01, 10)`,expected:`(1.51, 0.49)`,hidden:!0},{id:`6`,description:`Noisy data converges to the least-squares fit`,input:`([0, 1, 2, 3, 4], [1.1, 2.9, 5.2, 7.1, 8.8], 0.05, 2000)`,expected:`(1.96, 1.1)`,hidden:!0}],hints:[`Each iteration is the same three steps: predict with the current parameters, measure how wrong you are, nudge both parameters downhill.`,`Inside a loop over iterations: y_pred = w * X + b, error = y_pred - y, then the two gradients, then the two updates.`,`dw = (2 / n) * np.sum(error * X) and db = (2 / n) * np.sum(error); then w -= learning_rate * dw and b -= learning_rate * db.`,`Compute both gradients before updating either parameter; updating w first and then using the new w for db is a different (wrong) algorithm.`],solution:`import numpy as np
 
 def linear_regression(X: np.ndarray, y: np.ndarray,
                       learning_rate: float = 0.01,
                       iterations: int = 1000) -> tuple:
     """
-    Train a simple linear regression model using gradient descent.
+    Batch gradient descent on the MSE. Returns (w, b) rounded to 2 decimals.
     """
-    w = 0.0
-    b = 0.0
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
+    w, b = 0.0, 0.0
     n = len(X)
 
     for _ in range(iterations):
-        # Forward pass
-        y_pred = w * X + b
+        error = (w * X + b) - y          # y_pred - y, shape (n,)
 
-        # Compute gradients
-        dw = (2/n) * np.sum((y_pred - y) * X)
-        db = (2/n) * np.sum(y_pred - y)
+        # Gradients of (1/n) * sum(error^2)
+        dw = (2 / n) * np.sum(error * X)
+        db = (2 / n) * np.sum(error)
 
-        # Update parameters
-        w = w - learning_rate * dw
-        b = b - learning_rate * db
+        # Simultaneous update
+        w -= learning_rate * dw
+        b -= learning_rate * db
 
-    return (round(w, 2), round(b, 2))
-`},{id:`logistic-regression-full`,title:`Logistic Regression with Gradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:`
-## Logistic Regression with Gradient Descent
+    return (round(float(w), 2), round(float(b), 2))
 
-Implement binary logistic regression from scratch.
-
-### Model
-\`\`\`
-z = X @ w + b
-y_pred = sigmoid(z) = 1 / (1 + exp(-z))
-\`\`\`
-
-### Loss (Binary Cross-Entropy)
-\`\`\`
-L = -1/m * sum(y * log(y_pred) + (1-y) * log(1-y_pred))
-\`\`\`
-
-### Gradients
-\`\`\`
-dw = 1/m * X.T @ (y_pred - y)
-db = 1/m * sum(y_pred - y)
-\`\`\`
-    `,examples:[{input:`X (100, 2), y binary labels, 1000 iterations`,output:`Trained weights and bias`,explanation:`Learns decision boundary separating classes`}],starterCode:`import numpy as np
+# Time O(iterations * n), space O(n)
+`},{id:`logistic-regression-full`,title:`Logistic Regression with Gradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:'\n## Logistic Regression with Gradient Descent\n\nTrain a binary **logistic regression** classifier from scratch: a linear score, a sigmoid, and batch gradient descent on the mean binary cross-entropy.\n\n### Background\nLogistic regression is the baseline classifier in industry (click-through prediction, fraud scoring) and the "one-neuron network" of deep learning. It combines the two earlier problems in this section: **Sigmoid for Logistic Regression** and **Binary Cross-Entropy Loss**. The neat fact interviewers ask about: the gradient of BCE through a sigmoid simplifies to `(prediction - label) * input`, exactly the same form as linear regression.\n\n### Formula\nFor `X` of shape `(m, n)`, `w` of shape `(n,)` and a scalar `b`:\n```text\nz      = X @ w + b                      # logits, shape (m,)\ny_pred = sigmoid(z) = 1 / (1 + exp(-z)) # probabilities, shape (m,)\nL      = -(1/m) * sum_i [ y_i log(y_pred_i) + (1 - y_i) log(1 - y_pred_i) ]\n\ndL/dw  = (1/m) * X.T @ (y_pred - y)     # shape (n,)\ndL/db  = (1/m) * sum_i (y_pred_i - y_i) # scalar\n```\nAlgorithm:\n1. Start from `w = zeros(n)`, `b = 0`.\n2. Repeat `iterations` times: forward pass, both gradients, then `w -= learning_rate * dw` and `b -= learning_rate * db`.\n\n### Inputs\n- `X`: features, array of shape `(m, n)` (ints or floats)\n- `y`: binary labels in {0, 1}, shape `(m,)`\n- `learning_rate`: step size (float)\n- `iterations`: number of full-batch updates (int)\n\nA `sigmoid(z)` helper is already provided in the starter code.\n\n### Expected Return Format\nA tuple `(w, b)`:\n- `w`: NumPy array of shape `(n,)`, rounded to 4 decimals (`np.round(w, 4)`)\n- `b`: Python float, rounded to 4 decimals\n\n### Edge Cases and Conventions\n- There is **no regularisation**, so on linearly separable data (like the AND gate in the tests) the weights keep growing the longer you train; the tests fix the iteration count so the result is deterministic.\n- You do not need to compute the loss itself to train; only its gradient.\n\n### Constraints\n- NumPy only, vectorised over samples; no sklearn. (This matches `sklearn.linear_model.LogisticRegression(penalty=None)` only in the limit of convergence; sklearn adds an L2 penalty by default.)\n\n### Follow-up\n- Derive `dL/dz = y_pred - y` from the chain rule.\n- Add L2 regularisation `(lam/2) * ||w||^2`: how do the gradients change, and why is `b` usually not penalised?\n    ',examples:[{input:`logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000)`,output:`(array([6.0141, 6.0141]), -9.1984)`,explanation:`The AND gate: only (1, 1) gets a positive logit (6.01 + 6.01 - 9.20 > 0).`},{input:`Same data, iterations=1`,output:`(array([0., 0.]), -0.125)`,explanation:`At w = 0, b = 0 every prediction is 0.5, so y_pred - y = [0.5, 0.5, 0.5, -0.5]: dw = 0 and db = 0.25, giving b = -0.5 * 0.25.`}],starterCode:`import numpy as np
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     """
-    Train logistic regression using gradient descent.
+    Train logistic regression with batch gradient descent on the mean BCE.
 
     Args:
-        X: Features (m samples, n features)
-        y: Binary labels (m,)
+        X: Features, shape (m, n)
+        y: Binary labels in {0, 1}, shape (m,)
         learning_rate: Step size
-        iterations: Number of iterations
+        iterations: Number of full-batch updates
 
     Returns:
-        w: Learned weights (n,)
-        b: Learned bias (scalar)
+        w: Learned weights, shape (n,), rounded to 4 decimals
+        b: Learned bias (Python float), rounded to 4 decimals
     """
     m, n = X.shape
     w = np.zeros(n)
@@ -9655,83 +9433,58 @@ def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
     pass
 
     return np.round(w, 4), round(float(b), 4)
-`,testCases:[{id:`1`,description:`Simple separable data`,input:`(lambda r: bool(np.allclose(r[0], [6.0141, 6.0141], atol=1e-3) and np.isclose(r[1], -9.1984, atol=1e-3)))(logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000))`,expected:`True`,hidden:!1},{id:`2`,description:`Weight vector shape`,input:`logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000)[0].shape`,expected:`(2,)`,hidden:!1},{id:`3`,description:`Classifies correctly after training`,input:`(lambda: (
+`,testCases:[{id:`1`,description:`Simple separable data (AND)`,input:`(lambda r: bool(np.allclose(r[0], [6.0141, 6.0141], atol=1e-3) and np.isclose(r[1], -9.1984, atol=1e-3)))(logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000))`,expected:`True`,hidden:!1},{id:`2`,description:`Weight vector shape`,input:`logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1000)[0].shape`,expected:`(2,)`,hidden:!1},{id:`3`,description:`Classifies correctly after training`,input:`(lambda: (
     X := np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
     y := np.array([0, 0, 0, 1]),
     r := logistic_regression(X, y, 0.5, 1000),
     preds := (1 / (1 + np.exp(-(X @ r[0] + r[1])))) > 0.5,
     bool(np.array_equal(preds.astype(int), y))
-)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Bias is scalar`,input:`bool(np.ndim(logistic_regression(np.array([[1, 0], [0, 1]]), np.array([0, 1]), 0.1, 100)[1]) == 0)`,expected:`True`,hidden:!0}],hints:[`Forward: z = X @ w + b, then y_pred = sigmoid(z)`,`Gradients: dw = (1/m) * X.T @ (y_pred - y)`,`Update: w = w - lr * dw, b = b - lr * db`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Bias is scalar`,input:`bool(np.ndim(logistic_regression(np.array([[1, 0], [0, 1]]), np.array([0, 1]), 0.1, 100)[1]) == 0)`,expected:`True`,hidden:!0},{id:`5`,description:`OR data: learned weights and bias`,input:`(lambda r: (r[0].tolist(), r[1]))(logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 1, 1, 1]), 0.5, 1000))`,expected:`([7.2375, 7.2375], -3.1461)`,hidden:!0},{id:`6`,description:`One step from zero (checks the gradient formula)`,input:`(lambda r: (r[0].tolist(), r[1]))(logistic_regression(np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([0, 0, 0, 1]), 0.5, 1))`,expected:`([0.0, 0.0], -0.125)`,hidden:!0}],hints:[`This is linear regression with a sigmoid on top: the loop structure (predict, gradient, update) is identical.`,`Forward: z = X @ w + b and y_pred = sigmoid(z). The error vector y_pred - y has shape (m,).`,`dw = X.T @ (y_pred - y) / m and db = np.mean(y_pred - y); then w -= learning_rate * dw and b -= learning_rate * db.`,`Do not differentiate through the sigmoid separately: the BCE and sigmoid derivatives cancel to y_pred - y. Use X.T @ error (shape (n,)), not X @ error.`],solution:`import numpy as np
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def logistic_regression(X, y, learning_rate=0.1, iterations=1000):
+    """
+    Batch gradient descent on the mean BCE.
+    Returns (w rounded to 4 decimals, b as a float rounded to 4 decimals).
+    """
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
     m, n = X.shape
     w = np.zeros(n)
     b = 0.0
 
     for _ in range(iterations):
-        # Forward pass
-        z = X @ w + b
-        y_pred = sigmoid(z)
+        y_pred = sigmoid(X @ w + b)      # (m,)
+        error = y_pred - y               # dL/dz for BCE + sigmoid
 
-        # Compute gradients
-        dw = (1/m) * X.T @ (y_pred - y)
-        db = (1/m) * np.sum(y_pred - y)
+        dw = X.T @ error / m             # (n,)
+        db = np.mean(error)
 
-        # Update parameters
-        w = w - learning_rate * dw
-        b = b - learning_rate * db
+        w -= learning_rate * dw
+        b -= learning_rate * db
 
     return np.round(w, 4), round(float(b), 4)
-`},{id:`linear-svm`,title:`Linear SVM with Gradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:`
-## Linear SVM with Gradient Descent
 
-Implement a linear Support Vector Machine (SVM) classifier using gradient descent on the hinge loss with L2 regularization.
-
-### Objective
-\`\`\`
-L = (λ/2) * ||w||² + (1/m) * Σ max(0, 1 - yᵢ * (Xᵢ · w + b))
-\`\`\`
-
-### Gradients
-Compute gradients over all samples. For samples where the margin \`yᵢ * (Xᵢ · w + b) < 1\` (hinge loss is active):
-\`\`\`
-dw = λ * w - (1/m) * Σ yᵢ * Xᵢ    (sum over violating samples)
-db = -(1/m) * Σ yᵢ                  (sum over violating samples)
-\`\`\`
-
-For samples where the margin >= 1:
-\`\`\`
-dw contribution = λ * w   (only regularization)
-db contribution = 0
-\`\`\`
-
-### Function Signature
-\`\`\`python
-def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
-\`\`\`
-
-Returns \`(w, b)\` — the learned weight vector (rounded to 4 decimals) and bias (rounded to 4 decimals).
-
-**Note**: Labels \`y\` are in {-1, +1}.
-    `,examples:[{input:`X = [[2,1],[3,2],[-2,-1],[-3,-2]], y = [1,1,-1,-1], lr=0.01, λ=0.01, iters=1000`,output:`w and b that correctly classify all points`,explanation:`SVM finds a maximum-margin hyperplane separating positive and negative points`}],starterCode:`import numpy as np
+# Time O(iterations * m * n), space O(m + n)
+`},{id:`linear-svm`,title:`Linear SVM with Subgradient Descent`,section:`supervised-learning`,difficulty:`medium`,description:"\n## Linear SVM with Subgradient Descent\n\nTrain a **linear Support Vector Machine** by full-batch (sub)gradient descent on the L2-regularised hinge loss.\n\n### Background\nAn SVM looks for the hyperplane `x · w + b = 0` with the widest margin between the classes. The soft-margin version trades margin width (small `||w||`) against hinge-loss violations. The hinge `max(0, 1 - margin)` has a kink at margin 1, so we use a **subgradient**: the gradient of whichever piece is active. Uses the loss from **Hinge Loss**.\n\n### Objective\n```text\nJ(w, b) = (lam/2) * ||w||^2 + (1/m) * sum_i max(0, 1 - y_i * (X_i · w + b))\n```\n- `X_i`: row `i` of `X`, shape `(n,)`; `w`: shape `(n,)`; `b`: scalar\n- `y_i` in {-1, +1}\n- `lam` (`lambda_param`): regularisation strength. The bias is **not** regularised.\n\n### Subgradient\nLet `V = { i : y_i * (X_i · w + b) < 1 }` be the samples that violate the margin (**strictly** less than 1; a margin of exactly 1 counts as satisfied). Then\n```text\ndJ/dw = lam * w - (1/m) * sum_{i in V} y_i * X_i\ndJ/db =         - (1/m) * sum_{i in V} y_i\n```\nThe regularisation term `lam * w` appears **once**, whatever the samples do; samples outside `V` contribute nothing to the hinge part.\n\n### Algorithm\n1. Start from `w = zeros(n)`, `b = 0`.\n2. Repeat `iterations` times: compute all margins with the current `w, b`, find `V`, compute both subgradients, then `w -= learning_rate * dJ/dw` and `b -= learning_rate * dJ/db`.\n\n### Inputs\n- `X`: features, shape `(m, n)`\n- `y`: labels in {-1, +1}, shape `(m,)`\n- `learning_rate`, `lambda_param`: floats; `iterations`: int\n\n### Expected Return Format\nA tuple `(w, b)`:\n- `w`: NumPy array of shape `(n,)`, rounded to 4 decimals\n- `b`: Python float, rounded to 4 decimals\n\nPredict with `np.sign(X @ w + b)`.\n\n### Constraints\n- NumPy only, vectorised over samples (a boolean mask for `V`); no sklearn.\n- This objective is the one minimised by `sklearn.linear_model.SGDClassifier(loss='hinge', penalty='l2', alpha=lam)`, but sklearn uses stochastic updates and a learning-rate schedule, so its numbers differ. `LinearSVC` uses `C` (roughly `1 / (lam * m)`) and the squared hinge by default.\n\n### Follow-up\n- Why does the solution depend only on the support vectors?\n- How would you swap the linear score for a kernel, and why is that natural in the dual but not in this primal formulation?\n    ",examples:[{input:`linear_svm(np.array([[2, 1], [3, 2], [-2, -1], [-3, -2]]), np.array([1, 1, -1, -1]), 0.01, 0.01, 1000)`,output:`(array([0.4009, 0.2231]), 0.0)`,explanation:`The data are symmetric around the origin, so b stays 0; sign(X @ w) classifies all four points correctly.`},{input:`Same data, learning_rate=0.1, iterations=1`,output:`(array([0.25, 0.15]), 0.0)`,explanation:`At w = 0 every margin is 0 < 1, so all samples are in V: dw = -(1/4) * sum(y_i X_i) = -[2.5, 1.5], db = 0.`}],starterCode:`import numpy as np
 
 def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     """
-    Train a linear SVM using gradient descent on hinge loss + L2 regularization.
+    Train a linear SVM by subgradient descent on
+    (lambda_param / 2) * ||w||^2 + mean(max(0, 1 - y * (X @ w + b))).
 
     Args:
-        X: Features (m samples, n features)
+        X: Features, shape (m, n)
         y: Labels in {-1, +1}, shape (m,)
-        learning_rate: Step size for gradient descent
-        lambda_param: L2 regularization strength
-        iterations: Number of training iterations
+        learning_rate: Step size
+        lambda_param: L2 regularization strength (bias not regularized)
+        iterations: Number of full-batch updates
 
     Returns:
-        w: Learned weights (n,), rounded to 4 decimals
-        b: Learned bias (scalar), rounded to 4 decimals
+        w: Learned weights, shape (n,), rounded to 4 decimals
+        b: Learned bias (Python float), rounded to 4 decimals
     """
     m, n = X.shape
     w = np.zeros(n)
@@ -9758,33 +9511,33 @@ def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     y := np.array([1, -1]),
     result := linear_svm(X, y, 0.1, 0.01, 500),
     bool(result[0][0] > 0)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Compute margins for all samples: margins = y * (X @ w + b)`,`Find violating samples with mask = margins < 1`,`Gradient: dw = lambda_param * w - (1/m) * X[mask].T @ y[mask]`,`Update w and b using gradient descent`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Learned weights and bias on asymmetric data`,input:`(lambda r: (r[0].tolist(), r[1]))(linear_svm(np.array([[2.0, 0.5], [1.0, 1.5], [-1.0, -0.5], [-0.5, -2.0]]), np.array([1.0, 1.0, -1.0, -1.0]), 0.05, 0.1, 200))`,expected:`([0.5321, 0.4822], -0.2375)`,hidden:!0},{id:`5`,description:`One step from zero (every sample violates the margin)`,input:`(lambda r: (r[0].tolist(), r[1]))(linear_svm(np.array([[2, 1], [3, 2], [-2, -1], [-3, -2]]), np.array([1, 1, -1, -1]), 0.1, 0.01, 1))`,expected:`([0.25, 0.15], 0.0)`,hidden:!0}],hints:[`Only samples that violate the margin (y * score < 1) push on w and b; the regulariser always pulls w towards 0.`,`Each iteration: margins = y * (X @ w + b), mask = margins < 1, then the two subgradients from the masked rows.`,`dw = lambda_param * w - X[mask].T @ y[mask] / m and db = -np.sum(y[mask]) / m.`,`Add lambda_param * w once, not once per sample, and divide the hinge part by m (all samples), not by the number of violators. Use a strict < 1.`],solution:`import numpy as np
 
 def linear_svm(X, y, learning_rate=0.01, lambda_param=0.01, iterations=1000):
     """
-    Train a linear SVM using gradient descent on hinge loss + L2 regularization.
+    Subgradient descent on the L2-regularised hinge loss.
+    Returns (w rounded to 4 decimals, b as a float rounded to 4 decimals).
     """
+    X = np.asarray(X, dtype=float)
+    y = np.asarray(y, dtype=float)
     m, n = X.shape
     w = np.zeros(n)
     b = 0.0
 
     for _ in range(iterations):
-        # Compute margins
-        margins = y * (X @ w + b)
+        margins = y * (X @ w + b)        # (m,)
+        violators = margins < 1          # samples with an active hinge
 
-        # Find samples violating the margin
-        mask = margins < 1
+        dw = lambda_param * w - X[violators].T @ y[violators] / m
+        db = -np.sum(y[violators]) / m
 
-        # Compute gradients
-        dw = lambda_param * w - (1/m) * (X[mask].T @ y[mask])
-        db = -(1/m) * np.sum(y[mask])
-
-        # Update parameters
         w -= learning_rate * dw
         b -= learning_rate * db
 
     return np.round(w, 4), round(float(b), 4)
-`},{id:`knn-classifier`,title:`k-Nearest Neighbours Classifier`,section:`supervised-learning`,difficulty:`medium`,description:"\n## k-Nearest Neighbours (k-NN) Classifier\n\nk-NN has no training step: to classify a query point, find the `k` training points closest to it and take a **majority vote** of their labels.\n\nImplement `knn_predict(X_train, y_train, X_test, k)`.\n\n### Algorithm\nFor every query `x` in `X_test`:\n1. Compute the **Euclidean distance** to every training point:\n```\nd(x, x_i) = sqrt( sum_j (x_j - x_ij)^2 )\n```\n2. Take the `k` nearest training points. If several training points are at the **same distance**, the one with the **smaller training index** comes first (a *stable* sort: `np.argsort(d, kind='stable')`).\n3. Count the labels of those `k` neighbours and predict the most common one.\n4. **Vote ties**: if two or more classes share the top count, predict the **smallest class label** among them.\n\n### Vectorizing the distances\nAll pairwise squared distances at once, via broadcasting:\n```python\ndiff = X_test[:, None, :] - X_train[None, :, :]   # (m, n, d)\nD = np.sqrt((diff ** 2).sum(axis=-1))             # (m, n)\n```\n\n### Expected Return Format\n- Returns an int array of shape `(m,)`: the predicted label of each test point.\n- Labels are non-negative integers (so `np.bincount` works for the vote).\n\n### Notes\n- `k = 1` is the nearest-neighbour rule; with `k = n_train` every query gets the overall majority class.\n- Features on different scales dominate the distance, so in practice you standardize first.\n    ",examples:[{input:`X_train = [[0,0],[1,0],[0,1],[5,5],[6,5]], y_train = [0,0,0,1,1], X_test = [[0.5,0.5],[5.5,5]], k=3`,output:`[0, 1]`,explanation:`The first query has three class-0 neighbours. The second has neighbours (5,5), (6,5) (class 1) and then (1,0) (class 0): 2 votes to 1 for class 1.`},{input:`X_train = [[0],[2]], y_train = [1, 0], X_test = [[1]], k=2`,output:`[0]`,explanation:`One vote each: the tie goes to the smaller label, 0.`}],starterCode:`import numpy as np
+
+# Time O(iterations * m * n), space O(m + n)
+`},{id:`knn-classifier`,title:`k-Nearest Neighbours Classifier`,section:`supervised-learning`,difficulty:`medium`,description:"\n## k-Nearest Neighbours Classifier\n\nImplement `knn_predict(X_train, y_train, X_test, k)`: classify each query point by a **majority vote** of its `k` nearest training points under Euclidean distance.\n\n### Background\nk-NN is the canonical *lazy* learner: \"training\" is just storing the data, and all the work happens at prediction time. It is a strong baseline, the core of retrieval and recommendation systems (with approximate nearest-neighbour indexes), and a favourite interview question because it tests vectorised distance computation and careful tie-breaking.\n\n### Algorithm\nFor every query `x` in `X_test`:\n1. Compute the Euclidean distance to every training point:\n```text\nd(x, x_i) = sqrt( sum_j (x_j - x_ij)^2 )\n```\n2. Take the `k` nearest training points. If several are at the **same distance**, the one with the **smaller training index** comes first (a *stable* sort: `np.argsort(d, kind='stable')`).\n3. Count the labels of those `k` neighbours and predict the most common one.\n4. **Vote ties**: if two or more classes share the top count, predict the **smallest label** among them.\n\nAll pairwise distances at once, via broadcasting:\n```python\ndiff = X_test[:, None, :] - X_train[None, :, :]   # (m, n, d)\nD = np.sqrt((diff ** 2).sum(axis=-1))             # (m, n)\n```\n\n### Inputs\n- `X_train`: float array `(n, d)`\n- `y_train`: non-negative integer labels `(n,)` (so `np.bincount` works for the vote)\n- `X_test`: float array `(m, d)`\n- `k`: int with `1 <= k <= n`\n\n### Expected Return Format\nAn integer NumPy array of shape `(m,)`: the predicted label of each query.\n\n### Edge Cases and Conventions\n- `k = 1` is the nearest-neighbour rule; `k = n` gives every query the overall majority class.\n- scikit-learn's `KNeighborsClassifier(n_neighbors=k)` (uniform weights) also resolves vote ties to the smallest label. For distance ties its docs say the result depends on the order of the training data; here the order is pinned down by the stable sort.\n- Features on different scales dominate the distance, so in practice you standardise first (not needed for the tests).\n\n### Constraints\n- NumPy only; no sklearn or scipy. Compute the distance matrix without Python loops; a loop over queries for the vote is fine.\n\n### Follow-up\n- The `(m, n, d)` difference tensor can be huge. Rewrite the squared distances as `||a||^2 - 2 a·b + ||b||^2` to need only `(m, n)` memory. What numerical issue appears, and how do you guard against it?\n- How do KD-trees or approximate indexes (HNSW, IVF) cut the `O(m n d)` query cost?\n    ",examples:[{input:`knn_predict(np.array([[0, 0], [1, 0], [0, 1], [5, 5], [6, 5]]), np.array([0, 0, 0, 1, 1]), np.array([[0.5, 0.5], [5.5, 5]]), k=3)`,output:`array([0, 1])`,explanation:`The first query has three class-0 neighbours. The second has (5,5) and (6,5) (class 1) and then (1,0) (class 0): 2 votes to 1 for class 1.`},{input:`knn_predict(np.array([[0], [2]]), np.array([1, 0]), np.array([[1]]), k=2)`,output:`array([0])`,explanation:`One vote each: the tie goes to the smaller label, 0.`}],starterCode:`import numpy as np
 
 def knn_predict(X_train, y_train, X_test, k=3):
     """
@@ -9794,7 +9547,7 @@ def knn_predict(X_train, y_train, X_test, k=3):
         X_train: Training features, shape (n, d)
         y_train: Non-negative integer labels, shape (n,)
         X_test: Query points, shape (m, d)
-        k: Number of neighbours
+        k: Number of neighbours (1 <= k <= n)
 
     Returns:
         Predicted labels, int array of shape (m,)
@@ -9813,9 +9566,12 @@ def knn_predict(X_train, y_train, X_test, k=3):
     Xtr := np.random.randn(30, 2),
     ytr := (Xtr[:, 0] > 0).astype(int) + (Xtr[:, 1] > 0.5).astype(int),
     knn_predict(Xtr, ytr, np.array([[1.0, 1.0], [-1.0, -1.0], [1.0, -1.0], [0.0, 0.4]]), 5).tolist()
-)[-1])()`,expected:`[2, 0, 1, 0]`,hidden:!0}],hints:[`Broadcast X_test[:, None, :] - X_train[None, :, :] to get an (m, n, d) array of differences, then sum squares over the last axis.`,`np.argsort(D, axis=1, kind='stable')[:, :k] gives each query's k nearest training indices with distance ties broken by index.`,`np.bincount(y_train[idx], minlength=n_classes) counts the votes, and np.argmax returns the first (smallest) label among the tied maxima.`],solution:`import numpy as np
+)[-1])()`,expected:`[2, 0, 1, 0]`,hidden:!0}],hints:[`Split the problem in two: a distance matrix between every query and every training point, then a vote per query.`,`Broadcast X_test[:, None, :] - X_train[None, :, :] to get an (m, n, d) array of differences, then sum squares over the last axis (the sqrt does not change the order, but keep it for clarity).`,`np.argsort(D, axis=1, kind='stable')[:, :k] gives each query's k nearest indices; np.bincount(y_train[idx], minlength=n_classes) counts the votes and np.argmax picks the first (smallest) label among tied maxima.`,`The default np.argsort (quicksort) is not stable, so equal distances can come out in any order. Also pass minlength so every vote vector has the same length.`],solution:`import numpy as np
 
 def knn_predict(X_train, y_train, X_test, k=3):
+    """
+    k-NN with Euclidean distance. Returns an int array of shape (m,).
+    """
     X_train = np.asarray(X_train, dtype=float)
     X_test = np.asarray(X_test, dtype=float)
     y_train = np.asarray(y_train)
@@ -9833,7 +9589,9 @@ def knn_predict(X_train, y_train, X_test, k=3):
         votes = np.bincount(y_train[idx], minlength=n_classes)
         preds[i] = np.argmax(votes)   # argmax returns the first (smallest) label on ties
     return preds
-`},{id:`naive-bayes`,title:`Gaussian Naive Bayes`,section:`supervised-learning`,difficulty:`medium`,description:"\n## Gaussian Naive Bayes\n\nNaive Bayes applies Bayes' rule with the \"naive\" assumption that features are **independent given the class**. In the Gaussian variant each feature follows a normal distribution per class.\n\nImplement two functions:\n- `gaussian_nb_fit(X, y, var_smoothing=1e-9)`: estimate the parameters\n- `gaussian_nb_predict_proba(model, X)`: class probabilities for new points\n\n### Fit\nFor each class `c` (in ascending order, `np.unique(y)`):\n```\nprior[c]   = n_c / n\nmean[c, j] = mean of feature j over the samples of class c\nvar[c, j]  = variance (ddof=0) of feature j over class c  +  epsilon\nepsilon    = var_smoothing * max_j Var(X[:, j])     # over ALL samples\n```\n`epsilon` keeps variances away from zero (a constant feature within a class would otherwise give a division by zero). This is exactly scikit-learn's `GaussianNB(var_smoothing=...)`.\n\n### Predict (in log space)\nThe joint log-likelihood of sample `x` and class `c`:\n```\njll[c] = log prior[c] - 0.5 * sum_j log(2*pi*var[c, j])\n                      - 0.5 * sum_j (x_j - mean[c, j])^2 / var[c, j]\n```\nNormalize with **logsumexp** to get the posterior:\n```\nlog P(c | x) = jll[c] - logsumexp_c'(jll[c'])\nlogsumexp(a) = max(a) + log(sum(exp(a - max(a))))\n```\nNever multiply raw densities: with many features (or a point far from every class) they underflow to `0` and you get `0/0 = nan`.\n\n### Expected Return Format\n`gaussian_nb_fit` returns a dictionary with these keys:\n- `'classes'`: sorted unique labels, shape `(C,)`\n- `'priors'`: class priors, shape `(C,)`\n- `'means'`: per-class feature means, shape `(C, d)`\n- `'vars'`: per-class feature variances **including** epsilon, shape `(C, d)`\n\n`gaussian_nb_predict_proba` returns an array of shape `(m, C)` whose rows sum to 1, with columns in the order of `model['classes']`.\n    ",examples:[{input:`X = [[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]], y = [0, 0, 0, 1, 1, 1]`,output:`priors [0.5, 0.5], means [[2.0], [7.0]], vars ≈ [[0.6667], [0.6667]]`,explanation:`Each class has 3 points with variance 2/3; epsilon = 1e-9 * Var(X) is negligible here.`},{input:`gaussian_nb_predict_proba(model, np.array([[4.5]]))`,output:`[[0.5, 0.5]]`,explanation:`4.5 is equidistant from both means and the classes have equal priors and variances.`}],starterCode:`import numpy as np
+
+# Time O(m * n * d + m * n log n), space O(m * n * d) for the broadcast difference
+`},{id:`naive-bayes`,title:`Gaussian Naive Bayes`,section:`supervised-learning`,difficulty:`medium`,description:"\n## Gaussian Naive Bayes\n\nImplement `gaussian_nb_fit` and `gaussian_nb_predict_proba`: fit one Gaussian per class and feature, then turn new points into class probabilities with Bayes' rule, computed in **log space**.\n\n### Background\nNaive Bayes assumes the features are **independent given the class**, so the class-conditional density factorises into one 1D density per feature. The assumption is rarely true, yet the classifier is fast, needs little data and is a classic text and tabular baseline. The interview content is in the numerics: multiplying many small densities underflows, so everything happens in log space with a logsumexp.\n\n### Fit\nFor each class `c` in ascending order (`np.unique(y)`), with `n_c` samples of class `c` out of `n`:\n```text\nprior[c]   = n_c / n\nmean[c, j] = mean of feature j over the samples of class c\nvar[c, j]  = variance (ddof=0) of feature j over class c  +  epsilon\nepsilon    = var_smoothing * max_j Var(X[:, j])     # computed once, over ALL samples\n```\n`epsilon` keeps variances away from zero (a feature that is constant within a class would otherwise divide by zero). These are exactly the conventions of scikit-learn's `GaussianNB(var_smoothing=1e-9)`: `priors` = `class_prior_`, `means` = `theta_`, `vars` = `var_`.\n\n### Predict\nThe joint log-likelihood of sample `x` (shape `(d,)`) and class `c`:\n```text\njll[c] = log prior[c] - 0.5 * sum_j log(2*pi*var[c, j])\n                      - 0.5 * sum_j (x_j - mean[c, j])^2 / var[c, j]\n```\nNormalise with **logsumexp** to get the posterior:\n```text\nlog P(c | x) = jll[c] - logsumexp_c'(jll[c'])\nlogsumexp(a) = max(a) + log(sum(exp(a - max(a))))\n```\n\n### Inputs\n- `X`: float array `(n, d)` for fitting, `(m, d)` for prediction\n- `y`: class labels `(n,)`\n- `var_smoothing`: float, default `1e-9`\n\n### Expected Return Format\n`gaussian_nb_fit` returns a dictionary with these keys:\n- `'classes'`: sorted unique labels, shape `(C,)`\n- `'priors'`: class priors, shape `(C,)`\n- `'means'`: per-class feature means, shape `(C, d)`\n- `'vars'`: per-class feature variances **including** epsilon, shape `(C, d)`\n\n`gaussian_nb_predict_proba` returns an array of shape `(m, C)` whose rows sum to 1, with columns in the order of `model['classes']`.\n\n### Edge Cases and Conventions\n- Use the population variance (`ddof=0`), as sklearn does.\n- Never multiply raw densities: with many features, or a point far from every class, they underflow to `0` and you get `0/0 = nan`. In log space a point at `x = -500` still gets a clean `[1.0, 0.0]`.\n\n### Constraints\n- NumPy only; no sklearn or scipy. Vectorise prediction over samples and classes with broadcasting.\n\n### Follow-up\n- Where does the \"naive\" assumption hurt most (duplicated or strongly correlated features)?\n- How do multinomial and Bernoulli Naive Bayes differ, and why do they need Laplace smoothing instead of `var_smoothing`?\n    ",examples:[{input:`gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1]))`,output:`priors [0.5, 0.5], means [[2.0], [7.0]], vars ≈ [[0.6667], [0.6667]]`,explanation:`Each class has 3 points with variance 2/3; epsilon = 1e-9 * Var(X) is negligible here.`},{input:`gaussian_nb_predict_proba(model, np.array([[4.5]]))`,output:`array([[0.5, 0.5]])`,explanation:`4.5 is equidistant from both means, and the classes have equal priors and variances.`}],starterCode:`import numpy as np
 
 def gaussian_nb_fit(X, y, var_smoothing=1e-9):
     """
@@ -9845,7 +9603,8 @@ def gaussian_nb_fit(X, y, var_smoothing=1e-9):
         var_smoothing: Fraction of the largest feature variance added to all variances
 
     Returns:
-        dict with 'classes' (C,), 'priors' (C,), 'means' (C, d), 'vars' (C, d)
+        dict with 'classes' (C,), 'priors' (C,), 'means' (C, d),
+        'vars' (C, d) (ddof=0 variances plus epsilon)
     """
     # Your code here
     pass
@@ -9860,17 +9619,21 @@ def gaussian_nb_predict_proba(model, X):
         X: Features, shape (m, d)
 
     Returns:
-        Probabilities, shape (m, C); rows sum to 1
+        Probabilities, shape (m, C), columns in the order of model['classes'];
+        rows sum to 1
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Priors and means`,input:`(lambda m: (m["priors"].tolist(), m["means"].tolist()))(gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1])))`,expected:`([0.5, 0.5], [[2.0], [7.0]])`,hidden:!1},{id:`2`,description:`Midpoint between symmetric classes is 50/50`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1])), np.array([[4.5]])), 6).tolist()`,expected:`[[0.5, 0.5]]`,hidden:!1},{id:`3`,description:`Rows sum to 1, shape (m, C)`,input:`(lambda X, y: (lambda P: (P.shape, bool(np.allclose(P.sum(1), 1))))(gaussian_nb_predict_proba(gaussian_nb_fit(X, y), X)))(np.random.randn(20, 3), np.arange(20) % 4)`,expected:`((20, 4), True)`,hidden:!1},{id:`4`,description:`var_smoothing adds epsilon = s * max feature variance`,input:`np.round(gaussian_nb_fit(np.array([[0.0, 1.0], [0.0, 3.0], [2.0, 5.0], [2.0, 9.0]]), np.array([0, 0, 1, 1]), var_smoothing=0.1)["vars"], 6).tolist()`,expected:`[[0.875, 1.875], [0.875, 4.875]]`,hidden:!0},{id:`5`,description:`Posteriors match scikit-learn GaussianNB`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 3.0], [2.0, 1.0], [4.0, 5.0], [5.0, 4.0], [6.0, 6.0], [4.0, 3.0], [7.0, 2.0], [6.0, 1.0], [8.0, 3.0], [5.0, 2.0]]), np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2])), np.array([[3.0, 3.0], [5.0, 3.5], [6.0, 2.0], [4.0, 4.0]])), 6).tolist()`,expected:`[[0.891447, 0.101141, 0.007411], [9.1e-05, 0.927174, 0.072735], [0.0, 0.024231, 0.975769], [0.005153, 0.991937, 0.002909]]`,hidden:!0},{id:`6`,description:`Log-space: far-away points still give valid probabilities`,input:`(lambda P: (bool(np.all(np.isfinite(P))), np.round(P, 6).tolist()))(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[0.0], [1.0], [10.0], [11.0]]), np.array([0, 0, 1, 1])), np.array([[-500.0], [600.0]])))`,expected:`(True, [[1.0, 0.0], [0.0, 1.0]])`,hidden:!0},{id:`7`,description:`Unequal priors shift the posterior`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[0.0], [2.0], [0.5], [1.5], [3.0], [5.0]]), np.array([0, 0, 0, 0, 1, 1])), np.array([[2.5]])), 6).tolist()`,expected:`[[0.562951, 0.437049]]`,hidden:!0}],hints:[`Loop over np.unique(y): boolean-mask X[y == c] and take .mean(axis=0) and .var(axis=0) (ddof=0).`,`epsilon = var_smoothing * np.var(X, axis=0).max() is computed once over all samples and added to every class variance.`,`Build the (m, C) joint log-likelihood with broadcasting: X[:, None, :] - means[None, :, :].`,`Subtract the row max before exponentiating: P = exp(jll - logsumexp(jll)).`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Priors and means`,input:`(lambda m: (m["priors"].tolist(), m["means"].tolist()))(gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1])))`,expected:`([0.5, 0.5], [[2.0], [7.0]])`,hidden:!1},{id:`2`,description:`Midpoint between symmetric classes is 50/50`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[1.0], [2.0], [3.0], [6.0], [7.0], [8.0]]), np.array([0, 0, 0, 1, 1, 1])), np.array([[4.5]])), 6).tolist()`,expected:`[[0.5, 0.5]]`,hidden:!1},{id:`3`,description:`Rows sum to 1, shape (m, C)`,input:`(lambda X, y: (lambda P: (P.shape, bool(np.allclose(P.sum(1), 1))))(gaussian_nb_predict_proba(gaussian_nb_fit(X, y), X)))(np.random.randn(20, 3), np.arange(20) % 4)`,expected:`((20, 4), True)`,hidden:!1},{id:`4`,description:`var_smoothing adds epsilon = s * max feature variance`,input:`np.round(gaussian_nb_fit(np.array([[0.0, 1.0], [0.0, 3.0], [2.0, 5.0], [2.0, 9.0]]), np.array([0, 0, 1, 1]), var_smoothing=0.1)["vars"], 6).tolist()`,expected:`[[0.875, 1.875], [0.875, 4.875]]`,hidden:!0},{id:`5`,description:`Posteriors match scikit-learn GaussianNB`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 3.0], [2.0, 1.0], [4.0, 5.0], [5.0, 4.0], [6.0, 6.0], [4.0, 3.0], [7.0, 2.0], [6.0, 1.0], [8.0, 3.0], [5.0, 2.0]]), np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2])), np.array([[3.0, 3.0], [5.0, 3.5], [6.0, 2.0], [4.0, 4.0]])), 6).tolist()`,expected:`[[0.891447, 0.101141, 0.007411], [9.1e-05, 0.927174, 0.072735], [0.0, 0.024231, 0.975769], [0.005153, 0.991937, 0.002909]]`,hidden:!0},{id:`6`,description:`Log-space: far-away points still give valid probabilities`,input:`(lambda P: (bool(np.all(np.isfinite(P))), np.round(P, 6).tolist()))(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[0.0], [1.0], [10.0], [11.0]]), np.array([0, 0, 1, 1])), np.array([[-500.0], [600.0]])))`,expected:`(True, [[1.0, 0.0], [0.0, 1.0]])`,hidden:!0},{id:`7`,description:`Unequal priors shift the posterior`,input:`np.round(gaussian_nb_predict_proba(gaussian_nb_fit(np.array([[0.0], [2.0], [0.5], [1.5], [3.0], [5.0]]), np.array([0, 0, 0, 0, 1, 1])), np.array([[2.5]])), 6).tolist()`,expected:`[[0.562951, 0.437049]]`,hidden:!0}],hints:[`Fitting is just counting and averaging per class; prediction is Bayes rule: log prior + sum of per-feature log densities, then normalise.`,`Loop over np.unique(y): mask X[y == c] and take .mean(axis=0) and .var(axis=0) (ddof=0). epsilon = var_smoothing * np.var(X, axis=0).max() is computed once over all samples.`,`Build the (m, C) joint log-likelihood with broadcasting: (X[:, None, :] - means[None, :, :]) ** 2 / vars[None] summed over the last axis.`,`Subtract the row max before exponentiating (logsumexp); exponentiating jll directly underflows to 0 for far-away points and gives nan.`],solution:`import numpy as np
 
 def gaussian_nb_fit(X, y, var_smoothing=1e-9):
+    """
+    Returns {'classes', 'priors', 'means', 'vars'} like sklearn's GaussianNB.
+    """
     X = np.asarray(X, dtype=float)
     y = np.asarray(y)
     classes = np.unique(y)
-    epsilon = var_smoothing * np.var(X, axis=0).max()
+    epsilon = var_smoothing * np.var(X, axis=0).max()   # over all samples
 
     priors = np.array([np.mean(y == c) for c in classes])
     means = np.array([X[y == c].mean(axis=0) for c in classes])
@@ -9879,6 +9642,9 @@ def gaussian_nb_fit(X, y, var_smoothing=1e-9):
 
 
 def gaussian_nb_predict_proba(model, X):
+    """
+    Posterior probabilities, shape (m, C), via logsumexp.
+    """
     X = np.asarray(X, dtype=float)
     means, variances = model['means'], model['vars']           # (C, d)
 
@@ -9887,15 +9653,18 @@ def gaussian_nb_predict_proba(model, X):
     sq = ((X[:, None, :] - means[None, :, :]) ** 2 / variances[None]).sum(-1)  # (m, C)
     jll = np.log(model['priors']) + log_norm - 0.5 * sq
 
-    # Normalize with logsumexp
-    m = jll.max(axis=1, keepdims=True)
-    log_z = m + np.log(np.exp(jll - m).sum(axis=1, keepdims=True))
+    # Normalize with logsumexp (subtract the row max first)
+    mx = jll.max(axis=1, keepdims=True)
+    log_z = mx + np.log(np.exp(jll - mx).sum(axis=1, keepdims=True))
     return np.exp(jll - log_z)
-`},{id:`ridge-lasso`,title:`Ridge & Lasso Regression`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Ridge and Lasso Regression\n\nBoth add a penalty on the weights to least squares. **Ridge** (L2) shrinks all weights smoothly and has a closed form. **Lasso** (L1) has no closed form, but it sets some weights to **exactly zero**, which makes it a feature selector.\n\n### The intercept is not penalised\nPenalising `b` would make the fit depend on where the origin of `y` is. Instead, **centre** the data, fit without an intercept, then recover it:\n```\nx_mean = X.mean(axis=0),  y_mean = y.mean()\nXc = X - x_mean,          yc = y - y_mean\n... fit w on (Xc, yc) ...\nb = y_mean - x_mean @ w\n```\nThis is what scikit-learn's `Ridge` and `Lasso` do with `fit_intercept=True`.\n\n### 1. Ridge: `ridge_fit(X, y, lam)`\nMinimizes `||yc - Xc w||^2 + lam * ||w||^2`, whose solution is\n```\nw = (Xc^T Xc + lam * I)^(-1) Xc^T yc\n```\nUse `np.linalg.solve(A, b)` rather than forming the inverse. Matches `sklearn.linear_model.Ridge(alpha=lam)`.\n\n### 2. Lasso: `lasso_fit(X, y, lam, n_sweeps=100)`\nMinimizes (scikit-learn's scaling, so `lam` means the same as `Lasso(alpha=lam)`):\n```\n(1 / (2n)) * ||yc - Xc w||^2 + lam * ||w||_1\n```\nby **cyclic coordinate descent**: start from `w = 0`; each sweep updates `j = 0, 1, ..., d-1` in order, each using the latest values of the others:\n```\nr     = yc - Xc @ w                       # current residual\nrho_j = (1/n) * Xc[:, j] @ (r + Xc[:, j] * w_j)\nz_j   = (1/n) * Xc[:, j] @ Xc[:, j]\nw_j   = soft_threshold(rho_j, lam) / z_j  # (w_j = 0 if z_j == 0)\n\nsoft_threshold(a, lam) = sign(a) * max(|a| - lam, 0)\n```\nRun exactly `n_sweeps` full sweeps. Whenever `|rho_j| <= lam` the weight is set to **exactly 0**. If `lam >= max_j |Xc[:, j] @ yc| / n`, every weight is zero.\n\n### Expected Return Format\nBoth functions return a tuple `(w, b)`:\n- `w`: weight array of shape `(d,)`\n- `b`: intercept, a Python float\n    ",examples:[{input:`X = [[1], [2], [3], [4]], y = [3, 5, 7, 9], lam = 0`,output:`ridge_fit -> (array([2.]), 1.0)`,explanation:`With no penalty, ridge is ordinary least squares: y = 2x + 1.`},{input:`Same data, lam = 5`,output:`ridge_fit -> (array([1.0]), 3.5)`,explanation:`Xc^T Xc = 5 and Xc^T yc = 10, so w = 10 / (5 + 5) = 1; b = 6 - 2.5 * 1 = 3.5.`},{input:`X = np.random.randn(40, 5), y = 3*X[:, 0] - 2*X[:, 1] + 0.1*noise + 4, lasso_fit(X, y, 0.3)`,output:`w ≈ [2.74, -1.68, 0.0, 0.0, 0.0], b ≈ 3.94`,explanation:`The three noise features get exactly zero weight; the true weights (3, -2) are shrunk towards zero by the L1 penalty.`}],starterCode:`import numpy as np
+
+# Fit O(n * d), predict O(m * C * d) time and space
+`},{id:`ridge-lasso`,title:`Ridge & Lasso Regression`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Ridge & Lasso Regression\n\nImplement `ridge_fit` (closed form) and `lasso_fit` (cyclic coordinate descent), both with an **unpenalised intercept**, matching scikit-learn's `Ridge` and `Lasso`.\n\n### Background\nBoth add a penalty on the weights to least squares to fight overfitting and collinearity. **Ridge** (L2) shrinks all weights smoothly and has a closed form. **Lasso** (L1) has no closed form, but it sets some weights to **exactly zero**, so it doubles as feature selection. \"Why does L1 give sparsity and L2 not?\" is a standard interview question.\n\n### The intercept is not penalised\nPenalising `b` would make the fit depend on where the origin of `y` is. Instead, **centre** the data, fit without an intercept, then recover it:\n```text\nx_mean = X.mean(axis=0)    (d,)       y_mean = y.mean()\nXc = X - x_mean            (n, d)     yc = y - y_mean    (n,)\n... fit w on (Xc, yc) ...\nb = y_mean - x_mean @ w\n```\nThis is what scikit-learn does with `fit_intercept=True`.\n\n### 1. Ridge: `ridge_fit(X, y, lam)`\nMinimises `||yc - Xc w||^2 + lam * ||w||^2` (sklearn `Ridge(alpha=lam)`; note: **no** `1/n` factor). Setting the gradient to zero gives\n```text\nw = (Xc^T Xc + lam * I_d)^(-1) Xc^T yc\n```\nSolve the linear system with `np.linalg.solve` instead of forming the inverse.\n\n### 2. Lasso: `lasso_fit(X, y, lam, n_sweeps=100)`\nMinimises (sklearn `Lasso(alpha=lam)` scaling, **with** a `1/(2n)` factor):\n```text\n(1 / (2n)) * ||yc - Xc w||^2 + lam * ||w||_1\n```\nby **cyclic coordinate descent**:\n1. Start from `w = 0`.\n2. Each sweep updates `j = 0, 1, ..., d-1` **in order**, each update using the latest values of all other weights:\n```text\nr     = yc - Xc @ w                         # current residual, (n,)\nrho_j = (1/n) * Xc[:, j] @ (r + Xc[:, j] * w_j)   # fit of feature j to the residual without it\nz_j   = (1/n) * Xc[:, j] @ Xc[:, j]\nw_j   = soft_threshold(rho_j, lam) / z_j    # leave w_j = 0 if z_j == 0 (constant feature)\n\nsoft_threshold(a, lam) = sign(a) * max(|a| - lam, 0)\n```\n3. Run exactly `n_sweeps` full sweeps (no early stopping).\n\n### Inputs\n- `X`: float array `(n, d)`; `y`: float array `(n,)`\n- `lam`: penalty strength `>= 0`; `n_sweeps`: int\n\n### Expected Return Format\nBoth functions return a tuple `(w, b)`:\n- `w`: NumPy weight array of shape `(d,)`\n- `b`: intercept as a Python float\n\n### Edge Cases and Conventions\n- With `lam = 0`, ridge is ordinary least squares.\n- Whenever `|rho_j| <= lam`, lasso sets `w_j` to **exactly** 0. If `lam >= max_j |Xc[:, j] @ yc| / n`, every weight is zero and `b = mean(y)`.\n- The two `lam`s are on different scales (ridge has no `1/n`), exactly like sklearn's `alpha`.\n\n### Constraints\n- NumPy only; no sklearn. Keep the residual up to date incrementally inside the lasso loop rather than recomputing `Xc @ w`.\n\n### Follow-up\n- Sketch the L1 and L2 constraint regions and explain geometrically why L1 hits corners (zeros).\n- Elastic net mixes both penalties: how does the coordinate update change?\n    ",examples:[{input:`ridge_fit(np.array([[1.0], [2.0], [3.0], [4.0]]), np.array([3.0, 5.0, 7.0, 9.0]), 0.0)`,output:`(array([2.]), 1.0)`,explanation:`With no penalty, ridge is ordinary least squares: y = 2x + 1.`},{input:`Same data, lam = 5`,output:`(array([1.]), 3.5)`,explanation:`Xc^T Xc = 5 and Xc^T yc = 10, so w = 10 / (5 + 5) = 1; b = 6 - 2.5 * 1 = 3.5.`},{input:`X = np.random.randn(40, 5), y = 3*X[:, 0] - 2*X[:, 1] + 0.1*noise + 4, lasso_fit(X, y, 0.3)`,output:`w ≈ [2.7375, -1.6758, 0.0, 0.0, 0.0], b ≈ 3.9411`,explanation:`The three noise features get exactly zero weight; the true weights (3, -2) are shrunk towards zero by the L1 penalty (same as sklearn Lasso(alpha=0.3)).`}],starterCode:`import numpy as np
 
 def ridge_fit(X, y, lam):
     """
     Ridge regression in closed form (intercept not penalised).
+    Objective: ||yc - Xc w||^2 + lam * ||w||^2 on centred data.
 
     Args:
         X: Features, shape (n, d)
@@ -9930,9 +9699,12 @@ def lasso_fit(X, y, lam, n_sweeps=100):
     y := 3 * X[:, 0] - 2 * X[:, 1] + 0.1 * np.random.randn(40) + 4,
     w := lasso_fit(X, y, 0.3)[0],
     (int((w == 0).sum()), bool(np.all(w[2:] == 0)))
-)[-1])()`,expected:`(3, True)`,hidden:!1},{id:`4`,description:`Ridge matches scikit-learn Ridge(alpha=2)`,input:`(lambda wb: (np.round(wb[0], 6).tolist(), round(wb[1], 6)))(ridge_fit(np.array([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), np.array([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 2.0))`,expected:`([0.501562, 1.054956, 0.469557], 1.770184)`,hidden:!0},{id:`5`,description:`Lasso matches scikit-learn Lasso(alpha=0.1) after convergence`,input:`(lambda wb: (np.round(wb[0], 4).tolist(), round(wb[1], 4)))(lasso_fit(np.array([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), np.array([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 0.1, 500))`,expected:`([0.6142, 1.3094, 0.6529], 1.3058)`,hidden:!0},{id:`6`,description:`Large lam gives all-zero weights and b = mean(y)`,input:`(lambda wb: (bool(np.all(wb[0] == 0)), round(wb[1], 6)))(lasso_fit(np.array([[1.0, 0.5], [2.0, -1.0], [0.0, 1.0], [3.0, 2.0]]), np.array([4.0, 1.0, 3.0, 6.0]), 10.0))`,expected:`(True, 3.5)`,hidden:!0},{id:`7`,description:`Lasso weights after 3 sweeps (in-order coordinate updates)`,input:`(lambda wb: np.round(wb[0], 6).tolist())(lasso_fit(np.array([[1.0, 2.0], [2.0, 1.0], [3.0, 4.0], [4.0, 3.0]]), np.array([1.0, 2.0, 2.0, 4.0]), 0.05, 3))`,expected:`[1.003616, -0.26217]`,hidden:!0}],hints:[`Centre X and y first, fit w on the centred data, then b = y_mean - x_mean @ w.`,`Ridge: np.linalg.solve(Xc.T @ Xc + lam * np.eye(d), Xc.T @ yc).`,`Lasso: for each j, rho_j = Xc[:, j] @ (r + Xc[:, j] * w[j]) / n is the correlation of feature j with the residual that ignores feature j.`,`Keep the residual up to date after every coordinate: r -= Xc[:, j] * (w_new - w_old). soft_threshold returns exactly 0 when |rho| <= lam.`],solution:`import numpy as np
+)[-1])()`,expected:`(3, True)`,hidden:!1},{id:`4`,description:`Ridge matches scikit-learn Ridge(alpha=2)`,input:`(lambda wb: (np.round(wb[0], 6).tolist(), round(wb[1], 6)))(ridge_fit(np.array([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), np.array([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 2.0))`,expected:`([0.501562, 1.054956, 0.469557], 1.770184)`,hidden:!0},{id:`5`,description:`Lasso matches scikit-learn Lasso(alpha=0.1) after convergence`,input:`(lambda wb: (np.round(wb[0], 4).tolist(), round(wb[1], 4)))(lasso_fit(np.array([[1.0, 0.5, 2.0], [2.0, -1.0, 0.0], [0.0, 1.0, 1.0], [3.0, 2.0, -1.0], [1.5, 0.0, 0.5], [2.5, 1.5, 1.0]]), np.array([4.0, 1.0, 3.0, 5.0, 2.5, 6.0]), 0.1, 500))`,expected:`([0.6142, 1.3094, 0.6529], 1.3058)`,hidden:!0},{id:`6`,description:`Large lam gives all-zero weights and b = mean(y)`,input:`(lambda wb: (bool(np.all(wb[0] == 0)), round(wb[1], 6)))(lasso_fit(np.array([[1.0, 0.5], [2.0, -1.0], [0.0, 1.0], [3.0, 2.0]]), np.array([4.0, 1.0, 3.0, 6.0]), 10.0))`,expected:`(True, 3.5)`,hidden:!0},{id:`7`,description:`Lasso weights after 3 sweeps (in-order coordinate updates)`,input:`(lambda wb: np.round(wb[0], 6).tolist())(lasso_fit(np.array([[1.0, 2.0], [2.0, 1.0], [3.0, 4.0], [4.0, 3.0]]), np.array([1.0, 2.0, 2.0, 4.0]), 0.05, 3))`,expected:`[1.003616, -0.26217]`,hidden:!0},{id:`8`,description:`One-feature lasso is a soft-thresholded least-squares slope`,input:`(lambda wb: (np.round(wb[0], 6).tolist(), round(wb[1], 6)))(lasso_fit(np.array([[1.0], [2.0], [3.0], [4.0]]), np.array([3.0, 5.0, 7.0, 9.0]), 0.5))`,expected:`([1.6], 2.0)`,hidden:!0}],hints:[`Both problems become intercept-free after centring: fit w on Xc = X - x_mean and yc = y - y_mean, then b = y_mean - x_mean @ w.`,`Ridge is one linear solve. Lasso optimises one weight at a time: with the others fixed, the 1D problem has a closed-form soft-threshold solution.`,`Ridge: np.linalg.solve(Xc.T @ Xc + lam * np.eye(d), Xc.T @ yc). Lasso: rho_j = Xc[:, j] @ (r + Xc[:, j] * w[j]) / n, w_j = sign(rho_j) * max(|rho_j| - lam, 0) / z_j.`,`After changing w[j], update the residual (r -= Xc[:, j] * (w_new - w_old)) before moving on; a stale residual turns cyclic coordinate descent into a different algorithm.`],solution:`import numpy as np
 
 def ridge_fit(X, y, lam):
+    """
+    Closed-form ridge on centred data. Returns (w of shape (d,), float b).
+    """
     X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=float)
     x_mean, y_mean = X.mean(axis=0), y.mean()
     Xc, yc = X - x_mean, y - y_mean
@@ -9948,6 +9720,10 @@ def soft_threshold(a, lam):
 
 
 def lasso_fit(X, y, lam, n_sweeps=100):
+    """
+    Cyclic coordinate descent on (1/(2n))||yc - Xc w||^2 + lam ||w||_1.
+    Returns (w of shape (d,), float b).
+    """
     X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=float)
     n, d = X.shape
     x_mean, y_mean = X.mean(axis=0), y.mean()
@@ -9958,7 +9734,7 @@ def lasso_fit(X, y, lam, n_sweeps=100):
     r = yc.copy()                          # residual yc - Xc @ w
     for _ in range(n_sweeps):
         for j in range(d):
-            if z[j] == 0:
+            if z[j] == 0:                  # constant feature: keep w_j = 0
                 continue
             rho = Xc[:, j] @ (r + Xc[:, j] * w[j]) / n
             w_new = soft_threshold(rho, lam) / z[j]
@@ -9967,7 +9743,9 @@ def lasso_fit(X, y, lam, n_sweeps=100):
 
     b = float(y_mean - x_mean @ w)
     return w, b
-`},{id:`gradient-boosting`,title:`Gradient Boosting with Stumps`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Gradient Boosting for Regression (Decision Stumps)\n\nGradient boosting builds a strong model as a sum of weak ones. Each new weak learner is fit to the **negative gradient** of the loss at the current predictions. For squared loss `L = 0.5 * (y - F)^2` the negative gradient is simply the **residual** `y - F`.\n\nImplement two functions.\n\n### 1. `fit_stump(X, r)`: best depth-1 tree\nA stump splits on one feature `j` at a threshold `t`: samples with `X[:, j] <= t` go **left**, the others go **right**, and each side predicts the **mean** of `r` on that side.\n\nSearch **exhaustively**:\n- For each feature `j = 0 .. d-1`, take the sorted unique values `u` of `X[:, j]`; the candidate thresholds are the **midpoints** `(u[:-1] + u[1:]) / 2` (a feature with a single unique value has none).\n- Pick the split with the smallest sum of squared errors\n```\nSSE = sum_left (r - mean_left)^2 + sum_right (r - mean_right)^2\n```\n- **Ties**: keep the first one found, scanning features in order and thresholds in ascending order (i.e. only replace the best on a strictly smaller SSE).\n- If there is no candidate at all, return `(0, inf, mean(r), mean(r))`.\n\nReturns `(feature, threshold, left_value, right_value)`.\n\n### 2. `gradient_boosting(X, y, n_rounds, learning_rate)`\n```\nF_0 = mean(y)                          # constant initial prediction\nfor m = 1 .. n_rounds:\n    r   = y - F_{m-1}                   # residuals = negative gradient\n    h_m = fit_stump(X, r)\n    F_m = F_{m-1} + learning_rate * h_m(X)\n    loss_m = mean((y - F_m)^2)          # training MSE after round m\n```\nBecause each stump's leaf values are the least-squares fit to the residuals, the training loss is **non-increasing** for `0 < learning_rate <= 1`.\n\n### Expected Return Format\n`gradient_boosting` returns a dictionary with these keys:\n- `'f0'`: the initial constant prediction (float)\n- `'stumps'`: list of `n_rounds` tuples `(feature, threshold, left_value, right_value)`\n- `'predictions'`: final training predictions `F_M`, shape `(n,)`\n- `'losses'`: list of `n_rounds` floats, the training MSE after each round\n    ",examples:[{input:`fit_stump(np.array([[1], [2], [3], [4], [5], [6]]), np.array([-2., -2., -2., 2., 2., 2.]))`,output:`(0, 3.5, -2.0, 2.0)`,explanation:`Splitting between 3 and 4 separates the residuals perfectly (SSE = 0).`},{input:`gradient_boosting(X, y=[1, 1, 1, 5, 5, 5], n_rounds=3, learning_rate=0.5)`,output:`f0 = 3.0, losses = [1.0, 0.25, 0.0625]`,explanation:`Each round removes half of the remaining residual: MSE 4 -> 1 -> 0.25 -> 0.0625.`}],starterCode:`import numpy as np
+
+# Ridge: O(n d^2 + d^3). Lasso: O(n_sweeps * n * d) time, O(n d) space.
+`},{id:`gradient-boosting`,title:`Gradient Boosting with Stumps`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Gradient Boosting with Stumps\n\nImplement `fit_stump` (the best depth-1 regression tree) and `gradient_boosting` (a squared-loss booster that adds one shrunken stump per round).\n\n### Background\nGradient boosting builds a strong model as a sum of weak ones: each new learner is fit to the **negative gradient** of the loss at the current predictions. For the squared loss `L = 0.5 * (y - F)^2` the negative gradient is simply the **residual** `y - F`. Boosted trees (XGBoost, LightGBM, sklearn's `HistGradientBoosting`) are still the go-to models for tabular data.\n\n### 1. `fit_stump(X, r)`: best depth-1 tree\nA stump splits on one feature `j` at a threshold `t`: samples with `X[:, j] <= t` go **left**, the others go **right**, and each side predicts the **mean** of `r` on that side.\n\nSearch exhaustively:\n1. For each feature `j = 0 .. d-1`, take the sorted unique values `u` of `X[:, j]`. The candidate thresholds are the **midpoints** `(u[:-1] + u[1:]) / 2` (a feature with a single unique value has none).\n2. Score each candidate by the sum of squared errors\n```text\nSSE = sum_left (r - mean_left)^2 + sum_right (r - mean_right)^2\n```\n3. Keep the smallest SSE. **Ties**: keep the first one found, scanning features in order and thresholds in ascending order (replace the best only on a strictly smaller SSE).\n4. If there is no candidate at all, return `(0, inf, mean(r), mean(r))`.\n\n### 2. `gradient_boosting(X, y, n_rounds, learning_rate)`\n```text\nF_0 = mean(y)                          # constant initial prediction, shape (n,)\nfor m = 1 .. n_rounds:\n    r   = y - F_{m-1}                   # residuals = negative gradient\n    h_m = fit_stump(X, r)\n    F_m = F_{m-1} + learning_rate * h_m(X)\n    loss_m = mean((y - F_m)^2)          # training MSE after round m\n```\nThis matches `sklearn.ensemble.GradientBoostingRegressor(loss='squared_error', max_depth=1, n_estimators=n_rounds, learning_rate=learning_rate)`, whose `train_score_` is our `'losses'` (sklearn breaks exact ties between features at random, so tie cases may differ).\n\n### Inputs\n- `X`: float array `(n, d)`; `y` and `r`: float arrays `(n,)`\n- `n_rounds`: int; `learning_rate`: float in `(0, 1]`\n\n### Expected Return Format\n`fit_stump` returns a tuple `(feature, threshold, left_value, right_value)`: an int and three floats.\n\n`gradient_boosting` returns a dictionary with these keys:\n- `'f0'`: the initial constant prediction (float)\n- `'stumps'`: list of `n_rounds` tuples `(feature, threshold, left_value, right_value)`\n- `'predictions'`: final training predictions `F_M`, shape `(n,)`\n- `'losses'`: list of `n_rounds` floats, the training MSE after each round\n\n### Edge Cases and Conventions\n- Because each stump's leaf values are the least-squares fit to the residuals, the training loss is **non-increasing** for `0 < learning_rate <= 1`.\n- A sample exactly on a threshold goes left (`<=`).\n\n### Constraints\n- NumPy only; no sklearn. Scoring all thresholds of one feature at once (with a `(T, n)` mask) is encouraged.\n\n### Follow-up\n- For log loss (classification), what are the residuals, and why do leaf values need a Newton step instead of a plain mean?\n- Why does a smaller learning rate with more rounds usually generalise better?\n    ",examples:[{input:`fit_stump(np.array([[1], [2], [3], [4], [5], [6]]), np.array([-2., -2., -2., 2., 2., 2.]))`,output:`(0, 3.5, -2.0, 2.0)`,explanation:`Splitting between 3 and 4 separates the residuals perfectly (SSE = 0).`},{input:`gradient_boosting(np.array([[1], [2], [3], [4], [5], [6]]), np.array([1., 1., 1., 5., 5., 5.]), n_rounds=3, learning_rate=0.5)`,output:`{'f0': 3.0, 'losses': [1.0, 0.25, 0.0625], ...}`,explanation:`Residuals start at ±2 (MSE 4); each round removes half of what is left: MSE 1, then 0.25, then 0.0625.`}],starterCode:`import numpy as np
 
 def fit_stump(X, r):
     """
@@ -9979,7 +9757,8 @@ def fit_stump(X, r):
 
     Returns:
         (feature, threshold, left_value, right_value)
-        Left side is X[:, feature] <= threshold.
+        Left side is X[:, feature] <= threshold; ties keep the first
+        (feature, threshold) found; no candidate -> (0, inf, mean(r), mean(r)).
     """
     # Your code here
     pass
@@ -9996,7 +9775,8 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
         learning_rate: Shrinkage applied to every stump
 
     Returns:
-        dict with 'f0', 'stumps', 'predictions' (n,), 'losses' (list of n_rounds floats)
+        dict with 'f0' (float), 'stumps' (list of tuples),
+        'predictions' (n,), 'losses' (list of n_rounds floats)
     """
     # Your code here
     pass
@@ -10005,15 +9785,18 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
     y := np.sin(4 * X[:, 0]) + X[:, 1] ** 2 + 0.1 * np.random.randn(30),
     L := gradient_boosting(X, y, 15, 0.3)["losses"],
     bool(len(L) == 15 and all(b <= a + 1e-12 for a, b in zip(L, L[1:])) and L[-1] < np.var(y))
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Stump picks the better feature and midpoint`,input:`fit_stump(np.array([[1.0, 5.0], [2.0, 1.0], [3.0, 4.0], [4.0, 2.0]]), np.array([1.0, -1.0, 1.0, -1.0]))`,expected:`(1, 3.0, -1.0, 1.0)`,hidden:!0},{id:`5`,description:`Tie: the first feature / smallest threshold wins`,input:`fit_stump(np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]), np.array([0.0, 0.0, 4.0, 4.0]))`,expected:`(0, 1.5, 0.0, 4.0)`,hidden:!0},{id:`6`,description:`Predictions and losses on a 2-feature problem`,input:`(lambda m: (np.round(m["predictions"], 6).tolist(), [round(v, 6) for v in m["losses"]]))(gradient_boosting(np.array([[1.0, 3.0], [2.0, 1.0], [3.0, 2.0], [4.0, 5.0], [5.0, 4.0]]), np.array([1.0, 3.0, 2.0, 6.0, 4.0]), 4, 0.5))`,expected:`([1.583789, 2.435352, 2.435352, 5.610156, 3.935352], [1.34, 0.663125, 0.315049, 0.201065])`,hidden:!0},{id:`7`,description:`Stumps chosen on random data`,input:`(lambda: (
+)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Stump picks the better feature and midpoint`,input:`fit_stump(np.array([[1.0, 5.0], [2.0, 1.0], [3.0, 4.0], [4.0, 2.0]]), np.array([1.0, -1.0, 1.0, -1.0]))`,expected:`(1, 3.0, -1.0, 1.0)`,hidden:!0},{id:`5`,description:`Tie: the first feature / smallest threshold wins`,input:`fit_stump(np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]), np.array([0.0, 0.0, 4.0, 4.0]))`,expected:`(0, 1.5, 0.0, 4.0)`,hidden:!0},{id:`6`,description:`Predictions and losses match sklearn GradientBoostingRegressor(max_depth=1)`,input:`(lambda m: (np.round(m["predictions"], 6).tolist(), [round(v, 6) for v in m["losses"]]))(gradient_boosting(np.array([[1.0, 3.0], [2.0, 1.0], [3.0, 2.0], [4.0, 5.0], [5.0, 4.0]]), np.array([1.0, 3.0, 2.0, 6.0, 4.0]), 4, 0.5))`,expected:`([1.583789, 2.435352, 2.435352, 5.610156, 3.935352], [1.34, 0.663125, 0.315049, 0.201065])`,hidden:!0},{id:`7`,description:`Stumps chosen on random data`,input:`(lambda: (
     X := np.round(np.random.rand(12, 3), 2),
     y := 2 * X[:, 1] - X[:, 2] + 0.05 * np.random.randn(12),
     [(s[0], round(s[1], 6)) for s in gradient_boosting(X, y, 4, 0.5)["stumps"]]
-)[-1])()`,expected:`[[1, 0.49], [1, 0.22], [2, 0.275], [1, 0.22]]`,hidden:!0}],hints:[`For a fixed feature, the candidate thresholds are the midpoints between consecutive sorted unique values: (u[:-1] + u[1:]) / 2.`,`You can score all thresholds of a feature at once: with a boolean (T, n) mask "left", SSE = sum(r^2) - s_l^2 / n_l - s_r^2 / n_r, where s and n are the sums and counts of each side.`,`Only replace the current best when the SSE is strictly smaller; np.argmin already returns the first minimum within a feature.`,`In the boosting loop: residuals = y - F, fit a stump to them, then F += learning_rate * stump prediction; record np.mean((y - F) ** 2).`],solution:`import numpy as np
+)[-1])()`,expected:`[(1, 0.49), (1, 0.22), (2, 0.275), (1, 0.22)]`,hidden:!0},{id:`8`,description:`Constant features: no candidate split`,input:`(lambda s: (s[0], s[1] == float("inf"), s[2], s[3]))(fit_stump(np.array([[2.0, 7.0], [2.0, 7.0], [2.0, 7.0]]), np.array([1.0, 2.0, 6.0])))`,expected:`(0, True, 3.0, 3.0)`,hidden:!0}],hints:[`Boosting is a loop of "fit a tiny tree to what the model still gets wrong, add a fraction of it". Get fit_stump right first; the loop is five lines.`,`For one feature, the candidate thresholds are the midpoints between consecutive sorted unique values: u = np.unique(X[:, j]); (u[:-1] + u[1:]) / 2.`,`Score all thresholds of a feature at once: with a boolean (T, n) mask left, SSE = sum(r^2) - s_l^2 / n_l - s_r^2 / n_r, where s and n are the sums and counts of each side. np.argmin returns the first minimum.`,`Replace the best only on a strictly smaller SSE (so ties keep the earlier feature). In the loop, fit to residuals y - F (not to y), and scale every stump by learning_rate.`],solution:`import numpy as np
 
 def fit_stump(X, r):
+    """
+    Best depth-1 regression tree. Returns (feature, threshold, left_value, right_value).
+    """
     X, r = np.asarray(X, dtype=float), np.asarray(r, dtype=float)
-    best = (0, np.inf, r.mean(), r.mean())
+    best = (0, np.inf, float(r.mean()), float(r.mean()))
     best_sse = np.inf
     total_sq = np.sum(r ** 2)
 
@@ -10030,7 +9813,7 @@ def fit_stump(X, r):
         # SSE = sum r^2 - n_l * mean_l^2 - n_r * mean_r^2
         sse = total_sq - s_l ** 2 / n_l - s_r ** 2 / n_r
         k = int(np.argmin(sse))                              # first minimum
-        if sse[k] < best_sse:
+        if sse[k] < best_sse:                                # strict: ties keep earlier
             best_sse = sse[k]
             best = (j, float(thresholds[k]), float(s_l[k] / n_l[k]), float(s_r[k] / n_r[k]))
     return best
@@ -10042,6 +9825,10 @@ def stump_predict(stump, X):
 
 
 def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
+    """
+    Squared-loss gradient boosting with stumps.
+    Returns {'f0', 'stumps', 'predictions', 'losses'}.
+    """
     X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=float)
     f0 = float(y.mean())
     F = np.full(len(y), f0)
@@ -10055,7 +9842,10 @@ def gradient_boosting(X, y, n_rounds=10, learning_rate=0.1):
         losses.append(float(np.mean((y - F) ** 2)))
 
     return {'f0': f0, 'stumps': stumps, 'predictions': F, 'losses': losses}
-`},{id:`decision-tree-bagging`,title:`Decision Tree Classifier with Bagging`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Decision Tree Classifier with Bagging\n\nBuild a full classification tree with recursive **Gini** splits, then an ensemble of trees trained on **bootstrap samples** whose predictions are combined by **majority vote** (bagging).\n\n### Gini impurity\n```\ngini(S) = 1 - sum_c p_c^2              # p_c = fraction of S with class c\nsplit impurity = (n_L * gini(L) + n_R * gini(R)) / n\n```\n\n### Growing the tree (`build_tree`)\nAt a node holding samples `S` at depth `depth` (the root has depth 0):\n1. The node is a **leaf** if `max_depth` is not None and `depth >= max_depth`, or `len(S) < min_samples_split`, or `S` is pure.\n2. Otherwise search every feature `f` (in increasing order) and every threshold `t` (in increasing order), where the thresholds are the **midpoints between consecutive distinct sorted values** of feature `f` in `S`. A sample goes **left if `x[f] <= t`**, right otherwise.\n3. Start with `best = gini(S)`. A candidate replaces the current best only if its split impurity is **lower by more than 1e-12**. So ties keep the earlier candidate (smaller feature index, then smaller threshold), and a split is made only if it strictly reduces impurity.\n4. If no candidate qualified, the node is a leaf; otherwise recurse on both sides.\n\nA leaf predicts the **majority class** of its samples; ties go to the smallest class label. Labels are non-negative integers.\n\n### Tree format\n- Leaf: `{'leaf': True, 'value': c}` with `c` a Python int\n- Internal node: `{'leaf': False, 'feature': f, 'threshold': t, 'left': subtree, 'right': subtree}` with `f` an int and `t` a float\n\n### Bagging (`bagging_predict`)\nCreate `rng = np.random.default_rng(seed)`. For each of the `n_estimators` trees, draw `idx = rng.integers(0, n, size=n)` (sampling with replacement), fit `build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)`, and predict `X_test`. Each test sample gets the class with the most votes; ties go to the smallest label.\n\n### Expected Return Format\n- `build_tree(X, y, max_depth=None, min_samples_split=2)`: the root node dict\n- `predict_tree(tree, X)`: int array `(n_samples,)`\n- `bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None, min_samples_split=2, seed=0)`: int array `(n_test,)`\n",examples:[{input:`build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1]), max_depth=1)`,output:`{'leaf': False, 'feature': 0, 'threshold': 4.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}`,explanation:`x0 <= 4.5 separates the classes perfectly, so its split impurity is 0.`},{input:`predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]]))`,output:`array([0, 0, 0, 1])`,explanation:`(4.5, 6) has x0 equal to the threshold 4.5, so it goes left (x[f] <= t).`}],starterCode:`import numpy as np
+
+# fit_stump: O(d * n^2) with the (T, n) mask (O(d * n log n) with sorted prefix sums).
+# Boosting: n_rounds times that.
+`},{id:`decision-tree-bagging`,title:`Decision Tree Classifier with Bagging`,section:`supervised-learning`,difficulty:`hard`,description:"\n## Decision Tree Classifier with Bagging\n\nGrow a full classification tree with recursive **Gini** splits (`build_tree`, `predict_tree`), then combine trees trained on **bootstrap samples** by **majority vote** (`bagging_predict`).\n\n### Background\nA single deep tree has low bias but high variance: small changes in the data change the tree. **Bagging** (bootstrap aggregating) averages many such trees to cut the variance; random forests add per-split feature subsampling on top. This problem uses the impurity from **Gini Impurity for Decision-Tree Splits**.\n\n### Gini impurity\n```text\ngini(S)          = 1 - sum_c p_c^2            # p_c = fraction of S with class c\nsplit impurity   = (n_L * gini(L) + n_R * gini(R)) / n\n```\n\n### Growing the tree (`build_tree`)\nAt a node holding samples `S` at depth `depth` (the root has depth 0):\n1. The node is a **leaf** if `max_depth` is not None and `depth >= max_depth`, or `len(S) < min_samples_split`, or `S` is pure.\n2. Otherwise search every feature `f` (in increasing order) and every threshold `t` (in increasing order), where the thresholds are the **midpoints between consecutive distinct sorted values** of feature `f` within `S`. A sample goes **left if `x[f] <= t`**, right otherwise.\n3. Start with `best = gini(S)`. A candidate replaces the current best only if its split impurity is **lower by more than 1e-12**. So ties keep the earlier candidate (smaller feature index, then smaller threshold), and a split is made only if it strictly reduces impurity.\n4. If no candidate qualified, the node is a leaf; otherwise recurse on both sides with `depth + 1`.\n\nA leaf predicts the **majority class** of its samples; ties go to the smallest class label.\n\n### Tree format\n- Leaf: `{'leaf': True, 'value': c}` with `c` a Python int\n- Internal node: `{'leaf': False, 'feature': f, 'threshold': t, 'left': subtree, 'right': subtree}` with `f` an int and `t` a float\n\n### Bagging (`bagging_predict`)\n1. Create `rng = np.random.default_rng(seed)` once.\n2. For each of the `n_estimators` trees, in order: draw `idx = rng.integers(0, n, size=n)` (sampling with replacement), fit `build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)`, and predict `X_test`.\n3. Each test sample gets the class with the most votes (**hard voting**); ties go to the smallest label.\n\n### Inputs\n- `X`, `X_train`, `X_test`: float arrays `(n_samples, n_features)`\n- `y`, `y_train`: non-negative integer labels `(n_samples,)`\n- `max_depth`: int or None; `min_samples_split`: int (default 2); `n_estimators`, `seed`: ints\n\n### Expected Return Format\n- `build_tree(X, y, max_depth=None, min_samples_split=2)`: the root node dict (format above)\n- `predict_tree(tree, X)`: int array `(n_samples,)`\n- `bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None, min_samples_split=2, seed=0)`: int array `(n_test,)`\n\n### Conventions vs scikit-learn\n- Same as `DecisionTreeClassifier(criterion='gini')`: midpoint thresholds, `<=` goes left, `max_depth` and `min_samples_split` mean the same. sklearn shuffles the features at each node, so it breaks exact ties at random (fixed by `random_state`); here ties are deterministic.\n- `BaggingClassifier` averages the trees' predicted **probabilities** (soft voting) when it can; here you use hard majority voting.\n\n### Constraints\n- NumPy only; no sklearn.\n\n### Follow-up\n- What does a random forest change (`max_features`), and why does decorrelating the trees help more than adding trees?\n- About 63.2% of the distinct samples land in each bootstrap sample. How can the remaining \"out-of-bag\" samples estimate test error for free?\n",examples:[{input:`build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1]), max_depth=1)`,output:`{'leaf': False, 'feature': 0, 'threshold': 4.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}`,explanation:`x0 <= 4.5 separates the classes perfectly, so its split impurity is 0.`},{input:`predict_tree(tree, np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]]))  # tree: same data, no max_depth`,output:`array([0, 0, 0, 1])`,explanation:`(4.5, 6) has x0 equal to the threshold 4.5, so it goes left (x[f] <= t).`}],starterCode:`import numpy as np
 
 def build_tree(X, y, max_depth=None, min_samples_split=2):
     """
@@ -10070,6 +9860,7 @@ def build_tree(X, y, max_depth=None, min_samples_split=2):
     Returns:
         Root node: {'leaf': True, 'value': c} or
         {'leaf': False, 'feature': f, 'threshold': t, 'left': ..., 'right': ...}
+        (c and f Python ints, t a Python float)
     """
     # Your code here
     pass
@@ -10082,28 +9873,30 @@ def predict_tree(tree, X):
 def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
                     min_samples_split=2, seed=0):
     """
-    Bagging: trees on bootstrap samples (np.random.default_rng(seed)), majority vote.
+    Bagging: trees on bootstrap samples drawn with rng = np.random.default_rng(seed)
+    (idx = rng.integers(0, n, size=n) per tree), combined by majority vote.
 
     Returns:
-        Predicted classes for X_test, int array (n_test,)
+        Predicted classes for X_test, int array (n_test,) (vote ties -> smallest label)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Fully grown tree fits the training data`,input:`predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]])).tolist()`,expected:`[0, 0, 0, 1, 1, 1, 0, 1]`,hidden:!1},{id:`2`,description:`Root split (feature, threshold)`,input:`(lambda: (r := build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 4.5)`,hidden:!1},{id:`3`,description:`Predictions on new points`,input:`predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]])).tolist()`,expected:`[0, 0, 0, 1]`,hidden:!1},{id:`4`,description:`XOR-like data: stump vs full tree`,input:`(lambda: (predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), max_depth=1), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist(), predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0])), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()))()`,expected:`([1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 1, 1, 0])`,hidden:!0},{id:`5`,description:`Equal impurity ties go to feature 0`,input:`(lambda: (r := build_tree(np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), np.array([0, 0, 1, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 2.5)`,hidden:!0},{id:`6`,description:`max_depth=0 is a majority leaf (ties to the smaller label)`,input:`build_tree(np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), np.array([0, 0, 1, 1]), max_depth=0)`,expected:`{'leaf': True, 'value': 0}`,hidden:!0},{id:`7`,description:`min_samples_split stops splitting`,input:`predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), min_samples_split=8), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()`,expected:`[1, 1, 1, 1, 1, 1, 1]`,hidden:!0},{id:`8`,description:`Depth-2 tree structure`,input:`build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), max_depth=2)`,expected:`{'leaf': False, 'feature': 0, 'threshold': 0.5, 'left': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}, 'right': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 1}, 'right': {'leaf': True, 'value': 0}}}`,hidden:!0},{id:`9`,description:`Bagging predictions on noisy data`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), bagging_predict(D[0], D[1], D[2], n_estimators=7, max_depth=3, seed=0).tolist())[-1])()`,expected:`[0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1]`,hidden:!0},{id:`10`,description:`One bagged tree = a tree on the bootstrap sample`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), idx := np.random.default_rng(3).integers(0, 40, size=40), bagging_predict(D[0], D[1], D[2], n_estimators=1, seed=3).tolist() == predict_tree(build_tree(D[0][idx], D[1][idx]), D[2]).tolist())[-1])()`,expected:`True`,hidden:!0}],hints:['Write a helper that scans all (feature, threshold) candidates and keeps the best one with `if imp < best - 1e-12`; starting `best` at the node\'s own Gini enforces "strictly reduces impurity".',"Thresholds: `v = np.unique(X[:, f])` is sorted, so the midpoints are `(v[:-1] + v[1:]) / 2`.","`np.bincount(y).argmax()` gives the majority class with ties broken towards the smallest label.",`For bagging, draw all indices from one generator in a loop, stack the per-tree predictions into (n_estimators, n_test) and vote per column.`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Fully grown tree fits the training data`,input:`predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]])).tolist()`,expected:`[0, 0, 0, 1, 1, 1, 0, 1]`,hidden:!1},{id:`2`,description:`Root split (feature, threshold)`,input:`(lambda: (r := build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 4.5)`,hidden:!1},{id:`3`,description:`Predictions on new points`,input:`predict_tree(build_tree(np.array([[2.0, 3.0], [1.0, 1.0], [3.0, 1.0], [6.0, 5.0], [7.0, 7.0], [8.0, 6.0], [4.0, 4.0], [5.0, 2.0]]), np.array([0, 0, 0, 1, 1, 1, 0, 1])), np.array([[0.0, 0.0], [4.5, 1.0], [4.5, 6.0], [9.0, 9.0]])).tolist()`,expected:`[0, 0, 0, 1]`,hidden:!1},{id:`4`,description:`XOR-like data: stump vs full tree`,input:`(lambda: (predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), max_depth=1), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist(), predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0])), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()))()`,expected:`([1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 1, 1, 0])`,hidden:!0},{id:`5`,description:`Equal impurity ties go to feature 0`,input:`(lambda: (r := build_tree(np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), np.array([0, 0, 1, 1])), (r["feature"], r["threshold"]))[-1])()`,expected:`(0, 2.5)`,hidden:!0},{id:`6`,description:`max_depth=0 is a majority leaf (ties to the smaller label)`,input:`build_tree(np.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0], [4.0, 4.0]]), np.array([0, 0, 1, 1]), max_depth=0)`,expected:`{'leaf': True, 'value': 0}`,hidden:!0},{id:`7`,description:`min_samples_split stops splitting`,input:`predict_tree(build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), min_samples_split=8), np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]])).tolist()`,expected:`[1, 1, 1, 1, 1, 1, 1]`,hidden:!0},{id:`8`,description:`Depth-2 tree structure`,input:`build_tree(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 2.0], [2.0, 0.0], [2.0, 2.0]]), np.array([0, 1, 1, 0, 1, 1, 0]), max_depth=2)`,expected:`{'leaf': False, 'feature': 0, 'threshold': 0.5, 'left': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 0}, 'right': {'leaf': True, 'value': 1}}, 'right': {'leaf': False, 'feature': 1, 'threshold': 0.5, 'left': {'leaf': True, 'value': 1}, 'right': {'leaf': True, 'value': 0}}}`,hidden:!0},{id:`9`,description:`Bagging predictions on noisy data`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), bagging_predict(D[0], D[1], D[2], n_estimators=7, max_depth=3, seed=0).tolist())[-1])()`,expected:`[0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1]`,hidden:!0},{id:`10`,description:`One bagged tree = a tree on the bootstrap sample`,input:`(lambda: (D := (lambda: (X := np.round(np.random.randn(40, 2) * 2, 1), y := ((X[:, 0] + X[:, 1] + np.random.randn(40)) > 0).astype(int), Xq := np.round(np.random.randn(12, 2) * 2, 1), (X, y, Xq))[-1])(), idx := np.random.default_rng(3).integers(0, 40, size=40), bagging_predict(D[0], D[1], D[2], n_estimators=1, seed=3).tolist() == predict_tree(build_tree(D[0][idx], D[1][idx]), D[2]).tolist())[-1])()`,expected:`True`,hidden:!0}],hints:[`Think recursively: a node either stops (leaf with the majority class) or picks the single best split and asks the same question of each half.`,'Write a helper that scans every (feature, threshold) pair and keeps the best with `if imp < best - 1e-12`; starting best at the node\'s own Gini enforces "strictly reduces impurity". Thresholds: v = np.unique(X[:, f]); (v[:-1] + v[1:]) / 2.',"`np.bincount(y).argmax()` gives the majority class with ties broken towards the smallest label; the same idiom per column does the bagging vote.",`Create the generator once, outside the loop over trees (re-seeding per tree gives identical bootstrap samples). Cast feature and label to Python int and threshold to float so the tree prints as expected.`],solution:`import numpy as np
 
 def _gini(y):
     p = np.bincount(y) / len(y)
     return 1.0 - np.sum(p ** 2)
 
 def _best_split(X, y):
+    """Return (feature, threshold) of the best impurity-reducing split, or (None, None)."""
     n, n_features = X.shape
     best_imp, best_f, best_t = _gini(y), None, None
     for f in range(n_features):
-        values = np.unique(X[:, f])
-        for t in (values[:-1] + values[1:]) / 2:
+        values = np.unique(X[:, f])                 # sorted distinct values
+        for t in (values[:-1] + values[1:]) / 2:    # midpoints, ascending
             left = X[:, f] <= t
             imp = (left.sum() * _gini(y[left]) + (~left).sum() * _gini(y[~left])) / n
-            if imp < best_imp - 1e-12:
+            if imp < best_imp - 1e-12:              # strict improvement; ties keep earlier
                 best_imp, best_f, best_t = imp, f, t
     return best_f, best_t
 
@@ -10141,17 +9934,20 @@ def bagging_predict(X_train, y_train, X_test, n_estimators=10, max_depth=None,
                     min_samples_split=2, seed=0):
     X_train = np.asarray(X_train, dtype=float)
     y_train = np.asarray(y_train).astype(int)
-    rng = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)               # one generator for all trees
     n = len(y_train)
     votes = []
     for _ in range(n_estimators):
-        idx = rng.integers(0, n, size=n)
+        idx = rng.integers(0, n, size=n)            # bootstrap sample
         tree = build_tree(X_train[idx], y_train[idx], max_depth, min_samples_split)
         votes.append(predict_tree(tree, X_test))
     votes = np.array(votes)  # (n_estimators, n_test)
     n_classes = int(y_train.max()) + 1
     return np.array([np.bincount(votes[:, j], minlength=n_classes).argmax()
                      for j in range(votes.shape[1])], dtype=int)
+
+# One split search costs O(d * n^2) here (O(d * n log n) with sorting and prefix counts);
+# a tree is O(depth) levels of that, and bagging multiplies by n_estimators.
 `}],k=[{id:`kmeans-clustering`,title:`K-Means: Assign to Nearest Centroid`,section:`unsupervised-learning`,difficulty:`medium`,description:"\n## K-Means: Assign to Nearest Centroid\n\n### What you'll build\nThe **assignment step** of k-means: given data points and centroids, return the index of the nearest centroid for every point, without a Python loop over points.\n\n### Background\nk-means alternates two steps: *assign* each point to its nearest centroid, then *update* each centroid to the mean of its points. The assignment step is where almost all of the compute goes, `O(n * k * d)` per iteration, so vectorising it is the main skill being tested. The same pairwise-distance pattern powers k-NN and vector search. (The full algorithm is **K-Means from Scratch** later in this section.)\n\n### Formula\n```text\nd(i, j)  = sqrt( sum_f (X[i, f] - centroids[j, f])^2 )      # Euclidean distance\nlabel[i] = argmin_j d(i, j)\n```\nThe square root doesn't change which centroid is nearest, so comparing squared distances gives the same labels.\n\n### Inputs\n- `X`: data points, shape `(n_samples, n_features)`\n- `centroids`: cluster centres, shape `(k, n_features)`\n\n(Tests may pass nested Python lists; `np.asarray` them.)\n\n### Expected return format\nAn integer array of shape `(n_samples,)` with values in `0 .. k-1`.\n\n### Edge cases and conventions\n- **Ties**: a point equally far from several centroids goes to the **lowest centroid index** (what `np.argmin` returns).\n\n### Constraints\n- NumPy only, vectorised with broadcasting: `X[:, None, :] - centroids[None, :, :]` has shape `(n, k, d)`.\n\n### Follow-up\n- For large `n` and `d`, avoid the `(n, k, d)` intermediate with `||x||^2 - 2 x.c + ||c||^2` (one matrix multiply). What numerical issue can that introduce?\n    ",examples:[{input:`assign_clusters(np.array([[0, 0], [1, 1], [10, 10]]), np.array([[0, 0], [10, 10]]))`,output:`[0, 0, 1]`,explanation:`(1, 1) is at distance 1.41 from centroid 0 and 12.7 from centroid 1.`},{input:`assign_clusters(np.array([[5, 5]]), np.array([[0, 0], [10, 10]]))`,output:`[0]`,explanation:`Equidistant from both centroids: the tie goes to the lower index.`}],starterCode:`import numpy as np
 
 def assign_clusters(X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
@@ -11813,28 +11609,7 @@ def residual_block(x, params, stride=1):
     return np.maximum(out + shortcut, 0)
 
 # Cost is dominated by the two 3x3 convs: about 9 * C_out * (C_in + C_out) * H_out * W_out MACs per image.
-`}],re=[{id:`scaled-dot-product-attention`,title:`Scaled Dot-Product Attention`,section:`transformers`,difficulty:`medium`,description:`
-## Scaled Dot-Product Attention
-
-Implement the core attention mechanism from "Attention Is All You Need".
-
-### Formula
-\`\`\`
-Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
-\`\`\`
-
-Where:
-- Q: Queries (seq_len, d_k)
-- K: Keys (seq_len, d_k)
-- V: Values (seq_len, d_v)
-- d_k: Dimension of keys
-
-### Steps
-1. Compute attention scores: Q @ K.T
-2. Scale by sqrt(d_k)
-3. Apply softmax
-4. Multiply by V
-    `,examples:[{input:`Q, K, V all (4, 8) - 4 tokens, 8 dims`,output:`output (4, 8)`,explanation:`Each token attends to all tokens`}],starterCode:`import numpy as np
+`}],re=[{id:`scaled-dot-product-attention`,title:`Scaled Dot-Product Attention`,section:`transformers`,difficulty:`medium`,description:"\n## Scaled Dot-Product Attention\n\n### What you'll build\nThe core operation of every Transformer: each query takes a weighted average of the values, with weights given by how well it matches each key. Return both the output and the attention weights.\n\n### Background\nAttention is a differentiable lookup table. A query `q_i` is compared with every key `k_j` by a dot product; a softmax turns those scores into a probability distribution over positions; the output is the matching mixture of value vectors. Dividing by `sqrt(d_k)` keeps the scores at unit scale: for random vectors with unit-variance entries, `q · k` has variance `d_k`, and without the scaling the softmax saturates and its gradients vanish.\n\n### Formula\n```text\nS   = Q @ K.T / sqrt(d_k)      # (seq_len, seq_len) scores\nA   = softmax(S, axis=-1)      # each row sums to 1\nout = A @ V                    # (seq_len, d_v)\n```\n- `Q`: queries, `K`: keys, `V`: values; `d_k = Q.shape[-1]`\n- Row `i` of `A` holds query `i`'s weights over all keys\n\n### Inputs\n- `Q`: float array `(seq_len, d_k)`\n- `K`: float array `(seq_len, d_k)`\n- `V`: float array `(seq_len, d_v)`\n\n### Expected Return Format\nA tuple `(output, attention_weights)`:\n- `output`: `(seq_len, d_v)`\n- `attention_weights`: `(seq_len, seq_len)`, non-negative, rows sum to 1\n\n### Edge cases and conventions\n- Use a numerically stable softmax: subtract each row's max before `np.exp`.\n- No mask here (every query sees every key). Masking is the **Causal Attention Mask** problem.\n\n### Constraints\nNumPy only, fully vectorised (no Python loops over positions).\n\n### Follow-up\n- Why `sqrt(d_k)` and not `d_k`? What happens to the gradients of a saturated softmax?\n- Time and memory are `O(seq_len^2 · d)` and `O(seq_len^2)`. Which later problems (**Online Softmax**, **KV Cache**) attack each?\n",examples:[{input:`Q = K = np.array([[1.0, 0.0], [0.0, 1.0]]), V = np.array([[1.0, 2.0], [3.0, 4.0]])`,output:`output = [[1.6605, 2.6605], [2.3395, 3.3395]], attention_weights = [[0.6698, 0.3302], [0.3302, 0.6698]]`,explanation:`Scores are [[0.7071, 0], [0, 0.7071]] after dividing by sqrt(2); each query leans toward the key it matches.`},{input:`Q = np.zeros((3, 4)), any K, V = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])`,output:`every output row = [3.0, 4.0]`,explanation:`All scores are 0, so the weights are uniform (1/3) and each output is the mean of V.`}],starterCode:`import numpy as np
 
 def scaled_dot_product_attention(Q, K, V):
     """
@@ -11846,61 +11621,51 @@ def scaled_dot_product_attention(Q, K, V):
         V: Values (seq_len, d_v)
 
     Returns:
-        output: Attention output (seq_len, d_v)
-        attention_weights: Attention weights (seq_len, seq_len)
+        (output, attention_weights):
+            output: (seq_len, d_v)
+            attention_weights: (seq_len, seq_len), each row sums to 1
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output shape correct`,input:`scaled_dot_product_attention(np.random.randn(4, 8), np.random.randn(4, 8), np.random.randn(4, 8))[0].shape`,expected:`(4, 8)`,hidden:!1},{id:`2`,description:`Attention weights sum to 1`,input:`bool(np.allclose(scaled_dot_product_attention(np.ones((4, 8)), np.ones((4, 8)), np.ones((4, 8)))[1].sum(axis=-1), 1.0))`,expected:`True`,hidden:!1},{id:`3`,description:`Attention weights shape is (seq_len, seq_len)`,input:`scaled_dot_product_attention(np.random.randn(6, 16), np.random.randn(6, 16), np.random.randn(6, 16))[1].shape`,expected:`(6, 6)`,hidden:!0},{id:`4`,description:`Output is finite (no NaN or inf)`,input:`(lambda: [np.random.seed(0), (out := scaled_dot_product_attention(np.random.randn(4, 8), np.random.randn(4, 8), np.random.randn(4, 8))[0]), bool(np.all(np.isfinite(out)))][-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Attention weights are non-negative (valid probabilities)`,input:`(lambda: [np.random.seed(1), (weights := scaled_dot_product_attention(np.random.randn(5, 10), np.random.randn(5, 10), np.random.randn(5, 10))[1]), bool(np.all(weights >= 0))][-1])()`,expected:`True`,hidden:!0}],hints:[`Compute scores = Q @ K.T`,`Scale by sqrt(d_k) where d_k = Q.shape[-1]`,`Apply softmax along the last axis`,`Return softmax(scores) @ V`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Output shape correct`,input:`scaled_dot_product_attention(np.random.randn(4, 8), np.random.randn(4, 8), np.random.randn(4, 8))[0].shape`,expected:`(4, 8)`,hidden:!1},{id:`2`,description:`Hand-computed weights and output (2 tokens, d_k = 2)`,input:`(lambda r: (np.round(r[1], 4).tolist(), np.round(r[0], 4).tolist()))(scaled_dot_product_attention(np.eye(2), np.eye(2), np.array([[1.0, 2.0], [3.0, 4.0]])))`,expected:`([[0.6698, 0.3302], [0.3302, 0.6698]], [[1.6605, 2.6605], [2.3395, 3.3395]])`,hidden:!1},{id:`3`,description:`Attention weights shape is (seq_len, seq_len) and rows sum to 1`,input:`(lambda w: (w.shape, bool(np.allclose(w.sum(axis=-1), 1.0))))(scaled_dot_product_attention(np.random.randn(6, 16), np.random.randn(6, 16), np.random.randn(6, 16))[1])`,expected:`((6, 6), True)`,hidden:!0},{id:`4`,description:`Matches a reference implementation (d_v != d_k)`,input:`(lambda: (
+    Q := np.random.randn(5, 8), K := np.random.randn(5, 8), V := np.random.randn(5, 3),
+    S := Q @ K.T / np.sqrt(8),
+    W := np.exp(S - S.max(-1, keepdims=True)) / np.exp(S - S.max(-1, keepdims=True)).sum(-1, keepdims=True),
+    out := scaled_dot_product_attention(Q, K, V),
+    bool(np.allclose(out[0], W @ V) and np.allclose(out[1], W))
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Scores are divided by sqrt(d_k)`,input:`round(float(scaled_dot_product_attention(np.array([[2.0, 0.0, 0.0, 0.0]]), np.array([[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]), np.random.randn(2, 2))[1][0, 0]), 4)`,expected:`0.7311`,hidden:!0},{id:`6`,description:`Large scores stay finite (stable softmax)`,input:`bool(np.all(np.isfinite(scaled_dot_product_attention(np.random.randn(4, 8) * 100, np.random.randn(4, 8) * 100, np.random.randn(4, 8))[0])))`,expected:`True`,hidden:!0}],hints:[`Every query is compared with every key, so the score matrix is (seq_len, seq_len). Which matrix product gives all the dot products at once?`,`Three steps: scores, row-wise softmax, weighted sum of values. Return both the output and the weights.`,`scores = Q @ K.T / np.sqrt(Q.shape[-1]); softmax along axis=-1 with keepdims=True; output = weights @ V.`,`Subtract the row max before np.exp, or large scores overflow to inf and give NaN weights.`],solution:`import numpy as np
 
 def softmax(x, axis=-1):
+    # Subtracting the max doesn't change the result but prevents overflow
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
     return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
 def scaled_dot_product_attention(Q, K, V):
+    """
+    Returns:
+        (output (seq_len, d_v), attention_weights (seq_len, seq_len))
+    """
     d_k = Q.shape[-1]
-
-    # Compute attention scores
-    scores = Q @ K.T / np.sqrt(d_k)
-
-    # Apply softmax
-    attention_weights = softmax(scores)
-
-    # Compute output
-    output = attention_weights @ V
-
+    scores = Q @ K.T / np.sqrt(d_k)          # (seq_len, seq_len)
+    attention_weights = softmax(scores)      # each row is a distribution over keys
+    output = attention_weights @ V           # (seq_len, d_v)
     return output, attention_weights
-`},{id:`multi-head-attention`,title:`Multi-Head Attention`,section:`transformers`,difficulty:`hard`,description:`
-## Multi-Head Attention
 
-Implement multi-head attention from the Transformer architecture.
-
-### Concept
-\`\`\`
-MultiHead(Q, K, V) = Concat(head_1, ..., head_h) @ W_O
-
-where head_i = Attention(Q @ W_Q_i, K @ W_K_i, V @ W_V_i)
-\`\`\`
-
-### Steps
-1. Project Q, K, V with different learned projections for each head
-2. Apply scaled dot-product attention in parallel
-3. Concatenate heads
-4. Project back to original dimension
-    `,examples:[{input:`X (4, 64), num_heads=8, d_model=64`,output:`output (4, 64)`,explanation:`8 heads with d_k=8 each, concatenated to 64`}],starterCode:`import numpy as np
+# Time O(n^2 * d), memory O(n^2) for the score matrix (n = seq_len)
+`},{id:`multi-head-attention`,title:`Multi-Head Attention`,section:`transformers`,difficulty:`hard`,description:"\n## Multi-Head Attention\n\n### What you'll build\nThe head-splitting core of multi-head attention: cut the model dimension into `num_heads` slices, run scaled dot-product attention on every slice in parallel, and concatenate the results.\n\n### Background\nOne attention head produces one weighted average per query, so it can only \"look\" one way at a time. Several smaller heads let the model attend to different things at once (for example, the previous token in one head and the subject of the sentence in another) for the same cost as one big head. In a full layer, `Q`, `K`, `V` come from learned projections `X @ W_Q` etc. and the concatenated heads go through an output projection `W_O`. Here the inputs are **already projected** and there is **no output projection**: the task is the reshape-attend-merge part, which is where the shape bugs live.\n\n### Formula\nWith `d_k = d_model / num_heads`, head `h` uses columns `h*d_k : (h+1)*d_k`:\n```text\nhead_h = softmax(Q_h @ K_h.T / sqrt(d_k)) @ V_h          # (seq_len, d_k)\noutput = concat(head_0, ..., head_{H-1}, axis=-1)        # (seq_len, d_model)\n```\nVectorised: reshape `(seq_len, d_model) -> (seq_len, H, d_k)`, transpose to `(H, seq_len, d_k)`, do batched attention, then undo both steps.\n\n### Inputs\n- `Q`, `K`, `V`: float arrays `(seq_len, d_model)`\n- `num_heads`: int that divides `d_model`\n\n### Expected Return Format\n`output`: array `(seq_len, d_model)`, head `h`'s result in columns `h*d_k : (h+1)*d_k`.\n\n### Edge cases and conventions\n- Scale by `sqrt(d_k)` (the **per-head** width), not `sqrt(d_model)`.\n- `num_heads = 1` is plain scaled dot-product attention.\n- Stable softmax (subtract the row max).\n\n### Constraints\nNumPy only. Use reshape/transpose and batched matmul; no loop over heads is needed.\n\n### Follow-up\n- Add learned `W_Q, W_K, W_V, W_O`. How many parameters does the layer have? (Answer: `4 · d_model^2`, independent of `num_heads`.)\n- Why does `reshape(seq_len, d_model)` directly on the `(H, seq_len, d_k)` array give the wrong answer?\n",examples:[{input:`Q = K = np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), V = np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), num_heads = 2`,output:`[[2.321, 3.321, 4.321, 5.321], [3.679, 4.679, 5.679, 6.679]]`,explanation:`Each head sees a 2-dim slice; in both heads token i matches itself best, so the weights are [[0.6698, 0.3302], [0.3302, 0.6698]].`},{input:`Q (4, 64), K (4, 64), V (4, 64), num_heads = 8`,output:`output shape (4, 64)`,explanation:`8 heads of width d_k = 8, concatenated back to 64.`}],starterCode:`import numpy as np
 
 def multi_head_attention(Q, K, V, num_heads):
     """
-    Multi-head attention mechanism.
+    Multi-head attention on already-projected Q, K, V (no learned weights).
 
     Args:
         Q: Queries (seq_len, d_model)
         K: Keys (seq_len, d_model)
         V: Values (seq_len, d_model)
-        num_heads: Number of attention heads
+        num_heads: Number of attention heads (divides d_model)
 
     Returns:
-        output: Multi-head attention output (seq_len, d_model)
+        output: (seq_len, d_model), head h in columns h*d_k:(h+1)*d_k
     """
     seq_len, d_model = Q.shape
     assert d_model % num_heads == 0
@@ -11908,232 +11673,183 @@ def multi_head_attention(Q, K, V, num_heads):
 
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output shape preserved`,input:`multi_head_attention(np.random.randn(4, 64), np.random.randn(4, 64), np.random.randn(4, 64), 8).shape`,expected:`(4, 64)`,hidden:!1},{id:`2`,description:`Different d_model size (32 dims, 4 heads)`,input:`multi_head_attention(np.random.randn(6, 32), np.random.randn(6, 32), np.random.randn(6, 32), 4).shape`,expected:`(6, 32)`,hidden:!0},{id:`3`,description:`Single head case (equivalent to standard attention)`,input:`multi_head_attention(np.random.randn(4, 16), np.random.randn(4, 16), np.random.randn(4, 16), 1).shape`,expected:`(4, 16)`,hidden:!0},{id:`4`,description:`Output is finite (no NaN or inf)`,input:`(lambda: [np.random.seed(42), (out := multi_head_attention(np.random.randn(4, 64), np.random.randn(4, 64), np.random.randn(4, 64), 8)), bool(np.all(np.isfinite(out)))][-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Large d_model with many heads (128 dims, 16 heads)`,input:`multi_head_attention(np.random.randn(3, 128), np.random.randn(3, 128), np.random.randn(3, 128), 16).shape`,expected:`(3, 128)`,hidden:!0}],hints:[`Reshape Q, K, V to (seq_len, num_heads, d_k)`,`Apply attention for each head`,`Reshape back to (seq_len, d_model)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Output shape preserved`,input:`multi_head_attention(np.random.randn(4, 64), np.random.randn(4, 64), np.random.randn(4, 64), 8).shape`,expected:`(4, 64)`,hidden:!1},{id:`2`,description:`Hand-computed 2-head example`,input:`np.round(multi_head_attention(np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), 2), 4).tolist()`,expected:`[[2.321, 3.321, 4.321, 5.321], [3.679, 4.679, 5.679, 6.679]]`,hidden:!1},{id:`3`,description:`Matches attention run separately on each head slice`,input:`(lambda: (
+    Q := np.random.randn(5, 16), K := np.random.randn(5, 16), V := np.random.randn(5, 16),
+    att := lambda q, k, v: (lambda S: (np.exp(S - S.max(-1, keepdims=True)) / np.exp(S - S.max(-1, keepdims=True)).sum(-1, keepdims=True)) @ v)(q @ k.T / 2.0),
+    ref := np.concatenate([att(Q[:, h * 4:(h + 1) * 4], K[:, h * 4:(h + 1) * 4], V[:, h * 4:(h + 1) * 4]) for h in range(4)], axis=1),
+    bool(np.allclose(multi_head_attention(Q, K, V, 4), ref))
+)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`One head equals plain scaled dot-product attention`,input:`(lambda: (
+    Q := np.random.randn(4, 8), K := np.random.randn(4, 8), V := np.random.randn(4, 8),
+    S := Q @ K.T / np.sqrt(8),
+    bool(np.allclose(multi_head_attention(Q, K, V, 1), (np.exp(S - S.max(-1, keepdims=True)) / np.exp(S - S.max(-1, keepdims=True)).sum(-1, keepdims=True)) @ V))
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Zero queries attend uniformly: every row is the mean of V`,input:`(lambda V: bool(np.allclose(multi_head_attention(np.zeros((3, 8)), np.random.randn(3, 8), V, 4), np.tile(V.mean(axis=0), (3, 1)))))(np.random.randn(3, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`Large d_model with many heads (128 dims, 16 heads) stays finite`,input:`(lambda out: (out.shape, bool(np.all(np.isfinite(out)))))(multi_head_attention(np.random.randn(3, 128), np.random.randn(3, 128), np.random.randn(3, 128), 16))`,expected:`((3, 128), True)`,hidden:!0}],hints:[`Each head is ordinary attention on a d_k-wide slice of the columns. Can you get all the slices as one array with a leading head axis?`,`Split: (seq_len, d_model) -> reshape (seq_len, H, d_k) -> transpose (H, seq_len, d_k). Attend per head with batched matmul, then invert both steps.`,`scores = Qh @ Kh.transpose(0, 2, 1) / np.sqrt(d_k) has shape (H, seq_len, seq_len); softmax over axis=-1; heads = weights @ Vh.`,`Merge with heads.transpose(1, 0, 2).reshape(seq_len, d_model). Reshaping without the transpose silently mixes tokens across heads.`],solution:`import numpy as np
 
 def softmax(x, axis=-1):
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
     return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
 def multi_head_attention(Q, K, V, num_heads):
+    """
+    Returns:
+        output: (seq_len, d_model), head h in columns h*d_k:(h+1)*d_k
+    """
     seq_len, d_model = Q.shape
     d_k = d_model // num_heads
 
-    # Reshape to (seq_len, num_heads, d_k)
-    Q = Q.reshape(seq_len, num_heads, d_k)
-    K = K.reshape(seq_len, num_heads, d_k)
-    V = V.reshape(seq_len, num_heads, d_k)
+    # (seq_len, d_model) -> (num_heads, seq_len, d_k)
+    def split_heads(x):
+        return x.reshape(seq_len, num_heads, d_k).transpose(1, 0, 2)
 
-    # Transpose to (num_heads, seq_len, d_k)
-    Q = Q.transpose(1, 0, 2)
-    K = K.transpose(1, 0, 2)
-    V = V.transpose(1, 0, 2)
+    Qh, Kh, Vh = split_heads(Q), split_heads(K), split_heads(V)
 
-    # Scaled dot-product attention for each head
-    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)
-    attention = softmax(scores)
-    heads = attention @ V
+    # Batched attention over the head axis; scale by the per-head width
+    scores = Qh @ Kh.transpose(0, 2, 1) / np.sqrt(d_k)   # (H, seq_len, seq_len)
+    heads = softmax(scores) @ Vh                         # (H, seq_len, d_k)
 
-    # Transpose and reshape back
-    heads = heads.transpose(1, 0, 2)  # (seq_len, num_heads, d_k)
-    output = heads.reshape(seq_len, d_model)
+    # (H, seq_len, d_k) -> (seq_len, H, d_k) -> (seq_len, d_model)
+    return heads.transpose(1, 0, 2).reshape(seq_len, d_model)
 
-    return output
-`},{id:`positional-encoding`,title:`Sinusoidal Positional Encoding`,section:`transformers`,difficulty:`medium`,description:`
-## Sinusoidal Positional Encoding
-
-Implement the positional encoding from the original Transformer paper.
-
-### Formulas
-\`\`\`
-PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
-PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
-\`\`\`
-
-Where:
-- pos: Position in sequence
-- i: Dimension index
-- d_model: Model dimension
-
-### Purpose
-- Injects position information into embeddings
-- Allows model to learn relative positions
-- Fixed (not learned) encodings
-    `,examples:[{input:`max_len=100, d_model=512`,output:`PE matrix (100, 512)`,explanation:`Position encoding for 100 positions`}],starterCode:`import numpy as np
+# Same cost as one big head: O(n^2 * d_model) time, O(H * n^2) memory for the scores
+`},{id:`positional-encoding`,title:`Sinusoidal Positional Encoding`,section:`transformers`,difficulty:`medium`,description:'\n## Sinusoidal Positional Encoding\n\n### What you\'ll build\nThe fixed position table from "Attention Is All You Need": one `d_model`-dimensional vector per position, made of sines and cosines at geometrically spaced frequencies. It is added to the token embeddings.\n\n### Background\nAttention is permutation-invariant: shuffle the tokens and each output is shuffled the same way. Without position information, "dog bites man" and "man bites dog" look identical. The sinusoidal table gives every position a unique pattern, and because `sin`/`cos` at a fixed frequency rotate as the position advances, `PE[pos + k]` is a linear function of `PE[pos]` for every offset `k`. Modern LLMs mostly use **RoPE** (later in this section) instead, which applies the same frequencies as rotations inside attention.\n\n### Formula\nFor position `pos` and pair index `i = 0, 1, ..., d_model/2 - 1`:\n```text\nomega_i         = 1 / 10000^(2i / d_model)\nPE[pos, 2i]     = sin(pos * omega_i)\nPE[pos, 2i + 1] = cos(pos * omega_i)\n```\nColumn pair `(2i, 2i+1)` shares the frequency `omega_i`; frequencies go from 1 (fast) down to about `1/10000` (slow).\n\n### Inputs\n- `max_len`: int, number of positions (rows), positions are `0 .. max_len - 1`\n- `d_model`: even int, embedding width\n\n### Expected Return Format\n`PE`: float array `(max_len, d_model)`, values in `[-1, 1]`.\n\n### Edge cases and conventions\n- Even columns are sines, odd columns are cosines (interleaved, not first half / second half).\n- Row 0 is `[0, 1, 0, 1, ...]` because `sin(0) = 0` and `cos(0) = 1`.\n- Computing `omega_i` as `np.exp(-2i * ln(10000) / d_model)` is equivalent and avoids huge powers.\n\n### Constraints\nNumPy only, vectorised (an outer product of positions and frequencies, no Python loops).\n\n### Follow-up\n- Why does `PE[pos + k] = R_k @ PE[pos]` for a block-diagonal rotation `R_k`?\n- Learned position embeddings (GPT-2, used in **Mini GPT**) vs sinusoidal vs RoPE: which ones extrapolate past the training length?\n',examples:[{input:`positional_encoding(3, 4)`,output:`[[0.0, 1.0, 0.0, 1.0], [0.8415, 0.5403, 0.01, 1.0], [0.9093, -0.4161, 0.02, 0.9998]]`,explanation:`Frequencies are 1 and 1/100: columns 0-1 are sin/cos(pos), columns 2-3 are sin/cos(pos / 100).`},{input:`positional_encoding(100, 512).shape`,output:`(100, 512)`,explanation:`One row per position.`}],starterCode:`import numpy as np
 
 def positional_encoding(max_len, d_model):
     """
     Generate sinusoidal positional encodings.
 
     Args:
-        max_len: Maximum sequence length
-        d_model: Model dimension
+        max_len: Number of positions (rows)
+        d_model: Model dimension (even)
 
     Returns:
-        PE: Positional encoding matrix (max_len, d_model)
+        PE: (max_len, d_model); PE[pos, 2i] = sin(pos * w_i),
+            PE[pos, 2i+1] = cos(pos * w_i), w_i = 1 / 10000^(2i / d_model)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Correct shape`,input:`positional_encoding(50, 64).shape`,expected:`(50, 64)`,hidden:!1},{id:`2`,description:`First position starts with sin(0)=0`,input:`bool(np.isclose(positional_encoding(10, 4)[0, 0], 0.0))`,expected:`True`,hidden:!0},{id:`3`,description:`First position odd dim starts with cos(0)=1`,input:`bool(np.isclose(positional_encoding(10, 4)[0, 1], 1.0))`,expected:`True`,hidden:!0},{id:`4`,description:`Even columns use sin, odd columns use cos pattern`,input:`(lambda: (pe := positional_encoding(100, 8), bool(np.allclose(pe[:, 0], np.sin(np.arange(100) / (10000.0 ** (0.0 / 8))))))[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Values are bounded between -1 and 1`,input:`(lambda: (pe := positional_encoding(50, 64), bool(np.all(pe >= -1.0) and np.all(pe <= 1.0)))[-1])()`,expected:`True`,hidden:!0}],hints:[`Create position indices: np.arange(max_len)`,`Create dimension indices for the divisor`,`Use div_term = 10000^(2i/d_model)`,`Apply sin to even indices, cos to odd indices`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Correct shape`,input:`positional_encoding(50, 64).shape`,expected:`(50, 64)`,hidden:!1},{id:`2`,description:`Hand-checkable table (max_len=3, d_model=4)`,input:`np.round(positional_encoding(3, 4), 4).tolist()`,expected:`[[0.0, 1.0, 0.0, 1.0], [0.8415, 0.5403, 0.01, 1.0], [0.9093, -0.4161, 0.02, 0.9998]]`,hidden:!1},{id:`3`,description:`Position 0 alternates sin(0)=0 and cos(0)=1`,input:`positional_encoding(10, 6)[0].tolist()`,expected:`[0.0, 1.0, 0.0, 1.0, 0.0, 1.0]`,hidden:!0},{id:`4`,description:`Matches the formula for every entry of a larger table`,input:`(lambda: (
+    pe := positional_encoding(20, 8),
+    pos := np.arange(20)[:, None], w := 1.0 / 10000 ** (np.arange(0, 8, 2) / 8),
+    bool(np.allclose(pe[:, 0::2], np.sin(pos * w)) and np.allclose(pe[:, 1::2], np.cos(pos * w)))
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Spot values in a larger table`,input:`(lambda pe: (round(float(pe[7, 2]), 4), round(float(pe[19, 5]), 4)))(positional_encoding(20, 8))`,expected:`(0.6442, 0.982)`,hidden:!0},{id:`6`,description:`Values are bounded between -1 and 1`,input:`(lambda pe: bool(np.all(pe >= -1.0) and np.all(pe <= 1.0)))(positional_encoding(50, 64))`,expected:`True`,hidden:!0}],hints:[`Each pair of columns (2i, 2i+1) shares one frequency w_i. How many distinct frequencies are there for d_model columns?`,`Build an angle matrix angles[pos, i] = pos * w_i as an outer product of a (max_len, 1) column and a (d_model/2,) row.`,`w = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model)); then PE[:, 0::2] = np.sin(angles) and PE[:, 1::2] = np.cos(angles).`,`Interleave (even = sin, odd = cos); putting all sines in the first half is a different (also common) layout and fails the tests.`],solution:`import numpy as np
 
 def positional_encoding(max_len, d_model):
+    """
+    Returns:
+        PE: (max_len, d_model), sin in even columns, cos in odd columns
+    """
     PE = np.zeros((max_len, d_model))
+    position = np.arange(max_len)[:, np.newaxis]                       # (max_len, 1)
+    # w_i = 1 / 10000^(2i / d_model), computed in log space
+    div_term = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model))  # (d_model/2,)
+    angles = position * div_term                                       # (max_len, d_model/2)
 
-    position = np.arange(max_len)[:, np.newaxis]
-    div_term = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model))
-
-    PE[:, 0::2] = np.sin(position * div_term)
-    PE[:, 1::2] = np.cos(position * div_term)
-
+    PE[:, 0::2] = np.sin(angles)
+    PE[:, 1::2] = np.cos(angles)
     return PE
-`},{id:`layer-norm`,title:`Layer Normalization`,section:`transformers`,difficulty:`easy`,description:`
-## Layer Normalization
 
-Implement layer normalization, used in Transformers instead of batch normalization.
-
-### Formula
-\`\`\`
-LayerNorm(x) = γ * (x - μ) / sqrt(σ² + ε) + β
-\`\`\`
-
-### Difference from BatchNorm
-- **BatchNorm**: Normalizes across batch dimension
-- **LayerNorm**: Normalizes across feature dimension
-- LayerNorm works better for sequence models
-    `,examples:[{input:`X (batch, seq_len, features)`,output:`Normalized X, each position normalized independently`,explanation:`Normalize across last dimension`}],starterCode:`import numpy as np
+# O(max_len * d_model) time and memory
+`},{id:`layer-norm`,title:`Layer Normalization`,section:`transformers`,difficulty:`easy`,description:"\n## Layer Normalization\n\n### What you'll build\nLayerNorm over the last (feature) axis, with a learned scale `gamma` and shift `beta`. Every Transformer block uses it.\n\n### Background\nBatchNorm normalizes each feature over the batch, which couples examples together and breaks down for variable-length sequences and batch size 1 at inference. LayerNorm normalizes each token's feature vector on its own, so it behaves identically in training and inference and needs no running statistics. In pre-norm Transformers (GPT-2 onwards) it sits at the start of every residual branch: `x = x + Attn(LN(x))`. LLaMA-style models use the cheaper **RMSNorm** (see **SwiGLU Feed-Forward Block** in LLM Internals).\n\n### Formula\nFor each position (each vector `x` along the last axis, length `D`):\n```text\nmu      = mean(x)                          # scalar per position\nsigma^2 = mean((x - mu)^2)                 # population (biased) variance\ny       = gamma * (x - mu) / sqrt(sigma^2 + eps) + beta\n```\n\n### Inputs\n- `X`: float array `(..., D)`, e.g. `(seq_len, D)` or `(batch, seq_len, D)`\n- `gamma`, `beta`: float arrays `(D,)`\n- `eps`: small float, default `1e-5`\n\n### Expected Return Format\nArray with the same shape as `X`.\n\n### Edge cases and conventions\n- Statistics are over **axis=-1 only**, never over the batch or sequence axes.\n- Use the **biased** variance (`np.var` default, `ddof=0`), as PyTorch's `nn.LayerNorm` does.\n- `eps` goes **inside** the square root. A constant row gives `x - mu = 0`, so the output is just `beta`.\n\n### Constraints\nNumPy only; use `keepdims=True` so the statistics broadcast for any number of leading axes.\n\n### Follow-up\n- Write the backward pass. Why do the gradients with respect to `x` sum to zero along the feature axis?\n- Pre-norm vs post-norm: which one trains stably without learning-rate warmup, and why?\n",examples:[{input:`layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4))`,output:`[[-1.3416, -0.4472, 0.4472, 1.3416]]`,explanation:`mean = 2.5, variance = 1.25, so (x - 2.5) / sqrt(1.25).`},{input:`layer_norm(np.array([[2.0, 2.0, 2.0, 2.0]]), np.ones(4), np.array([0.0, 0.0, 0.0, 1.0]))`,output:`[[0.0, 0.0, 0.0, 1.0]]`,explanation:`A constant row normalizes to 0 (eps avoids division by zero), leaving only beta.`}],starterCode:`import numpy as np
 
 def layer_norm(X, gamma, beta, eps=1e-5):
     """
-    Apply layer normalization.
+    Apply layer normalization over the last axis.
 
     Args:
-        X: Input (batch, seq_len, features) or (seq_len, features)
-        gamma: Scale parameter (features,)
-        beta: Shift parameter (features,)
-        eps: Small constant
+        X: Input (..., D), e.g. (batch, seq_len, D) or (seq_len, D)
+        gamma: Scale (D,)
+        beta: Shift (D,)
+        eps: Small constant added to the variance
 
     Returns:
-        output: Normalized tensor
+        Array with the same shape as X
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output mean near zero`,input:`bool(np.allclose(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), np.ones(4), np.zeros(4)).mean(axis=-1), 0.0, atol=1e-5))`,expected:`True`,hidden:!1},{id:`2`,description:`Gamma and beta work`,input:`bool(np.allclose(layer_norm(np.array([[0.0, 0.0, 2.0, 2.0]]), np.array([1.0, 2.0, 1.0, 2.0]), np.zeros(4)), np.array([[-1.0, -2.0, 1.0, 2.0]])))`,expected:`True`,hidden:!0},{id:`3`,description:`Variance approximately 1 after normalization (gamma=1, beta=0)`,input:`bool(np.allclose(layer_norm(np.random.randn(5, 64), np.ones(64), np.zeros(64)).var(axis=-1), 1.0, atol=0.05))`,expected:`True`,hidden:!0},{id:`4`,description:`Works with 3D input (batch, seq_len, features)`,input:`bool(np.allclose(layer_norm(np.random.randn(2, 3, 8), np.ones(8), np.zeros(8)).mean(axis=-1), 0.0, atol=1e-5))`,expected:`True`,hidden:!0}],hints:[`Compute mean and variance along the last axis`,`Use keepdims=True for proper broadcasting`,`Apply normalization: (x - mean) / sqrt(var + eps)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Hand-computed row (gamma=1, beta=0)`,input:`np.round(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4)), 4).tolist()`,expected:`[[-1.3416, -0.4472, 0.4472, 1.3416]]`,hidden:!1},{id:`2`,description:`Output mean near zero for each row`,input:`bool(np.allclose(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0]]), np.ones(4), np.zeros(4)).mean(axis=-1), 0.0, atol=1e-5))`,expected:`True`,hidden:!1},{id:`3`,description:`Gamma and beta, plus a constant row`,input:`np.round(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0], [2.0, 2.0, 2.0, 2.0]]), np.array([1.0, 1.0, 2.0, 2.0]), np.array([0.0, 0.0, 0.0, 1.0])), 4).tolist()`,expected:`[[-1.3416, -0.4472, 0.8944, 3.6833], [0.0, 0.0, 0.0, 1.0]]`,hidden:!0},{id:`4`,description:`Uses the biased variance (unit variance output)`,input:`bool(np.allclose(layer_norm(np.random.randn(5, 64), np.ones(64), np.zeros(64)).var(axis=-1), 1.0, atol=1e-3))`,expected:`True`,hidden:!0},{id:`5`,description:`Works on 3D input and normalizes the last axis only`,input:`(lambda: (
+    X := np.random.randn(2, 3, 8) * 3 + 1, g := np.random.randn(8), b := np.random.randn(8),
+    ref := g * (X - X.mean(-1, keepdims=True)) / np.sqrt(X.var(-1, keepdims=True) + 1e-5) + b,
+    bool(np.allclose(layer_norm(X, g, b), ref))
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Each position is normalized on its own: which axis do you compute the mean and variance over?`,`Compute the mean and variance along axis=-1, normalize, then scale by gamma and shift by beta.`,`mean = X.mean(axis=-1, keepdims=True); var = X.var(axis=-1, keepdims=True); X_hat = (X - mean) / np.sqrt(var + eps).`,`Without keepdims=True the statistics will not broadcast against (..., D). Use the biased variance (ddof=0).`],solution:`import numpy as np
 
 def layer_norm(X, gamma, beta, eps=1e-5):
-    # Compute statistics along last dimension
-    mean = np.mean(X, axis=-1, keepdims=True)
-    var = np.var(X, axis=-1, keepdims=True)
+    """
+    Returns:
+        Array with the same shape as X, normalized over the last axis
+    """
+    mean = np.mean(X, axis=-1, keepdims=True)   # (..., 1)
+    var = np.var(X, axis=-1, keepdims=True)     # biased (population) variance
+    X_hat = (X - mean) / np.sqrt(var + eps)
+    return gamma * X_hat + beta
 
-    # Normalize
-    X_norm = (X - mean) / np.sqrt(var + eps)
-
-    # Scale and shift
-    return gamma * X_norm + beta
-`},{id:`causal-mask`,title:`Causal Attention Mask`,section:`transformers`,difficulty:`easy`,description:`
-## Causal (Autoregressive) Mask
-
-Create a causal mask for decoder self-attention to prevent attending to future tokens.
-
-### Mask Structure
-\`\`\`
-[[0, -inf, -inf, -inf],
- [0,    0, -inf, -inf],
- [0,    0,    0, -inf],
- [0,    0,    0,    0]]
-\`\`\`
-
-### Usage
-- Add mask to attention scores before softmax
-- -inf becomes 0 after softmax
-- Ensures each position only attends to previous positions
-    `,examples:[{input:`seq_len=4`,output:`Lower triangular mask (4, 4)`,explanation:`Position i can only attend to positions <= i`}],starterCode:`import numpy as np
+# O(N * D) time, where N is the number of positions
+`},{id:`causal-mask`,title:`Causal Attention Mask`,section:`transformers`,difficulty:`easy`,description:"\n## Causal (Autoregressive) Attention Mask\n\n### What you'll build\nThe additive mask that stops a decoder position from attending to later positions: 0 where attention is allowed, `-inf` where it is not.\n\n### Background\nA language model is trained to predict token `t+1` from tokens `0..t`. Training runs all positions in parallel, so without a mask position `t` could simply read token `t+1` from its input and the loss would be meaningless. Adding `-inf` to the forbidden scores makes `exp(-inf) = 0` after the softmax, so those keys get exactly zero weight. GPT-style decoders, **Mini GPT** and the **KV Cache** problem all rely on this.\n\n### Formula\n```text\nmask[i, j] = 0      if j <= i      (key j is at or before query i)\nmask[i, j] = -inf   if j > i       (key j is in the future)\n\nattention = softmax(Q @ K.T / sqrt(d_k) + mask) @ V\n```\nFor `seq_len = 4`:\n```text\n[[0, -inf, -inf, -inf],\n [0,    0, -inf, -inf],\n [0,    0,    0, -inf],\n [0,    0,    0,    0]]\n```\n\n### Inputs\n- `seq_len`: positive int\n\n### Expected Return Format\nFloat array `(seq_len, seq_len)` containing only `0.0` and `-inf` (`float('-inf')` / `-np.inf`).\n\n### Edge cases and conventions\n- The diagonal is `0`: every token attends to itself, so no row is fully masked and the softmax never sees an all-`-inf` row (which would give NaN).\n- Rows are queries, columns are keys.\n\n### Constraints\nNumPy only, no loops (`np.triu`, `np.tril` or index comparisons).\n\n### Follow-up\n- Some code uses a large negative number (e.g. `-1e9`) instead of `-inf`. When does that matter (hint: fp16)?\n- How do you combine this with a padding mask for a batch of left-padded prompts?\n",examples:[{input:`create_causal_mask(3)`,output:`[[0.0, -inf, -inf], [0.0, 0.0, -inf], [0.0, 0.0, 0.0]]`,explanation:`Query i may attend to keys 0..i.`},{input:`softmax(create_causal_mask(4))[1]`,output:`[0.5, 0.5, 0.0, 0.0]`,explanation:`With all scores equal, row 1 spreads its weight over its two visible keys.`}],starterCode:`import numpy as np
 
 def create_causal_mask(seq_len):
     """
-    Create a causal attention mask.
+    Create an additive causal attention mask.
 
     Args:
         seq_len: Sequence length
 
     Returns:
-        mask: Causal mask (seq_len, seq_len)
-               0 for allowed positions, -inf for masked
+        mask: (seq_len, seq_len) float array,
+              0.0 where key j <= query i, -inf where j > i
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Correct shape and pattern`,input:`create_causal_mask(4).shape`,expected:`(4, 4)`,hidden:!1},{id:`2`,description:`Lower triangular zeros, upper triangular -inf`,input:`bool(np.allclose(create_causal_mask(3), np.array([[0.0, float("-inf"), float("-inf")], [0.0, 0.0, float("-inf")], [0.0, 0.0, 0.0]])))`,expected:`True`,hidden:!0},{id:`3`,description:`Diagonal is all zeros (each position attends to itself)`,input:`bool(np.all(np.diag(create_causal_mask(5)) == 0.0))`,expected:`True`,hidden:!0},{id:`4`,description:`Upper triangle is all -inf`,input:`(lambda: (mask := create_causal_mask(4), upper := mask[np.triu_indices(4, k=1)], bool(np.all(upper == float("-inf"))))[-1])()`,expected:`True`,hidden:!0}],hints:[`Create a matrix of ones using np.ones((seq_len, seq_len))`,`Use np.triu to get upper triangular matrix (excluding diagonal)`,`Replace 1s with -inf`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Correct shape`,input:`create_causal_mask(4).shape`,expected:`(4, 4)`,hidden:!1},{id:`2`,description:`Pattern of -inf entries (seq_len=3)`,input:`np.isneginf(create_causal_mask(3)).tolist()`,expected:`[[False, True, True], [False, False, True], [False, False, False]]`,hidden:!1},{id:`3`,description:`Exact values: lower triangle 0, upper triangle -inf`,input:`bool(np.array_equal(create_causal_mask(3), np.array([[0.0, float("-inf"), float("-inf")], [0.0, 0.0, float("-inf")], [0.0, 0.0, 0.0]])))`,expected:`True`,hidden:!0},{id:`4`,description:`Diagonal is all zeros (each position attends to itself)`,input:`bool(np.all(np.diag(create_causal_mask(5)) == 0.0))`,expected:`True`,hidden:!0},{id:`5`,description:`After a softmax, row 1 attends equally to positions 0 and 1 only`,input:`(lambda M: np.round(np.exp(M[1] - M[1].max()) / np.exp(M[1] - M[1].max()).sum(), 4).tolist())(create_causal_mask(4))`,expected:`[0.5, 0.5, 0.0, 0.0]`,hidden:!0},{id:`6`,description:`Upper triangle is all -inf for a larger mask`,input:`(lambda M: bool(np.all(M[np.triu_indices(6, k=1)] == float("-inf")) and np.all(M[np.tril_indices(6)] == 0.0)))(create_causal_mask(6))`,expected:`True`,hidden:!0}],hints:[`Which entries are forbidden? Write the condition in terms of the query index i (row) and key index j (column).`,`Build a boolean "future" matrix that is True strictly above the diagonal, then map True -> -inf and False -> 0.`,`np.triu(np.ones((n, n)), k=1) marks the strict upper triangle; np.where(future, -np.inf, 0.0) builds the mask.`,`Use k=1, not k=0: masking the diagonal would hide each token from itself and leave row 0 fully masked (NaN after softmax).`],solution:`import numpy as np
 
 def create_causal_mask(seq_len):
-    # Create upper triangular matrix (above diagonal)
-    mask = np.triu(np.ones((seq_len, seq_len)), k=1)
-    # Replace 1s with -inf
-    mask = np.where(mask == 1, float('-inf'), 0.0)
-    return mask
-`},{id:`bpe-tokenization`,title:`BPE Tokenization`,section:`transformers`,difficulty:`medium`,description:`
-## Byte-Pair Encoding (BPE) Tokenization
-
-Implement the training step of BPE, the tokenization algorithm used by GPT, LLaMA, and most modern LLMs.
-
-### Algorithm
-1. Start with words split into individual character tokens
-2. Count frequency of all adjacent token pairs across the corpus
-3. Merge the most frequent pair into a new token
-4. Repeat for \`num_merges\` iterations
-
-### Input Format
-- \`word_freqs\`: Dict mapping space-separated token sequences to frequency
-  - e.g., \`{"h u g </w>": 10, "p u g </w>": 5}\`
-  - \`</w>\` marks end-of-word
-
-### Return Format
-Return a list of merge pair tuples, in the order they were applied.
-
-### Why BPE?
-- Handles any input text (no unknown tokens)
-- Balances character-level and word-level tokenization
-- Common subwords become single tokens, rare words split into subwords
-    `,examples:[{input:`word_freqs = {"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, num_merges=3`,output:`[('u', 'g'), ('ug', '</w>'), ('h', 'ug</w>')]`,explanation:`"ug" is the most frequent pair (freq 17), merged first`}],starterCode:`import numpy as np
-from collections import Counter
+    """
+    Returns:
+        mask: (seq_len, seq_len), 0.0 on/below the diagonal, -inf above it
+    """
+    # True strictly above the diagonal: key j is in the future of query i
+    future = np.triu(np.ones((seq_len, seq_len), dtype=bool), k=1)
+    return np.where(future, -np.inf, 0.0)
+`},{id:`bpe-tokenization`,title:`BPE Tokenization`,section:`transformers`,difficulty:`medium`,description:"\n## Byte-Pair Encoding (BPE) Training\n\n### What you'll build\nThe training loop of BPE: starting from characters, repeatedly merge the most frequent adjacent pair of tokens and record the merge rules in order.\n\n### Background\nTokenization is the first step of every LLM pipeline (`text -> token ids -> embeddings`). Word-level vocabularies can't handle unseen words; character-level sequences are long and slow. BPE (Sennrich et al., 2016; byte-level in GPT-2, LLaMA and most LLMs) sits in between: frequent words become single tokens and rare words split into known subwords, so there is never an unknown token. The ordered merge list **is** the tokenizer: to encode new text you apply the merges in the same order.\n\n### Algorithm\n1. Split every word into its tokens (initially characters, plus the end-of-word marker `</w>`).\n2. Count every **adjacent** pair of tokens across the corpus, **weighted by the word's frequency**.\n3. Pick the most frequent pair `(a, b)` and append it to `merges`.\n4. Replace every occurrence of `a b` with the single token `ab` in every word, scanning **left to right** (so `a a a` with the pair `(a, a)` becomes `aa a`).\n5. Repeat `num_merges` times, or stop early when no word has two or more tokens left.\n\n### Inputs\n- `word_freqs`: dict mapping a space-separated token sequence to its count, e.g. `{\"h u g </w>\": 10, \"p u g </w>\": 5}`\n- `num_merges`: int >= 0, the maximum number of merges\n\n### Expected Return Format\nA list of `(token_a, token_b)` tuples of strings, in the order they were merged. Its length is `num_merges`, or less if the corpus ran out of pairs.\n\n### Edge cases and conventions\n- **Ties:** when several pairs share the top count, pick the one **seen first** when you scan the words in dict order and each word left to right. `max(counter, key=counter.get)` on a `collections.Counter` filled in that order does exactly this. (In the example, `('u', 'g')` and `('g', '</w>')` are both 17; `('u', 'g')` appears first.)\n- Recount the pairs after every merge: merges change which pairs exist.\n\n### Constraints\nPlain Python (`collections.Counter` is fine); no tokenizer libraries.\n\n### Follow-up\n- Write `encode(word, merges)`: apply the merges in order. Why must encoding use the training order rather than \"longest token first\" (see **Greedy Longest-Match Tokenizer**)?\n- Byte-level BPE starts from 256 bytes instead of characters. What problem does that solve?\n",examples:[{input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)`,output:`[('u', 'g'), ('ug', '</w>'), ('h', 'ug</w>')]`,explanation:`('u','g') and ('g','</w>') tie at 17 and ('u','g') is seen first; then 'ug </w>' (17), then 'h ug</w>' (10).`},{input:`bpe_train({"a b </w>": 1, "c d </w>": 1}, 5)`,output:`[('a', 'b'), ('ab', '</w>'), ('c', 'd'), ('cd', '</w>')]`,explanation:`Every word is a single token after 4 merges, so training stops early.`}],starterCode:`from collections import Counter
 
 def bpe_train(word_freqs, num_merges):
     """
-    Train BPE tokenizer by learning merge rules.
+    Train a BPE tokenizer by learning merge rules.
 
     Args:
-        word_freqs: Dict mapping space-separated token sequences to frequency
-                    e.g., {"h u g </w>": 10, "p u g </w>": 5}
-        num_merges: Number of merge operations to perform
+        word_freqs: Dict mapping space-separated token sequences to frequency,
+                    e.g. {"h u g </w>": 10, "p u g </w>": 5}
+        num_merges: Maximum number of merge operations
 
     Returns:
-        merges: List of (token_a, token_b) tuples merged, in order
+        merges: List of (token_a, token_b) tuples, in the order merged
+                (ties: the pair seen first, scanning words in dict order)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`First merge is most frequent pair`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[0]`,expected:`('u', 'g')`,hidden:!1},{id:`2`,description:`Correct number of merges returned`,input:`len(bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3))`,expected:`3`,hidden:!1},{id:`3`,description:`Second merge builds on first`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[1]`,expected:`('ug', '</w>')`,hidden:!0},{id:`4`,description:`Works with different corpus`,input:`bpe_train({"a b c </w>": 10, "a b </w>": 7, "b c </w>": 3}, 2)[0]`,expected:`('a', 'b')`,hidden:!0}],hints:[`Split each word into tokens using word.split()`,`Count pair frequencies by iterating adjacent tokens, weighted by word frequency`,`Find the most frequent pair with max(pair_freqs, key=pair_freqs.get)`,`Merge the pair: scan tokens left-to-right, joining matching adjacent pairs`],solution:`import numpy as np
-from collections import Counter
+`,testCases:[{id:`1`,description:`First merge is the most frequent pair (tie broken by first occurrence)`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)[0]`,expected:`('u', 'g')`,hidden:!1},{id:`2`,description:`Full merge list for the example corpus`,input:`bpe_train({"h u g </w>": 10, "p u g </w>": 5, "b u g </w>": 2}, 3)`,expected:`[('u', 'g'), ('ug', '</w>'), ('h', 'ug</w>')]`,hidden:!1},{id:`3`,description:`Works with a different corpus`,input:`bpe_train({"a b c </w>": 10, "a b </w>": 7, "b c </w>": 3}, 2)`,expected:`[('a', 'b'), ('c', '</w>')]`,hidden:!0},{id:`4`,description:`Full merge list, stopping when no pairs are left`,input:`bpe_train({"l o w </w>": 5, "l o w e r </w>": 2, "n e w </w>": 6}, 20)`,expected:`[('w', '</w>'), ('l', 'o'), ('n', 'e'), ('ne', 'w</w>'), ('lo', 'w</w>'), ('lo', 'w'), ('low', 'e'), ('lowe', 'r'), ('lower', '</w>')]`,hidden:!0},{id:`5`,description:`Overlapping pairs merge left to right`,input:`bpe_train({"a a a </w>": 1}, 2)`,expected:`[('a', 'a'), ('aa', 'a')]`,hidden:!0},{id:`6`,description:`num_merges = 0 returns an empty list`,input:`bpe_train({"h u g </w>": 10}, 0)`,expected:`[]`,hidden:!0}],hints:[`Keep the current token list of every word, and recount the pair frequencies from scratch after each merge.`,`Each iteration: count weighted adjacent pairs, pick the best, record it, then rewrite every word with that pair merged.`,`Count with a Counter: for a, b in zip(tokens, tokens[1:]): counts[(a, b)] += freq. best = max(counts, key=counts.get).`,`Merge by scanning with an index and jumping by 2 after a merge, so "a a a" becomes "aa a" (not "aa aa"). Stop when the counter is empty.`],solution:`from collections import Counter
 
 def bpe_train(word_freqs, num_merges):
-    # Split each word into tokens
-    splits = {word: word.split() for word in word_freqs}
+    """
+    Returns:
+        merges: List of (token_a, token_b) tuples, in the order merged
+    """
+    splits = {word: word.split() for word in word_freqs}   # current tokens of each word
     merges = []
 
     for _ in range(num_merges):
-        # Count pair frequencies
+        # Count adjacent pairs, weighted by word frequency (insertion order = first seen)
         pair_freqs = Counter()
         for word, freq in word_freqs.items():
             tokens = splits[word]
-            for i in range(len(tokens) - 1):
-                pair_freqs[(tokens[i], tokens[i + 1])] += freq
+            for a, b in zip(tokens, tokens[1:]):
+                pair_freqs[(a, b)] += freq
 
-        if not pair_freqs:
+        if not pair_freqs:          # every word is a single token
             break
 
-        # Find and record most frequent pair
-        best_pair = max(pair_freqs, key=pair_freqs.get)
+        best_pair = max(pair_freqs, key=pair_freqs.get)   # first max wins ties
         merges.append(best_pair)
 
-        # Merge the pair in all words
-        for word in splits:
-            tokens = splits[word]
+        # Replace the pair everywhere, scanning left to right
+        for word, tokens in splits.items():
             new_tokens = []
             i = 0
             while i < len(tokens):
@@ -12146,105 +11862,54 @@ def bpe_train(word_freqs, num_merges):
             splits[word] = new_tokens
 
     return merges
-`},{id:`rope-embeddings`,title:`Rotary Positional Embeddings (RoPE)`,section:`transformers`,difficulty:`medium`,description:`
-## Rotary Positional Embeddings (RoPE)
 
-Implement RoPE, the positional encoding used by LLaMA, Mistral, GPT-NeoX, and most modern LLMs.
-
-### How It Works
-Instead of *adding* position information to embeddings (like sinusoidal encoding), RoPE *rotates* pairs of dimensions in Q and K by position-dependent angles.
-
-### Formulas
-For position \`pos\` and dimension pair \`(2i, 2i+1)\`:
-\`\`\`
-θ_i = 1 / (10000^(2i / d_model))
-
-q_rot[2i]   = q[2i] · cos(pos · θ_i) - q[2i+1] · sin(pos · θ_i)
-q_rot[2i+1] = q[2i] · sin(pos · θ_i) + q[2i+1] · cos(pos · θ_i)
-\`\`\`
-
-Apply the same rotation to both Q and K.
-
-### Key Properties
-- **Relative position awareness**: The dot product between rotated Q and K depends only on the relative position difference
-- **Norm preservation**: Rotation does not change vector magnitudes
-- **No learned parameters**: Computed directly from position indices
-
-### Why RoPE Over Sinusoidal?
-- Encodes *relative* positions naturally (sinusoidal is absolute)
-- Better extrapolation to longer sequences
-- Applied directly in attention computation (not added to embeddings)
-    `,examples:[{input:`Q, K both (4, 8) - 4 tokens, 8 dims`,output:`Q_rot (4, 8), K_rot (4, 8)`,explanation:`Each pair of dimensions is rotated by a position-dependent angle`}],starterCode:`import numpy as np
+# Each merge costs O(total corpus tokens); real tokenizers update pair counts incrementally
+`},{id:`rope-embeddings`,title:`Rotary Positional Embeddings (RoPE)`,section:`transformers`,difficulty:`medium`,description:"\n## Rotary Positional Embeddings (RoPE)\n\n### What you'll build\nApply RoPE to queries and keys: rotate each pair of dimensions by an angle proportional to the token's position. LLaMA, Mistral, Qwen, GPT-NeoX and most modern LLMs use it.\n\n### Background\nSinusoidal encodings are **added** to the embeddings once, at the input. RoPE instead **rotates** `q` and `k` inside every attention layer. Rotating `q` at position `m` by `m·θ` and `k` at position `n` by `n·θ` makes their dot product depend only on the angle difference `(m - n)·θ`, so attention scores see **relative** positions, with no learned parameters and no change to the vectors' norms. Values `V` are not rotated.\n\n### Formula\nFor position `pos` (row index, starting at 0), `d = d_model` and pair index `i = 0 .. d/2 - 1`:\n```text\ntheta_i = 1 / 10000^(2i / d)\na       = pos * theta_i\n\nx_rot[2i]     = x[2i] * cos(a) - x[2i+1] * sin(a)\nx_rot[2i + 1] = x[2i] * sin(a) + x[2i+1] * cos(a)\n```\nThis is the 2-D rotation `[[cos a, -sin a], [sin a, cos a]]` applied to the pair `(x[2i], x[2i+1])`. Apply it to every row of `Q` and of `K`.\n\n### Inputs\n- `Q`: float array `(seq_len, d_model)`, `d_model` even\n- `K`: float array `(seq_len, d_model)`\n\n### Expected Return Format\nA tuple `(Q_rot, K_rot)`, each with the shape of its input.\n\n### Edge cases and conventions\n- **Interleaved pairs** `(0,1), (2,3), ...` as in the RoFormer paper. Hugging Face LLaMA code pairs dimension `i` with `i + d/2` (\"rotate_half\"); it is the same idea with permuted dimensions, but it gives different numbers, so use the interleaved layout here.\n- Position 0 is unchanged (angle 0). Don't modify the inputs in place.\n\n### Constraints\nNumPy only, vectorised over positions and pairs (strided slicing `x[:, 0::2]`, `x[:, 1::2]`).\n\n### Follow-up\n- Prove `<R(m) q, R(n) k> = <q, R(n - m) k>`.\n- Context extension (NTK scaling, YaRN) changes the base 10000. Which pairs are affected most, and why?\n",examples:[{input:`apply_rope(np.array([[1.0, 0.0, 1.0, 0.0]] * 3), K)[0]`,output:`[[1.0, 0.0, 1.0, 0.0], [0.5403, 0.8415, 1.0, 0.01], [-0.4161, 0.9093, 0.9998, 0.02]]`,explanation:`theta = [1, 0.01]: pair 0 rotates by pos radians, pair 1 by pos / 100 radians.`},{input:`apply_rope(np.ones((2, 2)), np.ones((2, 2)))[0]`,output:`[[1.0, 1.0], [-0.3012, 1.3818]]`,explanation:`Row 1: (cos 1 - sin 1, sin 1 + cos 1); the norm stays sqrt(2).`}],starterCode:`import numpy as np
 
 def apply_rope(Q, K):
     """
-    Apply Rotary Positional Embeddings to Q and K.
+    Apply Rotary Positional Embeddings to Q and K (interleaved pairs).
 
     Args:
-        Q: Queries (seq_len, d_model) where d_model is even
+        Q: Queries (seq_len, d_model), d_model even
         K: Keys (seq_len, d_model)
 
     Returns:
-        Q_rot: Rotated queries (seq_len, d_model)
-        K_rot: Rotated keys (seq_len, d_model)
+        (Q_rot, K_rot): pair (2i, 2i+1) of row pos rotated by pos * theta_i,
+                        theta_i = 1 / 10000^(2i / d_model)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output shape preserved`,input:`apply_rope(np.ones((4, 8)), np.ones((4, 8)))[0].shape`,expected:`(4, 8)`,hidden:!1},{id:`2`,description:`Position 0 is unchanged (rotation angle is 0)`,input:`bool(np.allclose(apply_rope(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones((1, 4)))[0], np.array([[1.0, 2.0, 3.0, 4.0]])))`,expected:`True`,hidden:!1},{id:`3`,description:`Rotation preserves vector norms`,input:`(lambda: [np.random.seed(42), (Q := np.random.randn(6, 8)), (Q_rot := apply_rope(Q, Q)[0]), bool(np.allclose(np.linalg.norm(Q_rot, axis=-1), np.linalg.norm(Q, axis=-1)))][-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Both Q_rot and K_rot returned with correct shapes`,input:`(lambda: (result := apply_rope(np.ones((5, 16)), np.ones((5, 16))), bool(result[0].shape == (5, 16) and result[1].shape == (5, 16)))[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`K is also rotated (not identical to input)`,input:`(lambda: (K := np.ones((4, 8)), K_rot := apply_rope(K, K)[1], bool(not np.allclose(K_rot[1:], K[1:])))[-1])()`,expected:`True`,hidden:!0}],hints:[`Compute θ_i = 1.0 / (10000^(2i/d)) for dimension indices i = 0, 1, ..., d/2-1`,`Multiply positions (0 to seq_len-1) by θ to get angles matrix (seq_len, d/2)`,`Even dims: q_even * cos(angles) - q_odd * sin(angles)`,`Odd dims: q_even * sin(angles) + q_odd * cos(angles)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Output shapes preserved`,input:`(lambda r: (r[0].shape, r[1].shape))(apply_rope(np.ones((4, 8)), np.ones((4, 8))))`,expected:`((4, 8), (4, 8))`,hidden:!1},{id:`2`,description:`Position 0 is unchanged (rotation angle is 0)`,input:`apply_rope(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones((1, 4)))[0].tolist()`,expected:`[[1.0, 2.0, 3.0, 4.0]]`,hidden:!1},{id:`3`,description:`Hand-computed rotation at position 1 (d=2, theta=1)`,input:`np.round(apply_rope(np.ones((2, 2)), np.ones((2, 2)))[0][1], 4).tolist()`,expected:`[-0.3012, 1.3818]`,hidden:!1},{id:`4`,description:`Per-pair frequencies at position 3 (d=4)`,input:`np.round(apply_rope(np.ones((4, 4)), np.zeros((4, 4)))[0][3], 4).tolist()`,expected:`[-1.1311, -0.8489, 0.9696, 1.0295]`,hidden:!0},{id:`5`,description:`Rotation preserves vector norms`,input:`(lambda Q: bool(np.allclose(np.linalg.norm(apply_rope(Q, Q)[0], axis=-1), np.linalg.norm(Q, axis=-1))))(np.random.randn(6, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`K gets the same rotation as Q`,input:`(lambda Q, K: (lambda out: bool(np.allclose(out[1], apply_rope(K, Q)[0]) and not np.allclose(out[1][1:], K[1:])))(apply_rope(Q, K)))(np.random.randn(5, 6), np.random.randn(5, 6))`,expected:`True`,hidden:!0},{id:`7`,description:`q . k depends only on the relative position`,input:`(lambda q, k: (lambda out: bool(np.isclose(out[0][4] @ out[1][1], out[0][5] @ out[1][2])))(apply_rope(q, k)))(np.tile(np.random.randn(1, 8), (6, 1)), np.tile(np.random.randn(1, 8), (6, 1)))`,expected:`True`,hidden:!0}],hints:[`Think of each row as d/2 points in 2-D. Each point is rotated by its own angle, which depends on the row (position) and the pair index (frequency).`,`Build an angles matrix (seq_len, d/2) = positions[:, None] * theta[None, :], then rotate all pairs at once with cos and sin of it.`,`x_even, x_odd = x[:, 0::2], x[:, 1::2]; out[:, 0::2] = x_even * cos - x_odd * sin; out[:, 1::2] = x_even * sin + x_odd * cos.`,`Write into a new array (np.empty_like): updating x[:, 0::2] in place and then reading it for the odd half uses already-rotated values.`],solution:`import numpy as np
 
 def apply_rope(Q, K):
+    """
+    Returns:
+        (Q_rot, K_rot), same shapes as Q and K
+    """
     seq_len, d = Q.shape
 
-    # Compute rotation angles
-    positions = np.arange(seq_len)[:, np.newaxis]  # (seq_len, 1)
-    dims = np.arange(0, d, 2)  # (d/2,)
-    theta = 1.0 / (10000.0 ** (dims / d))  # (d/2,)
-    angles = positions * theta  # (seq_len, d/2)
+    # Rotation angle for every (position, pair): pos * theta_i
+    positions = np.arange(seq_len)[:, np.newaxis]        # (seq_len, 1)
+    theta = 1.0 / (10000.0 ** (np.arange(0, d, 2) / d))  # (d/2,)
+    angles = positions * theta                           # (seq_len, d/2)
+    cos_a, sin_a = np.cos(angles), np.sin(angles)
 
-    cos_a = np.cos(angles)
-    sin_a = np.sin(angles)
+    def rotate(x):
+        x_even, x_odd = x[:, 0::2], x[:, 1::2]
+        out = np.empty(x.shape)                          # don't overwrite the input
+        out[:, 0::2] = x_even * cos_a - x_odd * sin_a
+        out[:, 1::2] = x_even * sin_a + x_odd * cos_a
+        return out
 
-    # Rotate Q
-    Q_rot = np.zeros_like(Q)
-    Q_rot[:, 0::2] = Q[:, 0::2] * cos_a - Q[:, 1::2] * sin_a
-    Q_rot[:, 1::2] = Q[:, 0::2] * sin_a + Q[:, 1::2] * cos_a
+    return rotate(Q), rotate(K)
 
-    # Rotate K
-    K_rot = np.zeros_like(K)
-    K_rot[:, 0::2] = K[:, 0::2] * cos_a - K[:, 1::2] * sin_a
-    K_rot[:, 1::2] = K[:, 0::2] * sin_a + K[:, 1::2] * cos_a
-
-    return Q_rot, K_rot
-`},{id:`grouped-query-attention`,title:`Grouped Query Attention (GQA)`,section:`transformers`,difficulty:`medium`,description:`
-## Grouped Query Attention (GQA)
-
-Implement GQA, the efficient attention variant used in LLaMA 2, Mistral, Gemma, and most modern LLMs.
-
-### Concept
-In standard Multi-Head Attention (MHA), each head has its own Q, K, and V projections. GQA reduces memory by sharing KV heads across groups of query heads:
-
-| Variant | Q Heads | KV Heads | Used In |
-|---------|---------|----------|---------|
-| MHA | H | H | Original Transformer |
-| GQA | H | G (1 < G < H) | LLaMA 2, Mistral |
-| MQA | H | 1 | PaLM, Falcon |
-
-### Steps
-1. Reshape Q into \`num_q_heads\` heads of size \`d_head\`
-2. Reshape K, V into \`num_kv_heads\` heads of size \`d_head\`
-3. Repeat each KV head \`group_size\` times (group_size = num_q_heads / num_kv_heads)
-4. Apply scaled dot-product attention per head
-5. Concatenate all heads
-
-### Why GQA?
-- Reduces KV cache size by \`num_q_heads / num_kv_heads\` factor
-- Faster inference with minimal quality loss vs MHA
-- Key optimization for serving large language models
-    `,examples:[{input:`Q (4, 64), K (4, 16), V (4, 16), num_q_heads=8, num_kv_heads=2`,output:`output (4, 64)`,explanation:`8 query heads grouped into 2 KV groups of 4, d_head=8`}],starterCode:`import numpy as np
+# O(seq_len * d) time; no parameters
+`},{id:`grouped-query-attention`,title:`Grouped Query Attention (GQA)`,section:`transformers`,difficulty:`medium`,description:"\n## Grouped Query Attention (GQA)\n\n### What you'll build\nAttention where many query heads share a smaller set of key/value heads. LLaMA 2 70B, LLaMA 3, Mistral, Gemma and most modern LLMs use it to shrink the KV cache.\n\n### Background\nDuring generation the model stores every past token's keys and values (the **KV cache**, see LLM Generation & Decoding). Its size is `2 · n_layers · n_kv_heads · d_head · seq_len` numbers per sequence, and reading it every step is what makes decoding memory-bound. GQA keeps all `num_q_heads` query heads but only `num_kv_heads` K/V heads, cutting the cache by `num_q_heads / num_kv_heads` with little quality loss.\n\n| Variant | Query heads | KV heads | Used in |\n|---------|-------------|----------|---------|\n| MHA | H | H | Original Transformer, GPT-2 |\n| GQA | H | G (1 < G < H) | LLaMA 2 70B, LLaMA 3, Mistral |\n| MQA | H | 1 | PaLM, Falcon |\n\n### Algorithm\nWith `d_head = Q.shape[1] / num_q_heads` and `group_size = num_q_heads / num_kv_heads`:\n1. Split `Q` into `num_q_heads` heads and `K`, `V` into `num_kv_heads` heads: shape `(heads, seq_len, d_head)`, head `h` taking columns `h*d_head : (h+1)*d_head`.\n2. **Query head `h` uses KV head `h // group_size`**: consecutive query heads share a KV head. Repeating each KV head `group_size` times along the head axis does this.\n3. Per head: `softmax(q_h @ k_h.T / sqrt(d_head)) @ v_h`.\n4. Concatenate the query heads back to `(seq_len, num_q_heads * d_head)`.\n\n### Inputs\n- `Q`: `(seq_len, num_q_heads * d_head)`\n- `K`, `V`: `(seq_len, num_kv_heads * d_head)`\n- `num_q_heads`, `num_kv_heads`: ints, `num_kv_heads` divides `num_q_heads`\n\n### Expected Return Format\n`output`: array `(seq_len, num_q_heads * d_head)`.\n\n### Edge cases and conventions\n- `num_kv_heads == num_q_heads` is ordinary multi-head attention; `num_kv_heads == 1` is MQA.\n- Use `np.repeat` (each head repeated consecutively), not `np.tile` (which cycles through the heads and pairs query head 1 with KV head 1 instead of 0).\n- No causal mask; stable softmax.\n\n### Constraints\nNumPy only, vectorised (reshape/transpose, `np.repeat`, batched matmul).\n\n### Follow-up\n- LLaMA 2 70B has 64 query heads and 8 KV heads. By how much does GQA shrink its KV cache?\n- Can you avoid materialising the repeated K and V? (Reshape the query heads to `(num_kv_heads, group_size, ...)` and broadcast.)\n",examples:[{input:`Q = np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), K = np.eye(2), V = np.array([[1.0, 2.0], [3.0, 4.0]]), num_q_heads = 2, num_kv_heads = 1`,output:`[[1.6605, 2.6605, 2.3395, 3.3395], [2.3395, 3.3395, 1.6605, 2.6605]]`,explanation:`Both query heads share the one KV head; head 0 matches key i at row i, head 1 matches the other key.`},{input:`Q (1, 8), K (1, 4), V = np.array([[1.0, 2.0, 3.0, 4.0]]), num_q_heads = 4, num_kv_heads = 2`,output:`[[1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 3.0, 4.0]]`,explanation:`One token, so every weight is 1: query heads 0-1 return KV head 0 ([1, 2]) and heads 2-3 return KV head 1 ([3, 4]).`}],starterCode:`import numpy as np
 
 def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
     """
-    Grouped Query Attention.
+    Grouped Query Attention (query head h uses KV head h // group_size).
 
     Args:
         Q: Queries (seq_len, num_q_heads * d_head)
@@ -12262,62 +11927,43 @@ def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
 
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`GQA output shape (8 Q heads, 2 KV heads)`,input:`grouped_query_attention(np.random.randn(4, 64), np.random.randn(4, 16), np.random.randn(4, 16), 8, 2).shape`,expected:`(4, 64)`,hidden:!1},{id:`2`,description:`MQA case (1 KV head shared by all Q heads)`,input:`grouped_query_attention(np.random.randn(4, 32), np.random.randn(4, 4), np.random.randn(4, 4), 8, 1).shape`,expected:`(4, 32)`,hidden:!1},{id:`3`,description:`MHA case (num_q_heads == num_kv_heads)`,input:`grouped_query_attention(np.random.randn(4, 64), np.random.randn(4, 64), np.random.randn(4, 64), 8, 8).shape`,expected:`(4, 64)`,hidden:!0},{id:`4`,description:`Output is finite (no NaN or inf)`,input:`(lambda: [np.random.seed(7), (out := grouped_query_attention(np.random.randn(4, 64), np.random.randn(4, 16), np.random.randn(4, 16), 8, 2)), bool(np.all(np.isfinite(out)))][-1])()`,expected:`True`,hidden:!0}],hints:[`Reshape Q to (num_q_heads, seq_len, d_head) using reshape then transpose`,`Reshape K, V to (num_kv_heads, seq_len, d_head) the same way`,`Use np.repeat(K, group_size, axis=0) to expand KV heads to match Q heads`,`Apply attention: softmax(Q @ K^T / sqrt(d_head)) @ V for each head`,`Transpose and reshape back to (seq_len, num_q_heads * d_head)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`GQA output shape (8 Q heads, 2 KV heads)`,input:`grouped_query_attention(np.random.randn(4, 64), np.random.randn(4, 16), np.random.randn(4, 16), 8, 2).shape`,expected:`(4, 64)`,hidden:!1},{id:`2`,description:`Single token: query heads return their group's value head`,input:`grouped_query_attention(np.random.randn(1, 8), np.random.randn(1, 4), np.array([[1.0, 2.0, 3.0, 4.0]]), 4, 2).tolist()`,expected:`[[1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 3.0, 4.0]]`,hidden:!1},{id:`3`,description:`MQA hand-computed example (2 query heads, 1 KV head)`,input:`np.round(grouped_query_attention(np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]), np.eye(2), np.array([[1.0, 2.0], [3.0, 4.0]]), 2, 1), 4).tolist()`,expected:`[[1.6605, 2.6605, 2.3395, 3.3395], [2.3395, 3.3395, 1.6605, 2.6605]]`,hidden:!0},{id:`4`,description:`Matches a per-head reference with consecutive grouping`,input:`(lambda: (
+    Q := np.random.randn(5, 24), K := np.random.randn(5, 8), V := np.random.randn(5, 8),
+    att := lambda q, k, v: (lambda S: (np.exp(S - S.max(-1, keepdims=True)) / np.exp(S - S.max(-1, keepdims=True)).sum(-1, keepdims=True)) @ v)(q @ k.T / 2.0),
+    ref := np.concatenate([att(Q[:, h * 4:(h + 1) * 4], K[:, (h // 3) * 4:(h // 3 + 1) * 4], V[:, (h // 3) * 4:(h // 3 + 1) * 4]) for h in range(6)], axis=1),
+    bool(np.allclose(grouped_query_attention(Q, K, V, 6, 2), ref))
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`MHA case (num_kv_heads == num_q_heads) values`,input:`np.round(grouped_query_attention(np.eye(2), np.eye(2), np.array([[1.0, 2.0], [3.0, 4.0]]), 2, 2), 4).ravel().tolist()`,expected:`[1.5379, 3.0, 2.0, 3.4621]`,hidden:!0},{id:`6`,description:`MQA shape (1 KV head shared by all query heads) and finite output`,input:`(lambda out: (out.shape, bool(np.all(np.isfinite(out)))))(grouped_query_attention(np.random.randn(4, 32), np.random.randn(4, 4), np.random.randn(4, 4), 8, 1))`,expected:`((4, 32), True)`,hidden:!0}],hints:[`This is multi-head attention where several query heads read the same K/V head. Which KV head should query head h use?`,`Split Q into (num_q_heads, seq_len, d_head) and K, V into (num_kv_heads, seq_len, d_head); expand K and V so there is one head per query head; then do ordinary batched attention.`,`np.repeat(K_heads, group_size, axis=0) gives query head h the KV head h // group_size. scores = q @ k.transpose(0, 2, 1) / np.sqrt(d_head).`,`np.tile instead of np.repeat pairs the heads in the wrong order; scale by sqrt(d_head), not sqrt(num_q_heads * d_head).`],solution:`import numpy as np
 
 def softmax(x, axis=-1):
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
     return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
 def grouped_query_attention(Q, K, V, num_q_heads, num_kv_heads):
+    """
+    Returns:
+        output: (seq_len, num_q_heads * d_head)
+    """
     seq_len = Q.shape[0]
     d_head = Q.shape[1] // num_q_heads
     group_size = num_q_heads // num_kv_heads
 
-    # Reshape to per-head format: (num_heads, seq_len, d_head)
-    Q = Q.reshape(seq_len, num_q_heads, d_head).transpose(1, 0, 2)
-    K = K.reshape(seq_len, num_kv_heads, d_head).transpose(1, 0, 2)
-    V = V.reshape(seq_len, num_kv_heads, d_head).transpose(1, 0, 2)
+    # Per-head layout: (num_heads, seq_len, d_head)
+    q = Q.reshape(seq_len, num_q_heads, d_head).transpose(1, 0, 2)
+    k = K.reshape(seq_len, num_kv_heads, d_head).transpose(1, 0, 2)
+    v = V.reshape(seq_len, num_kv_heads, d_head).transpose(1, 0, 2)
 
-    # Repeat KV heads to match Q heads
-    K = np.repeat(K, group_size, axis=0)
-    V = np.repeat(V, group_size, axis=0)
+    # KV head g serves query heads g*group_size ... (g+1)*group_size - 1
+    k = np.repeat(k, group_size, axis=0)
+    v = np.repeat(v, group_size, axis=0)
 
-    # Scaled dot-product attention per head
-    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_head)
-    attention = softmax(scores, axis=-1)
-    heads = attention @ V
+    scores = q @ k.transpose(0, 2, 1) / np.sqrt(d_head)   # (num_q_heads, seq_len, seq_len)
+    heads = softmax(scores) @ v                           # (num_q_heads, seq_len, d_head)
 
-    # Concatenate heads
-    output = heads.transpose(1, 0, 2).reshape(seq_len, -1)
-    return output
-`},{id:`sliding-window-attention`,title:`Sliding Window Attention`,section:`transformers`,difficulty:`easy`,description:`
-## Sliding Window Attention
+    # Concatenate query heads
+    return heads.transpose(1, 0, 2).reshape(seq_len, -1)
 
-Create a sliding window causal attention mask, used in Mistral, Gemma, and other efficient LLMs.
-
-### Concept
-Standard causal attention lets each token attend to *all* previous tokens. With long sequences this is expensive (O(n²) memory). Sliding window attention restricts each token to only attend to the \`window_size\` nearest previous tokens.
-
-### Mask Structure (seq_len=5, window_size=3)
-\`\`\`
-[[  0, -inf, -inf, -inf, -inf],
- [  0,    0, -inf, -inf, -inf],
- [  0,    0,    0, -inf, -inf],
- [-inf,   0,    0,    0, -inf],
- [-inf, -inf,  0,    0,    0]]
-\`\`\`
-
-### Rules
-- Position \`i\` can attend to position \`j\` if:
-  - \`j <= i\` (causal: no future tokens)
-  - \`i - j < window_size\` (within the window)
-- Allowed positions get \`0\`, masked positions get \`-inf\`
-
-### Why Sliding Window?
-- Reduces memory from O(n²) to O(n × window_size)
-- Information still propagates across layers (layer L sees L × window_size tokens)
-- Combined with full attention layers in some architectures
-    `,examples:[{input:`seq_len=4, window_size=2`,output:`(4, 4) mask where each token sees at most 2 previous tokens`,explanation:`Position 3 attends to positions 2 and 3 only`}],starterCode:`import numpy as np
+# Compute is the same as MHA; the KV cache shrinks by num_q_heads / num_kv_heads
+`},{id:`sliding-window-attention`,title:`Sliding Window Attention`,section:`transformers`,difficulty:`easy`,description:"\n## Sliding Window Attention Mask\n\n### What you'll build\nA causal mask that also limits how far back each token can look: position `i` may attend only to the `window_size` most recent positions, itself included. Mistral and Gemma 2/3 (in alternating layers) use this pattern.\n\n### Background\nFull causal attention costs `O(n^2)` time and the KV cache grows with the whole context. With a window of `W` tokens, each query reads at most `W` keys, so attention costs `O(n · W)` and the cache can be a fixed-size ring buffer of `W` entries. Information still travels further than `W`: stacking layers lets a token see about `L · (W - 1)` positions back after `L` layers, like the receptive field of stacked convolutions.\n\n### Formula\n```text\nallowed(i, j) = (j <= i) and (i - j < window_size)\nmask[i, j]    = 0 if allowed(i, j) else -inf\n```\nFor `seq_len = 5`, `window_size = 3`:\n```text\n[[   0, -inf, -inf, -inf, -inf],\n [   0,    0, -inf, -inf, -inf],\n [   0,    0,    0, -inf, -inf],\n [-inf,    0,    0,    0, -inf],\n [-inf, -inf,    0,    0,    0]]\n```\n\n### Inputs\n- `seq_len`: positive int\n- `window_size`: int >= 1, number of visible positions **including the token itself**\n\n### Expected Return Format\nFloat array `(seq_len, seq_len)` with `0.0` for allowed and `-inf` for masked entries (rows = queries, columns = keys).\n\n### Edge cases and conventions\n- `window_size = 1`: only the diagonal is allowed.\n- `window_size >= seq_len`: identical to the plain **Causal Attention Mask**.\n- The diagonal is always allowed, so no row is fully masked.\n\n### Constraints\nNumPy only, no loops (broadcast row and column index arrays).\n\n### Follow-up\n- How would you implement the KV cache for a sliding window model as a ring buffer?\n- Off-by-one check: with a window of 4096, can token 5000 see token 904? (`5000 - 904 = 4096`, which is not `< 4096`, so no.)\n",examples:[{input:`sliding_window_mask(4, 2)`,output:`[[0, -inf, -inf, -inf], [0, 0, -inf, -inf], [-inf, 0, 0, -inf], [-inf, -inf, 0, 0]]`,explanation:`Each row allows itself and the one token before it.`},{input:`sliding_window_mask(3, 10)`,output:`[[0, -inf, -inf], [0, 0, -inf], [0, 0, 0]]`,explanation:`A window longer than the sequence is just a causal mask.`}],starterCode:`import numpy as np
 
 def sliding_window_mask(seq_len, window_size):
     """
@@ -12325,26 +11971,29 @@ def sliding_window_mask(seq_len, window_size):
 
     Args:
         seq_len: Sequence length
-        window_size: Number of tokens each position can attend to
-                     (including itself)
+        window_size: Number of positions each token can attend to,
+                     including itself
 
     Returns:
-        mask: (seq_len, seq_len) with 0 for allowed, -inf for masked
+        mask: (seq_len, seq_len), 0.0 where j <= i and i - j < window_size,
+              -inf elsewhere
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Correct shape`,input:`sliding_window_mask(6, 3).shape`,expected:`(6, 6)`,hidden:!1},{id:`2`,description:`Out-of-window position is masked`,input:`bool(sliding_window_mask(4, 2)[2, 0] == float("-inf"))`,expected:`True`,hidden:!1},{id:`3`,description:`In-window position is allowed`,input:`bool(sliding_window_mask(4, 2)[2, 1] == 0.0)`,expected:`True`,hidden:!0},{id:`4`,description:`Large window equals causal mask`,input:`bool(np.array_equal(sliding_window_mask(4, 10), np.where(np.triu(np.ones((4, 4)), k=1) == 1, float("-inf"), 0.0)))`,expected:`True`,hidden:!0},{id:`5`,description:`Diagonal is always allowed (self-attention)`,input:`bool(np.all(np.diag(sliding_window_mask(6, 1)) == 0.0))`,expected:`True`,hidden:!0}],hints:[`Create row and column index grids using np.arange`,`Allowed condition: (col <= row) AND (row - col < window_size)`,`Use np.where(allowed, 0.0, float("-inf")) to build the mask`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Correct shape`,input:`sliding_window_mask(6, 3).shape`,expected:`(6, 6)`,hidden:!1},{id:`2`,description:`Allowed pattern for seq_len=4, window=2`,input:`(sliding_window_mask(4, 2) == 0).astype(int).tolist()`,expected:`[[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]`,hidden:!1},{id:`3`,description:`Full pattern for seq_len=5, window=3`,input:`(sliding_window_mask(5, 3) == 0).astype(int).tolist()`,expected:`[[1, 0, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1]]`,hidden:!0},{id:`4`,description:`Masked entries are exactly -inf`,input:`(lambda M: bool(np.all(np.isneginf(M[M != 0])) and np.isneginf(M).sum() == 43))(sliding_window_mask(8, 3))`,expected:`True`,hidden:!0},{id:`5`,description:`Large window equals the causal mask`,input:`bool(np.array_equal(sliding_window_mask(4, 10), np.where(np.triu(np.ones((4, 4)), k=1) == 1, float("-inf"), 0.0)))`,expected:`True`,hidden:!0},{id:`6`,description:`Window 1 allows only the diagonal`,input:`(sliding_window_mask(4, 1) == 0).astype(int).tolist()`,expected:`[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]`,hidden:!0}],hints:[`Two conditions must both hold: the key is not in the future, and it is not too far in the past.`,`Make a column of row indices and a row of column indices; broadcasting them gives every (i, j) pair at once.`,`rows = np.arange(n)[:, None]; cols = np.arange(n)[None, :]; allowed = (cols <= rows) & (rows - cols < window_size); np.where(allowed, 0.0, -np.inf).`,`The window includes the token itself: use rows - cols < window_size, not <=.`],solution:`import numpy as np
 
 def sliding_window_mask(seq_len, window_size):
-    rows = np.arange(seq_len)[:, None]
-    cols = np.arange(seq_len)[None, :]
+    """
+    Returns:
+        mask: (seq_len, seq_len), 0.0 for allowed, -inf for masked
+    """
+    rows = np.arange(seq_len)[:, None]   # query positions
+    cols = np.arange(seq_len)[None, :]   # key positions
 
-    # Causal: can only attend to current or past positions
-    # Window: distance must be less than window_size
+    # Causal (no future keys) and within the last window_size positions
     allowed = (cols <= rows) & (rows - cols < window_size)
-
-    return np.where(allowed, 0.0, float('-inf'))
-`},{id:`attention-backward`,title:`Attention Backward Pass (dQ, dK, dV)`,section:`transformers`,difficulty:`hard`,description:"\n## Attention Backward Pass\n\nImplement single-head scaled dot-product attention **and its backward pass by hand**: given the upstream gradient `dOut = dL/dOut`, return `dQ`, `dK` and `dV`. This is the computation that autograd (and FlashAttention's backward kernel) performs for every attention layer.\n\n### Forward\n```\nS   = Q @ K.T / sqrt(d)          # (n, m), d = Q.shape[-1]\nS   = S masked with -inf where j > i   (only if causal=True; then n == m)\nP   = softmax(S, axis=-1)         # each row sums to 1\nOut = P @ V                       # (n, d_v)\n```\nShapes: `Q (n, d)`, `K (m, d)`, `V (m, d_v)`, `dOut (n, d_v)`.\n\n### Backward\nWork backwards through each line:\n```\ndV = P.T @ dOut\ndP = dOut @ V.T\ndS = P * (dP - rowsum(dP * P))    # softmax Jacobian-vector product, row by row\ndQ = dS @ K / sqrt(d)\ndK = dS.T @ Q / sqrt(d)\n```\nMasked positions have `P = 0`, so they get `dS = 0` automatically: no special case is needed in the backward pass. Use a numerically stable softmax (subtract the row max).\n\n### Expected Return Format\n- `attention_forward(Q, K, V, causal=False)`: `Out`, array `(n, d_v)`\n- `attention_backward(Q, K, V, dOut, causal=False)`: tuple `(dQ, dK, dV)` with the shapes of `Q`, `K`, `V`\n\nThe hidden tests compare your gradients with **finite differences** of `L = sum(Out * dOut)`.\n",examples:[{input:`attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))`,output:`array([[3., 4.], [3., 4.]])`,explanation:`All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.`},{input:`attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]`,output:`array of shape (3, 2), every entry 2/3`,explanation:`dV = P.T @ dOut, and each column of P sums to 2/3.`}],starterCode:`import numpy as np
+    return np.where(allowed, 0.0, -np.inf)
+`},{id:`attention-backward`,title:`Attention Backward Pass (dQ, dK, dV)`,section:`transformers`,difficulty:`hard`,description:"\n## Attention Backward Pass\n\n### What you'll build\nSingle-head scaled dot-product attention **and its backward pass by hand**: given the upstream gradient `dOut = dL/dOut`, return `dQ`, `dK` and `dV`. This is what autograd (and FlashAttention's backward kernel) computes for every attention layer.\n\n### Background\nInterviewers ask for this to check that you can backpropagate through a matrix product and a softmax without a framework. The only non-obvious step is the softmax: its Jacobian is `diag(p) - p p^T`, but you never build it; you apply it to a vector in `O(m)` per row.\n\n### Forward\nShapes: `Q (n, d)`, `K (m, d)`, `V (m, d_v)`.\n```text\nS   = Q @ K.T / sqrt(d)                   # (n, m), d = Q.shape[-1]\nS   = S with -inf where j > i             # only if causal=True (then n == m)\nP   = softmax(S, axis=-1)                 # each row sums to 1\nOut = P @ V                               # (n, d_v)\n```\n\n### Backward\nGiven `dOut` `(n, d_v)`, work back through each line:\n```text\ndV = P.T @ dOut                           # (m, d_v)\ndP = dOut @ V.T                           # (n, m)\ndS = P * (dP - rowsum(dP * P))            # softmax Jacobian-vector product, row by row\ndQ = dS @ K / sqrt(d)                     # (n, d)\ndK = dS.T @ Q / sqrt(d)                   # (m, d)\n```\nMasked positions have `P = 0`, so they get `dS = 0` automatically: the backward pass needs no special case for the mask.\n\n### Inputs\n- `Q`, `K`, `V` as above; `dOut`: `(n, d_v)`\n- `causal`: bool; if True, query `i` may only attend to keys `j <= i` (requires `n == m`)\n\n### Expected Return Format\n- `attention_forward(Q, K, V, causal=False)`: `Out`, array `(n, d_v)`\n- `attention_backward(Q, K, V, dOut, causal=False)`: tuple `(dQ, dK, dV)` with the shapes of `Q`, `K`, `V`\n\n### Edge cases and conventions\n- Use a numerically stable softmax (subtract the row max); the tests use scores of size about 100.\n- Recompute `P` inside the backward pass (FlashAttention does the same instead of storing it).\n- The hidden tests compare your gradients with **finite differences** of `L = sum(Out * dOut)`.\n\n### Constraints\nNumPy only, vectorised; no autograd.\n\n### Follow-up\n- FlashAttention's backward pass computes `rowsum(dP * P)` as `rowsum(dOut * Out)`. Why are they equal, and why is the second one cheaper?\n- What is the memory cost of storing `P` for a 32k-token context with 32 heads in fp16?\n",examples:[{input:`attention_forward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]))`,output:`[[3.0, 4.0], [3.0, 4.0]]`,explanation:`All scores are equal, so P is uniform (1/3) and each output row is the mean of the rows of V.`},{input:`attention_backward(np.zeros((2, 4)), np.zeros((3, 4)), np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]), np.ones((2, 2)))[2]`,output:`[[0.6667, 0.6667], [0.6667, 0.6667], [0.6667, 0.6667]]`,explanation:`dV = P.T @ dOut: each key gets weight 1/3 from each of the 2 queries.`}],starterCode:`import numpy as np
 
 def attention_forward(Q, K, V, causal=False):
     """
@@ -12393,31 +12042,37 @@ def attention_backward(Q, K, V, dOut, causal=False):
     bool(np.allclose(grads[0], fd(lambda A: f(A, K, V), Q), atol=1e-6)
          and np.allclose(grads[1], fd(lambda A: f(Q, A, V), K), atol=1e-6)
          and np.allclose(grads[2], fd(lambda A: f(Q, K, A), V), atol=1e-6))
-)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Causal: the first query only sees the first key`,input:`(lambda: (Q := np.random.randn(4, 4), V := np.random.randn(4, 3), bool(np.allclose(attention_forward(Q, np.random.randn(4, 4), V, causal=True)[0], V[0])))[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`Causal: dK and dV of the last key come only from the last query`,input:`(lambda: (Q := np.random.randn(4, 4), K := np.random.randn(4, 4), V := np.random.randn(4, 3), G := np.random.randn(4, 3), G2 := np.vstack([np.zeros((3, 3)), G[3:]]), a := attention_backward(Q, K, V, G, causal=True), b := attention_backward(Q, K, V, G2, causal=True), bool(np.allclose(a[1][3], b[1][3]) and np.allclose(a[2][3], b[2][3])))[-1])()`,expected:`True`,hidden:!0},{id:`8`,description:`Exact gradient values`,input:`(lambda: (Q := np.random.randn(2, 4), K := np.random.randn(3, 4), V := np.random.randn(3, 2), G := np.random.randn(2, 2), [np.round(g, 4).tolist() for g in attention_backward(Q, K, V, G)])[-1])()`,expected:`[[[0.0727, -0.0266, 0.0142, -0.101], [0.2869, -0.1133, 0.0177, -0.4224]], [[-0.3888, 0.1243, -0.2026, -0.111], [-0.0587, 0.0719, -0.0273, 0.0789], [0.4475, -0.1962, 0.23, 0.0321]], [[0.1512, 0.0272], [0.4298, 0.3335], [0.9976, 0.9215]]]`,hidden:!0},{id:`9`,description:`Large scores stay finite (stable softmax)`,input:`bool(all(np.all(np.isfinite(g)) for g in attention_backward(np.random.randn(3, 4) * 100, np.random.randn(3, 4) * 100, np.random.randn(3, 2), np.random.randn(3, 2))))`,expected:`True`,hidden:!0}],hints:[`Recompute P in the backward pass (or share a helper with the forward pass); every gradient is written in terms of P.`,"For one row p of a softmax, the Jacobian-vector product is p * (g - p . g). Applied to all rows: `P * (dP - (dP * P).sum(-1, keepdims=True))`.",`Do not forget the 1/sqrt(d) factor in both dQ and dK.`,`Shape check: dQ must be (n, d) = (n, m) @ (m, d), and dK must be (m, d) = (m, n) @ (n, d).`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Causal: the first query only sees the first key`,input:`(lambda: (Q := np.random.randn(4, 4), V := np.random.randn(4, 3), bool(np.allclose(attention_forward(Q, np.random.randn(4, 4), V, causal=True)[0], V[0])))[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`Causal: dK and dV of the last key come only from the last query`,input:`(lambda: (Q := np.random.randn(4, 4), K := np.random.randn(4, 4), V := np.random.randn(4, 3), G := np.random.randn(4, 3), G2 := np.vstack([np.zeros((3, 3)), G[3:]]), a := attention_backward(Q, K, V, G, causal=True), b := attention_backward(Q, K, V, G2, causal=True), bool(np.allclose(a[1][3], b[1][3]) and np.allclose(a[2][3], b[2][3])))[-1])()`,expected:`True`,hidden:!0},{id:`8`,description:`Exact gradient values`,input:`(lambda: (Q := np.random.randn(2, 4), K := np.random.randn(3, 4), V := np.random.randn(3, 2), G := np.random.randn(2, 2), [np.round(g, 4).tolist() for g in attention_backward(Q, K, V, G)])[-1])()`,expected:`[[[0.0727, -0.0266, 0.0142, -0.101], [0.2869, -0.1133, 0.0177, -0.4224]], [[-0.3888, 0.1243, -0.2026, -0.111], [-0.0587, 0.0719, -0.0273, 0.0789], [0.4475, -0.1962, 0.23, 0.0321]], [[0.1512, 0.0272], [0.4298, 0.3335], [0.9976, 0.9215]]]`,hidden:!0},{id:`9`,description:`Large scores stay finite (stable softmax)`,input:`bool(all(np.all(np.isfinite(g)) for g in attention_backward(np.random.randn(3, 4) * 100, np.random.randn(3, 4) * 100, np.random.randn(3, 2), np.random.randn(3, 2))))`,expected:`True`,hidden:!0}],hints:[`Every gradient is written in terms of P, so share a helper that computes P (with the optional mask) between the forward and backward passes.`,`Go backwards line by line: Out = P @ V gives dV and dP; P = softmax(S) gives dS; S = Q @ K.T / sqrt(d) gives dQ and dK.`,`For one softmax row p, the Jacobian-vector product is p * (g - p . g). For all rows: P * (dP - (dP * P).sum(-1, keepdims=True)).`,`Don't forget the 1/sqrt(d) factor in both dQ and dK. Shape check: dQ = (n, m) @ (m, d) and dK = (m, n) @ (n, d).`],solution:`import numpy as np
 
 def _probs(Q, K, causal):
+    """Attention probabilities P (n, m), with the optional causal mask."""
     d = Q.shape[-1]
     S = Q @ K.T / np.sqrt(d)
     if causal:
         n, m = S.shape
         S = np.where(np.tril(np.ones((n, m), dtype=bool)), S, -np.inf)
-    S = S - S.max(axis=-1, keepdims=True)
+    S = S - S.max(axis=-1, keepdims=True)          # stable softmax
     P = np.exp(S)
     return P / P.sum(axis=-1, keepdims=True)
 
 def attention_forward(Q, K, V, causal=False):
+    """Returns Out (n, d_v)."""
     return _probs(Q, K, causal) @ V
 
 def attention_backward(Q, K, V, dOut, causal=False):
+    """Returns (dQ, dK, dV) with the shapes of Q, K, V."""
     d = Q.shape[-1]
-    P = _probs(Q, K, causal)                            # (n, m)
+    P = _probs(Q, K, causal)                            # recompute instead of storing
     dV = P.T @ dOut                                     # (m, d_v)
     dP = dOut @ V.T                                     # (n, m)
+    # Softmax backward, row by row: p * (g - p . g); masked entries have p = 0
     dS = P * (dP - (dP * P).sum(axis=-1, keepdims=True))
     dQ = dS @ K / np.sqrt(d)                            # (n, d)
     dK = dS.T @ Q / np.sqrt(d)                          # (m, d)
     return dQ, dK, dV
-`},{id:`longest-match-tokenizer`,title:`Greedy Longest-Match Tokenizer`,section:`transformers`,difficulty:`medium`,description:"\n## Greedy Longest-Match Tokenizer\n\nGiven a fixed vocabulary, a simple and widely used way to tokenize text is **greedy longest match** (\"maximal munch\"): at each position, take the longest vocabulary entry that matches, emit its id, and continue after it. WordPiece (BERT) uses the same idea inside each word.\n\n### Default mode (`wordpiece=False`)\nScan `text` from left to right, character positions included as-is (spaces are ordinary characters and can be tokens):\n1. At position `i`, find the **longest** vocabulary token that is a prefix of `text[i:]`.\n2. If one exists, emit its id and move past it.\n3. Otherwise emit `vocab[unk_token]` for the single character `text[i]` and move one character on. A run of unknown characters gives one unknown id **per character**.\n\nGreedy is not globally optimal: with tokens `{'ab', 'abc', 'cd', 'd'}`, `\"abcd\"` becomes `abc + d`, even though `ab + cd` also covers it.\n\n### WordPiece mode (`wordpiece=True`)\n1. Split `text` on whitespace (`text.split()`); whitespace never produces tokens.\n2. Tokenize each word with greedy longest match, where the first piece is looked up as-is and every **later piece with a `##` prefix** (`\"playing\"` becomes `play`, `##ing`).\n3. If at some point no piece matches, the **whole word** becomes a single unknown id (BERT's behaviour); pieces already matched in that word are dropped.\n\n### Expected Return Format\nReturn a list of token ids (Python ints). `unk_token` is always in `vocab`.\n",examples:[{input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,output:`[4, 3]`,explanation:`"abc" is the longest match at position 0, then "ab".`},{input:`tokenize("abxc", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,output:`[3, 0, 5]`,explanation:`No token starts with "x", so it becomes [UNK] (id 0).`},{input:`tokenize("unaffable plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,output:`[1, 2, 3, 4, 6]`,explanation:`un, ##aff, ##able, play, ##s`}],starterCode:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+
+# Same O(n * m * d) cost as the forward pass
+`},{id:`longest-match-tokenizer`,title:`Greedy Longest-Match Tokenizer`,section:`transformers`,difficulty:`medium`,description:"\n## Greedy Longest-Match Tokenizer\n\n### What you'll build\nA tokenizer that turns text into token ids with a fixed vocabulary using **greedy longest match** (\"maximal munch\"), plus a WordPiece mode that works the way BERT's tokenizer does.\n\n### Background\nOnce a vocabulary exists (for example, learned by **BPE Tokenization**), you still need an encoding rule. The simplest rule is to take, at each position, the longest vocabulary entry that matches, emit its id and continue after it. WordPiece (BERT) applies this inside each word, marking pieces that continue a word with `##`. It's fast, but it's **not globally optimal**: with tokens `{'ab', 'abc', 'cd', 'd'}`, `\"abcd\"` becomes `abc + d`, even though `ab + cd` also covers it.\n\n### Algorithm, default mode (`wordpiece=False`)\nScan `text` left to right; spaces are ordinary characters and can be tokens.\n1. At position `i`, find the **longest** vocabulary token that is a prefix of `text[i:]`.\n2. If one exists, emit its id and move past it.\n3. Otherwise emit `vocab[unk_token]` for the single character `text[i]` and move on by one character. A run of unknown characters gives one unknown id **per character**.\n\n### Algorithm, WordPiece mode (`wordpiece=True`)\n1. Split `text` on whitespace (`text.split()`); whitespace never produces tokens.\n2. Tokenize each word with greedy longest match. The first piece is looked up as-is; every **later piece is looked up with a `##` prefix** (`\"playing\"` becomes `play`, `##ing`).\n3. If at some point no piece matches, the **whole word** becomes a single unknown id (BERT's behaviour), and the pieces already matched in that word are dropped.\n\n### Inputs\n- `text`: str (may be empty)\n- `vocab`: dict token string -> int id; always contains `unk_token`\n- `unk_token`: str, default `'[UNK]'`\n- `wordpiece`: bool, default False\n\n### Expected Return Format\nA list of token ids (Python ints), in order. The empty string gives `[]`.\n\n### Edge cases and conventions\n- Default mode never drops characters: unknown characters become one `[UNK]` each.\n- WordPiece mode drops whitespace and collapses an untokenizable word into a single `[UNK]`.\n\n### Constraints\nPlain Python. Bound the inner search by the longest token length, so each position costs `O(max_token_len)` lookups.\n\n### Follow-up\n- Which tokenization of `\"abcd\"` would a dynamic program that minimises the number of tokens choose? What does that cost?\n- Why do LLM tokenizers work on bytes rather than characters (no `[UNK]` at all)?\n",examples:[{input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,output:`[4, 3]`,explanation:`"abc" is the longest match at position 0, then "ab".`},{input:`tokenize("abxc", same vocab)`,output:`[3, 0, 5]`,explanation:`No token starts with "x", so it becomes [UNK] (id 0).`},{input:`tokenize("unaffable plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,output:`[1, 2, 3, 4, 6]`,explanation:`un, ##aff, ##able, then play, ##s.`}],starterCode:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
     """
     Greedy longest-match (maximal munch) tokenization.
 
@@ -12429,11 +12084,16 @@ def attention_backward(Q, K, V, dOut, causal=False):
                    pieces of a word with a '##' prefix
 
     Returns:
-        List of token ids
+        List of token ids (one unk id per unknown character in default mode,
+        one unk id per untokenizable word in WordPiece mode)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Longest match wins`,input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[4, 3]`,hidden:!1},{id:`2`,description:`Unknown character falls back to [UNK]`,input:`tokenize("abxc", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[3, 0, 5]`,hidden:!1},{id:`3`,description:`Spaces are ordinary characters`,input:`tokenize("the cab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[8, 7, 5, 3]`,hidden:!1},{id:`4`,description:`Greedy, not globally optimal`,input:`tokenize("abcd", {'[UNK]': 0, 'ab': 1, 'abc': 2, 'cd': 3, 'd': 4, 'a': 5, 'b': 6, 'c': 7})`,expected:`[2, 4]`,hidden:!0},{id:`5`,description:`One [UNK] per unknown character`,input:`tokenize("xyz", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[0, 0, 0]`,hidden:!0},{id:`6`,description:`Empty string`,input:`tokenize("", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[]`,hidden:!0},{id:`7`,description:`Custom unknown token`,input:`tokenize("aXa", {'<unk>': 5, 'a': 1}, unk_token='<unk>')`,expected:`[1, 5, 1]`,hidden:!0},{id:`8`,description:`WordPiece with ## continuations`,input:`tokenize("unaffable playing plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[1, 2, 3, 4, 5, 4, 6]`,hidden:!0},{id:`9`,description:`WordPiece: an unmatched word becomes a single [UNK]`,input:`tokenize("playx un aaa", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[0, 1, 9, 10, 10]`,hidden:!0},{id:`10`,description:`WordPiece ignores extra whitespace`,input:`tokenize("  play   un  ", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[4, 1]`,hidden:!0}],hints:[`Precompute the longest token length, then at each position try candidate lengths from longest to shortest.`,"Python's `for ... else` is handy: the `else` branch runs when the loop finished without `break`, i.e. no token matched.",'In WordPiece mode, build the lookup key as `word[i:end]` for the first piece and `"##" + word[i:end]` for the rest; on failure replace the whole word with the unknown id.'],solution:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+`,testCases:[{id:`1`,description:`Longest match wins`,input:`tokenize("abcab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[4, 3]`,hidden:!1},{id:`2`,description:`Unknown character falls back to [UNK]`,input:`tokenize("abxc", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[3, 0, 5]`,hidden:!1},{id:`3`,description:`Spaces are ordinary characters`,input:`tokenize("the cab", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[8, 7, 5, 3]`,hidden:!1},{id:`4`,description:`Greedy, not globally optimal`,input:`tokenize("abcd", {'[UNK]': 0, 'ab': 1, 'abc': 2, 'cd': 3, 'd': 4, 'a': 5, 'b': 6, 'c': 7})`,expected:`[2, 4]`,hidden:!0},{id:`5`,description:`One [UNK] per unknown character`,input:`tokenize("xyz", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[0, 0, 0]`,hidden:!0},{id:`6`,description:`Empty string`,input:`tokenize("", {'[UNK]': 0, 'a': 1, 'b': 2, 'ab': 3, 'abc': 4, 'c': 5, 'bc': 6, ' ': 7, 'the': 8, 'th': 9, 't': 10, 'h': 11, 'e': 12})`,expected:`[]`,hidden:!0},{id:`7`,description:`Custom unknown token`,input:`tokenize("aXa", {'<unk>': 5, 'a': 1}, unk_token='<unk>')`,expected:`[1, 5, 1]`,hidden:!0},{id:`8`,description:`WordPiece with ## continuations`,input:`tokenize("unaffable playing plays", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[1, 2, 3, 4, 5, 4, 6]`,hidden:!0},{id:`9`,description:`WordPiece: an unmatched word becomes a single [UNK]`,input:`tokenize("playx un aaa", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[0, 1, 9, 10, 10]`,hidden:!0},{id:`10`,description:`WordPiece ignores extra whitespace`,input:`tokenize("  play   un  ", {'[UNK]': 0, 'un': 1, '##aff': 2, '##able': 3, 'play': 4, '##ing': 5, '##s': 6, 'u': 7, '##n': 8, 'a': 9, '##a': 10}, wordpiece=True)`,expected:`[4, 1]`,hidden:!0}],hints:[`At each position you only need to try candidate lengths from the longest token length down to 1; the first hit is the longest match.`,`Write the default mode as a while loop over a position i; WordPiece mode is the same loop run on each word of text.split(), with a different lookup key.`,`Python's for ... else is handy: the else branch runs when the loop finished without break, i.e. nothing matched. In WordPiece mode the key is word[i:end] for the first piece and '##' + word[i:end] afterwards.`,`Default mode: an unknown character costs one [UNK] and advances by 1. WordPiece mode: on failure, replace the whole word's pieces with a single [UNK] (don't keep the partial pieces).`],solution:`def tokenize(text, vocab, unk_token='[UNK]', wordpiece=False):
+    """
+    Returns:
+        List of token ids
+    """
     unk_id = vocab[unk_token]
     ids = []
 
@@ -12441,7 +12101,7 @@ def attention_backward(Q, K, V, dOut, causal=False):
         max_len = max(len(token) for token in vocab)
         i = 0
         while i < len(text):
-            # Try the longest candidate first
+            # Try the longest candidate first; the first hit is the longest match
             for length in range(min(max_len, len(text) - i), 0, -1):
                 piece = text[i:i + length]
                 if piece in vocab:
@@ -12469,38 +12129,22 @@ def attention_backward(Q, K, V, dOut, causal=False):
                 break
         ids.extend(pieces)
     return ids
-`}],P=[{id:`vae-reparameterization`,title:`VAE Reparameterization Trick`,section:`generative-models`,difficulty:`medium`,description:`
-## VAE Reparameterization Trick
 
-Implement the reparameterization trick that allows backpropagation through stochastic sampling in VAEs.
-
-### The Problem
-We want to sample z ~ N(μ, σ²), but sampling is not differentiable.
-
-### The Solution
-\`\`\`
-ε ~ N(0, 1)
-z = μ + σ * ε
-\`\`\`
-
-### Why It Works
-- ε is sampled independently of parameters
-- z is now a deterministic function of μ, σ, and ε
-- Gradients can flow through μ and σ
-    `,examples:[{input:`mu = [0, 1], log_var = [0, 0]`,output:`z = mu + exp(0.5 * log_var) * epsilon`,explanation:`log_var=0 means σ=1`}],starterCode:`import numpy as np
+# Default mode: O(len(text) * max_token_len) dictionary lookups
+`}],P=[{id:`vae-reparameterization`,title:`VAE Reparameterization Trick`,section:`generative-models`,difficulty:`medium`,description:'\n## VAE Reparameterization Trick\n\n### What you\'ll build\nThe sampling step of a VAE: draw `z ~ N(μ, σ²)` in a way that lets gradients flow back into the encoder outputs `μ` and `log σ²`.\n\n### Background\nA VAE encoder outputs a Gaussian per input, and the decoder needs a sample from it. "Sample from N(μ, σ²)" is not a differentiable operation in μ and σ, so backprop would stop there. The trick moves the randomness into an input that does not depend on the parameters:\n- draw `ε ~ N(0, I)` (independent of μ, σ)\n- set `z = μ + σ ⊙ ε`, a deterministic, differentiable function of μ and σ\n\nThen `∂z/∂μ = 1` and `∂z/∂σ = ε`, so ordinary backprop trains the encoder.\n\n### Formula\n```text\nσ = exp(0.5 · log_var)          # log_var = log σ², so this is sqrt(σ²)\nε ~ N(0, I)                     # shape (batch, latent_dim)\nz = μ + σ ⊙ ε                   # elementwise\n```\nEncoders predict `log_var` rather than σ because it is unconstrained (any real number) while σ must be positive.\n\n### Inputs\n- `mu`: float array `(batch, latent_dim)`\n- `log_var`: float array `(batch, latent_dim)`, any real values (very negative means σ ≈ 0)\n\n### Expected return format\n- `z`: float array `(batch, latent_dim)`\n\n### Conventions (the tests rely on these)\n- The starter code calls `np.random.seed(42)` first. Keep it, then draw the noise **once** with `np.random.randn(*mu.shape)`, so the tests can reproduce your ε.\n- With `log_var` very negative, σ underflows to 0 and `z = mu` exactly.\n\n### Constraints\nNumPy only, vectorised (no Python loops).\n\n### Follow-up\n- Why does the KL term in the VAE loss stop σ from collapsing to 0?\n- How would you reparameterize a categorical latent? (Gumbel-softmax.)\n    ',examples:[{input:`mu = np.array([[0.0, 1.0]]), log_var = np.array([[0.0, 0.0]])`,output:`array([[0.4967, 0.8617]])`,explanation:`log_var = 0 gives σ = 1, so z = mu + ε with ε = [0.4967, -0.1383] (the first two draws after seed 42)`},{input:`mu = np.array([[0.0, 1.0]]), log_var = np.log(np.array([[4.0, 4.0]]))`,output:`array([[0.9934, 0.7235]])`,explanation:`σ² = 4 gives σ = 2, so the same ε is doubled before adding mu`}],starterCode:`import numpy as np
 
 def reparameterize(mu, log_var):
     """
-    Sample from latent distribution using reparameterization trick.
+    Sample z ~ N(mu, exp(log_var)) with the reparameterization trick.
 
     Args:
-        mu: Mean of latent distribution (batch, latent_dim)
-        log_var: Log variance of latent distribution (batch, latent_dim)
+        mu: Mean of the latent distribution, shape (batch, latent_dim)
+        log_var: Log variance of the latent distribution, shape (batch, latent_dim)
 
     Returns:
-        z: Sampled latent vectors (batch, latent_dim)
+        z: Sampled latent vectors, shape (batch, latent_dim)
     """
-    np.random.seed(42)  # For reproducibility
+    np.random.seed(42)  # keep: draw eps once with np.random.randn(*mu.shape)
     # Your code here
     pass
 `,testCases:[{id:`1`,description:`Output shape matches input`,input:`reparameterize(np.zeros((2, 4)), np.zeros((2, 4))).shape`,expected:`(2, 4)`,hidden:!1},{id:`2`,description:`Zero variance case has correct shape`,input:`reparameterize(np.ones((3, 5)), np.full((3, 5), -1000)).shape`,expected:`(3, 5)`,hidden:!0},{id:`3`,description:`When log_var is very negative, z ≈ mu (sigma ≈ 0)`,input:`bool(np.allclose(reparameterize(np.array([[3.0, 4.0]]), np.full((1, 2), -100)), np.array([[3.0, 4.0]]), atol=1e-5))`,expected:`True`,hidden:!0},{id:`4`,description:`Verify reparameterization formula: z = mu + exp(0.5*log_var)*eps`,input:`(lambda: (
@@ -12517,101 +12161,146 @@ def reparameterize(mu, log_var):
     np.random.seed(42),
     eps := np.random.randn(1, 3),
     bool(np.allclose(z, mu + eps))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`std = exp(0.5 * log_var)`,`Sample epsilon from standard normal`,`z = mu + std * epsilon`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Concrete values: log_var = 0 means z = mu + eps`,input:`np.round(reparameterize(np.array([[0.0, 1.0]]), np.array([[0.0, 0.0]])), 4).tolist()`,expected:`[[0.4967, 0.8617]]`,hidden:!1}],hints:[`The randomness must not depend on mu or log_var. Draw it separately, then combine it with the parameters through a differentiable formula.`,`Two steps: turn log_var into a standard deviation, then shift and scale a standard normal sample.`,`std = np.exp(0.5 * log_var); eps = np.random.randn(*mu.shape); z = mu + std * eps.`,`Pitfall: np.exp(log_var) is the variance, not the std. Also draw eps exactly once, after the seed, or the tests cannot reproduce it.`],solution:`import numpy as np
 
 def reparameterize(mu, log_var):
+    """
+    Returns z = mu + exp(0.5 * log_var) * eps, shape (batch, latent_dim).
+    """
     np.random.seed(42)
-    # Compute standard deviation
-    std = np.exp(0.5 * log_var)
-    # Sample epsilon from standard normal
-    eps = np.random.randn(*mu.shape)
-    # Reparameterization trick
-    z = mu + std * eps
-    return z
+    std = np.exp(0.5 * log_var)           # log_var = log(sigma^2)
+    eps = np.random.randn(*mu.shape)      # independent of mu and log_var
+    return mu + std * eps                 # differentiable in mu and std
+
+# Time and space: O(batch * latent_dim)
 `},{id:`vae-loss`,title:`VAE Loss Function`,section:`generative-models`,difficulty:`medium`,description:`
-## VAE Loss (ELBO)
+## VAE Loss (Negative ELBO)
 
-Implement the VAE loss function: reconstruction loss + KL divergence.
+### What you'll build
+The training loss of a Gaussian VAE: a reconstruction term plus the KL divergence between the encoder's distribution and the standard-normal prior.
 
-### Loss Components
+### Background
+Maximising the evidence lower bound (ELBO) is the same as minimising
+
+\`\`\`text
+L = E_q[ -log p(x | z) ] + KL( q(z | x) || N(0, I) )
 \`\`\`
-L = L_reconstruction + L_KL
 
-L_reconstruction = MSE(x, x_reconstructed)
-L_KL = -0.5 * sum(1 + log_var - mu² - exp(log_var))   # sum over latent dims, mean over batch
+The first term makes the decoder reproduce its input; the second keeps every posterior close to the prior, so random \`z ~ N(0, I)\` decode to realistic samples. With a Gaussian decoder the first term becomes a squared error; with a diagonal-Gaussian encoder the KL has a closed form.
+
+### Formula
+For example \`i\` with latent dimension \`d\`:
+\`\`\`text
+KL_i = -0.5 · Σ_{j=1..d} ( 1 + log_var_ij − mu_ij² − exp(log_var_ij) )
 \`\`\`
+This course uses the standard convention (Kingma & Welling; the official PyTorch VAE example), averaged over the batch:
+- \`recon_loss = mean((x − x_reconstructed)²)\` over **all** elements (plain MSE)
+- \`kl_loss = mean_i KL_i\`: **sum over latent dims, mean over the batch**
+- \`total_loss = recon_loss + kl_loss\`
 
-### Intuition
-- **Reconstruction loss**: Output should match input
-- **KL divergence**: Latent distribution should be close to N(0,1)
-    `,examples:[{input:`Perfect reconstruction, mu=0, var=1`,output:`Loss ≈ 0`,explanation:`Both terms are minimized`}],starterCode:`import numpy as np
+The capstone **E2E: Variational Autoencoder** uses exactly the same convention.
+
+### Inputs
+- \`x\`, \`x_reconstructed\`: float arrays \`(batch, features)\`
+- \`mu\`, \`log_var\`: float arrays \`(batch, latent_dim)\`
+
+### Expected return format
+A tuple of three Python floats, each rounded to 4 decimals, in this order:
+\`(total_loss, recon_loss, kl_loss)\`
+
+### Edge cases
+- \`mu = 0\`, \`log_var = 0\` (posterior equals the prior) gives \`kl_loss = 0.0\`.
+- Each latent dim's KL is ≥ 0, so \`kl_loss ≥ 0\`.
+
+### Constraints
+NumPy only, vectorised.
+
+### Follow-up
+- Why weight the KL with β (β-VAE), and what is "posterior collapse"?
+- How does the loss change for binary data (BCE reconstruction)?
+    `,examples:[{input:`x = [[1.0, 2.0]], x_reconstructed = [[0.0, 0.0]], mu = [[0.5, -0.5]], log_var = [[0.0, 1.0]]`,output:`(3.1091, 2.5, 0.6091)`,explanation:`recon = (1 + 4) / 2 = 2.5; KL = -0.5·[(1 + 0 − 0.25 − 1) + (1 + 1 − 0.25 − e)] = 0.6091`},{input:`x = x_reconstructed = zeros((2, 3)), mu = [[1.0, 1.0], [0.0, 0.0]], log_var = zeros((2, 2))`,output:`(0.5, 0.0, 0.5)`,explanation:`Row 0 has KL 0.5 + 0.5 = 1 (summed over latent dims), row 1 has 0; the batch mean is 0.5`}],starterCode:`import numpy as np
 
 def vae_loss(x, x_reconstructed, mu, log_var):
     """
-    Compute VAE loss (negative ELBO).
+    Compute the VAE loss (negative ELBO).
 
     Args:
-        x: Original input (batch, features)
-        x_reconstructed: Reconstructed input (batch, features)
-        mu: Latent mean (batch, latent_dim)
-        log_var: Latent log variance (batch, latent_dim)
+        x: Original input, shape (batch, features)
+        x_reconstructed: Decoder output, shape (batch, features)
+        mu: Latent mean, shape (batch, latent_dim)
+        log_var: Latent log variance, shape (batch, latent_dim)
 
     Returns:
-        total_loss: Combined loss
-        recon_loss: Reconstruction loss
-        kl_loss: KL divergence
+        (total_loss, recon_loss, kl_loss): Python floats rounded to 4 decimals.
+        recon_loss is the MSE over all elements; kl_loss sums over latent dims
+        and averages over the batch; total_loss = recon_loss + kl_loss.
     """
     # Your code here
     pass
 `,testCases:[{id:`1`,description:`Perfect case`,input:`bool(np.allclose(vae_loss(np.zeros((2, 4)), np.zeros((2, 4)), np.zeros((2, 2)), np.zeros((2, 2))), (0.0, 0.0, 0.0), atol=1e-6))`,expected:`True`,hidden:!1},{id:`2`,description:`Non-zero KL`,input:`bool(np.allclose(vae_loss(np.zeros((1, 4)), np.zeros((1, 4)), np.ones((1, 2)), np.zeros((1, 2))), (1.0, 0.0, 1.0), atol=1e-4))`,expected:`True`,hidden:!0},{id:`3`,description:`Non-zero reconstruction loss`,input:`(np.ones((1, 4)), np.zeros((1, 4)), np.zeros((1, 2)), np.zeros((1, 2)))`,expected:`(1.0, 1.0, 0.0)`,hidden:!0},{id:`4`,description:`KL is zero when mu=0, log_var=0 (standard normal)`,input:`vae_loss(np.zeros((2, 4)), np.zeros((2, 4)), np.zeros((2, 3)), np.zeros((2, 3)))[2]`,expected:`0.0`,hidden:!0},{id:`5`,description:`Total loss equals recon + KL`,input:`(lambda: (
     result := vae_loss(np.ones((2, 4)), np.zeros((2, 4)), np.ones((2, 3)), np.ones((2, 3))),
     bool(abs(result[0] - (result[1] + result[2])) < 1e-4)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Reconstruction: np.mean((x - x_reconstructed)²)`,`KL: -0.5 * sum(1 + log_var - mu² - exp(log_var)) over the latent dims`,`Average both terms over the batch`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Concrete values: reconstruction and KL both non-zero`,input:`vae_loss(np.array([[1.0, 2.0]]), np.zeros((1, 2)), np.array([[0.5, -0.5]]), np.array([[0.0, 1.0]]))`,expected:`(3.1091, 2.5, 0.6091)`,hidden:!1},{id:`7`,description:`KL sums over latent dims and averages over the batch`,input:`vae_loss(np.zeros((2, 3)), np.zeros((2, 3)), np.array([[1.0, 1.0], [0.0, 0.0]]), np.zeros((2, 2)))`,expected:`(0.5, 0.0, 0.5)`,hidden:!0}],hints:[`The loss has two independent parts: how well the decoder reproduces x, and how far each posterior N(mu, exp(log_var)) is from N(0, I).`,`Compute the reconstruction MSE, then a per-example KL (one number per row), then average the KL over the batch.`,`recon = np.mean((x - x_reconstructed) ** 2); kl = np.mean(-0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)).`,`Pitfall: np.mean over the whole KL array also divides by latent_dim, which under-weights the KL. Sum over axis=1 first. Round only the returned values.`],solution:`import numpy as np
 
 def vae_loss(x, x_reconstructed, mu, log_var):
-    # Reconstruction loss (MSE)
+    """
+    Returns (total_loss, recon_loss, kl_loss) as floats rounded to 4 decimals.
+    """
+    # Gaussian decoder -> squared error, averaged over every element
     recon_loss = np.mean((x - x_reconstructed) ** 2)
 
-    # KL divergence
-    kl_loss = -0.5 * np.mean(np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1))
+    # Closed-form KL(N(mu, sigma^2) || N(0, 1)) per latent dim,
+    # summed over latent dims (axis=1), then averaged over the batch
+    kl_per_example = -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)
+    kl_loss = np.mean(kl_per_example)
 
     total_loss = recon_loss + kl_loss
-
-    return round(total_loss, 4), round(recon_loss, 4), round(kl_loss, 4)
+    return round(float(total_loss), 4), round(float(recon_loss), 4), round(float(kl_loss), 4)
 `},{id:`diffusion-noise-schedule`,title:`Diffusion Noise Schedule`,section:`generative-models`,difficulty:`easy`,description:`
 ## Diffusion Noise Schedule
 
-Implement a linear noise schedule for diffusion models.
+### What you'll build
+The linear β schedule from DDPM (Ho et al., 2020) and the two quantities every diffusion step uses: \`α_t\` and the cumulative product \`ᾱ_t\`.
 
-### Linear Schedule
-\`\`\`
-β_t = β_start + t * (β_end - β_start) / (T - 1)
+### Background
+The forward process adds a little Gaussian noise at each of T steps; \`β_t\` is the variance added at step t. Because Gaussians compose, you never simulate the steps one by one: the noise level after t steps is fully described by \`ᾱ_t\`, which falls from about 1 (clean data) towards 0 (pure noise).
 
-where t = 0, 1, ..., T-1
+### Formula
+Timesteps are **0-indexed**, \`t = 0, 1, ..., T−1\` (the same indexing as the sampling problems):
+\`\`\`text
+β_t  = β_start + t · (β_end − β_start) / (T − 1)     # evenly spaced, both ends included
+α_t  = 1 − β_t
+ᾱ_t  = α_0 · α_1 · ... · α_t                         # cumulative product, ᾱ_0 = α_0
 \`\`\`
+With the DDPM defaults (T = 1000, β from 1e-4 to 0.02), ᾱ is 0.9999 at t = 0, about 0.0786 at t = 499 and 4.0e-5 at t = 999.
 
-### Derived Quantities
-\`\`\`
-α_t = 1 - β_t
-ᾱ_t = prod(α_1, ..., α_t)  # cumulative product
-\`\`\`
+### Inputs
+- \`T\`: int ≥ 2, the number of steps
+- \`beta_start\`, \`beta_end\`: floats with \`0 < beta_start < beta_end < 1\`
 
-These control how much noise is added at each step.
-    `,examples:[{input:`T=1000, beta_start=0.0001, beta_end=0.02`,output:`betas, alphas, alpha_bars arrays`,explanation:`Standard DDPM schedule`}],starterCode:`import numpy as np
+### Expected return format
+A tuple of three float arrays, each of shape \`(T,)\`: \`(betas, alphas, alpha_bars)\`
+
+### Constraints
+NumPy only, no loops.
+
+### Follow-up
+- Why did Improved DDPM switch to a cosine schedule? (The linear one destroys information too early for small images.)
+- What is the signal-to-noise ratio \`ᾱ_t / (1 − ᾱ_t)\` at the last step, and why should it be close to 0?
+    `,examples:[{input:`T = 3, beta_start = 0.1, beta_end = 0.3`,output:`betas = [0.1, 0.2, 0.3], alphas = [0.9, 0.8, 0.7], alpha_bars = [0.9, 0.72, 0.504]`,explanation:`ᾱ is the running product: 0.9, 0.9·0.8 = 0.72, 0.72·0.7 = 0.504`},{input:`T = 1000 (DDPM defaults)`,output:`alpha_bars[0] = 0.9999, alpha_bars[-1] ≈ 4.0e-05`,explanation:`The last step is almost pure noise`}],starterCode:`import numpy as np
 
 def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
     """
-    Create linear noise schedule for diffusion.
+    Create the linear DDPM noise schedule (0-indexed timesteps).
 
     Args:
-        T: Number of diffusion steps
-        beta_start: Starting beta value
-        beta_end: Ending beta value
+        T: Number of diffusion steps (int)
+        beta_start: beta_0
+        beta_end: beta_{T-1}
 
     Returns:
-        betas: Beta values (T,)
-        alphas: Alpha values (T,)
-        alpha_bars: Cumulative alpha product (T,)
+        (betas, alphas, alpha_bars): float arrays of shape (T,), where
+        alphas = 1 - betas and alpha_bars is the cumulative product of alphas
     """
     # Your code here
     pass
@@ -12624,51 +12313,31 @@ def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
     alphas := result[1],
     alpha_bars := result[2],
     bool(np.allclose(alpha_bars, np.cumprod(alphas)))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Use np.linspace for linear interpolation`,`alphas = 1 - betas`,`alpha_bars = np.cumprod(alphas)`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Small schedule, exact values`,input:`(lambda s: (np.round(s[0], 6).tolist(), np.round(s[1], 6).tolist(), np.round(s[2], 6).tolist()))(linear_noise_schedule(3, 0.1, 0.3))`,expected:`([0.1, 0.2, 0.3], [0.9, 0.8, 0.7], [0.9, 0.72, 0.504])`,hidden:!1},{id:`7`,description:`DDPM defaults: alpha_bar at t = 499 and t = 999 (scaled by 1e5)`,input:`(lambda ab: (round(float(ab[499]), 4), round(float(ab[-1]) * 1e5, 4)))(linear_noise_schedule(1000)[2])`,expected:`(0.0786, 4.0358)`,hidden:!0}],hints:[`β grows linearly from beta_start to beta_end, and both endpoints are included.`,`Build betas first; alphas and alpha_bars follow from it in one line each.`,`np.linspace(beta_start, beta_end, T) for betas; alphas = 1 - betas; np.cumprod(alphas) for alpha_bars.`,`Pitfall: np.arange(beta_start, beta_end, step) drops the endpoint and suffers float drift; np.linspace includes both ends.`],solution:`import numpy as np
 
 def linear_noise_schedule(T, beta_start=0.0001, beta_end=0.02):
-    # Linear schedule
-    betas = np.linspace(beta_start, beta_end, T)
-
-    # Compute alphas
-    alphas = 1 - betas
-
-    # Cumulative product
-    alpha_bars = np.cumprod(alphas)
-
+    """
+    Returns (betas, alphas, alpha_bars), each of shape (T,).
+    """
+    betas = np.linspace(beta_start, beta_end, T)   # endpoints included
+    alphas = 1.0 - betas
+    alpha_bars = np.cumprod(alphas)                # alpha_bar_t = prod_{s<=t} alpha_s
     return betas, alphas, alpha_bars
-`},{id:`diffusion-forward`,title:`Diffusion Forward Process`,section:`generative-models`,difficulty:`medium`,description:`
-## Diffusion Forward Process (Adding Noise)
-
-Implement the forward diffusion process that adds noise to data.
-
-### Formula
-\`\`\`
-x_t = sqrt(ᾱ_t) * x_0 + sqrt(1 - ᾱ_t) * ε
-
-where ε ~ N(0, I)
-\`\`\`
-
-### Intuition
-- As t increases, ᾱ_t decreases
-- More noise is added, signal is reduced
-- At t=T, x_T ≈ pure noise
-    `,examples:[{input:`x_0 (image), t=500, T=1000`,output:`x_t (noisy image)`,explanation:`Halfway through diffusion process`}],starterCode:`import numpy as np
+`},{id:`diffusion-forward`,title:`Diffusion Forward Process`,section:`generative-models`,difficulty:`medium`,description:"\n## Diffusion Forward Process (Adding Noise)\n\n### What you'll build\nThe closed-form forward process `q(x_t | x_0)`: jump straight from clean data to its noisy version at step t, and return the noise you used (it is the training target of the denoiser).\n\n### Background\nAdding `N(0, β_t)` noise T times in a row is equivalent to adding a single Gaussian whose size depends only on `ᾱ_t`. That is what makes diffusion training cheap: pick a random t, noise the batch in one shot, and train the network to predict ε.\n\n### Formula\n```text\nε    ~ N(0, I)                                      # same shape as x_0\nx_t  = sqrt(ᾱ_t) · x_0 + sqrt(1 − ᾱ_t) · ε\n```\n- `ᾱ_t = alpha_bars[t]` (0-indexed, as in **Diffusion Noise Schedule**)\n- `ᾱ_t = 1` returns `x_0` unchanged; `ᾱ_t → 0` gives (almost) pure noise\n- The variance is preserved: if `x_0` has unit variance, so does `x_t`\n\n### Inputs\n- `x_0`: float array of any shape `(batch, ...)`\n- `t`: int, an index into `alpha_bars`\n- `alpha_bars`: float array `(T,)` with values in [0, 1]\n\n### Expected return format\nA tuple `(x_t, noise)`, both float arrays with the shape of `x_0`.\n\n### Conventions (the tests rely on these)\nThe starter code calls `np.random.seed(42)`. Keep it and draw the noise **once** with `np.random.randn(*x_0.shape)`.\n\n### Constraints\nNumPy only, vectorised.\n\n### Follow-up\n- In training, t is sampled per example. How would you vectorise with a `(batch,)` array of timesteps? (Index `alpha_bars[t]` and reshape to `(batch, 1, ...)`.)\n- Why predict ε instead of x_0 directly?\n    ",examples:[{input:`x_0 = np.array([[1.0, -1.0]]), t = 1, alpha_bars = np.array([0.9, 0.5])`,output:`x_t = [[1.0583, -0.8049]], noise = [[0.4967, -0.1383]]`,explanation:`ᾱ_1 = 0.5, so x_t = sqrt(0.5)·x_0 + sqrt(0.5)·ε with ε the first draws after seed 42`},{input:`x_0 = np.array([[1.0, 2.0, 3.0]]), t = 0, alpha_bars = np.array([1.0, 0.5, 0.1])`,output:`x_t = [[1.0, 2.0, 3.0]]`,explanation:`ᾱ = 1 means no noise has been added yet`}],starterCode:`import numpy as np
 
 def diffusion_forward(x_0, t, alpha_bars):
     """
-    Add noise to data using forward diffusion.
+    Sample x_t ~ q(x_t | x_0) in closed form.
 
     Args:
-        x_0: Original data (batch, ...)
-        t: Timestep (int)
-        alpha_bars: Cumulative alpha products (T,)
+        x_0: Clean data, shape (batch, ...)
+        t: Timestep (int, 0-indexed into alpha_bars)
+        alpha_bars: Cumulative alpha products, shape (T,)
 
     Returns:
-        x_t: Noisy data at timestep t
-        noise: The noise that was added
+        (x_t, noise): both with the shape of x_0
     """
-    np.random.seed(42)
+    np.random.seed(42)  # keep: draw the noise once with np.random.randn(*x_0.shape)
     # Your code here
     pass
 `,testCases:[{id:`1`,description:`Output shape matches input`,input:`diffusion_forward(np.ones((2, 4)), 50, np.linspace(0.99, 0.01, 100))[0].shape`,expected:`(2, 4)`,hidden:!1},{id:`2`,description:`Noise shape matches input`,input:`diffusion_forward(np.ones((3, 5)), 10, np.linspace(0.99, 0.01, 100))[1].shape`,expected:`(3, 5)`,hidden:!0},{id:`3`,description:`When alpha_bar=1, x_t should equal x_0 (no noise added)`,input:`bool(np.allclose(diffusion_forward(np.array([[1.0, 2.0, 3.0]]), 0, np.array([1.0, 0.5, 0.1]))[0], np.array([[1.0, 2.0, 3.0]])))`,expected:`True`,hidden:!0},{id:`4`,description:`Verify formula: x_t = sqrt(alpha_bar_t)*x_0 + sqrt(1-alpha_bar_t)*noise`,input:`(lambda: (
@@ -12685,73 +12354,31 @@ def diffusion_forward(x_0, t, alpha_bars):
     alpha_bars := np.array([0.001]),
     x_t := diffusion_forward(x_0, 0, alpha_bars)[0],
     bool(np.mean(np.abs(x_t - x_0)) > 5)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Get alpha_bar_t = alpha_bars[t]`,`Sample noise from standard normal`,`Apply formula: sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * noise`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Concrete values at alpha_bar = 0.5`,input:`(lambda r: (np.round(r[0], 4).tolist(), np.round(r[1], 4).tolist()))(diffusion_forward(np.array([[1.0, -1.0]]), 1, np.array([0.9, 0.5])))`,expected:`([[1.0583, -0.8049]], [[0.4967, -0.1383]])`,hidden:!1},{id:`7`,description:`The returned noise is the seeded standard normal draw`,input:`(lambda: (n := diffusion_forward(np.zeros((2, 3)), 0, np.array([0.3]))[1], np.random.seed(42), bool(np.allclose(n, np.random.randn(2, 3))))[-1])()`,expected:`True`,hidden:!0}],hints:[`You do not need a loop over steps: all the noise added up to step t is summarised by a single number, alpha_bars[t].`,`Look up ᾱ_t, draw ε with the shape of x_0, then mix signal and noise.`,`x_t = np.sqrt(ab) * x_0 + np.sqrt(1 - ab) * noise, with noise = np.random.randn(*x_0.shape).`,`Pitfall: the coefficients are square roots of ᾱ and 1 − ᾱ (they are variances). Return the same noise array you used.`],solution:`import numpy as np
 
 def diffusion_forward(x_0, t, alpha_bars):
+    """
+    Returns (x_t, noise) with x_t = sqrt(ab) * x_0 + sqrt(1 - ab) * noise.
+    """
     np.random.seed(42)
-
     alpha_bar_t = alpha_bars[t]
-
-    # Sample noise
-    noise = np.random.randn(*x_0.shape)
-
-    # Forward process
+    noise = np.random.randn(*x_0.shape)   # the denoiser's training target
     x_t = np.sqrt(alpha_bar_t) * x_0 + np.sqrt(1 - alpha_bar_t) * noise
-
     return x_t, noise
-`},{id:`vqvae-quantization`,title:`VQ-VAE Vector Quantization`,section:`generative-models`,difficulty:`hard`,description:`
-## VQ-VAE Vector Quantization
-
-Implement the vector quantization layer used in VQ-VAE (Vector Quantized Variational Autoencoder).
-
-### Overview
-Unlike standard VAEs that use continuous latent spaces, VQ-VAE uses **discrete** latent representations by mapping encoder outputs to the nearest embedding in a learned codebook.
-
-### Quantization Process
-1. **Encoder output**: z_e of shape (batch, H, W, D)
-2. **Codebook**: K embedding vectors of dimension D
-3. **Find nearest**: For each spatial position, find the closest codebook entry
-4. **Quantize**: Replace z_e with the nearest codebook vector z_q
-
-### Distance Calculation
-\`\`\`
-distances[b, h, w, k] = ||z_e[b, h, w] - codebook[k]||²
-\`\`\`
-
-### Straight-Through Estimator
-During training, gradients flow through z_q to z_e by copying gradients:
-\`\`\`
-z_q = z_e + stop_gradient(z_q - z_e)
-\`\`\`
-(We don't implement this here, just the forward pass)
-
-### VQ-VAE Loss Components
-\`\`\`
-L = reconstruction + ||sg[z_e] - e||² + β * ||z_e - sg[e]||²
-\`\`\`
-- **Codebook loss**: Moves embeddings toward encoder outputs
-- **Commitment loss**: Commits encoder to embeddings
-
-### Function Signature
-\`\`\`python
-def vq_quantize(z_e, codebook):
-    # z_e: (batch, H, W, embedding_dim) - encoder output
-    # codebook: (num_embeddings, embedding_dim) - K embedding vectors
-    # Returns: z_q, indices
-\`\`\`
-    `,examples:[{input:`z_e (2, 4, 4, 64), codebook (512, 64)`,output:`z_q (2, 4, 4, 64), indices (2, 4, 4)`,explanation:`Each spatial position mapped to one of 512 codes`}],starterCode:`import numpy as np
+`},{id:`vqvae-quantization`,title:`VQ-VAE Vector Quantization`,section:`generative-models`,difficulty:`hard`,description:"\n## VQ-VAE Vector Quantization\n\n### What you'll build\nThe discrete bottleneck of a VQ-VAE (van den Oord et al., 2017): snap every encoder vector to its nearest codebook entry, and compute the two auxiliary losses that train the codebook and the encoder.\n\n### Background\nA VQ-VAE replaces the Gaussian latent of a VAE with a **discrete** one: a grid of indices into a learned codebook of K vectors. Discrete codes are what image and audio tokenizers (VQGAN, SoundStream, the image tokens of many multimodal LLMs) produce, so a Transformer can then model them like text.\n\n### Algorithm: `vq_quantize`\n1. Flatten the encoder output `z_e` from `(B, H, W, D)` to `N = B·H·W` vectors of size D.\n2. Compute all squared distances to the K codes with the expansion\n   `||z − e_k||² = ||z||² − 2·z·e_k + ||e_k||²`, giving an `(N, K)` matrix.\n3. `indices = argmin` over K (ties go to the **lowest** index, as `np.argmin` does).\n4. `z_q = codebook[indices]`, reshaped back to `(B, H, W, D)`; indices to `(B, H, W)`.\n\n### Losses: `vq_loss`\n`sg[·]` is stop-gradient (`.detach()` in PyTorch):\n```text\ncodebook_loss   = mean( (sg[z_e] − z_q)² )          # pulls codes toward encoder outputs\ncommitment_loss = β · mean( (z_e − sg[z_q])² )      # keeps the encoder near its codes\n```\nMeans are over **all** elements. In a forward pass both squared errors have the same value (`sg` only changes gradients), so `commitment_loss = β · codebook_loss`. The full VQ-VAE loss is `reconstruction + codebook_loss + commitment_loss`. The straight-through estimator `z_q = z_e + sg[z_q − z_e]` copies the decoder's gradient to the encoder; it only matters in an autograd framework (see the PyTorch track and **E2E: VQ-VAE**).\n\n### Inputs\n- `z_e`: float array `(B, H, W, D)`\n- `codebook`: float array `(K, D)`\n- `beta`: float, commitment weight (default 0.25)\n\n### Expected return format\n- `vq_quantize` returns `(z_q, indices)`: `z_q` float `(B, H, W, D)`, `indices` int `(B, H, W)`\n- `vq_loss` returns `(codebook_loss, commitment_loss)`: Python floats rounded to 4 decimals\n\n### Constraints\nNumPy only. Vectorise the distance computation: no loop over positions or codes.\n\n### Follow-up\n- What is codebook collapse, and how do EMA codebook updates or dead-code restarts fix it?\n- Memory of the `(N, K)` distance matrix for a 32×32 grid, batch 64 and K = 8192? (64·1024·8192·4 bytes ≈ 2 GB, so chunk it.)\n    ",examples:[{input:`z_e = [[[[1, 1], [9, 8], [4, 6]]]] (shape (1, 1, 3, 2)), codebook = [[0, 0], [10, 10], [5, 5]]`,output:`indices = [[[0, 1, 2]]], z_q = [[[[0, 0], [10, 10], [5, 5]]]]`,explanation:`[9, 8] is at squared distance 5 from [10, 10] but 25 from [5, 5]; [4, 6] is 2 from [5, 5]`},{input:`vq_loss(z_e, z_q, beta=0.25) for the example above`,output:`(1.5, 0.375)`,explanation:`Squared errors 1, 1, 1, 4, 1, 1 have mean 1.5; the commitment loss is 0.25 · 1.5`}],starterCode:`import numpy as np
 
 def vq_quantize(z_e, codebook):
     """
     Vector quantization for VQ-VAE.
 
     Args:
-        z_e: Encoder output (batch, H, W, embedding_dim)
-        codebook: Embedding vectors (num_embeddings, embedding_dim)
+        z_e: Encoder output, shape (batch, H, W, embedding_dim)
+        codebook: Code vectors, shape (num_embeddings, embedding_dim)
 
     Returns:
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        indices: Codebook indices used (batch, H, W)
+        z_q: Nearest code for every position, shape (batch, H, W, embedding_dim)
+        indices: Index of that code, int array of shape (batch, H, W);
+                 ties go to the lowest index
     """
     # Your code here
     pass
@@ -12759,16 +12386,16 @@ def vq_quantize(z_e, codebook):
 
 def vq_loss(z_e, z_q, beta=0.25):
     """
-    Compute VQ-VAE losses (codebook + commitment).
+    Codebook and commitment losses (forward values).
 
     Args:
-        z_e: Encoder output (batch, H, W, embedding_dim)
-        z_q: Quantized vectors (batch, H, W, embedding_dim)
-        beta: Commitment loss weight (default: 0.25)
+        z_e: Encoder output, shape (batch, H, W, embedding_dim)
+        z_q: Quantized vectors, same shape
+        beta: Commitment loss weight (default 0.25)
 
     Returns:
-        codebook_loss: Loss to update codebook
-        commitment_loss: Loss to commit encoder to codebook
+        (codebook_loss, commitment_loss): Python floats rounded to 4 decimals,
+        codebook_loss = mean((z_e - z_q)**2), commitment_loss = beta * that
     """
     # Your code here
     pass
@@ -12786,124 +12413,105 @@ def vq_loss(z_e, z_q, beta=0.25):
     z_q := np.random.randn(2, 3, 3, 4),
     losses := vq_loss(z_e, z_q, 0.25),
     bool(abs(losses[1] - 0.25 * losses[0]) < 1e-4)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Reshape z_e to (batch*H*W, D) for easier distance computation`,`Use broadcasting: ||a - b||² = ||a||² + ||b||² - 2*a·b`,`np.argmin along the codebook axis gives indices`,`Index into codebook with the indices to get z_q`,`Reshape back to original spatial dimensions`,`For loss: codebook_loss = ||z_e.detach() - z_q||², commitment = ||z_e - z_q.detach()||²`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`Nearest codes and losses on a hand-checked example`,input:`(lambda: (
+    z := np.array([[[[1.0, 1.0], [9.0, 8.0], [4.0, 6.0]]]]),
+    cb := np.array([[0.0, 0.0], [10.0, 10.0], [5.0, 5.0]]),
+    q := vq_quantize(z, cb),
+    (q[1].tolist(), q[0].tolist(), vq_loss(z, q[0], 0.25))
+)[-1])()`,expected:`([[[0, 1, 2]]], [[[[0.0, 0.0], [10.0, 10.0], [5.0, 5.0]]]], (1.5, 0.375))`,hidden:!1},{id:`8`,description:`Indices match a brute-force search; ties go to the lowest index`,input:`(lambda: (
+    z := np.random.randn(2, 3, 3, 4), cb := np.random.randn(8, 4),
+    brute := ((z[..., None, :] - cb) ** 2).sum(-1).argmin(-1),
+    tie := vq_quantize(np.zeros((1, 1, 1, 2)), np.array([[1.0, 0.0], [-1.0, 0.0]]))[1],
+    (bool(np.array_equal(vq_quantize(z, cb)[1], brute)), tie.tolist())
+)[-1])()`,expected:`(True, [[[0]]])`,hidden:!0}],hints:[`Quantization is a nearest-neighbour lookup: for every encoder vector, which of the K codes is closest?`,`Flatten z_e to (N, D), build an (N, K) matrix of squared distances, take the argmin per row, index the codebook, and reshape back.`,`Distances without a loop: np.sum(z**2, axis=1, keepdims=True) - 2 * z @ codebook.T + np.sum(codebook**2, axis=1); then np.argmin(d, axis=1) and codebook[idx].`,`Pitfall: z_e[..., None, :] - codebook also works but builds an (N, K, D) array, which runs out of memory for real codebooks. Both losses use the mean over all elements, not the sum.`],solution:`import numpy as np
 
 def vq_quantize(z_e, codebook):
-    z_e = np.array(z_e)
-    codebook = np.array(codebook)
-
+    """
+    Returns (z_q, indices): z_q has z_e's shape, indices has shape (batch, H, W).
+    """
     batch, H, W, D = z_e.shape
-    K, _ = codebook.shape
+    z_flat = z_e.reshape(-1, D)                                  # (N, D)
 
-    # Flatten spatial dimensions: (batch*H*W, D)
-    z_flat = z_e.reshape(-1, D)
+    # ||z - e||^2 = ||z||^2 - 2 z.e + ||e||^2, for all (vector, code) pairs
+    distances = (np.sum(z_flat ** 2, axis=1, keepdims=True)      # (N, 1)
+                 - 2 * z_flat @ codebook.T                        # (N, K)
+                 + np.sum(codebook ** 2, axis=1))                 # (K,)
 
-    # Compute distances using: ||a-b||² = ||a||² + ||b||² - 2*a·b
-    # z_flat: (N, D), codebook: (K, D)
-    z_sq = np.sum(z_flat ** 2, axis=1, keepdims=True)  # (N, 1)
-    codebook_sq = np.sum(codebook ** 2, axis=1)        # (K,)
-    cross = z_flat @ codebook.T                        # (N, K)
-
-    distances = z_sq + codebook_sq - 2 * cross         # (N, K)
-
-    # Find nearest codebook entry
-    indices_flat = np.argmin(distances, axis=1)        # (N,)
-
-    # Get quantized vectors
-    z_q_flat = codebook[indices_flat]                  # (N, D)
-
-    # Reshape back
-    z_q = z_q_flat.reshape(batch, H, W, D)
-    indices = indices_flat.reshape(batch, H, W)
-
-    return z_q, indices
+    indices_flat = np.argmin(distances, axis=1)                  # first index wins ties
+    z_q = codebook[indices_flat].reshape(batch, H, W, D)
+    return z_q, indices_flat.reshape(batch, H, W)
 
 
 def vq_loss(z_e, z_q, beta=0.25):
-    z_e = np.array(z_e)
-    z_q = np.array(z_q)
+    """
+    Returns (codebook_loss, commitment_loss) as floats rounded to 4 decimals.
+    """
+    mse = np.mean((z_e - z_q) ** 2)
+    # Same forward value; with autograd the codebook loss updates only the codes
+    # (sg on z_e) and the commitment loss only the encoder (sg on z_q).
+    codebook_loss = mse
+    commitment_loss = beta * mse
+    return round(float(codebook_loss), 4), round(float(commitment_loss), 4)
 
-    # Codebook loss: ||sg[z_e] - z_q||² (moves codebook toward encoder output)
-    # In practice, sg[z_e] means z_e is treated as constant
-    codebook_loss = np.mean((z_e - z_q) ** 2)
-
-    # Commitment loss: ||z_e - sg[z_q]||² (commits encoder to codebook)
-    # Same computation, but gradient only flows to z_e
-    commitment_loss = beta * np.mean((z_e - z_q) ** 2)
-
-    return round(codebook_loss, 4), round(commitment_loss, 4)
+# Time: O(N * K * D) for the distances; space: O(N * K)
 `},{id:`kl-divergence`,title:`KL Divergence (Gaussians)`,section:`generative-models`,difficulty:`easy`,description:`
-## KL Divergence Between Gaussians
+## KL Divergence Between Two Gaussians
 
-Compute the KL divergence between two univariate Gaussian distributions.
+### What you'll build
+The closed-form KL divergence \`KL(P || Q)\` between two univariate Gaussians.
+
+### Background
+KL divergence measures how many extra nats you pay, on average, for encoding samples from P with a code optimised for Q. It appears all over generative modelling: the VAE regulariser is \`KL(q(z|x) || N(0, 1))\`, diffusion's ELBO is a sum of Gaussian KLs, and RLHF penalises \`KL(π || π_ref)\`. For Gaussians it has a closed form, so no sampling is needed.
 
 ### Formula
+With \`P = N(μ_p, σ_p²)\` and \`Q = N(μ_q, σ_q²)\` (σ are **standard deviations**):
+\`\`\`text
+KL(P || Q) = log(σ_q / σ_p) + (σ_p² + (μ_p − μ_q)²) / (2 σ_q²) − 1/2
 \`\`\`
-KL(P || Q) = log(σ_q/σ_p) + (σ_p² + (μ_p - μ_q)²) / (2σ_q²) - 0.5
-\`\`\`
-
-Where P = N(μ_p, σ_p²) and Q = N(μ_q, σ_q²)
+Setting \`μ_q = 0, σ_q = 1\` and writing \`log_var = log σ_p²\` gives the VAE term \`−0.5·(1 + log_var − μ² − exp(log_var))\` used in **VAE Loss Function**.
 
 ### Properties
-- KL ≥ 0
-- KL = 0 iff P = Q
-- Not symmetric: KL(P||Q) ≠ KL(Q||P)
-    `,examples:[{input:`P = N(0, 1), Q = N(0, 1)`,output:`0`,explanation:`Same distribution`}],starterCode:`import numpy as np
+- \`KL ≥ 0\`, with equality iff P = Q
+- **Not symmetric**: \`KL(P || Q) ≠ KL(Q || P)\` in general
+- Units are nats because the log is natural
+
+### Inputs
+\`mu_p, sigma_p, mu_q, sigma_q\`: Python numbers (or NumPy scalars), with \`sigma_p, sigma_q > 0\`.
+
+### Expected return format
+\`kl\`: a Python float rounded to 4 decimals.
+
+### Constraints
+Use the closed form (no sampling).
+
+### Follow-up
+- Which direction does a VAE minimise, and why does reverse KL lead to mode-seeking behaviour?
+- Generalise to diagonal multivariate Gaussians (sum the per-dimension KLs).
+    `,examples:[{input:`mu_p = 1, sigma_p = 1, mu_q = 0, sigma_q = 1`,output:`0.5`,explanation:`Equal widths, so only the mean term remains: 1² / 2`},{input:`mu_p = 0, sigma_p = 2, mu_q = 0, sigma_q = 1`,output:`0.8069`,explanation:`log(1/2) + 4/2 − 0.5 = 0.8069; swapping P and Q gives 0.3181, so KL is not symmetric`}],starterCode:`import numpy as np
 
 def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
     """
-    Compute KL divergence between two Gaussians.
+    KL(P || Q) for P = N(mu_p, sigma_p^2) and Q = N(mu_q, sigma_q^2).
 
     Args:
-        mu_p, sigma_p: Mean and std of P
-        mu_q, sigma_q: Mean and std of Q
+        mu_p, sigma_p: Mean and standard deviation of P (sigma_p > 0)
+        mu_q, sigma_q: Mean and standard deviation of Q (sigma_q > 0)
 
     Returns:
-        kl: KL(P || Q)
+        kl: Python float rounded to 4 decimals
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Same distribution`,input:`(0, 1, 0, 1)`,expected:`0.0`,hidden:!1},{id:`2`,description:`Different means`,input:`(1, 1, 0, 1)`,expected:`0.5`,hidden:!1},{id:`3`,description:`Different variances`,input:`(0, 2, 0, 1)`,expected:`0.8069`,hidden:!0},{id:`4`,description:`KL is always non-negative`,input:`bool(kl_divergence_gaussian(3, 2, -1, 5) >= 0)`,expected:`True`,hidden:!0},{id:`5`,description:`Asymmetry: KL(P||Q) != KL(Q||P)`,input:`bool(abs(kl_divergence_gaussian(0, 1, 1, 2) - kl_divergence_gaussian(1, 2, 0, 1)) > 0.01)`,expected:`True`,hidden:!0}],hints:[`Apply the formula directly`,`Use np.log for natural logarithm`,`Remember: σ² is variance, σ is std`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Same distribution`,input:`(0, 1, 0, 1)`,expected:`0.0`,hidden:!1},{id:`2`,description:`Different means`,input:`(1, 1, 0, 1)`,expected:`0.5`,hidden:!1},{id:`3`,description:`Different variances`,input:`(0, 2, 0, 1)`,expected:`0.8069`,hidden:!0},{id:`4`,description:`KL is always non-negative`,input:`bool(kl_divergence_gaussian(3, 2, -1, 5) >= 0)`,expected:`True`,hidden:!0},{id:`5`,description:`Asymmetry: KL(P||Q) != KL(Q||P)`,input:`bool(abs(kl_divergence_gaussian(0, 1, 1, 2) - kl_divergence_gaussian(1, 2, 0, 1)) > 0.01)`,expected:`True`,hidden:!0},{id:`6`,description:`Reverse direction of test 3 (asymmetry, exact value)`,input:`kl_divergence_gaussian(0, 1, 0, 2)`,expected:`0.3181`,hidden:!0}],hints:[`KL compares a width ratio and a mean gap, both measured relative to Q (the distribution in the denominator).`,`There are three terms: a log ratio of standard deviations, a squared-error term scaled by 2σ_q², and a constant.`,`kl = np.log(sigma_q / sigma_p) + (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2) - 0.5.`,`Pitfall: the inputs are standard deviations, so square them for the variance term but not inside the log ratio. Return a Python float: round(float(kl), 4).`],solution:`import numpy as np
 
 def kl_divergence_gaussian(mu_p, sigma_p, mu_q, sigma_q):
-    term1 = np.log(sigma_q / sigma_p)
-    term2 = (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2)
-    term3 = -0.5
-
-    kl = term1 + term2 + term3
-    return round(kl, 4)
-`},{id:`ddpm-sampling-step`,title:`DDPM Reverse Sampling Step`,section:`generative-models`,difficulty:`medium`,description:`
-## One Reverse Step of DDPM
-
-A DDPM (Ho et al., 2020) generates data by starting from pure noise x_T ~ N(0, I) and denoising step by step. A network ε_θ(x_t, t) predicts the noise that was added; each reverse step removes a bit of it.
-
-### Noise schedule
-\`\`\`
-α_t = 1 - β_t
-ᾱ_t = α_0 · α_1 · ... · α_t        (cumulative product)
-\`\`\`
-Timesteps are **0-indexed** into \`betas\`, so t = 0 is the last (least noisy) step.
-
-### Reverse step (Algorithm 2 of the paper)
-\`\`\`
-mean    = 1 / sqrt(α_t) · ( x_t - β_t / sqrt(1 - ᾱ_t) · ε_θ )
-x_{t-1} = mean + σ_t · z          z ~ N(0, I)
-\`\`\`
-- Use **σ_t² = β_t** (the paper's first choice; the other one is the posterior variance β̃_t = (1 - ᾱ_{t-1}) / (1 - ᾱ_t) · β_t)
-- At **t = 0** no noise is added: return the mean
-- The noise z is passed in so the step is deterministic
-
-### Sanity check
-At t = 0, ᾱ_0 = α_0. If x_0' = sqrt(α_0)·x + sqrt(β_0)·ε and the model predicts ε exactly, the step returns x exactly.
-
-### Function Signature
-\`\`\`python
-def ddpm_step(x_t, eps_pred, t, betas, z):
-    # x_t, eps_pred, z: arrays of the same shape
-    # t: int timestep (0-indexed); betas: (T,) schedule
-    # returns x_{t-1}, same shape as x_t
-\`\`\`
-    `,examples:[{input:`x_t = [1.0, -0.5], eps_pred = [0.2, 0.4], t = 2, betas = [0.1, 0.2, 0.3], z = [0.5, -1.0]`,output:`[1.3673, -1.349]`,explanation:`ᾱ_2 = 0.9 · 0.8 · 0.7 = 0.504; mean = (x_t - 0.3 / sqrt(0.496) · ε) / sqrt(0.7), then add sqrt(0.3) · z`}],starterCode:`import numpy as np
+    """
+    Returns KL(N(mu_p, sigma_p^2) || N(mu_q, sigma_q^2)) rounded to 4 decimals.
+    """
+    log_ratio = np.log(sigma_q / sigma_p)                         # width mismatch
+    spread = (sigma_p**2 + (mu_p - mu_q)**2) / (2 * sigma_q**2)   # variance + mean gap
+    return round(float(log_ratio + spread - 0.5), 4)
+`},{id:`ddpm-sampling-step`,title:`DDPM Reverse Sampling Step`,section:`generative-models`,difficulty:`medium`,description:"\n## One Reverse Step of DDPM\n\n### What you'll build\nA single denoising step of DDPM sampling (Ho et al., 2020, Algorithm 2): given the current noisy sample `x_t` and the network's noise prediction, produce `x_{t-1}`.\n\n### Background\nSampling starts from pure noise `x_T ~ N(0, I)` and applies this step T times. A network `ε_θ(x_t, t)` predicts the noise contained in `x_t`; the step removes the right fraction of it, rescales, and (except at the very end) injects a little fresh noise so the chain stays stochastic.\n\n### Formula\nSchedule, with timesteps **0-indexed** into `betas` (t = 0 is the last, least noisy step):\n```text\nα_t = 1 − β_t\nᾱ_t = α_0 · α_1 · ... · α_t                    # cumulative product\n```\nReverse step:\n```text\nmean    = ( x_t − β_t / sqrt(1 − ᾱ_t) · ε_θ ) / sqrt(α_t)\nx_{t-1} = mean + σ_t · z,     σ_t = sqrt(β_t),  z ~ N(0, I)\n```\n- Use **σ_t² = β_t** (the paper's first choice; the alternative is the posterior variance `β̃_t = (1 − ᾱ_{t−1}) / (1 − ᾱ_t) · β_t`).\n- At **t = 0** add no noise: return `mean`, and ignore `z`.\n- `z` is passed in, so the step is deterministic and testable.\n\n### Inputs\n- `x_t`, `eps_pred`, `z`: float arrays of the same (any) shape\n- `t`: int in `[0, T−1]`\n- `betas`: float array `(T,)`\n\n### Expected return format\n`x_{t-1}`: float array with the shape of `x_t`.\n\n### Sanity check\nAt t = 0, `ᾱ_0 = α_0`. If `x = sqrt(α_0)·x_0 + sqrt(β_0)·ε` and the model predicts ε exactly, the step returns `x_0` exactly.\n\n### Constraints\nNumPy only, vectorised over the sample.\n\n### Follow-up\n- Why does DDIM allow 50 steps instead of 1000? (A deterministic, non-Markovian sampler on the same trained model.)\n- Where would classifier-free guidance plug in? (Replace `eps_pred`; see the next problem.)\n    ",examples:[{input:`x_t = [1.0, -0.5], eps_pred = [0.2, 0.4], t = 2, betas = [0.1, 0.2, 0.3], z = [0.5, -1.0]`,output:`[1.3673, -1.349]`,explanation:`ᾱ_2 = 0.9 · 0.8 · 0.7 = 0.504; mean = (x_t − 0.3 / sqrt(0.496) · ε) / sqrt(0.7), then add sqrt(0.3) · z`},{input:`Same inputs with t = 0`,output:`[0.9874, -0.6604]`,explanation:`Final step: mean = (x_t − 0.1 / sqrt(0.1) · ε) / sqrt(0.9), and z is ignored`}],starterCode:`import numpy as np
 
 def ddpm_step(x_t, eps_pred, t, betas, z):
     """
@@ -12929,9 +12537,12 @@ def ddpm_step(x_t, eps_pred, t, betas, z):
     x0 := np.random.randn(3, 4), eps := np.random.randn(3, 4), betas := np.linspace(1e-4, 0.02, 50),
     x1 := np.sqrt(1 - betas[0]) * x0 + np.sqrt(betas[0]) * eps,
     bool(np.allclose(ddpm_step(x1, eps, 0, betas, np.random.randn(3, 4)), x0))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`alphas = 1 - betas; alpha_bar = np.cumprod(alphas)`,`mean = (x_t - betas[t] / np.sqrt(1 - alpha_bar[t]) * eps_pred) / np.sqrt(alphas[t])`,`Return mean when t == 0, otherwise mean + np.sqrt(betas[t]) * z`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`The step has two parts: a deterministic mean that strips out the predicted noise, then optional fresh noise. Which steps should get fresh noise?`,`Precompute alphas and alpha_bar from betas, compute the mean, and branch on t == 0.`,`alpha_bar = np.cumprod(1 - betas); mean = (x_t - betas[t] / np.sqrt(1 - alpha_bar[t]) * eps_pred) / np.sqrt(1 - betas[t]); add np.sqrt(betas[t]) * z when t > 0.`,`Pitfall: the noise coefficient uses 1 − ᾱ_t (cumulative) while the outer division uses α_t (this step only). Mixing them up still gives the right shape but wrong values.`],solution:`import numpy as np
 
 def ddpm_step(x_t, eps_pred, t, betas, z):
+    """
+    Returns x_{t-1}, same shape as x_t (sigma_t^2 = beta_t, no noise at t = 0).
+    """
     x_t = np.asarray(x_t, dtype=float)
     eps_pred = np.asarray(eps_pred, dtype=float)
     betas = np.asarray(betas, dtype=float)
@@ -12939,37 +12550,16 @@ def ddpm_step(x_t, eps_pred, t, betas, z):
     alphas = 1.0 - betas
     alpha_bar = np.cumprod(alphas)
 
-    # Posterior mean: remove the predicted noise, then rescale
+    # Posterior mean, parameterised by the predicted noise
     mean = (x_t - betas[t] / np.sqrt(1.0 - alpha_bar[t]) * eps_pred) / np.sqrt(alphas[t])
 
     if t == 0:
         return mean                     # last step: no noise
     sigma = np.sqrt(betas[t])           # sigma_t^2 = beta_t
     return mean + sigma * np.asarray(z, dtype=float)
-`},{id:`classifier-free-guidance`,title:`Classifier-Free Guidance`,section:`generative-models`,difficulty:`easy`,description:`
-## Classifier-Free Guidance (CFG)
 
-Conditional diffusion models (e.g. text-to-image) are trained with the condition randomly **dropped** (replaced by a null token) some fraction of the time, so the same network predicts both ε_c = ε_θ(x_t, t, c) and ε_u = ε_θ(x_t, t, ∅). At sampling time, Ho & Salimans (2022) extrapolate away from the unconditional prediction:
-\`\`\`
-ε_guided = ε_u + w · (ε_c - ε_u)
-\`\`\`
-- **w = 0**: unconditional prediction
-- **w = 1**: plain conditional prediction (no guidance)
-- **w > 1**: stronger guidance, samples follow the prompt more closely and lose diversity (Stable Diffusion's default guidance scale is 7.5)
-
-This is the "guidance scale" convention used by most libraries. The paper writes ε̃ = (1 + w')·ε_c - w'·ε_u, which is the same formula with w = 1 + w'.
-
-### Guided sampling step
-Plug ε_guided into the DDPM reverse step (σ_t² = β_t, 0-indexed t, no noise at t = 0):
-\`\`\`
-α_t = 1 - β_t,  ᾱ_t = Π_{s<=t} α_s
-x_{t-1} = 1 / sqrt(α_t) · ( x_t - β_t / sqrt(1 - ᾱ_t) · ε_guided ) + σ_t · z
-\`\`\`
-
-### What to implement
-- \`guided_noise(eps_uncond, eps_cond, w)\`: returns ε_guided (same shape as the inputs)
-- \`cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z)\`: returns x_{t-1}
-    `,examples:[{input:`eps_uncond = [0.1, -0.2], eps_cond = [0.3, 0.2], w = 3`,output:`[0.7, 1.0]`,explanation:`0.1 + 3·(0.3 - 0.1) = 0.7 and -0.2 + 3·(0.2 + 0.2) = 1.0`}],starterCode:`import numpy as np
+# Time: O(T + size of x_t) per step (precompute alpha_bar once in a real sampler)
+`},{id:`classifier-free-guidance`,title:`Classifier-Free Guidance`,section:`generative-models`,difficulty:`easy`,description:"\n## Classifier-Free Guidance (CFG)\n\n### What you'll build\nThe guidance rule that makes text-to-image diffusion follow the prompt, plus a DDPM reverse step that uses the guided noise prediction.\n\n### Background\nA conditional diffusion model is trained with its condition randomly **dropped** (replaced by a null token, typically 10–20% of the time), so one network predicts both\n`ε_c = ε_θ(x_t, t, c)` and `ε_u = ε_θ(x_t, t, ∅)`. At sampling time Ho & Salimans (2022) push the prediction further in the direction the condition points:\n\n### Formula\n```text\nε_guided = ε_u + w · (ε_c − ε_u)\n```\n| Guidance scale w | Effect |\n|------------------|--------|\n| 0 | unconditional prediction |\n| 1 | plain conditional prediction (no guidance) |\n| > 1 | follows the prompt more closely, less diversity (Stable Diffusion's default is 7.5) |\n\nThis is the \"guidance scale\" convention used by most libraries. The paper writes `ε̃ = (1 + w')·ε_c − w'·ε_u`, the same formula with `w = 1 + w'`.\n\nGuided step: plug `ε_guided` into the DDPM reverse step from **DDPM Reverse Sampling Step** (0-indexed t, σ_t² = β_t, no noise at t = 0):\n```text\nα_t = 1 − β_t,   ᾱ_t = Π_{s ≤ t} α_s\nx_{t-1} = ( x_t − β_t / sqrt(1 − ᾱ_t) · ε_guided ) / sqrt(α_t)  +  σ_t · z     (z term only if t > 0)\n```\n\n### Inputs\n- `eps_uncond`, `eps_cond`, `x_t`, `z`: float arrays of the same shape\n- `w`: float guidance scale\n- `t`: int in `[0, T−1]`; `betas`: float array `(T,)`\n\n### Expected return format\n- `guided_noise(eps_uncond, eps_cond, w)` returns `ε_guided` (same shape as the inputs)\n- `cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z)` returns `x_{t-1}` (same shape as `x_t`)\n\n### Constraints\nNumPy only. Reuse `guided_noise` inside `cfg_step`.\n\n### Follow-up\n- CFG doubles the cost of each step (two forward passes). How do batching and guidance distillation reduce it?\n- Why do very high guidance scales oversaturate images?\n    ",examples:[{input:`eps_uncond = [0.1, -0.2], eps_cond = [0.3, 0.2], w = 3`,output:`[0.7, 1.0]`,explanation:`0.1 + 3·(0.3 − 0.1) = 0.7 and −0.2 + 3·(0.2 + 0.2) = 1.0`},{input:`x_t = [0.5, -1.0, 2.0], eps_uncond = [0.1, 0.0, -0.3], eps_cond = [0.4, -0.2, 0.1], w = 7.5, t = 3, betas = linspace(0.01, 0.1, 5), z = [1.0, -0.5, 0.25]`,output:`[0.3322, -0.8824, 1.6156]`,explanation:`Guide the noise first, then apply the usual DDPM step with σ_3 = sqrt(β_3)`}],starterCode:`import numpy as np
 
 def guided_noise(eps_uncond, eps_cond, w):
     """eps_uncond + w * (eps_cond - eps_uncond)"""
@@ -13003,7 +12593,7 @@ def cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z):
     b := cfg_step(x, np.random.randn(4) * 10, c, 1.0, 4, betas, np.ones(4)),
     e := cfg_step(x, np.zeros(4), c, 2.0, 0, betas, np.random.randn(4)),
     (bool(np.allclose(a, b)), bool(np.allclose(e, (x - betas[0] / np.sqrt(betas[0]) * 2 * c) / np.sqrt(1 - betas[0]))))
-)[-1])()`,expected:`(True, True)`,hidden:!0}],hints:[`guided = eps_uncond + w * (eps_cond - eps_uncond)`,`alphas = 1 - betas; alpha_bar = np.cumprod(alphas)`,`mean = (x_t - betas[t] / np.sqrt(1 - alpha_bar[t]) * guided) / np.sqrt(alphas[t]); add np.sqrt(betas[t]) * z only if t > 0`],solution:`import numpy as np
+)[-1])()`,expected:`(True, True)`,hidden:!0}],hints:[`Guidance is a linear extrapolation from the unconditional prediction through the conditional one. What should w = 0 and w = 1 give?`,`Write guided_noise first, then make cfg_step call it and run the ordinary DDPM step on the result.`,`guided = eps_uncond + w * (eps_cond - eps_uncond); alpha_bar = np.cumprod(1 - betas); mean = (x_t - betas[t] / np.sqrt(1 - alpha_bar[t]) * guided) / np.sqrt(1 - betas[t]).`,`Pitfall: add np.sqrt(betas[t]) * z only when t > 0, and keep the w convention (w = 1 means no guidance, not w = 0).`],solution:`import numpy as np
 
 def guided_noise(eps_uncond, eps_cond, w):
     eps_uncond = np.asarray(eps_uncond, dtype=float)
@@ -13023,35 +12613,7 @@ def cfg_step(x_t, eps_uncond, eps_cond, w, t, betas, z):
     if t == 0:
         return mean
     return mean + np.sqrt(betas[t]) * np.asarray(z, dtype=float)
-`},{id:`flow-matching`,title:`Flow Matching (Rectified Flow)`,section:`generative-models`,difficulty:`medium`,description:`
-## Conditional Flow Matching
-
-Flow matching (Lipman et al., 2023) and rectified flow (Liu et al., 2023) train a network v_θ(x, t) to be a **velocity field** that carries noise to data along an ODE. With straight-line paths, training is plain regression.
-
-### Training target
-Sample noise x0 ~ N(0, I), a data point x1, and a time t ~ U(0, 1) for each example. The point on the straight path and its velocity are:
-\`\`\`
-x_t      = (1 - t) · x0 + t · x1
-target   = d x_t / dt = x1 - x0
-loss     = mean( (v_pred - target)² )        (mean over every element of the batch)
-\`\`\`
-Here t = 0 is noise and t = 1 is data. \`t\` has shape (B,) and must broadcast over the remaining dimensions of x0 (reshape it to (B, 1, ..., 1)).
-
-### Sampling with Euler steps
-Start at x0 ~ N(0, I) and integrate dx/dt = v(x, t) from t = 0 to t = 1:
-\`\`\`
-x_{t+dt} = x_t + dt · v(x_t, t)
-\`\`\`
-With n steps, dt = 1/n and the times are t = 0, 1/n, ..., (n-1)/n. If the learned field is exactly the straight-line velocity, a **single** Euler step already lands on the data: that is the appeal of straight (rectified) paths.
-
-### Expected Return Format
-- \`flow_matching_loss(x0, x1, t, v_pred)\` returns a dictionary:
-  - \`'x_t'\`: interpolated points, same shape as x0
-  - \`'target'\`: target velocity x1 - x0, same shape as x0
-  - \`'loss'\`: MSE between v_pred and target (Python float)
-- \`euler_step(x_t, v, dt)\` returns x_t + dt · v
-- \`euler_sample(x0, velocity_fn, n_steps)\` calls \`velocity_fn(x, t)\` (t a Python float) at each step and returns the final x
-    `,examples:[{input:`x0 = [[0, 0], [1, 1]], x1 = [[2, 4], [3, -1]], t = [0.25, 0.5]`,output:`x_t = [[0.5, 1.0], [2.0, 0.0]], target = [[2, 4], [2, -2]]`,explanation:`Row 0 is a quarter of the way to its data point, row 1 halfway`}],starterCode:`import numpy as np
+`},{id:`flow-matching`,title:`Flow Matching (Rectified Flow)`,section:`generative-models`,difficulty:`medium`,description:"\n## Conditional Flow Matching (Rectified Flow)\n\n### What you'll build\nThe training target and loss of flow matching with straight paths, and an Euler sampler that integrates the learned velocity field from noise to data.\n\n### Background\nFlow matching (Lipman et al., 2023) and rectified flow (Liu et al., 2023) train a network `v_θ(x, t)` to be a **velocity field** whose ODE carries noise to data. With straight-line paths between a noise sample and a data sample, training is plain regression, with no noise schedule or variance bookkeeping. Stable Diffusion 3 and Flux are trained this way.\n\n### Formula (training)\nSample noise `x0 ~ N(0, I)`, a data point `x1`, and `t ~ U(0, 1)` per example:\n```text\nx_t    = (1 − t) · x0 + t · x1           # point on the straight path\ntarget = d x_t / dt = x1 − x0            # its constant velocity\nloss   = mean( (v_pred − target)² )      # mean over every element of the batch\n```\nHere **t = 0 is noise and t = 1 is data** (some papers use the opposite convention). `t` has shape `(B,)`: reshape it to `(B, 1, ..., 1)` so it broadcasts over the remaining dimensions.\n\n### Algorithm (sampling with Euler steps)\n1. Start from `x = x0` and set `dt = 1 / n_steps`.\n2. For `i = 0, ..., n_steps − 1`: `t = i · dt` (a Python float), `x ← x + dt · velocity_fn(x, t)`.\n3. Return `x`.\n\nIf the learned field is exactly the straight-line velocity, a **single** Euler step lands on the data: that is the appeal of straight (rectified) paths.\n\n### Inputs\n- `x0`, `x1`, `v_pred`: float arrays `(B, ...)` of the same shape\n- `t`: float array `(B,)` with values in [0, 1]\n- `velocity_fn(x, t)`: callable returning an array shaped like `x`; `n_steps`: int ≥ 1\n\n### Expected return format\n- `flow_matching_loss(x0, x1, t, v_pred)` returns a dict:\n  - `'x_t'`: interpolated points, same shape as `x0`\n  - `'target'`: target velocity `x1 − x0`, same shape as `x0`\n  - `'loss'`: MSE between `v_pred` and `target` (Python float)\n- `euler_step(x_t, v, dt)` returns `x_t + dt · v`\n- `euler_sample(x0, velocity_fn, n_steps)` returns the final `x` (same shape as `x0`)\n\n### Constraints\nNumPy only; the Euler loop is over steps, never over elements.\n\n### Follow-up\n- How is this related to diffusion? (With Gaussian paths, flow matching recovers a probability-flow ODE of a diffusion model.)\n- What does \"reflow\" do to make one-step sampling work for a real, imperfect model?\n    ",examples:[{input:`x0 = [[0, 0], [1, 1]], x1 = [[2, 4], [3, -1]], t = [0.25, 0.5]`,output:`x_t = [[0.5, 1.0], [2.0, 0.0]], target = [[2, 4], [2, -2]]`,explanation:`Row 0 is a quarter of the way to its data point, row 1 halfway`},{input:`euler_sample(np.array([2.0]), lambda x, t: -x, 4)`,output:`array([0.6328])`,explanation:`Each step multiplies x by (1 − 1/4), so 2 · 0.75⁴ = 0.6328 (the exact ODE solution is 2·e⁻¹ = 0.7358)`}],starterCode:`import numpy as np
 
 def flow_matching_loss(x0, x1, t, v_pred):
     """
@@ -13096,7 +12658,7 @@ def euler_sample(x0, velocity_fn, n_steps):
     x0 := np.random.randn(2, 5), x1 := np.random.randn(2, 5),
     r := flow_matching_loss(x0, x1, np.array([0.0, 1.0]), x1 - x0),
     (bool(np.allclose(r['x_t'][0], x0[0]) and np.allclose(r['x_t'][1], x1[1])), r['loss'])
-)[-1])()`,expected:`(True, 0.0)`,hidden:!0}],hints:[`Reshape t to (B, 1, ..., 1): t.reshape(-1, *([1] * (x0.ndim - 1)))`,`x_t = (1 - t) * x0 + t * x1 and target = x1 - x0`,`loss = np.mean((v_pred - target) ** 2)`,`euler_sample: dt = 1 / n_steps; for i in range(n_steps): x = euler_step(x, velocity_fn(x, i * dt), dt)`],solution:`import numpy as np
+)[-1])()`,expected:`(True, 0.0)`,hidden:!0}],hints:[`On a straight line from x0 to x1 the velocity does not depend on t. What is it?`,`flow_matching_loss: broadcast t, interpolate, form the target, take the MSE. euler_sample: a loop over steps that calls euler_step.`,`t = t.reshape(-1, *([1] * (x0.ndim - 1))); x_t = (1 - t) * x0 + t * x1; target = x1 - x0; loss = float(np.mean((v_pred - target) ** 2)).`,`Pitfall: in euler_sample the time passed at step i is i * dt (start of the interval), so the last call uses (n − 1)/n, not 1. A (B,) t without reshaping broadcasts against the last axis instead of the batch.`],solution:`import numpy as np
 
 def flow_matching_loss(x0, x1, t, v_pred):
     x0 = np.asarray(x0, dtype=float)
@@ -14694,52 +14256,13 @@ def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -> lis
             break
         batches.append((X[idx], y[idx]))
     return batches
-`}],R=[{id:`e2e-mlp`,title:`E2E: 2-Layer MLP with Backprop`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End 2-Layer MLP
-
-Implement a complete 2-layer MLP with forward pass, backward pass, and training loop.
-
-### Architecture
-\`\`\`
-Input (batch, input_dim)
-  ↓
-Linear(input_dim, hidden_dim) + ReLU
-  ↓
-Linear(hidden_dim, output_dim)
-  ↓
-Softmax + Cross-Entropy Loss
-\`\`\`
-
-### Forward Pass
-\`\`\`python
-h = relu(X @ W1 + b1)
-logits = h @ W2 + b2
-loss = cross_entropy(softmax(logits), y)
-\`\`\`
-
-### Backward Pass (Chain Rule)
-\`\`\`python
-# Output layer
-d_logits = softmax(logits) - y_onehot  # (batch, output_dim)
-d_W2 = h.T @ d_logits
-d_b2 = d_logits.sum(axis=0)
-
-# Hidden layer
-d_h = d_logits @ W2.T
-d_relu = d_h * (h > 0)  # ReLU derivative
-d_W1 = X.T @ d_relu
-d_b1 = d_relu.sum(axis=0)
-\`\`\`
-
-### Task
-Implement forward, backward, and training step.
-    `,examples:[{input:`MLP(784, 128, 10) on MNIST-like data`,output:`Trained model with decreasing loss`,explanation:`Full training loop`}],starterCode:`import numpy as np
+`}],R=[{id:`e2e-mlp`,title:`E2E: 2-Layer MLP with Backprop`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End 2-Layer MLP with Backprop\n\n### What you'll build\nA complete 2-layer classifier in plain NumPy: forward pass, softmax cross-entropy, hand-derived backward pass, an SGD step and a training loop. This is the \"implement backprop from scratch\" interview question.\n\n### Architecture\n| Step | Operation | Output shape |\n|------|-----------|--------------|\n| input | `X` | `(batch, input_dim)` |\n| layer 1 | `z1 = X @ W1 + b1` | `(batch, hidden_dim)` |\n| activation | `h = relu(z1)` | `(batch, hidden_dim)` |\n| layer 2 | `logits = h @ W2 + b2` | `(batch, output_dim)` |\n| loss | `mean_i −log softmax(logits)[i, y_i]` | scalar |\n\nThe constructor (given) uses He initialization, `W ~ N(0, 2 / fan_in)`, with `np.random.seed(42)`, and zero biases.\n\n### Backward pass\nWith the loss averaged over the batch `N`, softmax and cross-entropy combine into a simple gradient:\n```python\nd_logits = (probs - y_onehot) / N         # (N, output_dim)\ndW2 = h.T @ d_logits                      # (hidden_dim, output_dim)\ndb2 = d_logits.sum(axis=0)                # (output_dim,)\nd_h = d_logits @ W2.T                     # (N, hidden_dim)\nd_z1 = d_h * (z1 > 0)                     # ReLU passes gradient only where z1 > 0\ndW1 = X.T @ d_z1                          # (input_dim, hidden_dim)\ndb1 = d_z1.sum(axis=0)                    # (hidden_dim,)\n```\n\n### Method contract\n| Method | Does | Returns |\n|--------|------|---------|\n| `forward(X)` | computes logits and stores `self.cache = {'X', 'z1', 'h', 'logits'}` | `logits (batch, output_dim)` |\n| `compute_loss(logits, y)` | softmax (max-subtracted) + mean cross-entropy; stores `self.cache['probs']` | float |\n| `backward(y)` | uses the cache from `forward` and `compute_loss` | dict `{'dW1', 'db1', 'dW2', 'db2'}`, each shaped like its parameter |\n| `train_step(X, y, lr=0.01)` | forward, loss, backward, then `param -= lr * grad` for all four | the loss **before** the update (float) |\n| `train_mlp(X_train, y_train, epochs=100, lr=0.01)` | builds `MLP(input_dim, 64, num_classes)` (classes = `len(np.unique(y_train))`) and calls `train_step` on the full batch each epoch | `(model, losses)`, with `len(losses) == epochs` |\n\n### Inputs\n- `X`: float array `(batch, input_dim)`\n- `y`: int array `(batch,)` with class ids in `[0, output_dim)`\n\n### Edge cases and conventions\n- Clip the picked probabilities to `[1e-15, 1]` before the log (or use log-softmax) so a confident wrong prediction does not give `log(0)`.\n- The ReLU derivative at exactly 0 is taken as 0 (`z1 > 0`).\n\n### Constraints\nNumPy only; vectorise over the batch (no per-example loops).\n\n### Follow-up\n- How would you verify the gradients? (Finite differences: `(L(w + ε) − L(w − ε)) / 2ε`.)\n- Add L2 weight decay or momentum; what changes in `backward` and `train_step`?\n    ",examples:[{input:`m = MLP(3, 2, 2); X = np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]); m.forward(X)`,output:`array([[0.0, 0.0], [0.7148, 2.4115]])`,explanation:`Both hidden units are negative for row 0, so ReLU zeroes them and the logits equal b2 = 0`},{input:`m.compute_loss(m.cache["logits"], np.array([1, 0]))`,output:`1.2791`,explanation:`Row 0: −log 0.5 = 0.6931; row 1: −log softmax([0.7148, 2.4115])[0] = 1.8650; the mean is 1.2791`},{input:`[m.train_step(X, np.array([1, 0]), lr=0.5) for _ in range(3)]`,output:`[1.2791, 0.4081, 0.3437]`,explanation:`Each value is the loss before that step, so the first equals the loss above`}],starterCode:`import numpy as np
 
 class MLP:
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int):
-        """Initialize 2-layer MLP with random weights."""
+        """Initialize a 2-layer MLP (given; keep as is)."""
         np.random.seed(42)
-        # Xavier initialization
+        # He initialization: N(0, 2 / fan_in), suited to ReLU
         self.W1 = np.random.randn(input_dim, hidden_dim) * np.sqrt(2.0 / input_dim)
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, output_dim) * np.sqrt(2.0 / hidden_dim)
@@ -14757,64 +14280,81 @@ class MLP:
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """
-        Forward pass.
+        Forward pass. Store X, z1, h and logits in self.cache.
 
         Args:
             X: Input (batch, input_dim)
 
         Returns:
-            logits: Output (batch, output_dim)
+            logits: (batch, output_dim)
         """
         # Your code here
         pass
 
     def compute_loss(self, logits: np.ndarray, y: np.ndarray) -> float:
         """
-        Compute cross-entropy loss.
+        Mean softmax cross-entropy. Store the softmax probabilities in self.cache['probs'].
 
         Args:
             logits: Model output (batch, output_dim)
             y: True labels (batch,) as integers
 
         Returns:
-            loss: Scalar loss value
+            loss: Python float
         """
         # Your code here
         pass
 
     def backward(self, y: np.ndarray) -> dict:
         """
-        Backward pass.
+        Backward pass for the mean loss, using self.cache.
 
         Args:
             y: True labels (batch,) as integers
 
         Returns:
-            gradients: Dictionary with dW1, db1, dW2, db2
+            gradients: {'dW1', 'db1', 'dW2', 'db2'}, each shaped like its parameter
         """
         # Your code here
         pass
 
     def train_step(self, X: np.ndarray, y: np.ndarray, lr: float = 0.01) -> float:
         """
-        Single training step: forward, loss, backward, update.
+        Forward, loss, backward, SGD update of W1, b1, W2, b2.
 
         Returns:
-            loss: Loss value before update
+            loss: Loss value before the update
         """
         # Your code here
         pass
 
 
 def train_mlp(X_train, y_train, epochs=100, lr=0.01):
-    """Train MLP and return loss history."""
+    """
+    Build MLP(input_dim, 64, num_classes) and run \`epochs\` full-batch train steps.
+
+    Returns:
+        (model, losses): the trained MLP and the list of per-epoch losses
+    """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Forward pass shape`,input:`MLP(784, 128, 10).forward(np.random.randn(4, 784)).shape`,expected:`(4, 10)`,hidden:!1},{id:`2`,description:`Loss decreases`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(16, 10), y := np.array([0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0]), losses := [m.train_step(X, y) for _ in range(50)], losses[-1] < losses[0])[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Gradients computed`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(4, 10), y := np.array([0,1,2,0]), _ := m.forward(X), _ := m.compute_loss(m.cache["logits"], y), g := m.backward(y), all(k in g for k in ["dW1", "db1", "dW2", "db2"]))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Forward pass produces finite values`,input:`(lambda: (m := MLP(20, 16, 5), X := np.random.randn(8, 20), logits := m.forward(X), bool(np.all(np.isfinite(logits))))[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Gradient shapes match weight shapes`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(4, 10), y := np.array([0,1,2,0]), _ := m.forward(X), _ := m.compute_loss(m.cache["logits"], y), g := m.backward(y), bool(g["dW1"].shape == (10, 8) and g["dW2"].shape == (8, 3) and g["db1"].shape == (8,) and g["db2"].shape == (3,)))[-1])()`,expected:`True`,hidden:!0}],hints:[`Cache X, h (hidden activations), and logits in forward pass`,`d_logits = probs - y_onehot (softmax gradient combined with cross-entropy)`,`ReLU gradient: 1 if x > 0, else 0`,`Update: W = W - lr * dW`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Forward pass shape`,input:`MLP(784, 128, 10).forward(np.random.randn(4, 784)).shape`,expected:`(4, 10)`,hidden:!1},{id:`2`,description:`Loss decreases`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(16, 10), y := np.array([0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0]), losses := [m.train_step(X, y) for _ in range(50)], losses[-1] < losses[0])[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Gradients computed`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(4, 10), y := np.array([0,1,2,0]), _ := m.forward(X), _ := m.compute_loss(m.cache["logits"], y), g := m.backward(y), all(k in g for k in ["dW1", "db1", "dW2", "db2"]))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Forward pass produces finite values`,input:`(lambda: (m := MLP(20, 16, 5), X := np.random.randn(8, 20), logits := m.forward(X), bool(np.all(np.isfinite(logits))))[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Gradient shapes match weight shapes`,input:`(lambda: (m := MLP(10, 8, 3), X := np.random.randn(4, 10), y := np.array([0,1,2,0]), _ := m.forward(X), _ := m.compute_loss(m.cache["logits"], y), g := m.backward(y), bool(g["dW1"].shape == (10, 8) and g["dW2"].shape == (8, 3) and g["db1"].shape == (8,) and g["db2"].shape == (3,)))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Forward and loss values for a fixed input`,input:`(lambda: (m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]), logits := m.forward(X), (np.round(logits, 4).tolist(), round(float(m.compute_loss(logits, np.array([1, 0]))), 4)))[-1])()`,expected:`([[0.0, 0.0], [0.7148, 2.4115]], 1.2791)`,hidden:!1},{id:`7`,description:`Gradient values (mean loss, so divided by the batch size)`,input:`(lambda: (m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]), y := np.array([1, 0]), m.forward(X), m.compute_loss(m.cache["logits"], y), g := m.backward(y), (np.round(g["dW1"], 4).tolist(), np.round(g["db2"], 4).tolist()))[-1])()`,expected:`([[0.0, 0.0], [-0.686, 0.8553], [0.343, -0.4276]], [-0.1726, 0.1726])`,hidden:!0},{id:`8`,description:`dW1 matches a finite-difference gradient check`,input:`(lambda: (
+    m := MLP(5, 4, 3), X := np.random.randn(6, 5), y := np.array([0, 1, 2, 0, 1, 2]),
+    m.forward(X), m.compute_loss(m.cache["logits"], y), g := m.backward(y),
+    L := lambda: float(m.compute_loss(m.forward(X), y)),
+    num := np.array([[(lambda a: (m.W1.__setitem__((i, j), a + 1e-6), lp := L(), m.W1.__setitem__((i, j), a - 1e-6), lm := L(), m.W1.__setitem__((i, j), a), (lp - lm) / 2e-6)[-1])(m.W1[i, j]) for j in range(4)] for i in range(5)]),
+    bool(np.allclose(num, g["dW1"], atol=1e-6))
+)[-1])()`,expected:`True`,hidden:!0},{id:`9`,description:`train_step returns the pre-update loss; train_mlp returns (model, losses)`,input:`(lambda: (
+    m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]),
+    steps := [round(float(m.train_step(X, np.array([1, 0]), 0.5)), 4) for _ in range(3)],
+    r := train_mlp(np.random.randn(20, 4), np.arange(20) % 3, epochs=30, lr=0.1),
+    (steps, len(r[1]), r[0].W1.shape, bool(r[1][-1] < r[1][0]))
+)[-1])()`,expected:`([1.2791, 0.4081, 0.3437], 30, (4, 64), True)`,hidden:!0}],hints:[`Backprop is the chain rule applied layer by layer in reverse; everything the backward pass needs (X, z1, h, probs) must be saved during the forward pass.`,`Order: forward (cache X, z1, h, logits) → compute_loss (cache probs) → backward (output layer first, then the hidden layer) → SGD update.`,`d_logits = (probs - one_hot(y)) / N; dW2 = h.T @ d_logits; d_z1 = (d_logits @ W2.T) * (z1 > 0); dW1 = X.T @ d_z1; biases sum over axis 0.`,`Pitfall: forgetting the / N makes gradients N times too large (the loss is a mean). Index probabilities with probs[np.arange(N), y], not probs[:, y].`],solution:`import numpy as np
 
 class MLP:
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int):
         np.random.seed(42)
+        # He initialization: N(0, 2 / fan_in)
         self.W1 = np.random.randn(input_dim, hidden_dim) * np.sqrt(2.0 / input_dim)
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, output_dim) * np.sqrt(2.0 / hidden_dim)
@@ -14825,109 +14365,55 @@ class MLP:
         return np.maximum(0, x)
 
     def softmax(self, x):
-        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))   # stable
         return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
 
     def forward(self, X: np.ndarray) -> np.ndarray:
-        # Layer 1: Linear + ReLU
-        z1 = X @ self.W1 + self.b1
+        z1 = X @ self.W1 + self.b1          # (N, H)
         h = self.relu(z1)
-
-        # Layer 2: Linear
-        logits = h @ self.W2 + self.b2
-
-        # Cache for backward
+        logits = h @ self.W2 + self.b2      # (N, C)
         self.cache = {'X': X, 'z1': z1, 'h': h, 'logits': logits}
-
         return logits
 
     def compute_loss(self, logits: np.ndarray, y: np.ndarray) -> float:
         probs = self.softmax(logits)
-        batch_size = logits.shape[0]
-        correct_probs = probs[np.arange(batch_size), y]
-        loss = -np.mean(np.log(np.clip(correct_probs, 1e-15, 1)))
+        n = logits.shape[0]
+        correct_probs = probs[np.arange(n), y]
         self.cache['probs'] = probs
-        return loss
+        return float(-np.mean(np.log(np.clip(correct_probs, 1e-15, 1.0))))
 
     def backward(self, y: np.ndarray) -> dict:
-        X = self.cache['X']
-        h = self.cache['h']
-        z1 = self.cache['z1']
-        probs = self.cache['probs']
-        batch_size = X.shape[0]
+        X, z1, h, probs = (self.cache[k] for k in ('X', 'z1', 'h', 'probs'))
+        n = X.shape[0]
 
-        # One-hot encode targets
-        y_onehot = np.zeros_like(probs)
-        y_onehot[np.arange(batch_size), y] = 1
+        # Softmax + cross-entropy: dL/dlogits = (p - onehot) / N for the mean loss
+        d_logits = probs.copy()
+        d_logits[np.arange(n), y] -= 1
+        d_logits /= n
 
-        # Output layer gradients
-        d_logits = (probs - y_onehot) / batch_size
         dW2 = h.T @ d_logits
         db2 = d_logits.sum(axis=0)
 
-        # Hidden layer gradients
-        d_h = d_logits @ self.W2.T
-        d_relu = d_h * (z1 > 0)  # ReLU derivative
-        dW1 = X.T @ d_relu
-        db1 = d_relu.sum(axis=0)
-
+        d_z1 = (d_logits @ self.W2.T) * (z1 > 0)   # ReLU gate
+        dW1 = X.T @ d_z1
+        db1 = d_z1.sum(axis=0)
         return {'dW1': dW1, 'db1': db1, 'dW2': dW2, 'db2': db2}
 
     def train_step(self, X: np.ndarray, y: np.ndarray, lr: float = 0.01) -> float:
-        logits = self.forward(X)
-        loss = self.compute_loss(logits, y)
+        loss = self.compute_loss(self.forward(X), y)
         grads = self.backward(y)
-
-        # Update weights
-        self.W1 -= lr * grads['dW1']
-        self.b1 -= lr * grads['db1']
-        self.W2 -= lr * grads['dW2']
-        self.b2 -= lr * grads['db2']
-
+        for name in ('W1', 'b1', 'W2', 'b2'):
+            setattr(self, name, getattr(self, name) - lr * grads['d' + name])
         return loss
 
 
 def train_mlp(X_train, y_train, epochs=100, lr=0.01):
-    input_dim = X_train.shape[1]
-    output_dim = len(np.unique(y_train))
-    model = MLP(input_dim, 64, output_dim)
-
-    losses = []
-    for _ in range(epochs):
-        loss = model.train_step(X_train, y_train, lr)
-        losses.append(loss)
-
+    model = MLP(X_train.shape[1], 64, len(np.unique(y_train)))
+    losses = [model.train_step(X_train, y_train, lr) for _ in range(epochs)]
     return model, losses
-`},{id:`e2e-transformer`,title:`E2E: Transformer Encoder`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End Transformer Encoder
 
-Implement a complete Transformer encoder block.
-
-### Architecture
-\`\`\`
-Input Embeddings + Positional Encoding
-  ↓
-Multi-Head Self-Attention
-  ↓
-Add & LayerNorm (Residual)
-  ↓
-Feed-Forward Network (FFN)
-  ↓
-Add & LayerNorm (Residual)
-  ↓
-Output
-\`\`\`
-
-### Components
-1. **Positional Encoding**: Sinusoidal position embeddings
-2. **Multi-Head Attention**: Parallel attention heads
-3. **FFN**: Two linear layers with ReLU
-4. **Layer Normalization**: Normalize across features
-5. **Residual Connections**: Add input to output
-
-### Task
-Implement all components and combine into encoder block.
-    `,examples:[{input:`TransformerEncoder(d_model=64, nhead=8, dim_ff=256)`,output:`Encoded sequence (batch, seq_len, d_model)`,explanation:`Complete encoder forward pass`}],starterCode:`import numpy as np
+# Per step: O(N * (input_dim * H + H * C)) time, O(N * H) memory for the cache
+`},{id:`e2e-transformer`,title:`E2E: Transformer Encoder`,section:`e2e-implementations`,difficulty:`hard`,description:'\n## End-to-End Transformer Encoder\n\n### What you\'ll build\nEvery piece of the original (post-norm) Transformer encoder from "Attention Is All You Need", written as small functions and then stacked: layer norm, sinusoidal positions, scaled dot-product attention, multi-head attention, the feed-forward network, an encoder block and a multi-layer encoder.\n\n### Architecture\n| Step | Operation | Shape |\n|------|-----------|-------|\n| input | `x` | `(batch, seq_len, d_model)` |\n| positions | `x = x + positional_encoding(seq_len, d_model)` | same |\n| per block: attention | `a = multi_head_attention(x, x, x, num_heads)` | same |\n| per block: add & norm | `x = layer_norm(x + a, ln1_gamma, ln1_beta)` | same |\n| per block: FFN | `f = relu(x @ W1 + b1) @ W2 + b2` | hidden `(…, d_ff)`, out same |\n| per block: add & norm | `x = layer_norm(x + f, ln2_gamma, ln2_beta)` | same |\n\nThis is **post-norm** (LayerNorm after the residual add), as in the 2017 paper. GPT-style models use pre-norm; see **Mini GPT**.\n\n### Function contract\n| Function | Formula / behaviour | Returns |\n|----------|---------------------|---------|\n| `layer_norm(x, gamma, beta, eps=1e-5)` | `gamma · (x − mean) / sqrt(var + eps) + beta` over the last axis, population variance | array shaped like `x` |\n| `positional_encoding(seq_len, d_model)` | `PE[p, 2i] = sin(p / 10000^(2i/d_model))`, `PE[p, 2i+1] = cos(…)` | `(seq_len, d_model)` |\n| `scaled_dot_product_attention(Q, K, V, mask=None)` | `A = softmax(Q Kᵀ / sqrt(d_k) + mask)`; `mask` is **additive** (0 or −inf) | tuple `(A @ V, A)` for 3-D inputs `(batch, seq, d_k)` |\n| `multi_head_attention(Q, K, V, num_heads)` | split `d_model` into `num_heads` heads of `d_k = d_model / num_heads`, attend per head, concatenate | output only, `(batch, seq_len, d_model)` |\n| `feed_forward(x, W1, b1, W2, b2)` | `relu(x @ W1 + b1) @ W2 + b2` | `(…, d_model)` |\n| `TransformerEncoderBlock(d_model, num_heads, d_ff)` | attributes below; `forward(x)` runs one post-norm block | `(batch, seq_len, d_model)` |\n| `transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256)` | add positions, then `num_layers` fresh blocks | `(batch, seq_len, d_model)` |\n\n**Simplification:** `multi_head_attention` has **no learned projections**: the heads are slices of the given Q, K, V and there is no `W_O`. Real layers project first (`Q = x W_Q` etc.); the PyTorch `nn.MultiheadAttention` and the **Mini GPT** problem do.\n\n### Block parameters (the tests use these names)\nAfter `np.random.seed(42)` (in the starter), create, in this order:\n- `ln1_gamma`, `ln2_gamma`: ones `(d_model,)`; `ln1_beta`, `ln2_beta`: zeros `(d_model,)`\n- `W1 = np.random.randn(d_model, d_ff) * 0.02`, then `W2 = np.random.randn(d_ff, d_model) * 0.02`; `b1`, `b2` zeros\n\nBecause every block re-seeds, all blocks in `transformer_encoder` start with identical weights; that keeps the exercise deterministic.\n\n### Edge cases and conventions\n- Subtract the row max inside softmax (the provided `softmax` does).\n- `d_model` must be divisible by `num_heads`.\n\n### Constraints\nNumPy only, no loops over batch, heads or positions (`einsum` or `@` with transposes).\n\n### Follow-up\n- Attention costs `O(seq_len² · d_model)` time and `O(seq_len²)` memory per head. What do FlashAttention and sliding windows change?\n- Why does pre-norm train more stably than post-norm in deep stacks?\n    ',examples:[{input:`layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4))`,output:`array([[-1.3416, -0.4472, 0.4472, 1.3416]])`,explanation:`Mean 2.5 and population variance 1.25, so each value becomes (x − 2.5) / 1.118`},{input:`positional_encoding(3, 4)[2]`,output:`array([0.9093, -0.4161, 0.02, 0.9998])`,explanation:`Position 2: sin(2), cos(2), then the slower pair sin(2/100), cos(2/100)`},{input:`Q = K = [[[1, 0], [0, 1]]], V = [[[1, 2], [3, 4]]]; scaled_dot_product_attention(Q, K, V)`,output:`(array([[[1.6605, 2.6605], [2.3395, 3.3395]]]), array([[[0.6698, 0.3302], [0.3302, 0.6698]]]))`,explanation:`Scores are I / sqrt(2), so each query puts softmax([0.707, 0]) = [0.67, 0.33] on itself and the other key`}],starterCode:`import numpy as np
 
 def softmax(x, axis=-1):
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
@@ -14935,25 +14421,33 @@ def softmax(x, axis=-1):
 
 
 def layer_norm(x, gamma, beta, eps=1e-5):
-    """Layer normalization."""
+    """Normalize over the last axis (population variance), then scale and shift."""
     # Your code here
     pass
 
 
 def positional_encoding(seq_len, d_model):
-    """Sinusoidal positional encoding."""
+    """Sinusoidal positional encoding, shape (seq_len, d_model): sin on even, cos on odd columns."""
     # Your code here
     pass
 
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
-    """Scaled dot-product attention."""
+    """
+    Q, K, V: (batch, seq_len, d_k). mask: optional additive mask (0 / -inf).
+
+    Returns:
+        (output, attention): (batch, seq_len, d_k) and (batch, seq_len, seq_len)
+    """
     # Your code here
     pass
 
 
 def multi_head_attention(Q, K, V, num_heads):
-    """Multi-head attention."""
+    """
+    Split d_model into num_heads heads (no learned projections), attend per head,
+    concatenate. Returns the output only: (batch, seq_len, d_model).
+    """
     # Your code here
     pass
 
@@ -14967,12 +14461,11 @@ def feed_forward(x, W1, b1, W2, b2):
 class TransformerEncoderBlock:
     def __init__(self, d_model: int, num_heads: int, d_ff: int):
         """
-        Initialize transformer encoder block.
+        Post-norm encoder block.
 
-        Args:
-            d_model: Model dimension
-            num_heads: Number of attention heads
-            d_ff: Feed-forward hidden dimension
+        Create: ln1_gamma, ln1_beta, ln2_gamma, ln2_beta (ones / zeros, shape (d_model,)),
+        W1 = np.random.randn(d_model, d_ff) * 0.02, b1 = zeros(d_ff),
+        W2 = np.random.randn(d_ff, d_model) * 0.02, b2 = zeros(d_model)  (W1 drawn before W2).
         """
         np.random.seed(42)
         self.d_model = d_model
@@ -14984,7 +14477,7 @@ class TransformerEncoderBlock:
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
-        Forward pass through encoder block.
+        x = LN1(x + MHA(x)); x = LN2(x + FFN(x)).
 
         Args:
             x: Input (batch, seq_len, d_model)
@@ -14997,10 +14490,28 @@ class TransformerEncoderBlock:
 
 
 def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
-    """Stack multiple encoder blocks."""
+    """Add positional encoding, then apply num_layers new TransformerEncoderBlocks."""
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output shape preserved`,input:`transformer_encoder(np.random.randn(2, 10, 64), num_layers=2, d_model=64, num_heads=8, d_ff=256).shape`,expected:`(2, 10, 64)`,hidden:!1},{id:`2`,description:`Attention weights sum to 1`,input:`(lambda: (Q := np.random.randn(2, 5, 64), K := np.random.randn(2, 5, 64), V := np.random.randn(2, 5, 64), out_attn := scaled_dot_product_attention(Q, K, V), bool(np.allclose(out_attn[1].sum(axis=-1), 1.0)))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Layer norm output has zero mean`,input:`(lambda: (x := np.random.randn(2, 5, 64), gamma := np.ones(64), beta := np.zeros(64), out := layer_norm(x, gamma, beta), bool(np.allclose(out.mean(axis=-1), 0.0, atol=1e-5)))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Positional encoding shape`,input:`positional_encoding(10, 64).shape`,expected:`(10, 64)`,hidden:!0},{id:`5`,description:`Encoder output is finite`,input:`(lambda: (out := transformer_encoder(np.random.randn(2, 8, 64), num_layers=1, d_model=64, num_heads=8, d_ff=128), bool(np.all(np.isfinite(out))))[-1])()`,expected:`True`,hidden:!0}],hints:[`Attention: softmax(QK^T / sqrt(d_k)) @ V`,`Layer norm: (x - mean) / sqrt(var + eps) * gamma + beta`,`Residual: output = LayerNorm(x + Sublayer(x))`,`FFN: max(0, xW1 + b1)W2 + b2`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Output shape preserved`,input:`transformer_encoder(np.random.randn(2, 10, 64), num_layers=2, d_model=64, num_heads=8, d_ff=256).shape`,expected:`(2, 10, 64)`,hidden:!1},{id:`2`,description:`Attention weights sum to 1`,input:`(lambda: (Q := np.random.randn(2, 5, 64), K := np.random.randn(2, 5, 64), V := np.random.randn(2, 5, 64), out_attn := scaled_dot_product_attention(Q, K, V), bool(np.allclose(out_attn[1].sum(axis=-1), 1.0)))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Layer norm output has zero mean`,input:`(lambda: (x := np.random.randn(2, 5, 64), gamma := np.ones(64), beta := np.zeros(64), out := layer_norm(x, gamma, beta), bool(np.allclose(out.mean(axis=-1), 0.0, atol=1e-5)))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Positional encoding shape`,input:`positional_encoding(10, 64).shape`,expected:`(10, 64)`,hidden:!0},{id:`5`,description:`Encoder output is finite`,input:`(lambda: (out := transformer_encoder(np.random.randn(2, 8, 64), num_layers=1, d_model=64, num_heads=8, d_ff=128), bool(np.all(np.isfinite(out))))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`layer_norm and positional_encoding values`,input:`(lambda: (np.round(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4)), 4).tolist(), np.round(positional_encoding(3, 4), 4).tolist()))()`,expected:`([[-1.3416, -0.4472, 0.4472, 1.3416]], [[0.0, 1.0, 0.0, 1.0], [0.8415, 0.5403, 0.01, 1.0], [0.9093, -0.4161, 0.02, 0.9998]])`,hidden:!1},{id:`7`,description:`Attention output and weights (values), and an additive causal mask`,input:`(lambda: (
+    Q := np.array([[[1.0, 0.0], [0.0, 1.0]]]), V := np.array([[[1.0, 2.0], [3.0, 4.0]]]),
+    r := scaled_dot_product_attention(Q, Q, V),
+    m := scaled_dot_product_attention(Q, Q, V, np.array([[0.0, -np.inf], [0.0, 0.0]]))[1],
+    (np.round(r[0], 4).tolist(), np.round(r[1], 4).tolist(), np.round(m, 4).tolist())
+)[-1])()`,expected:`([[[1.6605, 2.6605], [2.3395, 3.3395]]], [[[0.6698, 0.3302], [0.3302, 0.6698]]], [[[1.0, 0.0], [0.3302, 0.6698]]])`,hidden:!0},{id:`8`,description:`Multi-head attention equals attention applied to each head slice`,input:`(lambda: (
+    x := np.random.randn(2, 5, 8),
+    ref := np.concatenate([scaled_dot_product_attention(x[..., h*2:(h+1)*2], x[..., h*2:(h+1)*2], x[..., h*2:(h+1)*2])[0] for h in range(4)], axis=-1),
+    bool(np.allclose(multi_head_attention(x, x, x, 4), ref))
+)[-1])()`,expected:`True`,hidden:!0},{id:`9`,description:`Block forward is post-norm: LN2(y + FFN(y)) with y = LN1(x + MHA(x))`,input:`(lambda: (
+    blk := TransformerEncoderBlock(8, 2, 16),
+    blk.__setattr__('ln1_gamma', np.linspace(0.5, 1.5, 8)), blk.__setattr__('ln2_beta', np.full(8, 0.1)),
+    blk.__setattr__('W1', np.random.randn(8, 16) * 0.5), blk.__setattr__('W2', np.random.randn(16, 8) * 0.5),
+    x := np.random.randn(2, 3, 8),
+    ln := lambda z, g, b: g * (z - z.mean(-1, keepdims=True)) / np.sqrt(z.var(-1, keepdims=True) + 1e-5) + b,
+    y := ln(x + multi_head_attention(x, x, x, 2), blk.ln1_gamma, blk.ln1_beta),
+    ref := ln(y + np.maximum(0, y @ blk.W1 + blk.b1) @ blk.W2 + blk.b2, blk.ln2_gamma, blk.ln2_beta),
+    bool(np.allclose(blk.forward(x), ref))
+)[-1])()`,expected:`True`,hidden:!0},{id:`10`,description:`Full encoder values with the documented initialization`,input:`(lambda: (x := np.random.randn(1, 4, 8), np.round(transformer_encoder(x, num_layers=2, d_model=8, num_heads=2, d_ff=16)[0, 0], 4).tolist())[-1])()`,expected:`[0.352, -0.1325, -0.7185, 2.3788, 0.2482, -0.829, -0.863, -0.436]`,hidden:!0}],hints:[`Build bottom-up: get layer_norm, positional_encoding and attention right on tiny inputs before assembling the block; the block is just two "sublayer, add, normalize" steps.`,`Multi-head attention is reshaping: (B, T, D) → (B, T, H, D/H) → (B, H, T, D/H), attend over the last two axes, then undo the transposes and reshape back to (B, T, D).`,`scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k) (or np.einsum("bhqd,bhkd->bhqk", ...)); PE uses div = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model)).`,`Pitfall: np.var defaults to the population variance (what LayerNorm wants); adding the mask after the softmax, or forgetting to transpose before the final reshape, silently scrambles heads.`],solution:`import numpy as np
 
 def softmax(x, axis=-1):
     exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
@@ -15009,13 +14520,13 @@ def softmax(x, axis=-1):
 
 def layer_norm(x, gamma, beta, eps=1e-5):
     mean = np.mean(x, axis=-1, keepdims=True)
-    var = np.var(x, axis=-1, keepdims=True)
+    var = np.var(x, axis=-1, keepdims=True)          # population variance
     return gamma * (x - mean) / np.sqrt(var + eps) + beta
 
 
 def positional_encoding(seq_len, d_model):
     PE = np.zeros((seq_len, d_model))
-    position = np.arange(seq_len)[:, np.newaxis]
+    position = np.arange(seq_len)[:, None]                                   # (T, 1)
     div_term = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model))
     PE[:, 0::2] = np.sin(position * div_term)
     PE[:, 1::2] = np.cos(position * div_term)
@@ -15024,9 +14535,9 @@ def positional_encoding(seq_len, d_model):
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
     d_k = Q.shape[-1]
-    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)
+    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)      # (B, T, T)
     if mask is not None:
-        scores = scores + mask
+        scores = scores + mask                            # additive: 0 or -inf
     attention = softmax(scores, axis=-1)
     return attention @ V, attention
 
@@ -15035,22 +14546,17 @@ def multi_head_attention(Q, K, V, num_heads):
     batch, seq_len, d_model = Q.shape
     d_k = d_model // num_heads
 
-    Q = Q.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
-    K = K.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
-    V = V.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
+    def split_heads(x):                                   # (B, T, D) -> (B, H, T, d_k)
+        return x.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
 
-    d_k = Q.shape[-1]
-    scores = np.einsum('bhqd,bhkd->bhqk', Q, K) / np.sqrt(d_k)
-    attention = softmax(scores, axis=-1)
-    output = np.einsum('bhqk,bhkd->bhqd', attention, V)
-
-    output = output.transpose(0, 2, 1, 3).reshape(batch, seq_len, d_model)
-    return output
+    q, k, v = split_heads(Q), split_heads(K), split_heads(V)
+    scores = np.einsum('bhqd,bhkd->bhqk', q, k) / np.sqrt(d_k)
+    out = np.einsum('bhqk,bhkd->bhqd', softmax(scores, axis=-1), v)
+    return out.transpose(0, 2, 1, 3).reshape(batch, seq_len, d_model)   # concat heads
 
 
 def feed_forward(x, W1, b1, W2, b2):
-    hidden = np.maximum(0, x @ W1 + b1)
-    return hidden @ W2 + b2
+    return np.maximum(0, x @ W1 + b1) @ W2 + b2
 
 
 class TransformerEncoderBlock:
@@ -15059,67 +14565,33 @@ class TransformerEncoderBlock:
         self.d_model = d_model
         self.num_heads = num_heads
 
-        # Layer norm parameters
         self.ln1_gamma = np.ones(d_model)
         self.ln1_beta = np.zeros(d_model)
         self.ln2_gamma = np.ones(d_model)
         self.ln2_beta = np.zeros(d_model)
 
-        # FFN parameters
         self.W1 = np.random.randn(d_model, d_ff) * 0.02
         self.b1 = np.zeros(d_ff)
         self.W2 = np.random.randn(d_ff, d_model) * 0.02
         self.b2 = np.zeros(d_model)
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        # Multi-head self-attention + residual + layer norm
-        attn_output = multi_head_attention(x, x, x, self.num_heads)
-        x = layer_norm(x + attn_output, self.ln1_gamma, self.ln1_beta)
-
-        # Feed-forward + residual + layer norm
-        ff_output = feed_forward(x, self.W1, self.b1, self.W2, self.b2)
-        x = layer_norm(x + ff_output, self.ln2_gamma, self.ln2_beta)
-
+        # Post-norm: sublayer, residual add, then LayerNorm
+        x = layer_norm(x + multi_head_attention(x, x, x, self.num_heads),
+                       self.ln1_gamma, self.ln1_beta)
+        x = layer_norm(x + feed_forward(x, self.W1, self.b1, self.W2, self.b2),
+                       self.ln2_gamma, self.ln2_beta)
         return x
 
 
 def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
-    batch, seq_len, _ = x.shape
-
-    # Add positional encoding
-    PE = positional_encoding(seq_len, d_model)
-    x = x + PE
-
-    # Stack encoder blocks
+    x = x + positional_encoding(x.shape[1], d_model)
     for _ in range(num_layers):
-        block = TransformerEncoderBlock(d_model, num_heads, d_ff)
-        x = block.forward(x)
-
+        x = TransformerEncoderBlock(d_model, num_heads, d_ff).forward(x)
     return x
-`},{id:`e2e-vae`,title:`E2E: Variational Autoencoder`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End Variational Autoencoder
 
-Implement a complete VAE with encoder, decoder, reparameterization, and ELBO loss.
-
-### Architecture
-\`\`\`
-Encoder: x → h → (μ, log_σ²)
-         ↓
-Reparameterization: z = μ + σ * ε, ε ~ N(0,1)
-         ↓
-Decoder: z → h → x_reconstructed
-\`\`\`
-
-### Loss (ELBO)
-\`\`\`
-L = Reconstruction Loss + KL Divergence
-L = ||x - x_hat||² + KL(q(z|x) || p(z))
-KL = -0.5 * sum(1 + log_var - μ² - exp(log_var))
-\`\`\`
-
-### Task
-Implement encoder, decoder, reparameterization trick, and loss computation.
-    `,examples:[{input:`VAE(input_dim=784, latent_dim=20)`,output:`Reconstructed images + latent samples`,explanation:`Full VAE forward pass`}],starterCode:`import numpy as np
+# Per block: O(B * T^2 * D) for attention + O(B * T * D * d_ff) for the FFN
+`},{id:`e2e-vae`,title:`E2E: Variational Autoencoder`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End Variational Autoencoder\n\n### What you'll build\nA complete VAE in NumPy: an MLP encoder that outputs a Gaussian per input, the reparameterization trick, an MLP decoder, the negative-ELBO loss, and sampling from the prior. It assembles **VAE Reparameterization Trick** and **VAE Loss Function** from Generative Models into one model.\n\n### Architecture\n| Stage | Operation | Shape |\n|-------|-----------|-------|\n| input | `x` | `(batch, input_dim)` |\n| encoder hidden | `h = relu(x @ W_enc + b_enc)` | `(batch, hidden_dim)` |\n| latent mean | `mu = h @ W_mu + b_mu` | `(batch, latent_dim)` |\n| latent log-variance | `log_var = h @ W_logvar + b_logvar` | `(batch, latent_dim)` |\n| sample | `z = mu + exp(0.5·log_var) ⊙ ε`, `ε = np.random.randn(*mu.shape)` | `(batch, latent_dim)` |\n| decoder hidden | `h' = relu(z @ W_dec1 + b_dec1)` | `(batch, hidden_dim)` |\n| reconstruction | `x_recon = sigmoid(h' @ W_dec2 + b_dec2)` | `(batch, input_dim)`, values in (0, 1) |\n\nThe constructor (given) seeds `np.random.seed(42)` and initializes every weight as `N(0, 0.01²)` with zero biases.\n\n### Loss (negative ELBO)\nThe same convention as **VAE Loss Function** (the standard one from Kingma & Welling and the PyTorch VAE example):\n```text\nrecon_loss = mean((x − x_recon)²)                                        # over all elements\nkl_loss    = mean_i [ −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij)) ]   # sum over latent dims, mean over batch\ntotal_loss = recon_loss + kl_loss\n```\nEarlier versions of this problem averaged the KL over latent dims as well; that shrinks it by a factor of `latent_dim` relative to the reconstruction term. The convention above is the one both problems now use.\n\n### Method contract\n| Method | Returns |\n|--------|---------|\n| `encode(x)` | tuple `(mu, log_var)`, each `(batch, latent_dim)` |\n| `reparameterize(mu, log_var)` | `z`, drawing ε once with `np.random.randn(*mu.shape)` (no re-seeding) |\n| `decode(z)` | `x_recon` `(batch, input_dim)`, sigmoid output |\n| `forward(x)` | dict `{'mu', 'log_var', 'z', 'x_recon'}` |\n| `compute_loss(x, x_recon, mu, log_var)` | dict `{'total_loss', 'recon_loss', 'kl_loss'}` of floats |\n| `sample(num_samples)` | `decode(z)` with `z = np.random.randn(num_samples, latent_dim)`: `(num_samples, input_dim)` |\n\n### Edge cases and conventions\n- With the tiny initial weights, `mu ≈ 0` and `log_var ≈ 0`, so the initial KL is close to 0 and `x_recon ≈ 0.5`.\n- `kl_loss ≥ 0` always; `total_loss` is exactly the sum of the other two.\n\n### Constraints\nNumPy only, vectorised over the batch. Training (backprop) is not required here; the PyTorch track's autograd makes it a one-liner.\n\n### Follow-up\n- With sigmoid outputs and binary data, why is BCE the more principled reconstruction loss?\n- How do you detect posterior collapse (KL → 0 for every latent dim), and what do KL annealing and free bits do?\n    ",examples:[{input:`vae.compute_loss(x=[[1.0, 2.0]], x_recon=[[0.0, 0.0]], mu=[[0.5, -0.5]], log_var=[[0.0, 1.0]])`,output:`{'total_loss': 3.1091, 'recon_loss': 2.5, 'kl_loss': 0.6091} (rounded)`,explanation:`Same numbers as the VAE Loss Function example: recon = 5/2, KL summed over the 2 latent dims`},{input:`VAE(784, 256, 20).forward(np.random.randn(4, 784))`,output:`{'mu': (4, 20), 'log_var': (4, 20), 'z': (4, 20), 'x_recon': (4, 784)}`,explanation:`Shapes of the returned arrays`}],starterCode:`import numpy as np
 
 class VAE:
     def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
@@ -15154,24 +14626,28 @@ class VAE:
     def encode(self, x: np.ndarray) -> tuple:
         """
         Encode input to latent distribution parameters.
+        h = relu(x @ W_enc + b_enc); mu = h @ W_mu + b_mu; log_var = h @ W_logvar + b_logvar
 
         Returns:
-            mu: Mean of latent distribution
-            log_var: Log variance of latent distribution
+            (mu, log_var): each (batch, latent_dim)
         """
         # Your code here
         pass
 
     def reparameterize(self, mu: np.ndarray, log_var: np.ndarray) -> np.ndarray:
         """
-        Reparameterization trick: z = mu + std * epsilon
+        Reparameterization trick: z = mu + exp(0.5 * log_var) * eps,
+        with eps = np.random.randn(*mu.shape) (drawn once, no re-seeding).
         """
         # Your code here
         pass
 
     def decode(self, z: np.ndarray) -> np.ndarray:
         """
-        Decode latent vector to reconstruction.
+        Decode latent vectors: relu(z @ W_dec1 + b_dec1), then sigmoid(... @ W_dec2 + b_dec2).
+
+        Returns:
+            x_recon: (batch, input_dim), values in (0, 1)
         """
         # Your code here
         pass
@@ -15181,7 +14657,7 @@ class VAE:
         Full forward pass.
 
         Returns:
-            Dictionary with mu, log_var, z, x_recon
+            {'mu', 'log_var', 'z', 'x_recon'}
         """
         # Your code here
         pass
@@ -15189,26 +14665,47 @@ class VAE:
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      mu: np.ndarray, log_var: np.ndarray) -> dict:
         """
-        Compute VAE loss (ELBO).
+        Negative ELBO.
+        recon_loss = MSE over all elements;
+        kl_loss = -0.5 * sum over latent dims of (1 + log_var - mu^2 - exp(log_var)), averaged over the batch.
 
         Returns:
-            Dictionary with total_loss, recon_loss, kl_loss
+            {'total_loss', 'recon_loss', 'kl_loss'} as floats, total = recon + kl
         """
         # Your code here
         pass
 
     def sample(self, num_samples: int) -> np.ndarray:
         """
-        Generate samples by decoding random latent vectors.
+        Decode z = np.random.randn(num_samples, latent_dim) drawn from the prior.
+
+        Returns:
+            (num_samples, input_dim)
         """
         # Your code here
         pass
-`,testCases:[{id:`1`,description:`Reconstruction shape`,input:`VAE(784, 256, 20).forward(np.random.randn(4, 784))["x_recon"].shape`,expected:`(4, 784)`,hidden:!1},{id:`2`,description:`KL divergence non-negative`,input:`(lambda: (vae := VAE(784, 256, 20), x := np.random.randn(4, 784), out := vae.forward(x), loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]), bool(loss["kl_loss"] >= 0))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Latent space shape`,input:`VAE(784, 256, 20).forward(np.random.randn(4, 784))["z"].shape`,expected:`(4, 20)`,hidden:!0},{id:`4`,description:`Sample shape matches input dim`,input:`VAE(784, 256, 20).sample(3).shape`,expected:`(3, 784)`,hidden:!0},{id:`5`,description:`Total loss equals recon + KL`,input:`(lambda: (vae := VAE(784, 256, 20), x := np.random.randn(4, 784), out := vae.forward(x), loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]), bool(np.allclose(loss["total_loss"], loss["recon_loss"] + loss["kl_loss"])))[-1])()`,expected:`True`,hidden:!0}],hints:[`Encoder: h = relu(x @ W + b), then mu = h @ W_mu, logvar = h @ W_logvar`,`Reparameterize: std = exp(0.5 * log_var), z = mu + std * epsilon`,`KL = -0.5 * mean(1 + log_var - mu² - exp(log_var))`,`Reconstruction loss: MSE or BCE`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Reconstruction shape`,input:`VAE(784, 256, 20).forward(np.random.randn(4, 784))["x_recon"].shape`,expected:`(4, 784)`,hidden:!1},{id:`2`,description:`KL divergence non-negative`,input:`(lambda: (vae := VAE(784, 256, 20), x := np.random.randn(4, 784), out := vae.forward(x), loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]), bool(loss["kl_loss"] >= 0))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Latent space shape`,input:`VAE(784, 256, 20).forward(np.random.randn(4, 784))["z"].shape`,expected:`(4, 20)`,hidden:!0},{id:`4`,description:`Sample shape matches input dim`,input:`VAE(784, 256, 20).sample(3).shape`,expected:`(3, 784)`,hidden:!0},{id:`5`,description:`Total loss equals recon + KL`,input:`(lambda: (vae := VAE(784, 256, 20), x := np.random.randn(4, 784), out := vae.forward(x), loss := vae.compute_loss(x, out["x_recon"], out["mu"], out["log_var"]), bool(np.allclose(loss["total_loss"], loss["recon_loss"] + loss["kl_loss"])))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`compute_loss values: KL sums over latent dims and averages over the batch`,input:`(lambda: (
+    vae := VAE(4, 3, 2),
+    a := vae.compute_loss(np.array([[1.0, 2.0]]), np.zeros((1, 2)), np.array([[0.5, -0.5]]), np.array([[0.0, 1.0]])),
+    b := vae.compute_loss(np.full((2, 3), 0.5), np.zeros((2, 3)), np.array([[1.0, 1.0], [0.0, 0.0]]), np.zeros((2, 2))),
+    [round(float(d[k]), 4) for d in (a, b) for k in ('total_loss', 'recon_loss', 'kl_loss')]
+)[-1])()`,expected:`[3.1091, 2.5, 0.6091, 0.75, 0.25, 0.5]`,hidden:!1},{id:`7`,description:`encode and decode values (weights scaled up so the outputs are not tiny)`,input:`(lambda: (
+    vae := VAE(4, 3, 2),
+    [setattr(vae, n, getattr(vae, n) * 100) for n in ('W_enc', 'W_mu', 'W_logvar', 'W_dec1', 'W_dec2')],
+    mu_lv := vae.encode(np.array([[1.0, 0.0, -1.0, 2.0]])),
+    (np.round(mu_lv[0], 4).tolist(), np.round(mu_lv[1], 4).tolist(), np.round(vae.decode(np.array([[0.5, -1.0]])), 4).tolist())
+)[-1])()`,expected:`([[-0.1875, 0.0533]], [[0.0102, -0.2683]], [[0.6317, 0.3098, 0.5342, 0.2166]])`,hidden:!0},{id:`8`,description:`forward is consistent: x_recon = decode(z), and z - mu is scaled by exp(0.5 * log_var)`,input:`(lambda: (
+    vae := VAE(6, 5, 3),
+    [setattr(vae, n, getattr(vae, n) * 100) for n in ('W_enc', 'W_mu', 'W_logvar', 'W_dec1', 'W_dec2')],
+    out := vae.forward(np.random.randn(4, 6)),
+    eps := (out['z'] - out['mu']) / np.exp(0.5 * out['log_var']),
+    s := vae.sample(5),
+    bool(np.allclose(out['x_recon'], vae.decode(out['z'])) and abs(eps.std() - 1) < 0.6 and s.shape == (5, 6) and np.all((s > 0) & (s < 1)))
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`A VAE is an autoencoder whose bottleneck is a distribution: encode to (mu, log_var), sample z, decode. The loss pays for both bad reconstructions and posteriors far from N(0, I).`,`Write the methods in order: encode → reparameterize → decode → forward (chains the three and returns a dict) → compute_loss → sample (decode prior samples).`,`Encoder: h = np.maximum(0, x @ W_enc + b_enc), then two linear heads. Decoder ends with 1 / (1 + np.exp(-a)). KL: np.mean(-0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)).`,`Pitfall: np.mean over the whole (batch, latent_dim) KL array divides by latent_dim too; sum over axis=1 first. Use exp(0.5 * log_var) (the std), not exp(log_var).`],solution:`import numpy as np
 
 class VAE:
     def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
         np.random.seed(42)
-
         self.W_enc = np.random.randn(input_dim, hidden_dim) * 0.01
         self.b_enc = np.zeros(hidden_dim)
         self.W_mu = np.random.randn(hidden_dim, latent_dim) * 0.01
@@ -15224,127 +14721,68 @@ class VAE:
     def encode(self, x: np.ndarray) -> tuple:
         h = np.maximum(0, x @ self.W_enc + self.b_enc)
         mu = h @ self.W_mu + self.b_mu
-        log_var = h @ self.W_logvar + self.b_logvar
+        log_var = h @ self.W_logvar + self.b_logvar    # unconstrained, unlike sigma
         return mu, log_var
 
     def reparameterize(self, mu: np.ndarray, log_var: np.ndarray) -> np.ndarray:
-        std = np.exp(0.5 * log_var)
-        eps = np.random.randn(*mu.shape)
-        return mu + std * eps
+        eps = np.random.randn(*mu.shape)               # randomness outside the parameters
+        return mu + np.exp(0.5 * log_var) * eps
 
     def decode(self, z: np.ndarray) -> np.ndarray:
         h = np.maximum(0, z @ self.W_dec1 + self.b_dec1)
-        x_recon = 1 / (1 + np.exp(-(h @ self.W_dec2 + self.b_dec2)))  # Sigmoid
-        return x_recon
+        return 1 / (1 + np.exp(-(h @ self.W_dec2 + self.b_dec2)))   # sigmoid
 
     def forward(self, x: np.ndarray) -> dict:
         mu, log_var = self.encode(x)
         z = self.reparameterize(mu, log_var)
-        x_recon = self.decode(z)
-        return {'mu': mu, 'log_var': log_var, 'z': z, 'x_recon': x_recon}
+        return {'mu': mu, 'log_var': log_var, 'z': z, 'x_recon': self.decode(z)}
 
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      mu: np.ndarray, log_var: np.ndarray) -> dict:
-        # Reconstruction loss (MSE)
-        recon_loss = np.mean((x - x_recon) ** 2)
-
-        # KL divergence
-        kl_loss = -0.5 * np.mean(1 + log_var - mu**2 - np.exp(log_var))
-
-        total_loss = recon_loss + kl_loss
-
-        return {'total_loss': total_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
+        recon_loss = float(np.mean((x - x_recon) ** 2))
+        # KL(q(z|x) || N(0, I)): sum over latent dims, mean over the batch
+        kl_loss = float(np.mean(-0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)))
+        return {'total_loss': recon_loss + kl_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
 
     def sample(self, num_samples: int) -> np.ndarray:
-        z = np.random.randn(num_samples, self.latent_dim)
+        z = np.random.randn(num_samples, self.latent_dim)   # prior N(0, I)
         return self.decode(z)
-`},{id:`e2e-vqvae`,title:`E2E: Vector Quantized VAE`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End VQ-VAE
-
-Implement a complete VQ-VAE (Vector Quantized Variational Autoencoder) with encoder, vector quantization, and decoder.
-
-### Architecture
-\`\`\`
-Encoder: x → z_e (continuous latents)
-           ↓
-Vector Quantization: z_e → z_q (discrete latents from codebook)
-           ↓
-Decoder: z_q → x_reconstructed
-\`\`\`
-
-### Key Difference from VAE
-- VAE: Continuous latent space with KL regularization
-- VQ-VAE: Discrete latent space using learned codebook
-
-### Vector Quantization
-1. Encoder outputs continuous vectors z_e
-2. Find nearest codebook entry for each spatial position
-3. Replace z_e with quantized z_q from codebook
-4. Use straight-through estimator for gradients
-
-### Loss Function
-\`\`\`
-L = L_reconstruction + L_codebook + β * L_commitment
-
-L_reconstruction = ||x - x_hat||²
-L_codebook = ||sg[z_e] - e||²  (moves codebook toward encoder output)
-L_commitment = ||z_e - sg[e]||²  (commits encoder to codebook)
-\`\`\`
-Where sg[] is stop-gradient.
-
-### Codebook EMA Update (Alternative)
-Instead of gradient updates, codebook can be updated with exponential moving average:
-\`\`\`
-N_i = γ * N_i + (1 - γ) * n_i     (count of assignments)
-m_i = γ * m_i + (1 - γ) * sum(z_e assigned to i)
-e_i = m_i / N_i
-\`\`\`
-
-### Task
-Implement encoder, vector quantization layer, decoder, and all loss components.
-    `,examples:[{input:`VQVAE(input_dim=784, num_embeddings=512, embedding_dim=64)`,output:`Reconstructed images + discrete codes`,explanation:`Full VQ-VAE forward pass`}],starterCode:`import numpy as np
+`},{id:`e2e-vqvae`,title:`E2E: Vector Quantized VAE`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End VQ-VAE\n\n### What you'll build\nA small but complete VQ-VAE: a vector-quantization layer with its losses, an encoder and decoder around it, the total loss, and codebook-usage statistics. It extends **VQ-VAE Vector Quantization** (Generative Models) into a model.\n\n### Background\nA VQ-VAE autoencodes through a **discrete** bottleneck: each encoder vector is replaced by its nearest codebook entry. The indices are a compressed, tokenized version of the input that a Transformer can model later (this is how VQGAN and many audio and image tokenizers work). Unlike a VAE there is no KL term; the codebook and commitment losses keep encoder outputs and codes close.\n\n### Architecture (simplified to MLPs on 4×4 inputs)\n| Stage | Operation | Shape |\n|-------|-----------|-------|\n| input | `x` | `(batch, C, 4, 4)` |\n| flatten | `x.reshape(batch, -1)` | `(batch, 16·C)` |\n| encoder | `relu(· @ enc_w1 + enc_b1) @ enc_w2 + enc_b2` | `(batch, D)` |\n| as a 1×1 latent grid | reshape | `z_e: (batch, 1, 1, D)` |\n| quantize | nearest row of `vq.embedding` | `z_q: (batch, 1, 1, D)`, `indices: (batch, 1, 1)` |\n| decoder | `relu(flat(z_q) @ dec_w1 + dec_b1) @ dec_w2 + dec_b2` | `(batch, 16·C)` |\n| reshape | | `x_recon: (batch, C, 4, 4)` (no output activation) |\n\n`D = embedding_dim`, `K = num_embeddings`. Both constructors are given: they seed `np.random.seed(42)` and create the weights listed above (the codebook `vq.embedding` is `N(0, 0.1²)` of shape `(K, D)`).\n\n### Losses\n`sg[·]` is stop-gradient; in a NumPy forward pass the two VQ terms have the same value:\n```text\nrecon_loss      = mean((x − x_recon)²)\ncodebook_loss   = mean((sg[z_e] − z_q)²)        # trains the codebook\ncommitment_loss = β · mean((z_e − sg[z_q])²)     # trains the encoder; β is already included here\ntotal_loss      = recon_loss + codebook_loss + commitment_loss\n```\nWith autograd, the decoder's gradient reaches the encoder through the straight-through estimator `z_q_st = z_e + sg[z_q − z_e]` (forward value `z_q`); the PyTorch track implements it.\n\n### Method contract\n| Method | Returns |\n|--------|---------|\n| `VectorQuantizer.quantize(z_e)` | tuple `(z_q, indices, distances)`: `z_q` like `z_e`; `indices` int `(batch, H, W)` (ties → lowest index); `distances` = squared distance to the chosen code, `(batch, H, W)` |\n| `VectorQuantizer.compute_loss(z_e, z_q, beta=0.25)` | dict `{'codebook_loss', 'commitment_loss'}` (floats) |\n| `VQVAE.encode(x)` | `z_e (batch, 1, 1, D)` |\n| `VQVAE.decode(z_q)` | `x_recon (batch, C, 4, 4)` |\n| `VQVAE.forward(x)` | dict `{'z_e', 'z_q', 'indices', 'x_recon'}` (decode `z_q`, not `z_e`) |\n| `VQVAE.compute_loss(x, x_recon, z_e, z_q, beta=0.25)` | dict `{'total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss'}` |\n| `VQVAE.get_codebook_usage(indices)` | int array `(K,)`: how many times each code was chosen (zeros for unused codes) |\n\n### Constraints\nNumPy only; vectorised nearest-neighbour search (no loop over positions or codes).\n\n### Follow-up\n- **Codebook collapse**: few codes get all the assignments. Usage statistics reveal it; dead-code restarts fix it.\n- **EMA codebook updates** replace the codebook loss: `N_k ← γN_k + (1−γ)n_k`, `m_k ← γm_k + (1−γ)Σ z_e assigned to k`, `e_k = m_k / N_k`.\n    ",examples:[{input:`vq.embedding = [[0, 0], [10, 10], [5, 5]]; vq.quantize(np.array([[[[1, 1], [9, 8], [4, 6]]]]))`,output:`indices = [[[0, 1, 2]]], distances = [[[2.0, 5.0, 2.0]]]`,explanation:`[9, 8] is 1² + 2² = 5 from [10, 10]; the others are 2 from their nearest code`},{input:`vq.compute_loss(z_e, z_q) for the example above`,output:`{'codebook_loss': 1.5, 'commitment_loss': 0.375}`,explanation:`Mean squared error 9 / 6 = 1.5, and β = 0.25 times that`},{input:`model.get_codebook_usage(np.array([[[0]], [[2]], [[2]]])) with K = 6`,output:`array([1, 0, 2, 0, 0, 0])`,explanation:`Code 0 used once, code 2 twice, the rest never`}],starterCode:`import numpy as np
 
 class VectorQuantizer:
     def __init__(self, num_embeddings: int, embedding_dim: int):
         """
-        Vector Quantization layer.
+        Vector quantization layer (given).
 
         Args:
             num_embeddings: Size of codebook (K)
-            embedding_dim: Dimension of each embedding
+            embedding_dim: Dimension of each embedding (D)
         """
         np.random.seed(42)
-        # Initialize codebook with small random values
-        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
+        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1   # (K, D)
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
 
     def quantize(self, z_e: np.ndarray) -> tuple:
         """
-        Quantize encoder output to nearest codebook entries.
+        Replace every vector of z_e by its nearest codebook entry.
 
         Args:
-            z_e: Encoder output (batch, height, width, embedding_dim)
+            z_e: Encoder output (batch, H, W, D)
 
         Returns:
             z_q: Quantized vectors (same shape as z_e)
-            indices: Codebook indices (batch, height, width)
-            distances: Distances to nearest embeddings
+            indices: Codebook indices (batch, H, W); ties go to the lowest index
+            distances: Squared distance to the chosen code (batch, H, W)
         """
         # Your code here
         pass
 
     def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
         """
-        Compute VQ losses.
-
-        Args:
-            z_e: Encoder output
-            z_q: Quantized vectors
-            beta: Commitment loss weight
-
         Returns:
-            Dictionary with codebook_loss and commitment_loss
+            {'codebook_loss': mean((z_e - z_q)**2),
+             'commitment_loss': beta * mean((z_e - z_q)**2)}
         """
         # Your code here
         pass
@@ -15354,269 +14792,172 @@ class VQVAE:
     def __init__(self, input_channels: int, hidden_dim: int,
                  num_embeddings: int, embedding_dim: int):
         """
-        Initialize VQ-VAE.
-
-        Args:
-            input_channels: Number of input channels
-            hidden_dim: Hidden layer dimension
-            num_embeddings: Codebook size
-            embedding_dim: Embedding dimension
+        VQ-VAE for (batch, input_channels, 4, 4) inputs, with MLP encoder/decoder (given).
         """
         np.random.seed(42)
-
-        # Encoder: conv layers to get spatial feature maps
-        self.enc_conv1_w = np.random.randn(hidden_dim, input_channels, 4, 4) * 0.1
-        self.enc_conv1_b = np.zeros(hidden_dim)
-        self.enc_conv2_w = np.random.randn(embedding_dim, hidden_dim, 4, 4) * 0.1
-        self.enc_conv2_b = np.zeros(embedding_dim)
-
-        # Vector Quantizer
-        self.vq = VectorQuantizer(num_embeddings, embedding_dim)
-
-        # Decoder: transposed conv to reconstruct
-        self.dec_conv1_w = np.random.randn(hidden_dim, embedding_dim, 4, 4) * 0.1
-        self.dec_conv1_b = np.zeros(hidden_dim)
-        self.dec_conv2_w = np.random.randn(input_channels, hidden_dim, 4, 4) * 0.1
-        self.dec_conv2_b = np.zeros(input_channels)
-
-        self.embedding_dim = embedding_dim
-
-    def encode(self, x: np.ndarray) -> np.ndarray:
-        """
-        Encode input to continuous latent representation.
-
-        Args:
-            x: Input (batch, channels, height, width)
-
-        Returns:
-            z_e: Encoder output (batch, height', width', embedding_dim)
-        """
-        # Your code here (simplified: use strided conv or just reshape for demo)
-        pass
-
-    def decode(self, z_q: np.ndarray) -> np.ndarray:
-        """
-        Decode quantized latents to reconstruction.
-
-        Args:
-            z_q: Quantized vectors (batch, height, width, embedding_dim)
-
-        Returns:
-            x_recon: Reconstructed input
-        """
-        # Your code here
-        pass
-
-    def forward(self, x: np.ndarray) -> dict:
-        """
-        Full forward pass.
-
-        Returns:
-            Dictionary with z_e, z_q, indices, x_recon
-        """
-        # Your code here
-        pass
-
-    def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
-                     z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
-        """
-        Compute total VQ-VAE loss.
-
-        Returns:
-            Dictionary with total_loss, recon_loss, codebook_loss, commitment_loss
-        """
-        # Your code here
-        pass
-
-    def get_codebook_usage(self, indices: np.ndarray) -> np.ndarray:
-        """
-        Compute codebook usage statistics.
-
-        Returns:
-            usage: Count of each codebook entry used
-        """
-        # Your code here
-        pass
-`,testCases:[{id:`1`,description:`Quantization shape`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(out[0].shape == z_e.shape))[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Indices valid range`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(np.all(out[1] >= 0) and np.all(out[1] < 512)))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Quantized from codebook`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(np.allclose(out[0][0, 0, 0], vq.embedding[out[1][0, 0, 0]])))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Loss values correct`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), losses := vq.compute_loss(z_e, out[0]), bool(losses["codebook_loss"] >= 0 and losses["commitment_loss"] >= 0))[-1])()`,expected:`True`,hidden:!0}],hints:[`For quantization: flatten spatial dims, compute distances, find argmin`,`Distance: ||z - e||² = ||z||² + ||e||² - 2*z·e`,`Straight-through: z_q = z_e + stop_grad(z_q - z_e)`,`Codebook loss uses z_e detached, commitment uses z_q detached`,`For simplified encoder/decoder, use reshape operations`],solution:`import numpy as np
-
-class VectorQuantizer:
-    def __init__(self, num_embeddings: int, embedding_dim: int):
-        np.random.seed(42)
-        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
-        self.num_embeddings = num_embeddings
-        self.embedding_dim = embedding_dim
-
-    def quantize(self, z_e: np.ndarray) -> tuple:
-        # z_e: (batch, H, W, D)
-        batch, H, W, D = z_e.shape
-
-        # Flatten spatial dimensions
-        z_flat = z_e.reshape(-1, D)  # (N, D) where N = batch * H * W
-
-        # Compute distances: ||z - e||² = ||z||² + ||e||² - 2*z·e
-        z_sq = np.sum(z_flat ** 2, axis=1, keepdims=True)  # (N, 1)
-        e_sq = np.sum(self.embedding ** 2, axis=1)          # (K,)
-        cross = z_flat @ self.embedding.T                    # (N, K)
-        distances = z_sq + e_sq - 2 * cross                  # (N, K)
-
-        # Find nearest embedding
-        indices_flat = np.argmin(distances, axis=1)          # (N,)
-
-        # Get quantized vectors
-        z_q_flat = self.embedding[indices_flat]              # (N, D)
-
-        # Reshape back
-        z_q = z_q_flat.reshape(batch, H, W, D)
-        indices = indices_flat.reshape(batch, H, W)
-        min_distances = np.min(distances, axis=1).reshape(batch, H, W)
-
-        return z_q, indices, min_distances
-
-    def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
-        # Codebook loss: ||sg[z_e] - z_q||²
-        # In practice, this updates the codebook to move toward encoder output
-        codebook_loss = np.mean((z_e - z_q) ** 2)
-
-        # Commitment loss: ||z_e - sg[z_q]||²
-        # This commits the encoder output to stay close to codebook
-        commitment_loss = beta * np.mean((z_e - z_q) ** 2)
-
-        return {
-            'codebook_loss': codebook_loss,
-            'commitment_loss': commitment_loss
-        }
-
-
-class VQVAE:
-    def __init__(self, input_channels: int, hidden_dim: int,
-                 num_embeddings: int, embedding_dim: int):
-        np.random.seed(42)
-
         self.input_channels = input_channels
         self.hidden_dim = hidden_dim
         self.embedding_dim = embedding_dim
 
-        # Simplified: use linear projection instead of conv for demo
-        # Encoder projects input to embedding space
+        # Encoder: (C*16) -> hidden_dim -> embedding_dim
         self.enc_w1 = np.random.randn(input_channels * 16, hidden_dim) * 0.1
         self.enc_b1 = np.zeros(hidden_dim)
         self.enc_w2 = np.random.randn(hidden_dim, embedding_dim) * 0.1
         self.enc_b2 = np.zeros(embedding_dim)
 
-        # Vector Quantizer
+        # Vector quantizer (re-seeds, so its codebook does not depend on the encoder size)
         self.vq = VectorQuantizer(num_embeddings, embedding_dim)
 
-        # Decoder projects back
+        # Decoder: embedding_dim -> hidden_dim -> (C*16)
         self.dec_w1 = np.random.randn(embedding_dim, hidden_dim) * 0.1
         self.dec_b1 = np.zeros(hidden_dim)
         self.dec_w2 = np.random.randn(hidden_dim, input_channels * 16) * 0.1
         self.dec_b2 = np.zeros(input_channels * 16)
 
     def encode(self, x: np.ndarray) -> np.ndarray:
-        # x: (batch, channels, H, W) - assume H=W=4 for simplicity
-        batch = x.shape[0]
+        """
+        x: (batch, C, 4, 4) -> flatten -> relu(x @ enc_w1 + enc_b1) @ enc_w2 + enc_b2
 
-        # Flatten spatial dimensions
-        x_flat = x.reshape(batch, -1)  # (batch, channels * H * W)
-
-        # Encode
-        h = np.maximum(0, x_flat @ self.enc_w1 + self.enc_b1)  # ReLU
-        z_e = h @ self.enc_w2 + self.enc_b2  # (batch, embedding_dim)
-
-        # Reshape to spatial format (batch, 2, 2, embedding_dim)
-        z_e = z_e.reshape(batch, 1, 1, self.embedding_dim)
-
-        return z_e
+        Returns:
+            z_e: (batch, 1, 1, embedding_dim)
+        """
+        # Your code here
+        pass
 
     def decode(self, z_q: np.ndarray) -> np.ndarray:
-        batch = z_q.shape[0]
+        """
+        z_q: (batch, 1, 1, D) -> flatten -> relu(z @ dec_w1 + dec_b1) @ dec_w2 + dec_b2
 
-        # Flatten
-        z_flat = z_q.reshape(batch, -1)  # (batch, embedding_dim)
-
-        # Decode
-        h = np.maximum(0, z_flat @ self.dec_w1 + self.dec_b1)  # ReLU
-        x_recon = h @ self.dec_w2 + self.dec_b2
-
-        # Reshape to image format
-        x_recon = x_recon.reshape(batch, self.input_channels, 4, 4)
-
-        return x_recon
+        Returns:
+            x_recon: (batch, C, 4, 4)
+        """
+        # Your code here
+        pass
 
     def forward(self, x: np.ndarray) -> dict:
-        # Encode
-        z_e = self.encode(x)
+        """
+        Encode, quantize, decode z_q.
 
-        # Quantize
-        z_q, indices, distances = self.vq.quantize(z_e)
-
-        # Straight-through estimator: gradient flows through z_q to z_e
-        # z_q_st = z_e + (z_q - z_e).detach()
-        # For forward pass, we just use z_q
-
-        # Decode
-        x_recon = self.decode(z_q)
-
-        return {
-            'z_e': z_e,
-            'z_q': z_q,
-            'indices': indices,
-            'x_recon': x_recon
-        }
+        Returns:
+            {'z_e', 'z_q', 'indices', 'x_recon'}
+        """
+        # Your code here
+        pass
 
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
-        # Reconstruction loss
-        recon_loss = np.mean((x - x_recon) ** 2)
-
-        # VQ losses
-        vq_losses = self.vq.compute_loss(z_e, z_q, beta)
-
-        # Total loss
-        total_loss = recon_loss + vq_losses['codebook_loss'] + vq_losses['commitment_loss']
-
-        return {
-            'total_loss': total_loss,
-            'recon_loss': recon_loss,
-            'codebook_loss': vq_losses['codebook_loss'],
-            'commitment_loss': vq_losses['commitment_loss']
-        }
+        """
+        Returns:
+            {'total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss'},
+            total = recon + codebook + commitment (commitment already includes beta)
+        """
+        # Your code here
+        pass
 
     def get_codebook_usage(self, indices: np.ndarray) -> np.ndarray:
-        usage = np.bincount(indices.flatten(), minlength=self.vq.num_embeddings)
-        return usage
-`},{id:`e2e-diffusion`,title:`E2E: Diffusion Model`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End Diffusion Model
+        """
+        Returns:
+            usage: int array (num_embeddings,), count of each code in indices
+        """
+        # Your code here
+        pass
+`,testCases:[{id:`1`,description:`Quantization shape`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(out[0].shape == z_e.shape))[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Indices valid range`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(np.all(out[1] >= 0) and np.all(out[1] < 512)))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Quantized from codebook`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), bool(np.allclose(out[0][0, 0, 0], vq.embedding[out[1][0, 0, 0]])))[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Loss values correct`,input:`(lambda: (vq := VectorQuantizer(512, 64), z_e := np.random.randn(2, 4, 4, 64), out := vq.quantize(z_e), losses := vq.compute_loss(z_e, out[0]), bool(losses["codebook_loss"] >= 0 and losses["commitment_loss"] >= 0))[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Nearest codes, distances and VQ losses on a hand-checked example`,input:`(lambda: (
+    vq := VectorQuantizer(3, 2),
+    vq.__setattr__('embedding', np.array([[0.0, 0.0], [10.0, 10.0], [5.0, 5.0]])),
+    z := np.array([[[[1.0, 1.0], [9.0, 8.0], [4.0, 6.0]]]]),
+    q := vq.quantize(z),
+    l := vq.compute_loss(z, q[0]),
+    (q[1].tolist(), np.round(q[2], 4).tolist(), round(float(l['codebook_loss']), 4), round(float(l['commitment_loss']), 4))
+)[-1])()`,expected:`([[[0, 1, 2]]], [[[2.0, 5.0, 2.0]]], 1.5, 0.375)`,hidden:!1},{id:`6`,description:`VQVAE forward shapes and decoder input is z_q`,input:`(lambda: (
+    m := VQVAE(1, 8, 6, 3), x := np.random.randn(5, 1, 4, 4), o := m.forward(x),
+    (o['z_e'].shape, o['z_q'].shape, o['indices'].shape, o['x_recon'].shape, bool(np.allclose(o['x_recon'], m.decode(o['z_q']))))
+)[-1])()`,expected:`((5, 1, 1, 3), (5, 1, 1, 3), (5, 1, 1), (5, 1, 4, 4), True)`,hidden:!0},{id:`7`,description:`Total loss values and codebook usage`,input:`(lambda: (
+    m := VQVAE(1, 8, 6, 3), x := np.random.randn(5, 1, 4, 4), o := m.forward(x),
+    L := m.compute_loss(x, o['x_recon'], o['z_e'], o['z_q']),
+    ([round(float(L[k]), 4) for k in ('total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss')],
+     m.get_codebook_usage(o['indices']).tolist(), m.get_codebook_usage(np.array([[[0]], [[2]], [[2]]])).tolist())
+)[-1])()`,expected:`([1.0413, 1.0323, 0.0072, 0.0018], [1, 0, 1, 2, 0, 1], [1, 0, 2, 0, 0, 0])`,hidden:!0}],hints:[`Three moving parts: an encoder to continuous vectors, a nearest-neighbour lookup into the codebook, and a decoder from the chosen codes. The losses compare z_e with z_q and x with x_recon.`,`quantize: flatten to (N, D), compute an (N, K) distance matrix, argmin per row, gather codes, reshape back. encode/decode: flatten, two linear layers with a ReLU between, reshape.`,`Distances: np.sum(z**2, 1, keepdims=True) - 2 * z @ E.T + np.sum(E**2, 1); usage: np.bincount(indices.ravel(), minlength=K).`,`Pitfall: decode z_q (not z_e) in forward; commitment_loss already includes β, so do not multiply by β again in the total. Without minlength, bincount drops trailing unused codes.`],solution:`import numpy as np
 
-Implement core components of a diffusion model (DDPM-style).
+class VectorQuantizer:
+    def __init__(self, num_embeddings: int, embedding_dim: int):
+        np.random.seed(42)
+        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
+        self.num_embeddings = num_embeddings
+        self.embedding_dim = embedding_dim
 
-### Forward Process (Adding Noise)
-\`\`\`
-x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-\`\`\`
+    def quantize(self, z_e: np.ndarray) -> tuple:
+        batch, H, W, D = z_e.shape
+        z_flat = z_e.reshape(-1, D)                                    # (N, D)
 
-### Noise Schedule
-\`\`\`
-β_t: Linear from β_start to β_end
-α_t = 1 - β_t
-α_bar_t = cumulative product of α_t
-\`\`\`
+        # ||z - e||^2 = ||z||^2 - 2 z.e + ||e||^2 for every (vector, code) pair
+        distances = (np.sum(z_flat ** 2, axis=1, keepdims=True)
+                     - 2 * z_flat @ self.embedding.T
+                     + np.sum(self.embedding ** 2, axis=1))              # (N, K)
 
-### Training Objective
-\`\`\`
-L = ||ε - ε_θ(x_t, t)||²
-\`\`\`
+        indices_flat = np.argmin(distances, axis=1)                    # ties -> lowest index
+        z_q = self.embedding[indices_flat].reshape(batch, H, W, D)
+        indices = indices_flat.reshape(batch, H, W)
+        min_distances = distances[np.arange(len(indices_flat)), indices_flat].reshape(batch, H, W)
+        return z_q, indices, min_distances
 
-Model learns to predict the noise added at timestep t.
+    def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
+        mse = float(np.mean((z_e - z_q) ** 2))
+        # Same forward value; the stop-gradient decides which side each term trains
+        return {'codebook_loss': mse, 'commitment_loss': beta * mse}
 
-### Reverse Process (Sampling)
-\`\`\`
-x_{t-1} = (1/sqrt(α_t)) * (x_t - (β_t/sqrt(1-α_bar_t)) * ε_θ(x_t, t)) + σ_t * z
-\`\`\`
 
-### Task
-Implement noise schedule, forward process, and reverse sampling.
-    `,examples:[{input:`DiffusionModel(T=1000)`,output:`Denoised samples`,explanation:`Forward and reverse diffusion`}],starterCode:`import numpy as np
+class VQVAE:
+    def __init__(self, input_channels: int, hidden_dim: int,
+                 num_embeddings: int, embedding_dim: int):
+        np.random.seed(42)
+        self.input_channels = input_channels
+        self.hidden_dim = hidden_dim
+        self.embedding_dim = embedding_dim
+
+        self.enc_w1 = np.random.randn(input_channels * 16, hidden_dim) * 0.1
+        self.enc_b1 = np.zeros(hidden_dim)
+        self.enc_w2 = np.random.randn(hidden_dim, embedding_dim) * 0.1
+        self.enc_b2 = np.zeros(embedding_dim)
+
+        self.vq = VectorQuantizer(num_embeddings, embedding_dim)
+
+        self.dec_w1 = np.random.randn(embedding_dim, hidden_dim) * 0.1
+        self.dec_b1 = np.zeros(hidden_dim)
+        self.dec_w2 = np.random.randn(hidden_dim, input_channels * 16) * 0.1
+        self.dec_b2 = np.zeros(input_channels * 16)
+
+    def encode(self, x: np.ndarray) -> np.ndarray:
+        batch = x.shape[0]
+        h = np.maximum(0, x.reshape(batch, -1) @ self.enc_w1 + self.enc_b1)
+        z_e = h @ self.enc_w2 + self.enc_b2                             # (batch, D)
+        return z_e.reshape(batch, 1, 1, self.embedding_dim)            # a 1x1 latent grid
+
+    def decode(self, z_q: np.ndarray) -> np.ndarray:
+        batch = z_q.shape[0]
+        h = np.maximum(0, z_q.reshape(batch, -1) @ self.dec_w1 + self.dec_b1)
+        x_recon = h @ self.dec_w2 + self.dec_b2
+        return x_recon.reshape(batch, self.input_channels, 4, 4)
+
+    def forward(self, x: np.ndarray) -> dict:
+        z_e = self.encode(x)
+        z_q, indices, _ = self.vq.quantize(z_e)
+        # With autograd you would decode z_e + sg[z_q - z_e] (straight-through);
+        # its forward value is z_q.
+        return {'z_e': z_e, 'z_q': z_q, 'indices': indices, 'x_recon': self.decode(z_q)}
+
+    def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
+                     z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
+        recon_loss = float(np.mean((x - x_recon) ** 2))
+        vq = self.vq.compute_loss(z_e, z_q, beta)
+        total = recon_loss + vq['codebook_loss'] + vq['commitment_loss']
+        return {'total_loss': total, 'recon_loss': recon_loss,
+                'codebook_loss': vq['codebook_loss'], 'commitment_loss': vq['commitment_loss']}
+
+    def get_codebook_usage(self, indices: np.ndarray) -> np.ndarray:
+        return np.bincount(indices.ravel(), minlength=self.vq.num_embeddings)
+
+# Quantization: O(N * K * D) time, O(N * K) memory for the distance matrix
+`},{id:`e2e-diffusion`,title:`E2E: Diffusion Model`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End Diffusion Model (DDPM)\n\n### What you'll build\nThe full DDPM machinery as one class: the noise schedule, closed-form forward noising, the ε-prediction training loss, the reverse step and the sampling loop. A real model would plug a neural network in as `noise_predictor`; here any callable works, so you can test the plumbing. It combines **Diffusion Noise Schedule**, **Diffusion Forward Process** and **DDPM Reverse Sampling Step** from Generative Models.\n\n### Pipeline\n| Phase | Step | Formula |\n|-------|------|---------|\n| setup | schedule (0-indexed `t = 0..T−1`) | `β = linspace(β_start, β_end, T)`, `α = 1 − β`, `ᾱ_t = Π_{s≤t} α_s` |\n| training | noise data at a random t | `x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε` |\n| training | loss | `mean((ε − ε_θ(x_t, t))²)` |\n| sampling | reverse step | `mean = (x_t − β_t / sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t)`; `x_{t−1} = mean + sqrt(β_t)·z` for t > 0, `mean` at t = 0 |\n| sampling | loop | start from `x ~ N(0, I)` and apply the reverse step for `t = T−1, T−2, ..., 0` |\n\n### Method contract\n| Method | Returns |\n|--------|---------|\n| `__init__(T=1000, beta_start=1e-4, beta_end=0.02)` | stores `self.T` and the schedule arrays `self.betas`, `self.alphas`, `self.alpha_bars` |\n| `get_noise_schedule()` | dict `{'betas', 'alphas', 'alpha_bars'}`, each `(T,)` |\n| `forward_diffusion(x_0, t)` | tuple `(x_t, noise)`, both shaped like `x_0`. Keep the starter's `np.random.seed(42)` and draw `noise = np.random.randn(*x_0.shape)` |\n| `reverse_step(x_t, t, predicted_noise)` | `x_{t−1}` shaped like `x_t`. For t > 0 draw `z = np.random.randn(*x_t.shape)` (no re-seeding); at t = 0 draw nothing |\n| `compute_loss(true_noise, predicted_noise)` | float, the MSE over all elements |\n| `sample(shape, noise_predictor)` | final `x` of the given shape; calls `noise_predictor(x, t)` once per step with `t` from `T−1` down to `0` |\n\n### Inputs\n- `x_0`, `x_t`, `predicted_noise`, `true_noise`: float arrays of any matching shape\n- `t`: int in `[0, T−1]`; `shape`: tuple; `noise_predictor(x, t)`: callable returning an array shaped like `x`\n\n### Constraints\nNumPy only; vectorised inside each step (the only loop is over timesteps in `sample`).\n\n### Follow-up\n- Sampling needs T network calls. How do DDIM or a shorter flow-matching ODE cut this to 20–50?\n- Why do training batches sample a random `t` per example instead of looping over all t?\n    ",examples:[{input:`DiffusionModel(T=3, beta_start=0.1, beta_end=0.3).get_noise_schedule()`,output:`{'betas': [0.1, 0.2, 0.3], 'alphas': [0.9, 0.8, 0.7], 'alpha_bars': [0.9, 0.72, 0.504]}`,explanation:`ᾱ is the running product of α`},{input:`dm.forward_diffusion(np.array([[1.0, -1.0]]), t=1) for the same model`,output:`(array([[1.1114, -0.9217]]), array([[0.4967, -0.1383]]))`,explanation:`x_1 = sqrt(0.72)·x_0 + sqrt(0.28)·ε with ε the first draws after seed 42`},{input:`dm.reverse_step(np.array([1.0, -0.5]), t=0, predicted_noise=np.array([0.2, 0.4]))`,output:`array([0.9874, -0.6604])`,explanation:`At t = 0 there is no added noise: (x − 0.1 / sqrt(0.1)·ε) / sqrt(0.9)`}],starterCode:`import numpy as np
 
 class DiffusionModel:
     def __init__(self, T: int = 1000, beta_start: float = 0.0001, beta_end: float = 0.02):
@@ -15630,12 +14971,12 @@ class DiffusionModel:
         """
         self.T = T
 
-        # Compute noise schedule
+        # Compute the linear schedule: self.betas, self.alphas, self.alpha_bars (each (T,))
         # Your code here
         pass
 
     def get_noise_schedule(self) -> dict:
-        """Return computed noise schedule parameters."""
+        """Return {'betas', 'alphas', 'alpha_bars'}."""
         # Your code here
         pass
 
@@ -15645,13 +14986,12 @@ class DiffusionModel:
 
         Args:
             x_0: Original data (batch, ...)
-            t: Timestep
+            t: Timestep (0-indexed)
 
         Returns:
-            x_t: Noisy data
-            noise: The noise that was added
+            (x_t, noise): x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * noise
         """
-        np.random.seed(42)
+        np.random.seed(42)  # keep: draw noise once with np.random.randn(*x_0.shape)
         # Your code here
         pass
 
@@ -15661,17 +15001,18 @@ class DiffusionModel:
 
         Args:
             x_t: Noisy data at timestep t
-            t: Current timestep
-            predicted_noise: Noise predicted by model
+            t: Current timestep (0-indexed)
+            predicted_noise: Noise predicted by the model
 
         Returns:
-            x_{t-1}: Less noisy data
+            x_{t-1}: mean + sqrt(beta_t) * z for t > 0 (z = np.random.randn(*x_t.shape)),
+                     just the mean at t = 0
         """
         # Your code here
         pass
 
     def compute_loss(self, true_noise: np.ndarray, predicted_noise: np.ndarray) -> float:
-        """Compute MSE loss between true and predicted noise."""
+        """MSE between true and predicted noise (Python float)."""
         # Your code here
         pass
 
@@ -15684,116 +15025,67 @@ class DiffusionModel:
             noise_predictor: Function that predicts noise given (x_t, t)
 
         Returns:
-            Generated samples
+            Generated samples: start from np.random.randn(*shape), then
+            reverse_step for t = T-1, ..., 0
         """
         # Your code here
         pass
-`,testCases:[{id:`1`,description:`Alpha bar decreases`,input:`(lambda: (dm := DiffusionModel(1000), sched := dm.get_noise_schedule(), bool(sched["alpha_bars"][-1] < sched["alpha_bars"][0]))[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Forward noise shape`,input:`(lambda: (dm := DiffusionModel(1000), x_0 := np.random.randn(4, 32), out := dm.forward_diffusion(x_0, 500), bool(out[0].shape == x_0.shape))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Noise schedule length matches T`,input:`(lambda: (dm := DiffusionModel(500), sched := dm.get_noise_schedule(), len(sched["betas"]) == 500 and len(sched["alpha_bars"]) == 500)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`MSE loss is zero for identical noise`,input:`(lambda: (dm := DiffusionModel(100), noise := np.random.randn(4, 16), round(dm.compute_loss(noise, noise), 6))[-1])()`,expected:`0.0`,hidden:!0},{id:`5`,description:`Forward diffusion at t=0 is close to original`,input:`(lambda: (dm := DiffusionModel(1000), x_0 := np.ones((2, 8)), out := dm.forward_diffusion(x_0, 0), bool(np.allclose(out[0], x_0, atol=0.5)))[-1])()`,expected:`True`,hidden:!0}],hints:[`betas = np.linspace(beta_start, beta_end, T)`,`alpha_bars = np.cumprod(1 - betas)`,`x_t = sqrt(alpha_bar) * x_0 + sqrt(1 - alpha_bar) * noise`,`Reverse: use mean and add small noise (except at t=0)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Alpha bar decreases`,input:`(lambda: (dm := DiffusionModel(1000), sched := dm.get_noise_schedule(), bool(sched["alpha_bars"][-1] < sched["alpha_bars"][0]))[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Forward noise shape`,input:`(lambda: (dm := DiffusionModel(1000), x_0 := np.random.randn(4, 32), out := dm.forward_diffusion(x_0, 500), bool(out[0].shape == x_0.shape))[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Noise schedule length matches T`,input:`(lambda: (dm := DiffusionModel(500), sched := dm.get_noise_schedule(), len(sched["betas"]) == 500 and len(sched["alpha_bars"]) == 500)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`MSE loss is zero for identical noise`,input:`(lambda: (dm := DiffusionModel(100), noise := np.random.randn(4, 16), round(dm.compute_loss(noise, noise), 6))[-1])()`,expected:`0.0`,hidden:!0},{id:`5`,description:`Forward diffusion at t=0 is close to original`,input:`(lambda: (dm := DiffusionModel(1000), x_0 := np.ones((2, 8)), out := dm.forward_diffusion(x_0, 0), bool(np.allclose(out[0], x_0, atol=0.5)))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Schedule and forward-diffusion values`,input:`(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3), s := dm.get_noise_schedule(),
+    r := dm.forward_diffusion(np.array([[1.0, -1.0]]), 1),
+    (np.round(s['alpha_bars'], 4).tolist(), np.round(r[0], 4).tolist(), np.round(r[1], 4).tolist())
+)[-1])()`,expected:`([0.9, 0.72, 0.504], [[1.1114, -0.9217]], [[0.4967, -0.1383]])`,hidden:!1},{id:`7`,description:`Reverse step: deterministic at t = 0, adds sqrt(beta_t) * z otherwise`,input:`(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3),
+    a := dm.reverse_step(np.array([1.0, -0.5]), 0, np.array([0.2, 0.4])),
+    np.random.seed(5), b := dm.reverse_step(np.array([1.0, -0.5]), 2, np.array([0.2, 0.4])),
+    np.random.seed(5), z := np.random.randn(2),
+    mean := (np.array([1.0, -0.5]) - 0.3 / np.sqrt(1 - 0.504) * np.array([0.2, 0.4])) / np.sqrt(0.7),
+    (np.round(a, 4).tolist(), bool(np.allclose(b, mean + np.sqrt(0.3) * z)))
+)[-1])()`,expected:`([0.9874, -0.6604], True)`,hidden:!0},{id:`8`,description:`compute_loss value; sample calls the predictor for t = T-1 down to 0`,input:`(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3), calls := [],
+    out := dm.sample((2, 2), lambda x, t: (calls.append(t), np.zeros_like(x))[1]),
+    (round(float(dm.compute_loss(np.array([1.0, 2.0]), np.array([0.0, 0.0]))), 4), calls, out.shape)
+)[-1])()`,expected:`(2.5, [2, 1, 0], (2, 2))`,hidden:!0}],hints:[`Everything derives from the schedule: compute betas, alphas and alpha_bars once in __init__ and reuse them in every method.`,`forward_diffusion is one line of mixing; reverse_step computes the mean, then adds noise only when t > 0; sample loops t over reversed(range(T)).`,`np.linspace and np.cumprod for the schedule; mean = (x_t - betas[t] / np.sqrt(1 - alpha_bars[t]) * eps) / np.sqrt(alphas[t]); sigma_t = np.sqrt(betas[t]).`,`Pitfall: the reverse step divides by sqrt(α_t) (this step) but scales ε by β_t / sqrt(1 − ᾱ_t) (cumulative). Do not re-seed inside reverse_step, or every step draws the same z.`],solution:`import numpy as np
 
 class DiffusionModel:
     def __init__(self, T: int = 1000, beta_start: float = 0.0001, beta_end: float = 0.02):
         self.T = T
-
-        # Linear noise schedule
         self.betas = np.linspace(beta_start, beta_end, T)
         self.alphas = 1 - self.betas
         self.alpha_bars = np.cumprod(self.alphas)
 
-        # For reverse process
-        self.sqrt_alpha_bars = np.sqrt(self.alpha_bars)
-        self.sqrt_one_minus_alpha_bars = np.sqrt(1 - self.alpha_bars)
-        self.sqrt_alphas = np.sqrt(self.alphas)
-
     def get_noise_schedule(self) -> dict:
-        return {
-            'betas': self.betas,
-            'alphas': self.alphas,
-            'alpha_bars': self.alpha_bars
-        }
+        return {'betas': self.betas, 'alphas': self.alphas, 'alpha_bars': self.alpha_bars}
 
     def forward_diffusion(self, x_0: np.ndarray, t: int) -> tuple:
         np.random.seed(42)
         noise = np.random.randn(*x_0.shape)
-
-        sqrt_alpha_bar = self.sqrt_alpha_bars[t]
-        sqrt_one_minus_alpha_bar = self.sqrt_one_minus_alpha_bars[t]
-
-        x_t = sqrt_alpha_bar * x_0 + sqrt_one_minus_alpha_bar * noise
-
+        ab = self.alpha_bars[t]
+        x_t = np.sqrt(ab) * x_0 + np.sqrt(1 - ab) * noise   # q(x_t | x_0) in one shot
         return x_t, noise
 
     def reverse_step(self, x_t: np.ndarray, t: int, predicted_noise: np.ndarray) -> np.ndarray:
-        alpha = self.alphas[t]
-        alpha_bar = self.alpha_bars[t]
-        beta = self.betas[t]
-
-        # Mean of reverse distribution
-        coef1 = 1 / np.sqrt(alpha)
-        coef2 = beta / np.sqrt(1 - alpha_bar)
-        mean = coef1 * (x_t - coef2 * predicted_noise)
-
-        if t > 0:
-            # Add noise (except at final step)
-            sigma = np.sqrt(beta)
-            noise = np.random.randn(*x_t.shape)
-            x_prev = mean + sigma * noise
-        else:
-            x_prev = mean
-
-        return x_prev
+        beta, alpha, ab = self.betas[t], self.alphas[t], self.alpha_bars[t]
+        mean = (x_t - beta / np.sqrt(1 - ab) * predicted_noise) / np.sqrt(alpha)
+        if t == 0:
+            return mean                                   # final step: no noise
+        return mean + np.sqrt(beta) * np.random.randn(*x_t.shape)   # sigma_t^2 = beta_t
 
     def compute_loss(self, true_noise: np.ndarray, predicted_noise: np.ndarray) -> float:
-        return np.mean((true_noise - predicted_noise) ** 2)
+        return float(np.mean((true_noise - predicted_noise) ** 2))
 
     def sample(self, shape: tuple, noise_predictor) -> np.ndarray:
-        # Start from pure noise
-        x = np.random.randn(*shape)
-
-        # Reverse diffusion
+        x = np.random.randn(*shape)                       # x_{T-1} ~ N(0, I)
         for t in reversed(range(self.T)):
-            predicted_noise = noise_predictor(x, t)
-            x = self.reverse_step(x, t, predicted_noise)
-
+            x = self.reverse_step(x, t, noise_predictor(x, t))
         return x
-`},{id:`e2e-cnn`,title:`E2E: Convolutional Neural Network`,section:`e2e-implementations`,difficulty:`hard`,description:`
-## End-to-End CNN
 
-Implement a complete CNN for image classification.
-
-### Architecture
-\`\`\`
-Input (batch, channels, height, width)
-  ↓
-Conv2D(in_channels, 32, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Conv2D(32, 64, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Flatten
-  ↓
-Linear(flattened_size, 128) + ReLU
-  ↓
-Linear(128, num_classes)
-  ↓
-Softmax
-\`\`\`
-
-### Components
-- 2D Convolution (no padding for simplicity)
-- Max Pooling
-- Flatten
-- Fully Connected layers
-
-### Task
-Implement conv2d, maxpool, and combine into CNN.
-    `,examples:[{input:`CNN on 28x28 grayscale images`,output:`Class probabilities`,explanation:`Full CNN forward pass`}],starterCode:`import numpy as np
+# Sampling: T calls of the noise predictor, O(T * size(x)) extra work
+`},{id:`e2e-cnn`,title:`E2E: Convolutional Neural Network`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End CNN\n\n### What you'll build\nA LeNet-style image classifier in NumPy: 2-D convolution, max pooling and flatten as standalone functions, then a `CNN` class that chains two conv blocks and two fully connected layers into logits.\n\n### Architecture (input `(batch, C, H, W)`, e.g. MNIST `(batch, 1, 28, 28)`)\n| Layer | Operation | Output shape (28×28 input) |\n|-------|-----------|----------------------------|\n| conv1 | `conv2d(x, conv1_w (32, C, 3, 3), conv1_b)` + ReLU | `(batch, 32, 26, 26)` |\n| pool1 | `maxpool2d(·, 2)` | `(batch, 32, 13, 13)` |\n| conv2 | `conv2d(·, conv2_w (64, 32, 3, 3), conv2_b)` + ReLU | `(batch, 64, 11, 11)` |\n| pool2 | `maxpool2d(·, 2)` | `(batch, 64, 5, 5)` |\n| flatten | `flatten(·)` | `(batch, 1600)` |\n| fc1 | `· @ fc1_w + fc1_b` + ReLU | `(batch, 128)` |\n| fc2 | `· @ fc2_w + fc2_b` | `(batch, num_classes)` **logits** (no softmax) |\n\nGeneral sizes: a 3×3 valid conv maps `H → H − 2`; a 2×2 pool maps `H → H // 2` (an odd leftover row/column is dropped). So `flat_size = 64 · h2 · w2` with `h1 = (H − 2) // 2`, `h2 = (h1 − 2) // 2` (same for W).\n\n### Function contract\n| Function | Behaviour | Returns |\n|----------|-----------|---------|\n| `conv2d(x, kernel, bias)` | stride 1, no padding, **cross-correlation** (no kernel flip, like every DL framework): `out[b, o, i, j] = Σ_{c,u,v} x[b, c, i+u, j+v] · kernel[o, c, u, v] + bias[o]` | `(batch, out_ch, H − kH + 1, W − kW + 1)` |\n| `maxpool2d(x, pool_size=2)` | non-overlapping windows (stride = pool_size), max per window and channel | `(batch, ch, H // p, W // p)` |\n| `flatten(x)` | keep the batch axis, merge the rest | `(batch, −1)` |\n| `CNN(input_shape, num_classes)` | creates `conv1_w/b`, `conv2_w/b` (given, after `np.random.seed(42)`), then `fc1_w (flat_size, 128)`, `fc1_b`, `fc2_w (128, num_classes)`, `fc2_b` (weights `N(0, 0.1²)`, zero biases) | |\n| `CNN.forward(x)` | the table above | logits `(batch, num_classes)` |\n| `test_cnn()` | a smoke test: build `CNN((1, 28, 28), 10)`, run 4 random images | `True` if the logits have shape `(4, 10)` |\n\n### Constraints\nNumPy only. Loops over output positions are acceptable for clarity, but try to vectorise `conv2d` (`np.lib.stride_tricks.sliding_window_view` + `np.einsum`): the naive 4-level loop is very slow in the browser.\n\n### Follow-up\n- Parameter count of conv1 and fc1 for MNIST? (32·1·9 + 32 = 320 and 1600·128 + 128 = 204,928: the dense layer dominates.)\n- How does im2col turn convolution into one matrix multiply?\n    ",examples:[{input:`conv2d(np.arange(16.0).reshape(1, 1, 4, 4), np.array([[[[1.0, 0.0], [2.0, -1.0]]]]), np.array([0.5]))`,output:`[[[[3.5, 5.5, 7.5], [11.5, 13.5, 15.5], [19.5, 21.5, 23.5]]]]`,explanation:`With x[i, j] = 4i + j, each output is x[i, j] + 2·x[i+1, j] − x[i+1, j+1] + 0.5 = 8i + 2j + 3.5`},{input:`maxpool2d(np.array([[[[1, 3, 2, 0], [4, 2, 1, 5], [0, 1, 7, 6], [2, 8, 3, 1]]]]))`,output:`[[[[4.0, 5.0], [8.0, 7.0]]]]`,explanation:`The max of each non-overlapping 2×2 block`},{input:`CNN((1, 28, 28), 10).forward(np.random.randn(2, 1, 28, 28)).shape`,output:`(2, 10)`,explanation:`28 → 26 → 13 → 11 → 5, so fc1 sees 64·5·5 = 1600 features`}],starterCode:`import numpy as np
 
 def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
     """
-    2D convolution (no padding, stride=1).
+    2D convolution (cross-correlation, no padding, stride=1).
 
     Args:
         x: Input (batch, in_channels, height, width)
@@ -15809,14 +15101,14 @@ def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
 
 def maxpool2d(x: np.ndarray, pool_size: int = 2) -> np.ndarray:
     """
-    2D max pooling.
+    2D max pooling with non-overlapping windows (stride = pool_size).
 
     Args:
         x: Input (batch, channels, height, width)
         pool_size: Size of pooling window
 
     Returns:
-        output: Pooled tensor
+        output: (batch, channels, height // pool_size, width // pool_size)
     """
     # Your code here
     pass
@@ -15848,11 +15140,11 @@ class CNN:
         self.conv2_w = np.random.randn(64, 32, 3, 3) * 0.1
         self.conv2_b = np.zeros(64)
 
-        # Calculate flattened size after convolutions and pooling
-        # Your code to compute this
-        pass
+        # Flattened size after conv(3x3) -> pool(2) -> conv(3x3) -> pool(2)
+        # Your code here
 
-        # Fully connected layers
+        # Fully connected layers: fc1_w (flat_size, 128), fc1_b (128,),
+        # fc2_w (128, num_classes), fc2_b (num_classes,); weights * 0.1, biases zero
         # Your code here
         pass
 
@@ -15864,53 +15156,43 @@ class CNN:
             x: Input images (batch, channels, height, width)
 
         Returns:
-            logits: (batch, num_classes)
+            logits: (batch, num_classes), no softmax
         """
         # Your code here
         pass
 
 
 def test_cnn():
-    """Test CNN with sample data."""
+    """Smoke test: CNN((1, 28, 28), 10) on 4 random images; return True if logits are (4, 10)."""
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Conv output shape`,input:`conv2d(np.random.randn(2, 1, 8, 8), np.random.randn(32, 1, 3, 3), np.zeros(32)).shape`,expected:`(2, 32, 6, 6)`,hidden:!1},{id:`2`,description:`Pool output shape`,input:`maxpool2d(np.random.randn(2, 32, 8, 8), pool_size=2).shape`,expected:`(2, 32, 4, 4)`,hidden:!1},{id:`3`,description:`Flatten preserves batch dimension`,input:`flatten(np.random.randn(4, 64, 3, 3)).shape`,expected:`(4, 576)`,hidden:!0},{id:`4`,description:`Full CNN forward pass shape`,input:`CNN(input_shape=(1, 28, 28), num_classes=10).forward(np.random.randn(2, 1, 28, 28)).shape`,expected:`(2, 10)`,hidden:!0}],hints:[`Conv output size: (input - kernel + 1) for stride=1, no padding`,`Pool output size: input // pool_size`,`Use nested loops for convolution (or np.lib.stride_tricks)`,`Flatten: x.reshape(batch_size, -1)`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Conv output shape`,input:`conv2d(np.random.randn(2, 1, 8, 8), np.random.randn(32, 1, 3, 3), np.zeros(32)).shape`,expected:`(2, 32, 6, 6)`,hidden:!1},{id:`2`,description:`Pool output shape`,input:`maxpool2d(np.random.randn(2, 32, 8, 8), pool_size=2).shape`,expected:`(2, 32, 4, 4)`,hidden:!1},{id:`3`,description:`Flatten preserves batch dimension`,input:`flatten(np.random.randn(4, 64, 3, 3)).shape`,expected:`(4, 576)`,hidden:!0},{id:`4`,description:`Full CNN forward pass shape`,input:`CNN(input_shape=(1, 28, 28), num_classes=10).forward(np.random.randn(2, 1, 28, 28)).shape`,expected:`(2, 10)`,hidden:!0},{id:`5`,description:`conv2d and maxpool2d values`,input:`(lambda: (conv2d(np.arange(16.0).reshape(1, 1, 4, 4), np.array([[[[1.0, 0.0], [2.0, -1.0]]]]), np.array([0.5])).tolist(), maxpool2d(np.array([[[[1.0, 3, 2, 0], [4, 2, 1, 5], [0, 1, 7, 6], [2, 8, 3, 1]]]])).tolist(), maxpool2d(np.arange(25.0).reshape(1, 1, 5, 5)).tolist()))()`,expected:`([[[[3.5, 5.5, 7.5], [11.5, 13.5, 15.5], [19.5, 21.5, 23.5]]]], [[[[4.0, 5.0], [8.0, 7.0]]]], [[[[6.0, 8.0], [16.0, 18.0]]]])`,hidden:!1},{id:`6`,description:`conv2d matches a reference on random multi-channel inputs`,input:`(lambda: (
+    x := np.random.randn(2, 3, 7, 6), k := np.random.randn(4, 3, 3, 2), b := np.random.randn(4),
+    ref := np.einsum('bchwij,ocij->bohw', np.lib.stride_tricks.sliding_window_view(x, (3, 2), axis=(2, 3)), k) + b[None, :, None, None],
+    bool(np.allclose(conv2d(x, k, b), ref))
+)[-1])()`,expected:`True`,hidden:!0},{id:`7`,description:`forward follows the architecture (checked against the model weights)`,input:`(lambda: (
+    m := CNN((1, 14, 14), 3), x := np.random.randn(2, 1, 14, 14),
+    cv := lambda a, k, b: np.einsum('bchwij,ocij->bohw', np.lib.stride_tricks.sliding_window_view(a, k.shape[2:], axis=(2, 3)), k) + b[None, :, None, None],
+    pl := lambda a: a[:, :, :a.shape[2] // 2 * 2, :a.shape[3] // 2 * 2].reshape(a.shape[0], a.shape[1], a.shape[2] // 2, 2, a.shape[3] // 2, 2).max(axis=(3, 5)),
+    h := pl(np.maximum(0, cv(pl(np.maximum(0, cv(x, m.conv1_w, m.conv1_b))), m.conv2_w, m.conv2_b))).reshape(2, -1),
+    ref := np.maximum(0, h @ m.fc1_w + m.fc1_b) @ m.fc2_w + m.fc2_b,
+    (m.fc1_w.shape, m.fc2_w.shape, bool(np.allclose(m.forward(x), ref)))
+)[-1])()`,expected:`((256, 128), (128, 3), True)`,hidden:!0}],hints:[`Track shapes layer by layer first: write down H and W after every conv (H − k + 1) and pool (H // 2); that gives the input size of fc1.`,`Write conv2d, maxpool2d and flatten as standalone functions, test them on tiny arrays, then chain them in forward with ReLU after each conv and after fc1.`,`Vectorised conv: windows = np.lib.stride_tricks.sliding_window_view(x, (kH, kW), axis=(2, 3)); out = np.einsum("bchwij,ocij->bohw", windows, kernel) + bias[None, :, None, None]. Pool: reshape to (B, C, H//p, p, W//p, p) and take .max(axis=(3, 5)).`,`Pitfall: crop odd sizes before the pooling reshape (13 → 12), and do not flip the kernel; frameworks compute cross-correlation. forward returns logits, not softmax probabilities.`],solution:`import numpy as np
 
 def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
-    batch, in_ch, H, W = x.shape
-    out_ch, _, kH, kW = kernel.shape
-    out_H = H - kH + 1
-    out_W = W - kW + 1
-
-    output = np.zeros((batch, out_ch, out_H, out_W))
-
-    for b in range(batch):
-        for oc in range(out_ch):
-            for i in range(out_H):
-                for j in range(out_W):
-                    receptive_field = x[b, :, i:i+kH, j:j+kW]
-                    output[b, oc, i, j] = np.sum(receptive_field * kernel[oc]) + bias[oc]
-
-    return output
+    """Valid cross-correlation, stride 1: (B, C, H, W) -> (B, O, H-kH+1, W-kW+1)."""
+    kH, kW = kernel.shape[2:]
+    # windows[b, c, i, j, u, v] = x[b, c, i+u, j+v]  (a view, no copy)
+    windows = np.lib.stride_tricks.sliding_window_view(x, (kH, kW), axis=(2, 3))
+    return np.einsum('bchwij,ocij->bohw', windows, kernel) + bias[None, :, None, None]
 
 
 def maxpool2d(x: np.ndarray, pool_size: int = 2) -> np.ndarray:
-    batch, channels, H, W = x.shape
-    out_H = H // pool_size
-    out_W = W // pool_size
-
-    output = np.zeros((batch, channels, out_H, out_W))
-
-    for i in range(out_H):
-        for j in range(out_W):
-            h_start = i * pool_size
-            w_start = j * pool_size
-            output[:, :, i, j] = np.max(
-                x[:, :, h_start:h_start+pool_size, w_start:w_start+pool_size],
-                axis=(2, 3)
-            )
-
-    return output
+    B, C, H, W = x.shape
+    p = pool_size
+    Ho, Wo = H // p, W // p
+    x = x[:, :, :Ho * p, :Wo * p]                         # drop the odd leftover row/column
+    return x.reshape(B, C, Ho, p, Wo, p).max(axis=(3, 5))
 
 
 def flatten(x: np.ndarray) -> np.ndarray:
@@ -15922,57 +15204,36 @@ class CNN:
         np.random.seed(42)
         in_channels, H, W = input_shape
 
-        # Conv layers
         self.conv1_w = np.random.randn(32, in_channels, 3, 3) * 0.1
         self.conv1_b = np.zeros(32)
         self.conv2_w = np.random.randn(64, 32, 3, 3) * 0.1
         self.conv2_b = np.zeros(64)
 
-        # Calculate size after convolutions and pooling
-        # After conv1 (3x3): H-2, W-2
-        # After pool1 (2x2): (H-2)//2, (W-2)//2
-        # After conv2 (3x3): (H-2)//2 - 2, (W-2)//2 - 2
-        # After pool2 (2x2): ((H-2)//2 - 2)//2, ((W-2)//2 - 2)//2
-        h1 = (H - 2) // 2
-        w1 = (W - 2) // 2
-        h2 = (h1 - 2) // 2
-        w2 = (w1 - 2) // 2
+        # conv 3x3: H -> H-2; pool 2: H -> H//2 (twice)
+        h2 = ((H - 2) // 2 - 2) // 2
+        w2 = ((W - 2) // 2 - 2) // 2
         flat_size = 64 * h2 * w2
 
-        # FC layers
         self.fc1_w = np.random.randn(flat_size, 128) * 0.1
         self.fc1_b = np.zeros(128)
         self.fc2_w = np.random.randn(128, num_classes) * 0.1
         self.fc2_b = np.zeros(num_classes)
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        # Conv block 1
-        x = conv2d(x, self.conv1_w, self.conv1_b)
-        x = np.maximum(0, x)  # ReLU
-        x = maxpool2d(x)
-
-        # Conv block 2
-        x = conv2d(x, self.conv2_w, self.conv2_b)
-        x = np.maximum(0, x)  # ReLU
-        x = maxpool2d(x)
-
-        # Flatten
+        x = maxpool2d(np.maximum(0, conv2d(x, self.conv1_w, self.conv1_b)))
+        x = maxpool2d(np.maximum(0, conv2d(x, self.conv2_w, self.conv2_b)))
         x = flatten(x)
-
-        # FC layers
-        x = np.maximum(0, x @ self.fc1_w + self.fc1_b)  # ReLU
-        x = x @ self.fc2_w + self.fc2_b  # Logits
-
-        return x
+        x = np.maximum(0, x @ self.fc1_w + self.fc1_b)
+        return x @ self.fc2_w + self.fc2_b                # logits
 
 
 def test_cnn():
-    # Test with MNIST-like data
     cnn = CNN(input_shape=(1, 28, 28), num_classes=10)
-    x = np.random.randn(4, 1, 28, 28)
-    logits = cnn.forward(x)
+    logits = cnn.forward(np.random.randn(4, 1, 28, 28))
     return logits.shape == (4, 10)
-`},{id:`e2e-mini-gpt`,title:`Mini GPT (Character-Level Language Model)`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## Mini GPT: a Character-Level Language Model\n\nPut the pieces together into a tiny decoder-only Transformer, the same architecture as GPT-2 (just very small), and run it end to end: forward pass, next-token loss, training and greedy generation.\n\n### Architecture\n```\nidx (B, T) integer token ids, T <= block_size\nx = tok_emb[idx] + pos_emb[:T]                       # (B, T, C)\nfor each block:                                      # pre-norm residual blocks\n    x = x + Attn(LN1(x))                             # causal multi-head self-attention\n    x = x + MLP(LN2(x))                              # MLP(h) = gelu(h W_1 + b_1) W_2 + b_2\nh = LN_f(x)                                          # final LayerNorm\nlogits = h @ W_lm                                    # (B, T, V)\n```\n\n**Causal self-attention** with `H` heads, `d_head = C / H`:\n```\nq, k, v = split(x @ W_qkv, 3, axis=-1)               # each (B, T, C); W_qkv columns are [Q | K | V]\nreshape each to (B, H, T, d_head)                    # head h uses columns h*d_head:(h+1)*d_head\nscores = q @ k^T / sqrt(d_head), masked to -inf where key position > query position\nout = softmax(scores) @ v -> back to (B, T, C) -> @ W_o\n```\nLayerNorm uses `eps = 1e-5`; GELU is the tanh approximation (both helpers are provided).\n\n### Loss\nMean cross-entropy of the next token over all `B*T` positions: `targets[b, t]` is the token that follows `idx[b, t]`. With the small (std 0.02) initialization the logits start near 0, so the **initial loss is about `log(V)`**: the model starts out guessing uniformly.\n\n### Generation (greedy)\nRepeat `max_new_tokens` times: crop the context to the last `block_size` tokens, run `forward`, take the **argmax** of the logits at the last position and append it.\n\n### Training\n`train_step` (provided in the NumPy track) does one SGD step on the LM head only, using `dL/dlogits = (softmax - one_hot) / N`. You write the loop.\n\n### Expected Return Format\n- `MiniGPT(vocab_size, d_model=16, n_heads=2, n_layers=1, block_size=8)`\n- `model.forward(idx)`: logits `(B, T, vocab_size)`\n- `model.loss(idx, targets)`: mean cross-entropy (scalar)\n- `model.generate(idx, max_new_tokens)`: integer array `(B, T + max_new_tokens)` that starts with `idx`\n- `train(model, idx, targets, steps, lr)`: list of `steps` losses, each computed **before** that step's update\n",examples:[{input:`model = MiniGPT(vocab_size=5); model.forward(np.zeros((2, 8), dtype=int)).shape`,output:`(2, 8, 5)`},{input:`model.loss(idx, targets)`,output:`≈ 1.609 (= log 5)`,explanation:`Untrained model is close to uniform.`},{input:`model.generate(np.array([[0, 1, 2]]), 5).shape`,output:`(1, 8)`}],starterCode:`import numpy as np
+
+# conv2d: O(B * O * C * kH * kW * H_out * W_out) time
+`},{id:`e2e-mini-gpt`,title:`Mini GPT (Character-Level Language Model)`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## Mini GPT: a Character-Level Language Model\n\n### What you'll build\nA tiny decoder-only Transformer with the same architecture as GPT-2 (just very small), run end to end: forward pass, next-token loss, a training loop and greedy generation.\n\n### Architecture\n| Step | Operation | Shape |\n|------|-----------|-------|\n| input | `idx`: integer token ids, `T ≤ block_size` | `(B, T)` |\n| embeddings | `x = tok_emb[idx] + pos_emb[:T]` | `(B, T, C)` |\n| per block (pre-norm) | `x = x + attention(LN1(x))` | `(B, T, C)` |\n| per block (pre-norm) | `x = x + gelu(LN2(x) @ W_1 + b_1) @ W_2 + b_2` | hidden `(B, T, 4C)` |\n| final norm | `h = LN_f(x)` = `hidden_states(idx)` | `(B, T, C)` |\n| LM head (untied) | `logits = h @ W_lm` | `(B, T, V)` |\n\n### Causal self-attention (per block, `H = n_heads`, `d_head = C / H`)\n1. `q, k, v = split(x @ W_qkv, 3, axis=-1)`: each `(B, T, C)`; the columns of `W_qkv` are `[Q | K | V]`.\n2. Reshape each to `(B, H, T, d_head)`; head `h` uses columns `h·d_head : (h+1)·d_head`.\n3. `scores = q @ kᵀ / sqrt(d_head)`, set to `−inf` where the key position is **after** the query position.\n4. `out = softmax(scores) @ v`, merged back to `(B, T, C)`, then `@ W_o`. No biases in attention.\n\nThe constructor (given) creates every parameter with GPT-2-style `N(0, 0.02²)` weights from `np.random.default_rng(seed)`; LayerNorm (`eps = 1e-5`), tanh-GELU and softmax helpers are provided.\n\n### Method contract\n| Method | Returns |\n|--------|---------|\n| `attention(x, blk)` | `(B, T, C)`, using the block dict's `W_qkv` and `W_o` |\n| `hidden_states(idx)` | `(B, T, C)`: embeddings → blocks → final LayerNorm |\n| `forward(idx)` | logits `(B, T, vocab_size)` |\n| `loss(idx, targets)` | float: mean cross-entropy over all `B·T` positions; `targets[b, t]` is the token after `idx[b, t]` |\n| `generate(idx, max_new_tokens)` | int array `(B, T + max_new_tokens)` starting with `idx` |\n| `train_step(idx, targets, lr)` | *(provided in the NumPy track)* one SGD step on `W_lm` only, using `dL/dlogits = (softmax − one_hot) / N` |\n| `train(model, idx, targets, steps=20, lr=1.0)` | list of `steps` losses, each computed **before** that step's update |\n\n### Conventions\n- **Initial loss ≈ log(V)**: with std-0.02 weights the logits start near 0, so the model guesses uniformly.\n- **Greedy generation**: repeat `max_new_tokens` times: crop the context to the last `block_size` tokens, run `forward`, append the **argmax** of the last position's logits.\n- Use a numerically stable log-softmax in `loss` (subtract the max).\n\n### Constraints\nNumPy only; no loops over batch, heads or positions (only over blocks and generation steps).\n\n### Follow-up\n- Generation re-runs the whole context each step: how does a **KV cache** make each new token `O(T)` instead of `O(T²)`?\n- Why do GPT-2 and most LLMs **tie** the LM head to `tok_emb`? (See **Transformer Bug Hunt**, which does.)\n",examples:[{input:`model = MiniGPT(vocab_size=5); model.forward(np.zeros((2, 8), dtype=int)).shape`,output:`(2, 8, 5)`,explanation:`One distribution over the 5 tokens for every position of every sequence`},{input:`seq = np.array([[i % 5 for i in range(9)]]); model.loss(seq[:, :-1], seq[:, 1:])`,output:`1.6769`,explanation:`Close to log 5 = 1.6094: the untrained model is nearly uniform over the 5 tokens`},{input:`After train(model, seq[:, :-1], seq[:, 1:], steps=30, lr=2.0) on two shifted copies of the cycle 0→1→2→3→4→0: model.generate(np.array([[0, 1, 2]]), 5)`,output:`[[0, 1, 2, 3, 4, 0, 1, 2]]`,explanation:`The prompt is kept and greedy decoding continues the learned cycle`}],starterCode:`import numpy as np
 
 def layer_norm(x, gamma, beta, eps=1e-5):
     mu = x.mean(axis=-1, keepdims=True)
@@ -16056,7 +15317,7 @@ def train(model, idx, targets, steps=20, lr=1.0):
     each computed before that step's update."""
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`forward returns (B, T, vocab_size)`,input:`MiniGPT(5).forward(np.random.randint(0, 5, size=(2, 8))).shape`,expected:`(2, 8, 5)`,hidden:!1},{id:`2`,description:`Causal: changing a future token leaves earlier logits unchanged`,input:`(lambda m, a: (lambda b: bool(np.allclose(m.forward(a)[:, :5], m.forward(b)[:, :5]) and not np.allclose(m.forward(a)[:, 5:], m.forward(b)[:, 5:])))(np.concatenate([a[:, :5], (a[:, 5:] + 1) % 5], axis=1)))(MiniGPT(5, n_layers=2), np.random.randint(0, 5, size=(2, 8)))`,expected:`True`,hidden:!1},{id:`3`,description:`Initial loss is about log(vocab_size)`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), bool(abs(MiniGPT(5).loss(seq[:, :-1], seq[:, 1:]) - np.log(5)) < 0.1))[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`generate keeps the prompt and appends max_new_tokens tokens`,input:`(lambda out: (out.shape, out[:, :3].tolist()))(MiniGPT(5).generate(np.array([[0, 1, 2]]), 5))`,expected:`((1, 8), [[0, 1, 2]])`,hidden:!1},{id:`5`,description:`Training reduces the loss`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), losses := train(MiniGPT(5), seq[:, :-1], seq[:, 1:], steps=20, lr=1.0), bool(len(losses) == 20 and losses[-1] < losses[0] - 0.5))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Generation is greedy (argmax of the last-position logits)`,input:`(lambda m, p: bool(m.generate(p, 1)[0, -1] == m.forward(p)[0, -1].argmax()))(MiniGPT(5, seed=3), np.array([[4, 1, 3]]))`,expected:`True`,hidden:!0},{id:`7`,description:`After training, generation continues the cycle`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), train(m, seq[:, :-1], seq[:, 1:], steps=30, lr=2.0), m.generate(np.array([[0, 1, 2]]), 5).tolist())[-1])()`,expected:`[[0, 1, 2, 3, 4, 0, 1, 2]]`,hidden:!0},{id:`8`,description:`generate crops the context to block_size`,input:`MiniGPT(5, block_size=8).generate(np.array([[0, 1, 2, 3, 4, 0]]), 6).shape`,expected:`(1, 12)`,hidden:!0},{id:`9`,description:`Exact logits for a fixed seed (architecture details)`,input:`round(float(np.abs(MiniGPT(5, n_layers=2, seed=1).forward(np.array([[0, 1, 2, 3, 4, 0, 1, 2]])) * 1000).sum()), 4)`,expected:`2475.9754`,hidden:!0}],hints:[`Attention: q, k, v = np.split(x @ W_qkv, 3, axis=-1); reshape each to (B, T, H, d_head) and transpose to (B, H, T, d_head). Mask with np.triu(..., k=1) before the softmax.`,`hidden_states: x = tok_emb[idx] + pos_emb[:T]; each block does x += attn(LN1(x)) then x += MLP(LN2(x)); finish with the final LayerNorm.`,`loss: stable log-softmax over the last axis, pick the target log-probs with np.take_along_axis, return -mean as a float.`,`generate: loop max_new_tokens times on idx[:, -block_size:], take argmax at the last position, np.concatenate it onto idx.`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`forward returns (B, T, vocab_size)`,input:`MiniGPT(5).forward(np.random.randint(0, 5, size=(2, 8))).shape`,expected:`(2, 8, 5)`,hidden:!1},{id:`2`,description:`Causal: changing a future token leaves earlier logits unchanged`,input:`(lambda m, a: (lambda b: bool(np.allclose(m.forward(a)[:, :5], m.forward(b)[:, :5]) and not np.allclose(m.forward(a)[:, 5:], m.forward(b)[:, 5:])))(np.concatenate([a[:, :5], (a[:, 5:] + 1) % 5], axis=1)))(MiniGPT(5, n_layers=2), np.random.randint(0, 5, size=(2, 8)))`,expected:`True`,hidden:!1},{id:`3`,description:`Initial loss is about log(vocab_size)`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), bool(abs(MiniGPT(5).loss(seq[:, :-1], seq[:, 1:]) - np.log(5)) < 0.1))[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`generate keeps the prompt and appends max_new_tokens tokens`,input:`(lambda out: (out.shape, out[:, :3].tolist()))(MiniGPT(5).generate(np.array([[0, 1, 2]]), 5))`,expected:`((1, 8), [[0, 1, 2]])`,hidden:!1},{id:`5`,description:`Training reduces the loss`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), losses := train(MiniGPT(5), seq[:, :-1], seq[:, 1:], steps=20, lr=1.0), bool(len(losses) == 20 and losses[-1] < losses[0] - 0.5))[-1])()`,expected:`True`,hidden:!0},{id:`6`,description:`Generation is greedy (argmax of the last-position logits)`,input:`(lambda m, p: bool(m.generate(p, 1)[0, -1] == m.forward(p)[0, -1].argmax()))(MiniGPT(5, seed=3), np.array([[4, 1, 3]]))`,expected:`True`,hidden:!0},{id:`7`,description:`After training, generation continues the cycle`,input:`(lambda: (seq := np.array([[i % 5 for i in range(9)], [(i + 2) % 5 for i in range(9)]]), m := MiniGPT(5), train(m, seq[:, :-1], seq[:, 1:], steps=30, lr=2.0), m.generate(np.array([[0, 1, 2]]), 5).tolist())[-1])()`,expected:`[[0, 1, 2, 3, 4, 0, 1, 2]]`,hidden:!0},{id:`8`,description:`generate crops the context to block_size`,input:`MiniGPT(5, block_size=8).generate(np.array([[0, 1, 2, 3, 4, 0]]), 6).shape`,expected:`(1, 12)`,hidden:!0},{id:`9`,description:`Exact logits for a fixed seed (architecture details)`,input:`round(float(np.abs(MiniGPT(5, n_layers=2, seed=1).forward(np.array([[0, 1, 2, 3, 4, 0, 1, 2]])) * 1000).sum()), 4)`,expected:`2475.9754`,hidden:!0}],hints:[`Build it in the order data flows: attention for one block, then hidden_states (embeddings, blocks, final norm), then forward, loss and generate on top. Test the causal property early: changing a later token must not change earlier logits.`,`Attention is reshaping plus one masked softmax: split x @ W_qkv into q, k, v, move heads to axis 1, compute (B, H, T, T) scores, mask, softmax, multiply by v, move heads back, project with W_o.`,`np.split(x @ W_qkv, 3, axis=-1); a.reshape(B, T, H, d).transpose(0, 2, 1, 3); mask with np.where(np.triu(np.ones((T, T), bool), k=1), -np.inf, scores); loss with np.take_along_axis(log_probs, targets[..., None], axis=-1).`,`Pitfalls: the residual adds to x, not to LN(x) (pre-norm); generate must crop to idx[:, -block_size:] or pos_emb runs out of rows; record each training loss before calling train_step.`],solution:`import numpy as np
 
 def layer_norm(x, gamma, beta, eps=1e-5):
     mu = x.mean(axis=-1, keepdims=True)
@@ -16156,7 +15417,7 @@ def train(model, idx, targets, steps=20, lr=1.0):
         losses.append(model.loss(idx, targets))
         model.train_step(idx, targets, lr)
     return losses
-`},{id:`e2e-vit-classifier`,title:`E2E: Tiny Vision Transformer`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End Tiny Vision Transformer (ViT)\n\nA Vision Transformer treats an image as a **sequence of patches**: cut it into `P x P` tiles, embed each tile linearly, prepend a learnable **[CLS]** token, add **position embeddings**, run a Transformer encoder, and classify from the final CLS token.\n\nBuild `TinyViT` with **one pre-norm encoder block**.\n\n### Architecture\n```\nx (B, C, H, W)\n  │ patchify                  (B, N, P*P*C)       N = (H/P) * (W/P)\n  │ @ W_patch + b_patch       (B, N, D)\n  │ prepend CLS token         (B, N+1, D)\n  │ + pos_emb (N+1, D)        (only if use_pos_emb)\n  ▼\n  t = t + MHA(LN1(t))         pre-norm attention with residual\n  t = t + MLP(LN2(t))         MLP: Linear(D, mlp_dim) -> GELU -> Linear(mlp_dim, D)\n  ▼\n  cls = LN_f(t[:, 0])         (B, D)      <- cls_features(x)\n  logits = cls @ W_head + b_head  (B, num_classes)\n```\n\n### Details\n- **Patch order**: patches in row-major order over the `(H/P, W/P)` grid; inside a patch, flatten as `(p1, p2, c)`, i.e. einops `'b c (h p1) (w p2) -> b (h w) (p1 p2 c)'`. This matches a stride-`P` convolution.\n- **MHA**: `qkv = h @ W_qkv` (no bias) split into `Q, K, V` of width `D`; reshape to `num_heads` heads of size `D / num_heads`; `softmax(Q K^T / sqrt(d_head)) V`; merge heads; output projection `@ W_o` (no bias). No mask: every token attends to every token.\n- **LayerNorm**: over the last dimension, `eps = 1e-5`, with learnable gain (init 1) and bias (init 0).\n- **GELU**: tanh approximation, `0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))`.\n- **Initialization**: weights `~ N(0, 1/fan_in)`, biases 0, CLS token and position embeddings `~ N(0, 0.02^2)`.\n\n### Why position embeddings matter\nSelf-attention is **permutation-equivariant**, and the CLS token attends to all patches with the same weights regardless of where they are. So **without** position embeddings, shuffling the patches of an image leaves the CLS output (and the prediction) unchanged. Position embeddings are the only source of spatial order.\n\n### Methods to implement\n- `patchify(x)`: `(B, C, H, W) -> (B, N, P*P*C)`\n- `cls_features(x)`: final-LayerNormed CLS token, `(B, D)`\n- `forward(x)`: logits, `(B, num_classes)`\n- `loss(x, y)`: mean cross-entropy (float), with integer labels `y`\n- `train_step(x, y, lr)`: one plain SGD step on `loss(x, y)`; returns the loss **before** the step (float).\n  - **NumPy track**: update only the classification head (`W_head`, `b_head`); the encoder stays frozen (a *linear probe*). Its gradient is `dlogits = (softmax(logits) - onehot(y)) / B`, `dW_head = cls^T @ dlogits`, `db_head = dlogits.sum(0)`.\n  - **PyTorch track**: autograd updates **every** parameter.\n\n### Constructor\n`TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)`\n    ",examples:[{input:`TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, num_classes=3).forward(np.random.randn(4, 1, 8, 8))`,output:`logits of shape (4, 3)`,explanation:`4 patches of 4x4 pixels -> 5 tokens (with CLS) of width 16 -> CLS head.`},{input:`model.patchify(np.arange(32.).reshape(1, 2, 4, 4)) with patch_size=2`,output:`shape (1, 4, 8); first patch [0, 16, 1, 17, 4, 20, 5, 21]`,explanation:`Order (p1, p2, c): pixel (0,0) of both channels, then pixel (0,1), then (1,0), then (1,1).`}],starterCode:`import numpy as np
+`},{id:`e2e-vit-classifier`,title:`E2E: Tiny Vision Transformer`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## End-to-End Tiny Vision Transformer (ViT)\n\n### What you'll build\n`TinyViT`: a Vision Transformer classifier with **one pre-norm encoder block**, including patch extraction, the [CLS] token, position embeddings, the loss and a training step.\n\n### Background\nA Vision Transformer (Dosovitskiy et al., 2021) treats an image as a **sequence of patches**: cut it into `P × P` tiles, embed each tile linearly, prepend a learnable **[CLS]** token, add **position embeddings**, run a Transformer encoder, and classify from the final CLS token. With no convolutions, everything the model knows about 2-D layout comes from the patch order and the position embeddings.\n\n### Architecture\n```text\nx (B, C, H, W)\n  │ patchify                  (B, N, P*P*C)       N = (H/P) * (W/P)\n  │ @ W_patch + b_patch       (B, N, D)\n  │ prepend CLS token         (B, N+1, D)\n  │ + pos_emb (N+1, D)        (only if use_pos_emb)\n  ▼\n  t = t + MHA(LN1(t))         pre-norm attention with residual\n  t = t + MLP(LN2(t))         MLP: Linear(D, mlp_dim) -> GELU -> Linear(mlp_dim, D)\n  ▼\n  cls = LN_f(t[:, 0])         (B, D)      <- cls_features(x)\n  logits = cls @ W_head + b_head  (B, num_classes)\n```\n\n### Details\n- **Patch order**: patches in row-major order over the `(H/P, W/P)` grid; inside a patch, flatten as `(p1, p2, c)`, i.e. einops `'b c (h p1) (w p2) -> b (h w) (p1 p2 c)'`. This matches a stride-`P` convolution.\n- **MHA**: `qkv = h @ W_qkv` (no bias) split into `Q, K, V` of width `D`; reshape to `num_heads` heads of size `D / num_heads`; `softmax(Q K^T / sqrt(d_head)) V`; merge heads; output projection `@ W_o` (no bias). No mask: every token attends to every token.\n- **LayerNorm**: over the last dimension, `eps = 1e-5`, with learnable gain (init 1) and bias (init 0).\n- **GELU**: tanh approximation, `0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))`.\n- **Initialization**: weights `~ N(0, 1/fan_in)`, biases 0, CLS token and position embeddings `~ N(0, 0.02^2)`.\n\n### Why position embeddings matter\nSelf-attention is **permutation-equivariant**, and the CLS token attends to all patches with the same weights regardless of where they are. So **without** position embeddings, shuffling the patches of an image leaves the CLS output (and the prediction) unchanged. Position embeddings are the only source of spatial order.\n\n### Method contract\n| Method | Returns |\n|--------|---------|\n| `TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)` | creates all parameters (initialization above) |\n| `patchify(x)` | `(B, C, H, W) → (B, N, P·P·C)` |\n| `cls_features(x)` | final-LayerNormed CLS token, `(B, D)` |\n| `forward(x)` | logits `(B, num_classes)` |\n| `loss(x, y)` | float, mean cross-entropy with integer labels `y (B,)` |\n| `train_step(x, y, lr=0.1)` | float, the loss **before** one plain SGD step |\n\n`train_step` differs by track:\n- **NumPy track**: update only the classification head (`W_head`, `b_head`); the encoder stays frozen (a *linear probe*). Gradient: `dlogits = (softmax(logits) − onehot(y)) / B`, `dW_head = clsᵀ @ dlogits`, `db_head = dlogits.sum(0)`.\n- **PyTorch track**: autograd updates **every** parameter.\n\nIn the NumPy track, parameter names and storage are up to you (the tests only use the methods above); the PyTorch starter names the patch embedding `patch_embed`.\n\n### Constraints\nNumPy only, no loops over batch, heads or tokens.\n\n### Follow-up\n- Attention over N patches costs `O(N²)`: what happens to the cost if you halve the patch size?\n- Why do ViTs need more data (or strong augmentation) than CNNs? (They lack the convolutional inductive bias of locality and translation equivariance.)\n    ",examples:[{input:`TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, num_classes=3).forward(np.random.randn(4, 1, 8, 8))`,output:`logits of shape (4, 3)`,explanation:`4 patches of 4x4 pixels -> 5 tokens (with CLS) of width 16 -> CLS head.`},{input:`model.patchify(np.arange(32.).reshape(1, 2, 4, 4)) with patch_size=2`,output:`shape (1, 4, 8); first patch [0, 16, 1, 17, 4, 20, 5, 21]`,explanation:`Order (p1, p2, c): pixel (0,0) of both channels, then pixel (0,1), then (1,0), then (1,1).`}],starterCode:`import numpy as np
 
 class TinyViT:
     def __init__(self, img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2,
@@ -16215,7 +15476,7 @@ class TinyViT:
     y := np.arange(8) % 2,
     losses := [m.train_step(x, y, 0.5) for _ in range(20)],
     bool(len(losses) == 20 and m.loss(x, y) < 0.8 * losses[0])
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`patchify: reshape to (B, C, H/P, P, W/P, P), transpose to (B, H/P, W/P, P, P, C), then reshape to (B, N, P*P*C).`,`Prepend CLS with np.concatenate([np.broadcast_to(cls, (B, 1, D)), tokens], axis=1), then add pos (N+1, D) if use_pos_emb.`,`Multi-head attention: split h @ W_qkv into Q, K, V; reshape each to (B, T, heads, d_head) and transpose to (B, heads, T, d_head); scores are Q @ K^T / sqrt(d_head).`,`Head-only SGD: dlogits = (softmax(logits) - onehot(y)) / B; W_head -= lr * cls.T @ dlogits; b_head -= lr * dlogits.sum(0).`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Follow the shapes: an image becomes N patch vectors, then N + 1 tokens of width D with the CLS token in front; only token 0 is used for classification.`,`patchify is pure reshaping: (B, C, H, W) → (B, C, H/P, P, W/P, P) → transpose to (B, H/P, W/P, P, P, C) → (B, N, P·P·C). Then embed, prepend CLS, add pos, run one pre-norm block, LayerNorm the CLS row.`,`Prepend with np.concatenate([np.broadcast_to(cls, (B, 1, D)), tokens], axis=1). Attention: np.split(h @ W_qkv, 3, axis=-1), heads via reshape(B, T, nh, hd).transpose(0, 2, 1, 3), scores = q @ k.transpose(0, 1, 3, 2) / np.sqrt(hd).`,`Pitfall: the transpose order decides the (p1, p2, c) flattening; a plain reshape without it mixes pixels from different patches. In the NumPy train_step compute the loss before updating the head.`],solution:`import numpy as np
 
 
 def layer_norm(x, g, b, eps=1e-5):
@@ -16308,7 +15569,7 @@ class TinyViT:
         self.p['W_head'] -= lr * feats.T @ dlogits
         self.p['b_head'] -= lr * dlogits.sum(axis=0)
         return loss
-`},{id:`transformer-bug-hunt`,title:`Transformer Bug Hunt: Fix a Broken Mini-GPT`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## Transformer Bug Hunt: Fix a Broken Mini-GPT\n\nThe starter code is a tiny GPT-style language model: token and position embeddings, one causal self-attention block, one MLP block, a final LayerNorm and an LM head. It runs without errors on short inputs, but its outputs are wrong.\n\n**There are exactly 4 bugs, all inside `gpt_forward`.** The helpers `init_params`, `layer_norm`, `softmax` and `gelu` are correct. Find and fix the bugs; you shouldn't need to rewrite the model.\n\n### Reference architecture (what the code should compute)\nFor token ids `tokens` of length `T` (positions `t = 0 .. T-1`), with `d = d_model`:\n```\nx   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0\n\nh   = LN1(x)\nq, k, v = h @ W_q, h @ W_k, h @ W_v\nS   = q @ k.T / sqrt(d)\nS[i, j] = -inf  for j > i                                # causal mask, applied BEFORE the softmax\natt = softmax(S)                                         # row-wise, each row sums to 1\nx   = x + (att @ v) @ W_o                                # residual 1\n\nx   = x + GELU(LN2(x) @ W_1 + b_1) @ W_2 + b_2           # residual 2 (pre-LN)\n\nlogits = LN_f(x) @ wte.T                                 # tied LM head\n```\n`LN(x) = g * (x - mean) / sqrt(var + 1e-5) + b` over the last axis (population variance), and GELU uses the tanh approximation.\n\n### Expected Return Format\n`gpt_forward(tokens, params)` returns a tuple `(logits, att)`:\n- `logits`: `(T, vocab_size)` array\n- `att`: `(T, T)` attention probabilities, row `i` holds query `i`'s weights\n\n### How it is tested\nThe tests check properties every correct decoder must have (causality, attention rows summing to 1), compare against an independent reference computation with the attention and MLP outputs switched off, and check exact logits and attention values for fixed `init_params` weights.\n\n### Debugging tips\nWrite small experiments in the editor: inspect `att`, try a single token, zero out `W_o` or `W_2`, compare positions.\n",examples:[{input:`logits, att = gpt_forward([3, 1, 4, 1, 5], init_params())`,output:`logits.shape == (5, 11), att.shape == (5, 5)`,explanation:`In the fixed model every row of att sums to 1 and att is lower-triangular.`},{input:`gpt_forward([6], init_params(seed=3))[1]`,output:`array([[1.]])`,explanation:`A single token can only attend to itself.`}],starterCode:`import numpy as np
+`},{id:`transformer-bug-hunt`,title:`Transformer Bug Hunt: Fix a Broken Mini-GPT`,section:`e2e-implementations`,difficulty:`hard`,description:"\n## Transformer Bug Hunt: Fix a Broken Mini-GPT\n\n### What you'll build\nA working `gpt_forward` by debugging a broken one. Reading and fixing someone else's model code is a common interview format, and these four bugs are the classic silent ones: the code runs and the shapes are right, but the numbers are wrong.\n\n### The setup\nThe starter code is a tiny GPT-style language model: token and position embeddings, one causal self-attention block, one MLP block, a final LayerNorm and an LM head. It runs without errors on short inputs, but its outputs are wrong.\n\n**There are exactly 4 bugs, all inside `gpt_forward`.** The helpers `init_params`, `layer_norm`, `softmax` and `gelu` are correct. Find and fix the bugs; you shouldn't need to rewrite the model.\n\n### Reference architecture (what the code should compute)\nFor token ids `tokens` of length `T` (positions `t = 0 .. T-1`), with `d = d_model`:\n```text\nx   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0\n\nh   = LN1(x)\nq, k, v = h @ W_q, h @ W_k, h @ W_v\nS   = q @ k.T / sqrt(d)\nS[i, j] = -inf  for j > i                                # causal mask, applied BEFORE the softmax\natt = softmax(S)                                         # row-wise, each row sums to 1\nx   = x + (att @ v) @ W_o                                # residual 1\n\nx   = x + GELU(LN2(x) @ W_1 + b_1) @ W_2 + b_2           # residual 2 (pre-LN)\n\nlogits = LN_f(x) @ wte.T                                 # tied LM head\n```\n`LN(x) = g * (x - mean) / sqrt(var + 1e-5) + b` over the last axis (population variance), and GELU uses the tanh approximation.\n\n### Expected Return Format\n`gpt_forward(tokens, params)` returns a tuple `(logits, att)`:\n- `logits`: `(T, vocab_size)` array\n- `att`: `(T, T)` attention probabilities, row `i` holds query `i`'s weights\n\n### How it is tested\nThe tests check properties every correct decoder must have (causality, attention rows summing to 1), compare against an independent reference computation with the attention and MLP outputs switched off, and check exact logits and attention values for fixed `init_params` weights.\n\n### Debugging tips\nWrite small experiments in the editor: inspect `att`, try a single token, zero out `W_o` or `W_2`, compare positions.\n\n### Constraints\nEdit only `gpt_forward`; keep the signature and the `(logits, att)` return.\n\n### Follow-up\n- Which of these bugs would still let training loss go down? (Most of them: that is why they are dangerous.)\n- What unit tests would have caught each bug before training?\n",examples:[{input:`logits, att = gpt_forward([3, 1, 4, 1, 5], init_params())`,output:`logits.shape == (5, 11), att.shape == (5, 5)`,explanation:`In the fixed model every row of att sums to 1 and att is lower-triangular.`},{input:`gpt_forward([6], init_params(seed=3))[1]`,output:`array([[1.]])`,explanation:`A single token can only attend to itself.`}],starterCode:`import numpy as np
 
 def init_params(vocab_size=11, d_model=8, max_len=8, seed=0):
     """Deterministic random weights for a 1-layer, single-head model. (Correct.)"""
@@ -17692,40 +16953,7 @@ def ppo_rlhf_objective(old_logp: np.ndarray, new_logp: np.ndarray,
         'policy_loss': round(float(policy_term), 2),
         'kl_penalty': round(float(beta * np.mean(kl)), 2),  # monitoring only
     }
-`}],B=[{id:`llm-temperature-scaling`,title:`Temperature Scaling`,section:`llm-generation`,difficulty:`easy`,description:`
-## Temperature Scaling
-
-Implement temperature scaling for LLM logits to control the randomness of generated text.
-
-### How It Works
-Before converting logits to probabilities via softmax, divide by a temperature parameter T:
-
-\`\`\`
-scaled_logits = logits / T
-probs = softmax(scaled_logits)
-\`\`\`
-
-### Temperature Effects
-
-| Temperature | Effect |
-|-------------|--------|
-| T < 1 | Sharper distribution (more confident, less random) |
-| T = 1 | Original distribution (unchanged) |
-| T > 1 | Flatter distribution (more random, more creative) |
-
-### Softmax Reminder
-\`\`\`
-softmax(x_i) = exp(x_i) / sum(exp(x_j))
-\`\`\`
-
-For numerical stability, subtract the max before exponentiating:
-\`\`\`
-softmax(x_i) = exp(x_i - max(x)) / sum(exp(x_j - max(x)))
-\`\`\`
-
-### Interview Insight
-Temperature scaling is the simplest decoding control. Interviewers expect you to know that T→0 approaches greedy decoding (argmax) and T→∞ approaches uniform sampling.
-    `,examples:[{input:`logits = [2.0, 1.0, 0.1], temperature = 0.5`,output:`[0.8360, 0.1142, 0.0498]`,explanation:`Low temperature makes the highest logit dominate`},{input:`logits = [2.0, 1.0, 0.1], temperature = 2.0`,output:`[0.4566, 0.2784, 0.2650]`,explanation:`High temperature flattens the distribution`}],starterCode:`import numpy as np
+`}],B=[{id:`llm-temperature-scaling`,title:`Temperature Scaling`,section:`llm-generation`,difficulty:`easy`,description:"\n## Temperature Scaling\n\n### What you'll build\nTurn a vector of next-token logits into probabilities with a temperature `T`: divide the logits by `T`, then take a numerically stable softmax.\n\n### Background\nAt every generation step the model outputs one logit per vocabulary token. Temperature is the first knob every decoding API exposes. Dividing by `T < 1` stretches the gaps between logits, so the distribution gets sharper (more deterministic); `T > 1` shrinks the gaps and flattens it (more diverse, more mistakes). It never changes the **ranking** of tokens, only how peaked the distribution is.\n\n### Formula\n```text\nz_i   = logits_i / T\np_i   = exp(z_i - max(z)) / sum_j exp(z_j - max(z))\n```\nSubtracting `max(z)` doesn't change the result (it cancels in the ratio) but keeps `exp` from overflowing.\n\n| Temperature | Effect |\n|-------------|--------|\n| `T -> 0` | all mass on the argmax (greedy decoding) |\n| `T < 1` | sharper than the model's distribution |\n| `T = 1` | the model's own distribution |\n| `T > 1` | flatter; `T -> inf` approaches uniform |\n\n### Inputs\n- `logits`: float array `(vocab_size,)` (a list also works)\n- `temperature`: float `> 0`, default 1.0\n\n### Expected Return Format\n`probs`: float array `(vocab_size,)`, non-negative, sums to 1.\n\n### Edge cases and conventions\n- Very small `T` (e.g. 0.01) makes the scaled logits huge; the max subtraction keeps the result finite.\n- `T = 0` itself is undefined (division by zero); real APIs special-case it as greedy argmax. You don't need to handle it here.\n\n### Constraints\nNumPy only, vectorised.\n\n### Follow-up\n- Show that temperature scaling preserves the argmax and the ranking.\n- Temperature is also used to **calibrate** a classifier after training (Guo et al., 2017). How would you fit `T` on a validation set?\n",examples:[{input:`temperature_scaling(np.array([2.0, 1.0, 0.1]), temperature=0.5)`,output:`[0.8638, 0.1169, 0.0193]`,explanation:`Dividing by 0.5 doubles the logit gaps, so the top token dominates (vs 0.659 at T=1).`},{input:`temperature_scaling(np.array([2.0, 1.0, 0.1]), temperature=2.0)`,output:`[0.5017, 0.3043, 0.194]`,explanation:`Dividing by 2 halves the gaps and flattens the distribution.`}],starterCode:`import numpy as np
 
 def temperature_scaling(logits, temperature=1.0):
     """
@@ -17733,66 +16961,26 @@ def temperature_scaling(logits, temperature=1.0):
 
     Args:
         logits: Raw logits from the model (vocab_size,)
-        temperature: Temperature parameter (T > 0)
+        temperature: Temperature T > 0
 
     Returns:
-        probs: Probability distribution over vocabulary (vocab_size,)
+        probs: softmax(logits / T), shape (vocab_size,), sums to 1
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Temperature=1 gives standard softmax`,input:`(lambda: (
-    logits := np.array([2.0, 1.0, 0.1]),
-    probs := temperature_scaling(logits, 1.0),
-    bool(np.allclose(probs, np.exp(logits - np.max(logits)) / np.sum(np.exp(logits - np.max(logits))), atol=1e-4))
-)[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Low temperature sharpens distribution`,input:`(lambda: (
-    logits := np.array([2.0, 1.0, 0.1]),
-    probs_low := temperature_scaling(logits, 0.5),
-    probs_high := temperature_scaling(logits, 2.0),
-    bool(np.max(probs_low) > np.max(probs_high))
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Probabilities sum to 1`,input:`bool(np.allclose(np.sum(temperature_scaling(np.array([1.0, 2.0, 3.0, 4.0]), 0.7)), 1.0))`,expected:`True`,hidden:!1},{id:`4`,description:`Very low temperature approaches argmax`,input:`(lambda: (
-    probs := temperature_scaling(np.array([3.0, 1.0, 0.5]), 0.01),
-    bool(probs[0] > 0.99)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Divide logits by temperature before applying softmax`,`For numerical stability, subtract the max of scaled logits before exp()`,`softmax(x) = exp(x - max(x)) / sum(exp(x - max(x)))`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Values at T=0.5 and T=2`,input:`(lambda z: (np.round(temperature_scaling(z, 0.5), 4).tolist(), np.round(temperature_scaling(z, 2.0), 4).tolist()))(np.array([2.0, 1.0, 0.1]))`,expected:`([0.8638, 0.1169, 0.0193], [0.5017, 0.3043, 0.194])`,hidden:!1},{id:`2`,description:`Temperature=1 gives the standard softmax`,input:`(lambda z: bool(np.allclose(temperature_scaling(z, 1.0), np.exp(z - z.max()) / np.exp(z - z.max()).sum())))(np.array([2.0, 1.0, 0.1]))`,expected:`True`,hidden:!1},{id:`3`,description:`Probabilities sum to 1`,input:`bool(np.isclose(np.sum(temperature_scaling(np.array([1.0, 2.0, 3.0, 4.0]), 0.7)), 1.0))`,expected:`True`,hidden:!0},{id:`4`,description:`Very low temperature approaches argmax and stays finite`,input:`(lambda p: (round(float(p[0]), 4), bool(np.all(np.isfinite(p)))))(temperature_scaling(np.array([3.0, 1.0, 0.5]), 0.01))`,expected:`(1.0, True)`,hidden:!0},{id:`5`,description:`Very high temperature approaches uniform`,input:`np.round(temperature_scaling(np.array([5.0, 0.0, -5.0, 2.0]), 1000.0), 2).tolist()`,expected:`[0.25, 0.25, 0.25, 0.25]`,hidden:!0},{id:`6`,description:`Ranking is preserved`,input:`(lambda z: np.argsort(temperature_scaling(z, 3.0)).tolist() == np.argsort(z).tolist())(np.array([0.3, -1.2, 2.5, 0.9, 1.1]))`,expected:`True`,hidden:!0}],hints:[`Temperature acts on the logits, before the softmax. What does dividing by a number below 1 do to the gaps between logits?`,`Two steps: scale (logits / temperature), then a numerically stable softmax.`,`scaled = logits / temperature; e = np.exp(scaled - scaled.max()); probs = e / e.sum().`,`Subtract the max after scaling, not before: with T = 0.01 the scaled logits are 100x larger and overflow np.exp otherwise.`],solution:`import numpy as np
 
 def temperature_scaling(logits, temperature=1.0):
-    logits = np.array(logits, dtype=np.float64)
-    # Scale logits by temperature
-    scaled = logits / temperature
-    # Numerically stable softmax
-    shifted = scaled - np.max(scaled)
-    exp_vals = np.exp(shifted)
-    probs = exp_vals / np.sum(exp_vals)
-    return probs
-`},{id:`llm-top-k-sampling`,title:`Top-k Sampling`,section:`llm-generation`,difficulty:`easy`,description:`
-## Top-k Sampling
+    """
+    Returns:
+        probs: softmax(logits / temperature), shape (vocab_size,)
+    """
+    scaled = np.asarray(logits, dtype=np.float64) / temperature
+    exp_vals = np.exp(scaled - np.max(scaled))   # stable: largest exponent is 0
+    return exp_vals / np.sum(exp_vals)
 
-Implement top-k sampling, which restricts token selection to the k most likely tokens.
-
-### Algorithm
-1. Compute probabilities from logits (via softmax)
-2. Find the top-k tokens by probability
-3. Zero out all other tokens
-4. Re-normalize the remaining probabilities
-5. Sample from the filtered distribution
-
-### Why Top-k?
-- Prevents sampling extremely unlikely tokens
-- Reduces incoherent or nonsensical outputs
-- Simple to implement and widely used (GPT-2 used k=40)
-
-### Limitation
-Fixed k doesn't adapt to the shape of the distribution:
-- For a confident prediction (one token has 90% probability), k=50 still allows 49 unlikely tokens
-- For a flat distribution, k=50 might cut off reasonable options
-
-This motivates **nucleus (top-p) sampling**.
-
-### Function Signature
-\`\`\`python
-def top_k_sampling(logits, k, temperature=1.0):
-    # Returns: sampled_token_index, filtered_probs
-\`\`\`
-    `,examples:[{input:`logits = [5.0, 3.0, 2.0, 1.0, 0.1], k = 3`,output:`Only top 3 tokens have non-zero probability`,explanation:`Tokens at indices 0, 1, 2 are kept; indices 3, 4 are zeroed`}],starterCode:`import numpy as np
+# O(V) time and memory
+`},{id:`llm-top-k-sampling`,title:`Top-k Sampling`,section:`llm-generation`,difficulty:`easy`,description:"\n## Top-k Sampling\n\n### What you'll build\nSample the next token from only the `k` most likely tokens: apply temperature, keep the top `k` logits, renormalize, and draw one token. Return the token and the filtered distribution.\n\n### Background\nPure sampling from the full softmax occasionally picks a token from the long tail of thousands of unlikely tokens, and one bad token can derail the rest of the text. Top-k (Fan et al., 2018; GPT-2 used `k = 40`) truncates the tail. Its weakness is that `k` is fixed: when the model is confident, `k = 40` still admits 39 poor tokens; when it is uncertain, 40 may cut off good ones. **Top-p** (next problem) adapts the cutoff instead.\n\n### Algorithm\n1. `z = logits / temperature`.\n2. Find the indices of the `k` largest values of `z`.\n3. Set every other logit to `-inf`.\n4. Softmax (stable) over the result: the kept tokens renormalize to sum to 1, the rest get exactly 0.\n5. Sample one token index from that distribution.\n\n### Inputs\n- `logits`: float array `(vocab_size,)`\n- `k`: int, `1 <= k <= vocab_size`\n- `temperature`: float `> 0`, default 1.0 (applied **before** filtering)\n\n### Expected Return Format\nA tuple `(token, filtered_probs)`:\n- `token`: Python `int`, an index whose filtered probability is `> 0`\n- `filtered_probs`: float array `(vocab_size,)` with exactly `k` non-zero entries summing to 1\n\n### Edge cases and conventions\n- Keep the `np.random.seed(42)` line from the starter and sample with `np.random.choice(len(probs), p=probs)`, so runs are reproducible.\n- `k = 1` is greedy decoding: the argmax gets probability 1.\n- Tests avoid ties at the `k`-th largest logit, so any tie-breaking is fine.\n\n### Constraints\nNumPy only. `np.argsort` or `np.argpartition` for the top-k.\n\n### Follow-up\n- `np.argpartition` finds the top-k in `O(V)` instead of `O(V log V)`. Does that matter for a 128k vocabulary on a GPU?\n- How do top-k and temperature interact if you apply temperature **after** filtering instead?\n",examples:[{input:`top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), k=3)`,output:`(token in {0, 1, 2}, filtered_probs = [0.8438, 0.1142, 0.042, 0.0, 0.0])`,explanation:`Only the three largest logits survive; softmax([5, 3, 2]) renormalizes them.`},{input:`top_k_sampling(np.array([2.0, 0.0, 4.0, 1.0, -1.0]), k=3, temperature=2.0)`,output:`filtered_probs = [0.2312, 0.0, 0.6285, 0.1402, 0.0]`,explanation:`Temperature first (logits become [1, 0, 2, 0.5, -0.5]), then keep the top 3.`}],starterCode:`import numpy as np
 
 def top_k_sampling(logits, k, temperature=1.0):
     """
@@ -17801,82 +16989,39 @@ def top_k_sampling(logits, k, temperature=1.0):
     Args:
         logits: Raw logits (vocab_size,)
         k: Number of top tokens to keep
-        temperature: Temperature for scaling (applied before filtering)
+        temperature: Temperature, applied before filtering
 
     Returns:
         token: Sampled token index (int)
-        filtered_probs: Probability distribution after filtering (vocab_size,)
+        filtered_probs: (vocab_size,), k non-zero entries summing to 1
     """
     np.random.seed(42)
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Only k tokens have non-zero probability`,input:`(lambda: (
-    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.sum(result[1] > 0) == 3)
-)[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Filtered probs sum to 1`,input:`(lambda: (
-    result := top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3),
-    bool(np.allclose(np.sum(result[1]), 1.0))
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Sampled token is within top-k`,input:`(lambda: (
-    logits := np.array([5.0, 3.0, 2.0, 1.0, 0.1]),
-    top_k_indices := np.argsort(logits)[-3:],
-    result := top_k_sampling(logits, 3),
-    bool(result[0] in top_k_indices)
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`k=1 always picks the top token`,input:`(lambda: (
-    result := top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1),
-    bool(result[0] == 1)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Apply temperature scaling first: scaled_logits = logits / temperature`,`Use np.argsort or np.argpartition to find top-k indices`,`Set non-top-k logits to -inf (or a very large negative number) before softmax`,`Re-normalize by dividing by the sum of remaining probabilities`,`Use np.random.choice with the filtered probabilities to sample`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Filtered distribution values (k=3)`,input:`np.round(top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3)[1], 4).tolist()`,expected:`[0.8438, 0.1142, 0.042, 0.0, 0.0]`,hidden:!1},{id:`2`,description:`Sampled token is within the top k`,input:`(lambda r: r[0] in [0, 1, 2] and isinstance(r[0], int))(top_k_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 3))`,expected:`True`,hidden:!1},{id:`3`,description:`Exactly k tokens keep probability and they sum to 1`,input:`(lambda p: (int(np.sum(p > 0)), round(float(p.sum()), 6)))(top_k_sampling(np.random.randn(20), 5)[1])`,expected:`(5, 1.0)`,hidden:!0},{id:`4`,description:`k=1 always picks the top token`,input:`(lambda r: (r[0], r[1].tolist()))(top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 1))`,expected:`(1, [0.0, 1.0, 0.0, 0.0])`,hidden:!0},{id:`5`,description:`Filtered distribution values (k=2)`,input:`np.round(top_k_sampling(np.array([1.0, 5.0, 2.0, 0.5]), 2)[1], 4).tolist()`,expected:`[0.0, 0.9526, 0.0474, 0.0]`,hidden:!0},{id:`6`,description:`Temperature is applied before filtering (k=3, T=2)`,input:`np.round(top_k_sampling(np.array([2.0, 0.0, 4.0, 1.0, -1.0]), 3, 2.0)[1], 4).tolist()`,expected:`[0.2312, 0.0, 0.6285, 0.1402, 0.0]`,hidden:!0}],hints:[`You need two things: which k tokens survive, and a renormalized distribution over just those tokens.`,`Scale by the temperature, mask every logit outside the top k to -inf, softmax, then sample.`,`top_idx = np.argsort(scaled)[-k:]; filtered = np.full_like(scaled, -np.inf); filtered[top_idx] = scaled[top_idx]; token = np.random.choice(len(probs), p=probs).`,`Masking to -inf before the softmax renormalizes automatically; zeroing probabilities after the softmax also works but then you must divide by their sum. Return int(token), not a NumPy integer.`],solution:`import numpy as np
 
 def top_k_sampling(logits, k, temperature=1.0):
+    """
+    Returns:
+        (token (int), filtered_probs (vocab_size,))
+    """
     np.random.seed(42)
-    logits = np.array(logits, dtype=np.float64)
+    scaled = np.asarray(logits, dtype=np.float64) / temperature
 
-    # Apply temperature
-    scaled = logits / temperature
-
-    # Find top-k indices
+    # Keep the k largest logits; everything else becomes -inf (probability 0)
     top_k_idx = np.argsort(scaled)[-k:]
+    filtered = np.full_like(scaled, -np.inf)
+    filtered[top_k_idx] = scaled[top_k_idx]
 
-    # Mask non-top-k to -inf
-    filtered_logits = np.full_like(scaled, -np.inf)
-    filtered_logits[top_k_idx] = scaled[top_k_idx]
-
-    # Softmax over filtered logits
-    shifted = filtered_logits - np.max(filtered_logits)
-    exp_vals = np.exp(shifted)
+    # Stable softmax over the kept tokens (exp(-inf) = 0)
+    exp_vals = np.exp(filtered - np.max(filtered))
     probs = exp_vals / np.sum(exp_vals)
 
-    # Sample
     token = np.random.choice(len(probs), p=probs)
     return int(token), probs
-`},{id:`llm-top-p-sampling`,title:`Nucleus (Top-p) Sampling`,section:`llm-generation`,difficulty:`medium`,description:`
-## Nucleus (Top-p) Sampling
 
-Implement nucleus sampling (also called top-p sampling), which dynamically selects the smallest set of tokens whose cumulative probability exceeds a threshold p.
-
-### Algorithm
-1. Compute probabilities from logits (with temperature)
-2. Sort tokens by probability (descending)
-3. Compute cumulative sum of sorted probabilities
-4. Find the cutoff: smallest set where cumulative probability >= p
-5. Zero out tokens below the cutoff
-6. Re-normalize and sample
-
-### Why Top-p?
-Unlike top-k (fixed number of tokens), top-p **adapts** to the distribution:
-- Confident prediction (one token at 95%): only 1-2 tokens kept
-- Uncertain prediction (flat distribution): many tokens kept
-
-### Common Values
-- GPT-3/4: p = 0.9 or 0.95
-- Creative writing: p = 0.95
-- Factual tasks: p = 0.7
-
-### Function Signature
-\`\`\`python
-def top_p_sampling(logits, p, temperature=1.0):
-    # Returns: sampled_token_index, filtered_probs
-\`\`\`
-    `,examples:[{input:`probs = [0.5, 0.3, 0.1, 0.05, 0.05], p = 0.8`,output:`Tokens with probs [0.5, 0.3] kept (cumsum = 0.8)`,explanation:`Only 2 tokens needed to reach the 80% threshold`}],starterCode:`import numpy as np
+# O(V log V) for the sort (O(V) with np.argpartition)
+`},{id:`llm-top-p-sampling`,title:`Nucleus (Top-p) Sampling`,section:`llm-generation`,difficulty:`medium`,description:'\n## Nucleus (Top-p) Sampling\n\n### What you\'ll build\nSample from the **nucleus**: the smallest set of most-likely tokens whose total probability reaches `p`. Return the sampled token and the filtered, renormalized distribution.\n\n### Background\nTop-k keeps a fixed number of tokens. Nucleus sampling (Holtzman et al., 2019) keeps a fixed amount of **probability mass** instead, so the cutoff adapts: after "The capital of France is", one token holds 95% of the mass and the nucleus is tiny; after "My favourite food is", the distribution is flat and the nucleus is large. Most chat APIs expose `top_p` (often 0.9 to 0.95) alongside temperature.\n\n### Algorithm\n1. `probs = softmax(logits / temperature)` (stable).\n2. Sort the probabilities in descending order and take the cumulative sum `c`.\n3. Keep the sorted tokens up to and **including** the first one where `c >= p` (the token that crosses the threshold is in the nucleus).\n4. Zero out every other token and renormalize the kept ones to sum to 1.\n5. Sample one token from the result.\n\n### Inputs\n- `logits`: float array `(vocab_size,)`\n- `p`: float in `(0, 1]`\n- `temperature`: float `> 0`, default 1.0 (applied before the nucleus is computed)\n\n### Expected Return Format\nA tuple `(token, filtered_probs)`:\n- `token`: Python `int`, an index inside the nucleus\n- `filtered_probs`: float array `(vocab_size,)`, non-zero exactly on the nucleus, sums to 1\n\n### Edge cases and conventions\n- The most likely token is always kept, even if its probability alone exceeds `p`.\n- `p = 1.0` keeps every token with non-zero probability.\n- Keep the `np.random.seed(42)` line and sample with `np.random.choice(len(probs), p=probs)`.\n- Equivalent rule: keep a sorted token if the mass **before** it, `c - prob`, is still `< p`.\n\n### Constraints\nNumPy only: `np.argsort`, `np.cumsum`, `np.searchsorted` (or a boolean mask).\n\n### Follow-up\n- In practice, frameworks apply temperature, then top-k, then top-p. Does the order of top-k and top-p matter?\n- What goes wrong with top-p when the model is over-confident and wrong? (See min-p sampling for one fix.)\n',examples:[{input:`top_p_sampling(np.array([2.0, 1.0, 0.5, 0.1, -1.0]), p=0.8)`,output:`filtered_probs = [0.6285, 0.2312, 0.1402, 0.0, 0.0]`,explanation:`Probabilities are [0.5585, 0.2055, 0.1246, 0.0835, 0.0278]; the cumulative sum first reaches 0.8 at the third token (0.8886), so three tokens are kept and renormalized.`},{input:`top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), p=0.5)`,output:`(0, [1.0, 0.0, 0.0, 0.0, 0.0])`,explanation:`The top token alone has probability 0.8258 >= 0.5, so the nucleus is just token 0.`}],starterCode:`import numpy as np
 
 def top_p_sampling(logits, p, temperature=1.0):
     """
@@ -17885,464 +17030,240 @@ def top_p_sampling(logits, p, temperature=1.0):
     Args:
         logits: Raw logits (vocab_size,)
         p: Cumulative probability threshold (0 < p <= 1)
-        temperature: Temperature for scaling
+        temperature: Temperature, applied first
 
     Returns:
         token: Sampled token index (int)
-        filtered_probs: Probability distribution after filtering (vocab_size,)
+        filtered_probs: (vocab_size,), non-zero on the nucleus only, sums to 1
     """
     np.random.seed(42)
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Filtered probs sum to 1`,input:`(lambda: (
-    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9),
-    bool(np.allclose(np.sum(result[1]), 1.0))
-)[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`p=1.0 keeps all tokens`,input:`(lambda: (
-    result := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0),
-    bool(np.sum(result[1] > 0) == 5)
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Small p keeps fewer tokens`,input:`(lambda: (
-    result_small := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5),
-    result_large := top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.95),
-    bool(np.sum(result_small[1] > 0) <= np.sum(result_large[1] > 0))
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Dominant token with very small p`,input:`(lambda: (
-    logits := np.array([10.0, 1.0, 0.5, 0.1]),
-    result := top_p_sampling(logits, 0.5),
-    bool(np.sum(result[1] > 0) <= 2)
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`First compute softmax probabilities (with temperature)`,`Sort probabilities in descending order, keeping track of original indices`,`Compute cumulative sum of sorted probabilities`,`The cutoff is where cumsum first exceeds p — include that token too`,`Zero out all tokens not in the nucleus set, then re-normalize`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Nucleus includes the token that crosses p`,input:`np.round(top_p_sampling(np.array([2.0, 1.0, 0.5, 0.1, -1.0]), 0.8)[1], 4).tolist()`,expected:`[0.6285, 0.2312, 0.1402, 0.0, 0.0]`,hidden:!1},{id:`2`,description:`p=1.0 keeps all tokens and the result sums to 1`,input:`(lambda f: (int(np.sum(f > 0)), round(float(f.sum()), 6)))(top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 1.0)[1])`,expected:`(5, 1.0)`,hidden:!1},{id:`3`,description:`Confident distribution: the top token alone forms the nucleus`,input:`(lambda r: (r[0], r[1].tolist()))(top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.5))`,expected:`(0, [1.0, 0.0, 0.0, 0.0, 0.0])`,hidden:!0},{id:`4`,description:`Two-token nucleus at p=0.9`,input:`np.round(top_p_sampling(np.array([5.0, 3.0, 2.0, 1.0, 0.1]), 0.9)[1], 4).tolist()`,expected:`[0.8808, 0.1192, 0.0, 0.0, 0.0]`,hidden:!0},{id:`5`,description:`Smaller p never keeps more tokens`,input:`(lambda z: int(np.sum(top_p_sampling(z, 0.5)[1] > 0)) <= int(np.sum(top_p_sampling(z, 0.95)[1] > 0)))(np.random.randn(12))`,expected:`True`,hidden:!0},{id:`6`,description:`Sampled token lies in the nucleus (with temperature)`,input:`(lambda r: bool(r[1][r[0]] > 0) and isinstance(r[0], int))(top_p_sampling(np.array([0.5, 3.0, 2.5, -1.0, 0.0]), 0.7, 1.5))`,expected:`True`,hidden:!0}],hints:[`The nucleus is a prefix of the tokens sorted by probability. How do you find where that prefix ends?`,`Softmax with temperature, sort descending, cumulative sum, keep the prefix up to the first position where the cumulative sum reaches p, renormalize, sample.`,`order = np.argsort(probs)[::-1]; c = np.cumsum(probs[order]); cutoff = np.searchsorted(c, p); keep = order[:cutoff + 1].`,`Include the crossing token (cutoff + 1). Without it, a confident distribution with p below the top probability keeps nothing and you divide by zero.`],solution:`import numpy as np
 
 def top_p_sampling(logits, p, temperature=1.0):
+    """
+    Returns:
+        (token (int), filtered_probs (vocab_size,))
+    """
     np.random.seed(42)
-    logits = np.array(logits, dtype=np.float64)
-
-    # Apply temperature and compute softmax
-    scaled = logits / temperature
-    shifted = scaled - np.max(scaled)
-    exp_vals = np.exp(shifted)
+    scaled = np.asarray(logits, dtype=np.float64) / temperature
+    exp_vals = np.exp(scaled - np.max(scaled))
     probs = exp_vals / np.sum(exp_vals)
 
-    # Sort descending
+    # Sort descending and accumulate
     sorted_idx = np.argsort(probs)[::-1]
-    sorted_probs = probs[sorted_idx]
+    cumsum = np.cumsum(probs[sorted_idx])
 
-    # Cumulative sum
-    cumsum = np.cumsum(sorted_probs)
+    # First position where the cumulative mass reaches p; keep it too
+    cutoff = np.searchsorted(cumsum, p)
+    nucleus = sorted_idx[:cutoff + 1]
 
-    # Find cutoff: include tokens until cumsum >= p
-    cutoff_idx = np.searchsorted(cumsum, p)
-    # Include the token that crosses the threshold
-    nucleus_indices = sorted_idx[:cutoff_idx + 1]
-
-    # Filter
     filtered_probs = np.zeros_like(probs)
-    filtered_probs[nucleus_indices] = probs[nucleus_indices]
+    filtered_probs[nucleus] = probs[nucleus]
+    filtered_probs /= filtered_probs.sum()
 
-    # Re-normalize
-    filtered_probs = filtered_probs / np.sum(filtered_probs)
-
-    # Sample
     token = np.random.choice(len(filtered_probs), p=filtered_probs)
     return int(token), filtered_probs
-`},{id:`llm-repetition-penalty`,title:`Repetition Penalty`,section:`llm-generation`,difficulty:`easy`,description:`
-## Repetition Penalty
 
-Implement repetition penalty to discourage the model from generating repeated tokens.
-
-### Algorithm (from Keskar et al., CTRL paper)
-For each token that has already been generated:
-- If the logit is **positive**, divide by the penalty factor
-- If the logit is **negative**, multiply by the penalty factor
-
-\`\`\`
-for token_id in generated_tokens:
-    if logits[token_id] > 0:
-        logits[token_id] = logits[token_id] / penalty
-    else:
-        logits[token_id] = logits[token_id] * penalty
-\`\`\`
-
-### Why This Formula?
-- Dividing positive logits makes repeated tokens less likely
-- Multiplying negative logits makes them even more negative (also less likely)
-- Both operations push repeated tokens toward lower probability
-
-### Common Values
-- penalty = 1.0: No effect
-- penalty = 1.2: Mild repetition reduction
-- penalty = 1.5: Strong repetition reduction
-- penalty > 2.0: Can cause incoherent text
-
-### Function Signature
-\`\`\`python
-def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
-    # Returns: penalized_logits
-\`\`\`
-    `,examples:[{input:`logits = [2.0, -1.0, 3.0, 0.5], generated = [0, 1], penalty = 1.5`,output:`[1.333, -1.5, 3.0, 0.5]`,explanation:`Token 0 (positive): 2.0/1.5=1.333; Token 1 (negative): -1.0*1.5=-1.5`}],starterCode:`import numpy as np
+# O(V log V) for the sort
+`},{id:`llm-repetition-penalty`,title:`Repetition Penalty`,section:`llm-generation`,difficulty:`easy`,description:"\n## Repetition Penalty\n\n### What you'll build\nThe CTRL repetition penalty (Keskar et al., 2019), as implemented by Hugging Face's `RepetitionPenaltyLogitsProcessor`: make every token that already appeared in the output less likely, by shrinking its logit.\n\n### Background\nSmall or greedily decoded models fall into loops (\"I think that I think that I think...\"). The penalty pushes the logits of already-generated tokens down before sampling. It is applied to the raw logits, before temperature, top-k and top-p.\n\n### Formula\nFor every **distinct** token id `t` in `generated_tokens`:\n```text\nlogits[t] = logits[t] / penalty    if logits[t] > 0\nlogits[t] = logits[t] * penalty    otherwise (logits[t] <= 0)\n```\nWith `penalty > 1`, both branches lower the logit: a positive logit moves toward 0, a negative one moves further from 0. Dividing a negative logit instead would **raise** it, which is the classic bug.\n\n### Inputs\n- `logits`: float array `(vocab_size,)`\n- `generated_tokens`: list of int token ids (may contain repeats, may be empty)\n- `penalty`: float `>= 1.0`, default 1.2\n\n### Expected Return Format\n`penalized_logits`: new float array `(vocab_size,)`; the input array must not be modified.\n\n### Edge cases and conventions\n- **Each distinct token is penalized once**, however often it appears: `[0, 0, 0]` penalizes token 0 once, as in CTRL and Hugging Face. (For a count-based penalty, see the follow-up.)\n- `penalty = 1.0` leaves the logits unchanged.\n- A logit of exactly 0 stays 0.\n\n### Constraints\nNumPy only. Copy the input first (`np.array(logits, dtype=float)` or `.copy()`).\n\n### Follow-up\n- OpenAI's `presence_penalty` and `frequency_penalty` **subtract** `alpha_presence * [count > 0] + alpha_frequency * count` instead. Implement it; how is it different from dividing?\n- Why can a strong repetition penalty hurt code generation?\n",examples:[{input:`apply_repetition_penalty(np.array([2.0, -1.0, 3.0, 0.5]), [0, 1], penalty=1.5)`,output:`[1.3333, -1.5, 3.0, 0.5]`,explanation:`Token 0 (positive): 2.0 / 1.5; token 1 (negative): -1.0 * 1.5. Tokens 2 and 3 were not generated.`},{input:`apply_repetition_penalty(np.array([2.0, -1.0, 3.0]), [0, 0, 1, 1, 1], penalty=2.0)`,output:`[1.0, -2.0, 3.0]`,explanation:`Repeats do not stack: each distinct token is penalized once.`}],starterCode:`import numpy as np
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
     """
-    Apply repetition penalty to logits for previously generated tokens.
+    Apply the CTRL repetition penalty to previously generated tokens.
 
     Args:
         logits: Raw logits (vocab_size,)
-        generated_tokens: List of previously generated token indices
+        generated_tokens: List of previously generated token ids (may repeat)
         penalty: Repetition penalty factor (>= 1.0)
 
     Returns:
-        penalized_logits: Logits with penalty applied (vocab_size,)
+        penalized_logits: New array (vocab_size,); each distinct generated
+                          token: positive logit / penalty, else * penalty
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Positive logits are divided by penalty`,input:`(lambda: (
-    result := apply_repetition_penalty(np.array([2.0, 1.0, 3.0]), [0], 1.5),
-    bool(np.allclose(result[0], 2.0 / 1.5))
-)[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Negative logits are multiplied by penalty`,input:`(lambda: (
-    result := apply_repetition_penalty(np.array([2.0, -1.0, 3.0]), [1], 1.5),
-    bool(np.allclose(result[1], -1.0 * 1.5))
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Non-generated tokens unchanged`,input:`(lambda: (
-    result := apply_repetition_penalty(np.array([2.0, -1.0, 3.0]), [0], 1.5),
-    bool(np.allclose(result[1], -1.0) and np.allclose(result[2], 3.0))
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Penalty=1.0 has no effect`,input:`(lambda: (
-    logits := np.array([2.0, -1.0, 3.0, 0.5]),
-    result := apply_repetition_penalty(logits, [0, 1, 2], 1.0),
-    bool(np.allclose(result, logits))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Make a copy of logits to avoid modifying the input`,`Loop over each token in generated_tokens`,`Check if the logit at that index is positive or negative`,`Positive: divide by penalty; Negative: multiply by penalty`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Positive logit divided, negative multiplied, others unchanged`,input:`np.round(apply_repetition_penalty(np.array([2.0, -1.0, 3.0, 0.5]), [0, 1], 1.5), 4).tolist()`,expected:`[1.3333, -1.5, 3.0, 0.5]`,hidden:!1},{id:`2`,description:`Penalty=1.0 has no effect`,input:`(lambda z: bool(np.allclose(apply_repetition_penalty(z, [0, 1, 2], 1.0), z)))(np.array([2.0, -1.0, 3.0, 0.5]))`,expected:`True`,hidden:!1},{id:`3`,description:`Several penalized tokens`,input:`apply_repetition_penalty(np.array([2.0, -1.0, 3.0, 0.5]), [0, 1, 3], 2.0).tolist()`,expected:`[1.0, -2.0, 3.0, 0.25]`,hidden:!0},{id:`4`,description:`Repeated tokens are penalized only once`,input:`apply_repetition_penalty(np.array([2.0, -1.0, 3.0]), [0, 0, 1, 1, 1], 2.0).tolist()`,expected:`[1.0, -2.0, 3.0]`,hidden:!0},{id:`5`,description:`Input array is not modified; zero logit stays zero`,input:`(lambda z: (lambda out: z.tolist() + out.tolist())(apply_repetition_penalty(z, [0, 1, 2], 2.0)))(np.array([2.0, -1.0, 0.0]))`,expected:`[2.0, -1.0, 0.0, 1.0, -2.0, 0.0]`,hidden:!0},{id:`6`,description:`No generated tokens: logits unchanged`,input:`apply_repetition_penalty(np.array([0.5, -0.5]), [], 1.3).tolist()`,expected:`[0.5, -0.5]`,hidden:!0}],hints:[`With penalty > 1, every generated token should end up less likely. What has to happen to a positive logit, and to a negative one?`,`Copy the logits, then for each distinct generated token apply one of two updates depending on its sign.`,`Vectorised: ids = np.unique(generated_tokens).astype(int); vals = out[ids]; out[ids] = np.where(vals > 0, vals / penalty, vals * penalty).`,`Dividing a negative logit by the penalty raises it; and looping over the raw list penalizes repeated tokens several times. Use the distinct ids.`],solution:`import numpy as np
 
 def apply_repetition_penalty(logits, generated_tokens, penalty=1.2):
-    logits = np.array(logits, dtype=np.float64).copy()
+    """
+    Returns:
+        penalized_logits: new array (vocab_size,)
+    """
+    out = np.array(logits, dtype=np.float64)          # copy: never modify the input
+    ids = np.unique(np.asarray(generated_tokens, dtype=int))   # each token once
+    if ids.size == 0:
+        return out
+    vals = out[ids]
+    # Both branches lower the logit when penalty > 1
+    out[ids] = np.where(vals > 0, vals / penalty, vals * penalty)
+    return out
 
-    for token_id in generated_tokens:
-        if logits[token_id] > 0:
-            logits[token_id] = logits[token_id] / penalty
-        else:
-            logits[token_id] = logits[token_id] * penalty
-
-    return logits
-`},{id:`llm-kv-cache`,title:`KV Cache for Efficient Generation`,section:`llm-generation`,difficulty:`medium`,description:`
-## KV Cache for Efficient Generation
-
-Implement KV (Key-Value) caching to make autoregressive generation efficient.
-
-### The Problem
-In autoregressive generation, at each step we compute:
-\`\`\`
-Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
-\`\`\`
-
-Without caching, we recompute K and V for ALL previous tokens at every step. For a sequence of length n, this is O(n²) per token.
-
-### The Solution: KV Cache
-Cache the K and V projections from previous steps:
-1. **First token**: Compute K, V for the prompt. Cache them.
-2. **Each new token**: Compute K_new, V_new for only the new token. Append to cache.
-3. **Attention**: Use Q_new (just the new token) with the full cached K, V.
-
-### Implementation
-\`\`\`
-# Step t: generating token t
-K_new = x_t @ W_K          # (1, d_k) - only new token
-V_new = x_t @ W_V          # (1, d_v) - only new token
-K_cache = concat(K_cache, K_new)  # (t, d_k)
-V_cache = concat(V_cache, V_new)  # (t, d_v)
-
-Q_t = x_t @ W_Q            # (1, d_k) - only new token
-output = attention(Q_t, K_cache, V_cache)  # attend to all
-\`\`\`
-
-### Speedup
-- Without cache: O(n²d) total for n tokens
-- With cache: O(nd) total for n tokens
-
-### Function Signature
-\`\`\`python
-def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache, v_cache):
-    # Returns: output, updated_k_cache, updated_v_cache
-\`\`\`
-    `,examples:[{input:`x_new (1, d_model), cache has 5 previous tokens`,output:`output (1, d_v), caches now have 6 entries each`,explanation:`New K,V appended; attention computed over all 6 tokens`}],starterCode:`import numpy as np
+# O(V + G log G) for G generated tokens
+`},{id:`llm-kv-cache`,title:`KV Cache for Efficient Generation`,section:`llm-generation`,difficulty:`medium`,description:"\n## KV Cache for Efficient Generation\n\n### What you'll build\nOne decoding step of single-head attention with a **KV cache**: project only the new token, append its key and value to the cache, and let its query attend over every cached position.\n\n### Background\nGeneration is autoregressive: to produce token `t+1` the model needs attention over tokens `0..t`. The keys and values of tokens `0..t-1` don't change once computed (causal attention never lets old tokens see new ones), so recomputing them every step is wasted work. Caching them turns each step from \"re-run the whole prefix\" into \"process one token\". This is why LLM serving has two phases: **prefill** (run the prompt in parallel and fill the cache) and **decode** (one token per step, reading the whole cache). The cache, `2 · n_layers · n_kv_heads · d_head · seq_len` numbers per sequence, is often bigger than the model's activations; **GQA** (Transformer Architecture) and sliding windows exist to shrink it.\n\n### Algorithm\nFor the new token embedding `x_new` `(1, d_model)`:\n```text\nq = x_new @ W_Q            # (1, d_k)   only the new token is projected\nk = x_new @ W_K            # (1, d_k)\nv = x_new @ W_V            # (1, d_v)\nk_cache = concat(k_cache, k)  -> (t + 1, d_k)     (start from k if the cache is None)\nv_cache = concat(v_cache, v)  -> (t + 1, d_v)\noutput  = softmax(q @ k_cache.T / sqrt(d_k)) @ v_cache    # (1, d_v)\n```\nNo mask is needed: the cache only contains the past and the current token, so this is exactly causal attention for the last position.\n\n### Inputs\n- `x_new`: `(1, d_model)`\n- `W_Q`, `W_K`: `(d_model, d_k)`; `W_V`: `(d_model, d_v)`\n- `k_cache`: `(t, d_k)` or None; `v_cache`: `(t, d_v)` or None (None on the first step)\n\n### Expected Return Format\nA tuple `(output, k_cache, v_cache)`:\n- `output`: `(1, d_v)`\n- `k_cache`: `(t + 1, d_k)`, `v_cache`: `(t + 1, d_v)`, with the new row **appended at the end**\n\n### Edge cases and conventions\n- First step (`None` caches): the new token attends only to itself, so `output = v`.\n- Stable softmax; scale by `sqrt(d_k)` where `d_k = W_Q.shape[1]`.\n\n### Constraints\nNumPy only. Don't recompute keys or values for cached tokens.\n\n### Follow-up\n- Per generated token, attention with a cache costs `O(t · d)` instead of `O(t^2 · d)` (or `O(t · d^2)` for the projections). Over `n` tokens: `O(n^2 d)` vs `O(n^3 d)`.\n- How big is the KV cache of a 32-layer, 8-KV-head, `d_head = 128` model at 32k tokens in fp16? (About 4 GiB per sequence.)\n",examples:[{input:`Step 1: kv_cache_attention(np.array([[1.0, 0.0]]), I, I, I); step 2 with x = [[0.0, 1.0]] and the returned caches (I = np.eye(2))`,output:`step 1 output [[1.0, 0.0]]; step 2 output [[0.3302, 0.6698]], caches of length 2`,explanation:`Step 2: scores [0, 1] / sqrt(2) give weights [0.3302, 0.6698] over the two cached values.`},{input:`x_new (1, 8), cache of 5 previous tokens, d_k = d_v = 4`,output:`output (1, 4), caches (6, 4)`,explanation:`One new key/value is appended; the query attends over all 6 positions.`}],starterCode:`import numpy as np
 
 def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     """
-    Compute attention with KV caching for efficient autoregressive generation.
+    One decoding step of attention with a KV cache.
 
     Args:
         x_new: New token embedding (1, d_model)
-        W_Q: Query weight matrix (d_model, d_k)
-        W_K: Key weight matrix (d_model, d_k)
-        W_V: Value weight matrix (d_model, d_v)
-        k_cache: Cached keys from previous steps (seq_len, d_k) or None
-        v_cache: Cached values from previous steps (seq_len, d_v) or None
+        W_Q: Query weights (d_model, d_k)
+        W_K: Key weights (d_model, d_k)
+        W_V: Value weights (d_model, d_v)
+        k_cache: Cached keys (t, d_k) or None on the first step
+        v_cache: Cached values (t, d_v) or None on the first step
 
     Returns:
-        output: Attention output for new token (1, d_v)
-        k_cache: Updated key cache (seq_len+1, d_k)
-        v_cache: Updated value cache (seq_len+1, d_v)
+        output: Attention output for the new token (1, d_v)
+        k_cache: Updated key cache (t + 1, d_k), new row last
+        v_cache: Updated value cache (t + 1, d_v), new row last
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Output shape is correct`,input:`(lambda: (
-    d_model := 8,
-    d_k := 4,
-    d_v := 4,
-    x := np.random.randn(1, d_model),
-    W_Q := np.random.randn(d_model, d_k) * 0.1,
-    W_K := np.random.randn(d_model, d_k) * 0.1,
-    W_V := np.random.randn(d_model, d_v) * 0.1,
-    result := kv_cache_attention(x, W_Q, W_K, W_V),
-    result[0].shape
-)[-1])()`,expected:`(1, 4)`,hidden:!1},{id:`2`,description:`Cache grows by 1 each step`,input:`(lambda: (
-    d := 4,
-    x := np.random.randn(1, d),
-    W := np.random.randn(d, d) * 0.1,
+`,testCases:[{id:`1`,description:`Output and cache shapes on the first step`,input:`(lambda r: (r[0].shape, r[1].shape, r[2].shape))(kv_cache_attention(np.random.randn(1, 8), np.random.randn(8, 4), np.random.randn(8, 4), np.random.randn(8, 3)))`,expected:`((1, 3), (1, 4), (1, 3))`,hidden:!1},{id:`2`,description:`Hand-computed two steps with identity weights`,input:`(lambda: (
+    I := np.eye(2),
+    r1 := kv_cache_attention(np.array([[1.0, 0.0]]), I, I, I),
+    r2 := kv_cache_attention(np.array([[0.0, 1.0]]), I, I, I, r1[1], r1[2]),
+    np.round(np.concatenate([r1[0][0], r2[0][0]]), 4).tolist()
+)[-1])()`,expected:`[1.0, 0.0, 0.3302, 0.6698]`,hidden:!1},{id:`3`,description:`Cache grows by one per step`,input:`(lambda: (
+    x := np.random.randn(1, 4), W := np.random.randn(4, 4) * 0.1,
     r1 := kv_cache_attention(x, W, W, W),
     r2 := kv_cache_attention(x, W, W, W, r1[1], r1[2]),
     r3 := kv_cache_attention(x, W, W, W, r2[1], r2[2]),
-    r3[1].shape[0]
-)[-1])()`,expected:`3`,hidden:!1},{id:`3`,description:`First step creates cache of length 1`,input:`(lambda: (
-    d := 4,
-    x := np.random.randn(1, d),
-    W := np.random.randn(d, d) * 0.1,
-    result := kv_cache_attention(x, W, W, W),
-    result[1].shape[0]
-)[-1])()`,expected:`1`,hidden:!1},{id:`4`,description:`Attention output changes with more context`,input:`(lambda: (
-    np.random.seed(0),
-    d := 4,
-    x1 := np.random.randn(1, d),
-    x2 := np.random.randn(1, d),
-    W := np.random.randn(d, d) * 0.1,
-    r1 := kv_cache_attention(x1, W, W, W),
-    r2 := kv_cache_attention(x2, W, W, W, r1[1], r1[2]),
-    bool(not np.allclose(r1[0], r2[0]))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Compute Q, K, V projections for the new token: Q_new = x_new @ W_Q`,`If cache is None, initialize K_cache and V_cache as the new K, V`,`Otherwise concatenate: K_cache = np.concatenate([k_cache, K_new], axis=0)`,`Compute attention: scores = Q_new @ K_cache.T / sqrt(d_k)`,`Apply softmax to scores, then output = softmax_scores @ V_cache`],solution:`import numpy as np
+    (r1[1].shape[0], r3[1].shape[0], r3[2].shape[0])
+)[-1])()`,expected:`(1, 3, 3)`,hidden:!0},{id:`4`,description:`Cached decoding matches full causal attention for every step`,input:`(lambda: (
+    X := np.random.randn(4, 6), Wq := np.random.randn(6, 4), Wk := np.random.randn(6, 4), Wv := np.random.randn(6, 3),
+    S := (X @ Wq) @ (X @ Wk).T / 2.0 + np.triu(np.full((4, 4), -np.inf), 1),
+    full := (np.exp(S - S.max(1, keepdims=True)) / np.exp(S - S.max(1, keepdims=True)).sum(1, keepdims=True)) @ (X @ Wv),
+    steps := [None, None],
+    outs := [(r := kv_cache_attention(X[t:t + 1], Wq, Wk, Wv, steps[0], steps[1]), steps.__setitem__(slice(0, 2), [r[1], r[2]]), r[0][0])[-1] for t in range(4)],
+    bool(np.allclose(np.array(outs), full) and np.allclose(steps[0], X @ Wk) and np.allclose(steps[1], X @ Wv))
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`First step returns the new value (attends only to itself)`,input:`(lambda x, Wv: bool(np.allclose(kv_cache_attention(x, np.random.randn(5, 2), np.random.randn(5, 2), Wv)[0], x @ Wv)))(np.random.randn(1, 5), np.random.randn(5, 3))`,expected:`True`,hidden:!0}],hints:[`Only the new token needs projecting: the cached keys and values of earlier tokens never change.`,`Project q, k, v for x_new; append k and v to the caches (or start them); attend with q over the whole cache.`,`k_cache = k if k_cache is None else np.concatenate([k_cache, k], axis=0); scores = q @ k_cache.T / np.sqrt(d_k); output = softmax(scores) @ v_cache.`,`Append the new row at the end (axis=0), not the beginning, and scale by sqrt(d_k) of the keys, not d_model.`],solution:`import numpy as np
 
 def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
-    # Project new token
-    Q_new = x_new @ W_Q  # (1, d_k)
-    K_new = x_new @ W_K  # (1, d_k)
-    V_new = x_new @ W_V  # (1, d_v)
+    """
+    Returns:
+        (output (1, d_v), k_cache (t+1, d_k), v_cache (t+1, d_v))
+    """
+    # Project only the new token
+    q = x_new @ W_Q  # (1, d_k)
+    k = x_new @ W_K  # (1, d_k)
+    v = x_new @ W_V  # (1, d_v)
 
-    # Update cache
+    # Append to the cache (start it on the first step)
     if k_cache is None:
-        k_cache = K_new
-        v_cache = V_new
+        k_cache, v_cache = k, v
     else:
-        k_cache = np.concatenate([k_cache, K_new], axis=0)
-        v_cache = np.concatenate([v_cache, V_new], axis=0)
+        k_cache = np.concatenate([k_cache, k], axis=0)
+        v_cache = np.concatenate([v_cache, v], axis=0)
 
-    # Compute attention
-    d_k = Q_new.shape[-1]
-    scores = Q_new @ k_cache.T / np.sqrt(d_k)  # (1, seq_len)
-
-    # Softmax
-    scores = scores - np.max(scores, axis=-1, keepdims=True)
-    attn_weights = np.exp(scores) / np.sum(np.exp(scores), axis=-1, keepdims=True)
-
-    # Weighted sum of values
-    output = attn_weights @ v_cache  # (1, d_v)
+    # The new query attends to every cached position (past + itself)
+    scores = q @ k_cache.T / np.sqrt(q.shape[-1])      # (1, t + 1)
+    scores = scores - scores.max(axis=-1, keepdims=True)
+    weights = np.exp(scores)
+    weights /= weights.sum(axis=-1, keepdims=True)
+    output = weights @ v_cache                         # (1, d_v)
 
     return output, k_cache, v_cache
-`},{id:`llm-beam-search`,title:`Beam Search Decoding`,section:`llm-generation`,difficulty:`medium`,description:`
-## Beam Search Decoding
 
-Implement beam search, which maintains multiple candidate sequences to find higher-probability outputs.
-
-### Algorithm
-1. Start with \`beam_width\` copies of the initial sequence
-2. At each step, for each beam:
-   - Get log-probabilities for next token
-   - Consider top-k expansions
-3. Keep only the \`beam_width\` sequences with highest total log-probability
-4. Stop when all beams have generated the EOS token or hit max length
-
-### Scoring
-Use **log probabilities** (not raw probabilities) to avoid underflow:
-\`\`\`
-score(sequence) = sum of log P(token_i | tokens_<i)
-\`\`\`
-
-### Length Normalization
-Beam search favors shorter sequences. Normalize by length:
-\`\`\`
-normalized_score = score / length^alpha
-\`\`\`
-where alpha is typically 0.6-0.7.
-
-### Simplified Version
-For this problem, implement a simplified beam search using a pre-computed log-probability matrix (no actual model). At each step, expand each beam with all possible next tokens, score them, and keep the top \`beam_width\`.
-
-### Function Signature
-\`\`\`python
-def beam_search(log_probs, beam_width, max_length, eos_token=None):
-    # log_probs: (max_length, vocab_size) - pre-computed log probs per step
-    # Returns: best_sequence, best_score
-\`\`\`
-    `,examples:[{input:`log_probs (3 steps, 4 tokens), beam_width=2`,output:`best sequence of length 3 with highest total log-prob`,explanation:`Explores 2 paths at each step, returns the best one`}],starterCode:`import numpy as np
+# Per step: O(d_model * d) for the projections + O(t * d) for attention.
+# (np.concatenate copies the cache each step; real servers preallocate it.)
+`},{id:`llm-beam-search`,title:`Beam Search Decoding`,section:`llm-generation`,difficulty:`medium`,description:'\n## Beam Search Decoding\n\n### What you\'ll build\nBeam search over a table of per-step log-probabilities: keep the `beam_width` best partial sequences at every step, with optional end-of-sequence handling, and return the best sequence and its score.\n\n### Background\nGreedy decoding commits to the single best token at each step and can miss a sequence whose first token looked worse. Beam search keeps several hypotheses alive. It is used where there is one "right" output (translation, speech recognition, constrained or structured generation); open-ended chat uses sampling instead, because beam search tends to produce bland, repetitive text.\n\nIn a real model, the next-token distribution depends on the prefix. To keep this problem self-contained, `log_probs[t]` is the **same for every beam** at step `t`. Without EOS that makes greedy already optimal, so the interesting case is EOS: a beam that ends early stops paying log-probability costs.\n\n### Algorithm\nScores are sums of log-probabilities (never multiply raw probabilities: they underflow).\n1. Start with one empty beam: `[([], 0.0)]`.\n2. For each step `t` in `0 .. min(max_length, num_steps) - 1`:\n   - For each beam, in order: if it **ends with `eos_token`**, carry it to the candidate list unchanged; otherwise add one candidate per token `v = 0 .. vocab_size - 1`: `(seq + [v], score + log_probs[t, v])`.\n   - Sort all candidates by score, descending, with a **stable** sort (ties keep candidate order: earlier beam first, then lower token id), and keep the first `beam_width`.\n3. Return the first (best) beam.\n\n### Inputs\n- `log_probs`: float array `(num_steps, vocab_size)` of log-probabilities\n- `beam_width`: int >= 1\n- `max_length`: int or None (None means `num_steps`)\n- `eos_token`: int or None (None disables EOS handling)\n\n### Expected Return Format\nA tuple `(best_sequence, best_score)`:\n- `best_sequence`: list of Python ints\n- `best_score`: total log-probability of that sequence, **rounded to 4 decimals**\n\n### Edge cases and conventions\n- Finished (EOS) beams compete with unfinished ones on their raw score: **no length normalization** here (see the follow-up).\n- `beam_width = 1` is greedy decoding.\n\n### Constraints\nNumPy and plain Python lists.\n\n### Follow-up\n- Raw log-probability scores favour short sequences. Add length normalization `score / len(seq)^alpha` (`alpha` about 0.6 to 0.7, Wu et al., 2016). Where in the algorithm must it be applied?\n- Complexity per step is `O(B · V)` candidates; how do real implementations avoid sorting all of them (top-k per beam first)?\n',examples:[{input:`beam_search(np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), beam_width=1)`,output:`([0, 1, 2], -1.3783)`,explanation:`Greedy: log(0.6) + log(0.7) + log(0.6) = -1.3783.`},{input:`beam_search(np.log(np.array([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), beam_width=2, eos_token=1)`,output:`([1], -0.7985)`,explanation:`The beam [1] ends at once with log(0.45). Greedy (beam_width=1) drops it and ends with [0, 2, 2] at -2.5257.`}],starterCode:`import numpy as np
 
 def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
     """
     Beam search decoding over pre-computed log probabilities.
 
     Args:
-        log_probs: Log probability matrix (num_steps, vocab_size).
-                   log_probs[t] gives log probs for step t.
-        beam_width: Number of beams to maintain
+        log_probs: Log probability matrix (num_steps, vocab_size);
+                   log_probs[t] gives the log probs for step t
+        beam_width: Number of beams to keep
         max_length: Maximum sequence length (defaults to num_steps)
-        eos_token: End-of-sequence token ID (optional)
+        eos_token: End-of-sequence token id (optional); a beam ending with it
+                   is carried forward unchanged
 
     Returns:
-        best_sequence: List of token indices for the best beam
-        best_score: Total log-probability of the best sequence
+        best_sequence: List of token ids (ints) for the best beam
+        best_score: Its total log-probability, rounded to 4 decimals
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Greedy path found with beam_width=1`,input:`(lambda: (
-    log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    result := beam_search(log_probs, 1),
-    result[0]
-)[-1])()`,expected:`[0, 1, 2]`,hidden:!1},{id:`2`,description:`Beam search score is log-probability sum`,input:`(lambda: (
-    log_probs := np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])),
-    result := beam_search(log_probs, 1),
-    round(result[1], 4)
-)[-1])()`,expected:`-1.3783`,hidden:!1},{id:`3`,description:`Wider beam can find better path`,input:`(lambda: (
-    log_probs := np.log(np.array([[0.4, 0.35, 0.25], [0.1, 0.1, 0.8], [0.9, 0.05, 0.05]])),
-    r1 := beam_search(log_probs, 1),
-    r2 := beam_search(log_probs, 3),
-    bool(r2[1] >= r1[1] - 1e-10)
-)[-1])()`,expected:`True`,hidden:!0},{id:`4`,description:`Sequence length matches steps`,input:`(lambda: (
-    log_probs := np.log(np.array([[0.5, 0.5], [0.3, 0.7], [0.8, 0.2], [0.4, 0.6]])),
-    result := beam_search(log_probs, 2),
-    len(result[0])
-)[-1])()`,expected:`4`,hidden:!1}],hints:[`Maintain a list of (sequence, score) tuples for each beam`,`At each step, expand all beams with all possible next tokens`,`Score = previous score + log_probs[step][token]`,`Sort all candidates by score and keep top beam_width`,`After all steps, return the beam with the highest score`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Greedy path found with beam_width=1`,input:`beam_search(np.log(np.array([[0.6, 0.3, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), 1)`,expected:`([0, 1, 2], -1.3783)`,hidden:!1},{id:`2`,description:`A beam that ends with EOS stops accumulating log-probs`,input:`beam_search(np.log(np.array([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 2, eos_token=1)`,expected:`([1], -0.7985)`,hidden:!1},{id:`3`,description:`Beam width 1 cannot keep the EOS beam`,input:`beam_search(np.log(np.array([[0.5, 0.45, 0.05], [0.3, 0.3, 0.4], [0.3, 0.3, 0.4]])), 1, eos_token=1)`,expected:`([0, 2, 2], -2.5257)`,hidden:!0},{id:`4`,description:`max_length truncates decoding`,input:`beam_search(np.log(np.array([[0.5, 0.4, 0.1], [0.2, 0.7, 0.1], [0.1, 0.3, 0.6]])), 2, max_length=2)`,expected:`([0, 1], -1.0498)`,hidden:!0},{id:`5`,description:`Sequence length matches the number of steps; wider beam never scores worse`,input:`(lambda L: (len(beam_search(L, 2)[0]), beam_search(L, 3)[1] >= beam_search(L, 1)[1]))(np.log(np.array([[0.5, 0.5], [0.3, 0.7], [0.8, 0.2], [0.4, 0.6]])))`,expected:`(4, True)`,hidden:!0},{id:`6`,description:`Ties keep the lower token id (stable sort)`,input:`beam_search(np.log(np.array([[0.4, 0.4, 0.2], [0.5, 0.5, 0.0001]])), 2)`,expected:`([0, 0], -1.6094)`,hidden:!0}],hints:[`Represent each beam as (token list, total log-prob). At every step all beams grow together.`,`Each step: build every candidate (carry EOS beams unchanged, expand the rest with every token), sort by score, keep the top beam_width.`,`new_score = score + log_probs[step][token]; candidates.sort(key=lambda c: c[1], reverse=True) is stable, so ties keep candidate order.`,`Add log-probabilities (don't multiply probabilities); check seq[-1] == eos_token only when seq is non-empty; round only the final score.`],solution:`import numpy as np
 
 def beam_search(log_probs, beam_width, max_length=None, eos_token=None):
-    log_probs = np.array(log_probs, dtype=np.float64)
+    """
+    Returns:
+        (best_sequence (list of int), best_score (float, 4 decimals))
+    """
+    log_probs = np.asarray(log_probs, dtype=np.float64)
     num_steps, vocab_size = log_probs.shape
     if max_length is None:
         max_length = num_steps
 
-    # Initialize beams: (sequence, score)
-    beams = [([], 0.0)]
+    beams = [([], 0.0)]   # (sequence, total log-prob)
 
     for step in range(min(max_length, num_steps)):
-        all_candidates = []
-
+        candidates = []
         for seq, score in beams:
-            # If this beam ended with EOS, carry it forward
-            if eos_token is not None and len(seq) > 0 and seq[-1] == eos_token:
-                all_candidates.append((seq, score))
+            # A finished beam is carried forward unchanged
+            if eos_token is not None and seq and seq[-1] == eos_token:
+                candidates.append((seq, score))
                 continue
-
-            # Expand with all possible next tokens
             for token in range(vocab_size):
-                new_seq = seq + [token]
-                new_score = score + log_probs[step][token]
-                all_candidates.append((new_seq, new_score))
+                candidates.append((seq + [token], score + log_probs[step, token]))
 
-        # Keep top beam_width candidates
-        all_candidates.sort(key=lambda x: x[1], reverse=True)
-        beams = all_candidates[:beam_width]
+        # Stable sort: equal scores keep candidate order
+        candidates.sort(key=lambda c: c[1], reverse=True)
+        beams = candidates[:beam_width]
 
-    # Return best beam
     best_seq, best_score = beams[0]
-    return best_seq, round(best_score, 4)
-`},{id:`llm-speculative-decoding`,title:`Speculative Decoding`,section:`llm-generation`,difficulty:`hard`,description:`
-## Speculative Decoding
+    return best_seq, round(float(best_score), 4)
 
-Implement the core verification step of speculative decoding, a technique that speeds up LLM inference by using a small "draft" model to propose tokens and a large "target" model to verify them.
-
-### Overview
-1. **Draft model** (small, fast): Generates K candidate tokens quickly
-2. **Target model** (large, slow): Verifies all K tokens in **one forward pass**
-3. **Accept/Reject**: Each draft token is accepted with probability min(1, p_target/p_draft)
-
-### Verification Algorithm
-For each draft token i = 0, 1, ..., K-1:
-\`\`\`
-r = uniform(0, 1)
-if r < min(1, p_target[i] / p_draft[i]):
-    accept token i
-else:
-    reject token i and all subsequent tokens
-    resample from adjusted distribution: max(0, p_target - p_draft)
-    break
-\`\`\`
-
-If all K tokens accepted, sample one more token from the target model's distribution for position K.
-
-### Why It Works
-- Draft model generates tokens cheaply (e.g., 10x faster)
-- Target model verifies K tokens at once (parallel, not sequential)
-- Accepted tokens are **exactly** distributed as if sampled from the target model
-- Expected speedup: ~2-3x for well-matched draft/target pairs
-
-### Function Signature
-\`\`\`python
-def speculative_decode(draft_probs, target_probs, draft_tokens):
-    # Returns: accepted_tokens, num_accepted
-\`\`\`
-
-### Important
-The output distribution is mathematically guaranteed to match the target model exactly. This is not an approximation.
-    `,examples:[{input:`draft_probs=[0.8, 0.7], target_probs=[0.9, 0.3], draft_tokens=[5, 12]`,output:`Token 5 likely accepted (0.9/0.8>1), Token 12 may be rejected (0.3/0.7<1)`,explanation:`Higher target prob → more likely to accept`}],starterCode:`import numpy as np
+# O(steps * B * V log(B * V)) with a full sort per step
+`},{id:`llm-speculative-decoding`,title:`Speculative Decoding`,section:`llm-generation`,difficulty:`hard`,description:"\n## Speculative Decoding (Verification Step)\n\n### What you'll build\nThe accept/reject loop of speculative decoding: given the probabilities a small **draft** model and the large **target** model assign to `K` drafted tokens, decide how many of them to keep.\n\n### Background\nDecoding a large model is memory-bound: each step reads every weight to produce one token. Speculative decoding (Leviathan et al., 2023; Chen et al., 2023) lets a cheap draft model propose `K` tokens, then runs the target model **once** on all of them in parallel. Each drafted token `x_i` is accepted with probability `min(1, p_target(x_i) / p_draft(x_i))`; at the first rejection, the rest are thrown away and the target resamples that position from the residual distribution `max(0, p_target - p_draft)` (normalized). This scheme produces **exactly** the target model's distribution, not an approximation, and typically gives a 2 to 3x speedup.\n\nThis problem implements the accept/reject loop only. Resampling the rejected position and the bonus token after a fully accepted draft need the full distributions; they are the follow-up.\n\n### Algorithm\n```text\nnp.random.seed(42)                       # once, at the start (in the starter)\naccepted = []\nfor i in 0 .. K-1:\n    a = 1.0 if draft_probs[i] == 0 else min(1, target_probs[i] / draft_probs[i])\n    r = np.random.uniform()              # one draw per drafted token, in order\n    if r < a:  accepted.append(draft_tokens[i])\n    else:      break                     # reject token i and everything after it\nreturn accepted, len(accepted)\n```\n\n### Inputs\n- `draft_probs`: list of `K` floats, `p_draft(x_i)` for each drafted token\n- `target_probs`: list of `K` floats, `p_target(x_i)`\n- `draft_tokens`: list of `K` ints\n- `target_dist_next`: full target distribution after the last drafted token, or None. **Not used in this problem** (it is only needed for the bonus token).\n\n### Expected Return Format\nA tuple `(accepted_tokens, num_accepted)`:\n- `accepted_tokens`: list of ints, always a **prefix** of `draft_tokens`\n- `num_accepted`: int in `[0, K]`, equal to `len(accepted_tokens)`\n\n### Edge cases and conventions\n- `target_probs[i] >= draft_probs[i]` means certain acceptance (`a = 1`); `target_probs[i] = 0` means certain rejection.\n- Draw exactly one uniform per token you examine, in order, after the seed, so results are reproducible (with seed 42 the first draws are 0.3745, 0.9507, 0.7320, ...).\n\n### Constraints\nNumPy only.\n\n### Follow-up\n- Add the residual resampling on rejection and the bonus token from `target_dist_next` when all `K` are accepted. Prove that the output token is distributed exactly as `p_target`.\n- If each token is accepted with probability `alpha`, the expected number of tokens per target pass is `(1 - alpha^(K+1)) / (1 - alpha)`. How do you choose `K`?\n",examples:[{input:`speculative_decode([0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [10, 20, 30])`,output:`([10], 1)`,explanation:`Each acceptance probability is 0.8; the draws are 0.3745 (accept) and 0.9507 (reject), so only token 10 is kept.`},{input:`speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3])`,output:`([1, 2, 3], 3)`,explanation:`The target is more confident than the draft on every token, so all are accepted.`}],starterCode:`import numpy as np
 
 def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
     """
-    Verify draft tokens using speculative decoding.
+    Verify draft tokens with the speculative decoding acceptance rule.
 
     Args:
-        draft_probs: Probability the draft model assigned to each drafted token.
-                     List of K floats.
-        target_probs: Probability the target model assigns to each drafted token.
-                      List of K floats.
-        draft_tokens: The K token IDs proposed by the draft model.
-                      List of K ints.
-        target_dist_next: Full target distribution for position after last draft token.
-                          Array of shape (vocab_size,) or None.
+        draft_probs: Draft-model probability of each drafted token (K floats)
+        target_probs: Target-model probability of each drafted token (K floats)
+        draft_tokens: The K drafted token ids
+        target_dist_next: Full target distribution after the last drafted
+                          token, or None (not used in this problem)
 
     Returns:
-        accepted_tokens: List of accepted token IDs
-        num_accepted: Number of accepted tokens (0 to K)
+        accepted_tokens: Accepted prefix of draft_tokens (list of ints)
+        num_accepted: len(accepted_tokens), between 0 and K
     """
     np.random.seed(42)
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`All tokens accepted when target_prob >= draft_prob`,input:`(lambda: (
-    np.random.seed(0),
-    result := speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3]),
-    bool(result[1] == 3)
-)[-1])()`,expected:`True`,hidden:!1},{id:`2`,description:`Accepted tokens are prefix of draft tokens`,input:`(lambda: (
-    np.random.seed(42),
-    result := speculative_decode([0.5, 0.5, 0.5], [0.6, 0.6, 0.6], [10, 20, 30]),
-    bool(result[0] == [10, 20, 30][:result[1]])
-)[-1])()`,expected:`True`,hidden:!1},{id:`3`,description:`Returns between 0 and K accepted tokens`,input:`(lambda: (
-    np.random.seed(42),
-    result := speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3]),
-    bool(0 <= result[1] <= 3)
-)[-1])()`,expected:`True`,hidden:!1},{id:`4`,description:`Deterministic acceptance when target prob much higher`,input:`(lambda: (
-    results := [speculative_decode([0.01], [0.99], [42])[1] for _ in range(10)],
-    bool(all(r == 1 for r in results))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`For each draft token, compute acceptance probability: min(1, target_prob / draft_prob)`,`Draw a uniform random number r. Accept if r < acceptance_probability`,`On first rejection, stop — do not check subsequent tokens`,`Return the prefix of draft_tokens up to the last accepted token`,`The acceptance criterion guarantees the output matches the target distribution`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`All tokens accepted when target_prob >= draft_prob`,input:`speculative_decode([0.3, 0.3, 0.3], [0.9, 0.9, 0.9], [1, 2, 3])`,expected:`([1, 2, 3], 3)`,hidden:!1},{id:`2`,description:`Seeded draws: accept, then reject`,input:`speculative_decode([0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [10, 20, 30])`,expected:`([10], 1)`,hidden:!1},{id:`3`,description:`Zero target probability rejects that token and everything after`,input:`speculative_decode([0.5, 0.5, 0.5], [1.0, 1.0, 0.0], [10, 20, 30])`,expected:`([10, 20], 2)`,hidden:!0},{id:`4`,description:`First token rejected: nothing accepted`,input:`speculative_decode([0.4, 0.2], [0.0, 0.9], [7, 8])`,expected:`([], 0)`,hidden:!0},{id:`5`,description:`Seeded draws with acceptance probability 0.25`,input:`speculative_decode([0.8, 0.8, 0.8], [0.2, 0.2, 0.2], [1, 2, 3])`,expected:`([], 0)`,hidden:!0},{id:`6`,description:`Result is always a prefix of the draft and the count matches`,input:`(lambda r: r[0] == [4, 5, 6, 7][:r[1]] and 0 <= r[1] <= 4)(speculative_decode([0.6, 0.5, 0.9, 0.2], [0.5, 0.45, 0.1, 0.3], [4, 5, 6, 7]))`,expected:`True`,hidden:!0}],hints:[`Tokens are checked in order and the first rejection ends the loop: the answer is always a prefix of draft_tokens.`,`For each token: compute the acceptance probability, draw one uniform number, accept or stop.`,`a = min(1.0, target_probs[i] / draft_probs[i]) (1.0 if draft_probs[i] == 0); r = np.random.uniform(); accept if r < a.`,`Keep the np.random.seed(42) line and draw exactly one number per examined token; drawing all K up front with a different call changes the results.`],solution:`import numpy as np
 
 def speculative_decode(draft_probs, target_probs, draft_tokens, target_dist_next=None):
+    """
+    Returns:
+        (accepted_tokens (list of int), num_accepted (int))
+    """
     np.random.seed(42)
-    K = len(draft_tokens)
     accepted_tokens = []
 
-    for i in range(K):
-        # Acceptance probability
-        if draft_probs[i] == 0:
-            accept_prob = 1.0 if target_probs[i] == 0 else 1.0
-        else:
-            accept_prob = min(1.0, target_probs[i] / draft_probs[i])
-
-        # Draw random number
+    for p_draft, p_target, token in zip(draft_probs, target_probs, draft_tokens):
+        # Accept with probability min(1, p_target / p_draft)
+        accept_prob = 1.0 if p_draft == 0 else min(1.0, p_target / p_draft)
         r = np.random.uniform()
-
         if r < accept_prob:
-            accepted_tokens.append(draft_tokens[i])
+            accepted_tokens.append(int(token))
         else:
-            # Reject this and all subsequent tokens
-            break
+            break   # reject this token and every token after it
 
     return accepted_tokens, len(accepted_tokens)
+
+# O(K); the real cost saving is one target forward pass for K tokens
 `}],V=[{id:`gradient-clipping`,title:`Gradient Clipping by Global Norm`,section:`optimization`,difficulty:`easy`,description:"\n## Gradient Clipping by Global Norm\n\n### What you'll build\n`clip_grad_norm(grads, max_norm)`: treat the gradients of *all* parameters as one long vector, compute its L2 norm, and if it exceeds `max_norm`, rescale every gradient by the same factor. This is what `torch.nn.utils.clip_grad_norm_` does.\n\n### Background\nA single bad batch can produce a huge gradient that throws the weights far away: a *loss spike*, sometimes followed by NaNs. Clipping caps the size of the step. Clipping by the **global** norm (rather than per tensor or per element) keeps the update's direction and the relative sizes of all gradients; only the step length changes. Most LLM training runs clip with `max_norm=1.0`.\n\n### Formula\n```text\ntotal_norm = sqrt( sum_i sum(g_i ** 2) )        # over every array and every element\nclip_coef  = max_norm / (total_norm + eps)       # eps = 1e-6, as in PyTorch\nif clip_coef < 1:\n    g_i = g_i * clip_coef                        # same factor for every array\n```\n- `g_i`: the gradient array of parameter `i` (any shape)\n- `max_norm`: the largest allowed global norm\n- `eps`: guards against division by zero when every gradient is 0\n\n### Inputs\n- `grads`: list of NumPy float arrays of any shapes\n- `max_norm`: positive float\n- `eps`: small float, default `1e-6`\n\n### Expected return format\nReturn a tuple `(clipped_grads, total_norm)`:\n- `clipped_grads`: a **list** of new arrays with the same shapes as `grads` (don't modify the inputs)\n- `total_norm`: the global norm **before** clipping, as a Python float\n\n### Edge cases and conventions\n- Gradients whose global norm is at most `max_norm` come back unchanged (copies).\n- After clipping, the global norm equals `max_norm` (up to the tiny `eps`).\n- All-zero gradients: `total_norm = 0.0` and nothing changes.\n\n### Constraints\nNumPy only; one pass over the arrays (no per-element Python loops).\n\n### Follow-up\n- Where does clipping go in a mixed-precision loop? (After `scaler.unscale_(optimizer)`, before `scaler.step`.)\n- How does clipping by value (`clip_grad_value_`) differ, and why does it change the update direction?\n    ",examples:[{input:`clip_grad_norm([np.array([3.0, 4.0])], max_norm=1.0)`,output:`([array([0.6, 0.8])], 5.0)`,explanation:`The norm is sqrt(9 + 16) = 5 > 1, so every gradient is scaled by 1/5 (more precisely 1/(5 + 1e-6)).`},{input:`clip_grad_norm([np.array([1.0, 2.0]), np.array([2.0])], max_norm=5.0)`,output:`([array([1., 2.]), array([2.])], 3.0)`,explanation:`The global norm sqrt(1 + 4 + 4) = 3 is below 5, so the gradients come back unchanged.`}],starterCode:`import numpy as np
 
 def clip_grad_norm(grads: list, max_norm: float, eps: float = 1e-6):
@@ -18617,11 +17538,11 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
     return (1 - z) * n + z * h_prev           # z = 1 keeps the old state
 
 # Time O(N * 3H * (D + H)), dominated by the two matmuls.
-`}],U=[{id:`rmsnorm-swiglu`,title:`SwiGLU Feed-Forward Block (LLaMA MLP)`,section:`llm-internals`,difficulty:`medium`,description:'\n## SwiGLU Feed-Forward Block (LLaMA MLP)\n\nThe original Transformer MLP is `ReLU(x W_1) W_2`. LLaMA, Mistral, Qwen and PaLM replace it with a **gated** MLP, **SwiGLU** (Shazeer, 2020, "GLU Variants Improve Transformer"): one projection is passed through SiLU and used as a *gate* that multiplies a second, linear projection elementwise.\n\n### SiLU (a.k.a. Swish with beta = 1)\n```\nsilu(z) = z * sigmoid(z) = z / (1 + exp(-z))\n```\n\n### SwiGLU FFN\n```\ngate   = silu(x @ W_gate)          # (..., d_ff)\nup     = x @ W_up                  # (..., d_ff)\nffn(x) = (gate * up) @ W_down      # (..., d_model)\n```\nNo biases (LLaMA uses none). There are **three** weight matrices instead of two, so to keep the parameter count of a `4 * d_model` ReLU MLP, LLaMA uses `d_ff ≈ (2/3) * 4 * d_model`.\n\n### RMSNorm (brief)\nLLaMA normalizes with RMSNorm: like LayerNorm but **no mean subtraction and no bias**:\n```\nrms_norm(x) = x / sqrt(mean(x**2, axis=-1) + eps) * weight\n```\n\n### The full pre-norm MLP sub-block\n```\nllama_mlp_block(x) = x + ffn(rms_norm(x))\n```\n\n### Expected Return Format\n- `rms_norm(x, weight, eps=1e-6)`: array with the same shape as `x` (normalized over the last axis)\n- `swiglu_ffn(x, W_gate, W_up, W_down)`: `W_gate`, `W_up` are `(d_model, d_ff)`, `W_down` is `(d_ff, d_model)`; returns shape `(..., d_model)`\n- `llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6)`: same shape as `x`\n',examples:[{input:`rms_norm(np.array([[3.0, 4.0]]), np.ones(2))`,output:`[[0.8485, 1.1314]]`,explanation:`mean(x**2) = 12.5, rms = 3.5355`},{input:`x (4, 8), W_gate/W_up (8, 16), W_down (16, 8)`,output:`llama_mlp_block(...) shape (4, 8)`,explanation:`Residual connection keeps the model dimension.`}],starterCode:`import numpy as np
+`}],U=[{id:`rmsnorm-swiglu`,title:`SwiGLU Feed-Forward Block (LLaMA MLP)`,section:`llm-internals`,difficulty:`medium`,description:"\n## SwiGLU Feed-Forward Block (LLaMA MLP)\n\n### What you'll build\nThe MLP half of a LLaMA decoder block: RMSNorm, a SwiGLU gated feed-forward network, and the residual connection around them. Three functions: `rms_norm`, `swiglu_ffn` and `llama_mlp_block`.\n\n### Background\nThe original Transformer MLP is `ReLU(x W_1) W_2`. LLaMA, Mistral, Qwen and PaLM use a **gated** MLP instead, SwiGLU (Shazeer, 2020): one projection goes through SiLU and **gates** a second, linear projection elementwise. At equal parameter count it gives lower loss. LLaMA also replaces LayerNorm with **RMSNorm**, which skips the mean subtraction and the bias: cheaper, and empirically just as good. About two thirds of a dense LLM's parameters live in these MLPs.\n\n### Formula\n```text\nrms_norm(x)  = x / sqrt(mean(x^2, axis=-1) + eps) * weight\n\nsilu(z)      = z * sigmoid(z) = z / (1 + exp(-z))\ngate         = silu(x @ W_gate)                  # (..., d_ff)\nup           = x @ W_up                          # (..., d_ff)\nswiglu_ffn(x) = (gate * up) @ W_down             # (..., d_model)\n\nllama_mlp_block(x) = x + swiglu_ffn(rms_norm(x))\n```\nNo biases anywhere (LLaMA uses none). With three weight matrices instead of two, LLaMA sets `d_ff ≈ (2/3) · 4 · d_model` to match the parameter count of a `4 · d_model` ReLU MLP.\n\n### Inputs\n- `x`: float array `(..., d_model)` (any number of leading axes, e.g. `(batch, seq_len, d_model)`)\n- `weight` / `norm_weight`: `(d_model,)`\n- `W_gate`, `W_up`: `(d_model, d_ff)`; `W_down`: `(d_ff, d_model)`\n- `eps`: float, default `1e-6`\n\n### Expected Return Format\n- `rms_norm(x, weight, eps=1e-6)`: same shape as `x`\n- `swiglu_ffn(x, W_gate, W_up, W_down)`: shape `(..., d_model)`\n- `llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6)`: same shape as `x`\n\n### Edge cases and conventions\n- RMSNorm normalizes over the last axis only; `eps` goes inside the square root.\n- The residual adds the **un-normalized** `x` (pre-norm): `x + ffn(norm(x))`, not `norm(x) + ffn(norm(x))`.\n- The gate is SiLU, not sigmoid (that would be GLU) and not ReLU (ReGLU).\n\n### Constraints\nNumPy only, vectorised.\n\n### Follow-up\n- Count the parameters of the SwiGLU MLP and of a ReLU MLP with `d_ff = 4 d_model`. What `d_ff` makes them equal?\n- Write the attention half of the LLaMA block (RMSNorm, RoPE, GQA, causal mask). Which earlier problems give you each piece?\n",examples:[{input:`rms_norm(np.array([[3.0, 4.0]]), np.ones(2))`,output:`[[0.8485, 1.1314]]`,explanation:`mean(x^2) = 12.5, so the RMS is 3.5355 and x / 3.5355 = [0.8485, 1.1314]. The mean is not subtracted.`},{input:`swiglu_ffn(np.array([[1.0, -1.0]]), np.array([[1.0], [0.0]]), np.array([[2.0], [1.0]]), np.array([[1.0, 0.5]]))`,output:`[[0.7311, 0.3655]]`,explanation:`gate = silu(1) = 0.7311, up = 2 - 1 = 1, then (0.7311 * 1) @ [[1, 0.5]].`}],starterCode:`import numpy as np
 
 def rms_norm(x, weight, eps=1e-6):
     """
-    RMSNorm over the last axis.
+    RMSNorm over the last axis: x / sqrt(mean(x**2) + eps) * weight.
 
     Args:
         x: (..., d_model)
@@ -18659,34 +17580,40 @@ def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`rms_norm values`,input:`np.round(rms_norm(np.array([[3.0, 4.0]]), np.ones(2)), 4).tolist()`,expected:`[[0.8485, 1.1314]]`,hidden:!1},{id:`2`,description:`Block output shape`,input:`llama_mlp_block(np.random.randn(4, 8), np.ones(8), np.random.randn(8, 16), np.random.randn(8, 16), np.random.randn(16, 8)).shape`,expected:`(4, 8)`,hidden:!1},{id:`3`,description:`SwiGLU on a hand-checkable input`,input:`np.round(swiglu_ffn(np.array([[1.0, -1.0]]), np.array([[1.0], [0.0]]), np.array([[2.0], [1.0]]), np.array([[1.0, 0.5]])), 4).tolist()`,expected:`[[0.7311, 0.3655]]`,hidden:!1},{id:`4`,description:`RMSNorm does not subtract the mean`,input:`np.round(rms_norm(np.array([[2.0, 2.0, 2.0]]), np.array([1.0, 2.0, 3.0])), 4).tolist()`,expected:`[[1.0, 2.0, 3.0]]`,hidden:!0},{id:`5`,description:`SwiGLU matches a reference`,input:`(lambda x, Wg, Wu, Wd: bool(np.allclose(swiglu_ffn(x, Wg, Wu, Wd), ((x @ Wg) * (1 / (1 + np.exp(-(x @ Wg)))) * (x @ Wu)) @ Wd)))(np.random.randn(2, 3, 8), np.random.randn(8, 12), np.random.randn(8, 12), np.random.randn(12, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`Gate is SiLU, not sigmoid or ReLU`,input:`round(float(swiglu_ffn(np.array([[-1.0]]), np.array([[1.0]]), np.array([[1.0]]), np.array([[1.0]]))[0, 0]), 4)`,expected:`0.2689`,hidden:!0},{id:`7`,description:`Block has a residual connection (W_down = 0 gives x back)`,input:`(lambda x: bool(np.allclose(llama_mlp_block(x, np.ones(8), np.random.randn(8, 16), np.random.randn(8, 16), np.zeros((16, 8))), x)))(np.random.randn(3, 8))`,expected:`True`,hidden:!0},{id:`8`,description:`Block output values`,input:`round(float(llama_mlp_block(np.random.randn(4, 8), np.linspace(0.5, 1.5, 8), np.random.randn(8, 16) * 0.3, np.random.randn(8, 16) * 0.3, np.random.randn(16, 8) * 0.3).sum()), 4)`,expected:`13.7389`,hidden:!0}],hints:[`RMSNorm: rms = np.sqrt(np.mean(x**2, axis=-1, keepdims=True) + eps); return x / rms * weight. No mean subtraction, no bias.`,`SiLU is z * sigmoid(z) = z / (1 + np.exp(-z)).`,`SwiGLU: (silu(x @ W_gate) * (x @ W_up)) @ W_down. The gate and up projections have the same width d_ff.`,`The block normalizes first, then adds the FFN output back to the un-normalized x.`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`rms_norm values`,input:`np.round(rms_norm(np.array([[3.0, 4.0]]), np.ones(2)), 4).tolist()`,expected:`[[0.8485, 1.1314]]`,hidden:!1},{id:`2`,description:`Block output shape`,input:`llama_mlp_block(np.random.randn(4, 8), np.ones(8), np.random.randn(8, 16), np.random.randn(8, 16), np.random.randn(16, 8)).shape`,expected:`(4, 8)`,hidden:!1},{id:`3`,description:`SwiGLU on a hand-checkable input`,input:`np.round(swiglu_ffn(np.array([[1.0, -1.0]]), np.array([[1.0], [0.0]]), np.array([[2.0], [1.0]]), np.array([[1.0, 0.5]])), 4).tolist()`,expected:`[[0.7311, 0.3655]]`,hidden:!1},{id:`4`,description:`RMSNorm does not subtract the mean`,input:`np.round(rms_norm(np.array([[2.0, 2.0, 2.0]]), np.array([1.0, 2.0, 3.0])), 4).tolist()`,expected:`[[1.0, 2.0, 3.0]]`,hidden:!0},{id:`5`,description:`SwiGLU matches a reference on a 3-D input`,input:`(lambda x, Wg, Wu, Wd: bool(np.allclose(swiglu_ffn(x, Wg, Wu, Wd), ((x @ Wg) * (1 / (1 + np.exp(-(x @ Wg)))) * (x @ Wu)) @ Wd)))(np.random.randn(2, 3, 8), np.random.randn(8, 12), np.random.randn(8, 12), np.random.randn(12, 8))`,expected:`True`,hidden:!0},{id:`6`,description:`Gate is SiLU, not sigmoid or ReLU`,input:`round(float(swiglu_ffn(np.array([[-1.0]]), np.array([[1.0]]), np.array([[1.0]]), np.array([[1.0]]))[0, 0]), 4)`,expected:`0.2689`,hidden:!0},{id:`7`,description:`Block has a residual connection (W_down = 0 gives x back)`,input:`(lambda x: bool(np.allclose(llama_mlp_block(x, np.ones(8), np.random.randn(8, 16), np.random.randn(8, 16), np.zeros((16, 8))), x)))(np.random.randn(3, 8))`,expected:`True`,hidden:!0},{id:`8`,description:`Block output values`,input:`round(float(llama_mlp_block(np.random.randn(4, 8), np.linspace(0.5, 1.5, 8), np.random.randn(8, 16) * 0.3, np.random.randn(8, 16) * 0.3, np.random.randn(16, 8) * 0.3).sum()), 4)`,expected:`13.7389`,hidden:!0}],hints:[`Three small pieces that compose: a normalizer, a gated MLP, and a residual add. Write and test each one separately.`,`RMSNorm divides by the root-mean-square of the last axis (no mean subtraction, no bias); SwiGLU multiplies silu(x @ W_gate) by x @ W_up elementwise before projecting down.`,`rms = np.sqrt(np.mean(x**2, axis=-1, keepdims=True) + eps); silu(z) = z / (1 + np.exp(-z)); block = x + swiglu_ffn(rms_norm(x, norm_weight, eps), ...).`,`Add the residual to the original x, not to the normalized x, and keep keepdims=True so the RMS broadcasts over any leading axes.`],solution:`import numpy as np
 
 def rms_norm(x, weight, eps=1e-6):
-    rms = np.sqrt(np.mean(x ** 2, axis=-1, keepdims=True) + eps)
+    """Returns an array with the same shape as x."""
+    rms = np.sqrt(np.mean(x ** 2, axis=-1, keepdims=True) + eps)   # (..., 1)
     return x / rms * weight
 
 
 def silu(z):
-    return z / (1.0 + np.exp(-z))
+    return z / (1.0 + np.exp(-z))           # z * sigmoid(z)
 
 
 def swiglu_ffn(x, W_gate, W_up, W_down):
+    """Returns an array of shape (..., d_model)."""
     gate = silu(x @ W_gate)   # (..., d_ff)
     up = x @ W_up             # (..., d_ff)
     return (gate * up) @ W_down
 
 
 def llama_mlp_block(x, norm_weight, W_gate, W_up, W_down, eps=1e-6):
+    """Returns an array with the same shape as x."""
+    # Pre-norm: normalize the branch input, add the result to the raw x
     return x + swiglu_ffn(rms_norm(x, norm_weight, eps), W_gate, W_up, W_down)
-`},{id:`online-softmax`,title:`Online Softmax (the FlashAttention Trick)`,section:`llm-internals`,difficulty:`hard`,description:"\n## Online Softmax: the trick behind FlashAttention\n\nStandard attention materializes the full `(n_q, n_k)` score matrix, then takes a softmax over each row. For long sequences that matrix doesn't fit in fast on-chip memory (SRAM), and reading/writing it to slow memory (HBM) dominates runtime.\n\n**FlashAttention** (Dao et al., 2022) never builds the full matrix. It walks over the keys in **blocks** and keeps, for every query row, three running statistics. The key idea is the **online softmax** (Milakov & Gimelshein, 2018): you can compute a softmax normalizer in one streaming pass by rescaling the running sum whenever the running max changes.\n\n### Part 1: `online_softmax(x, block_size)` for a 1-D vector\nKeep a running max `m` and a running sum `l` (start with `m = -inf`, `l = 0`). For each block `b` of `x`:\n```\nm_new = max(m, max(b))\nl     = l * exp(m - m_new) + sum(exp(b - m_new))     # rescale old sum to the new max\nm     = m_new\n```\nAfter the pass, `softmax(x) = exp(x - m) / l`.\n\n### Part 2: `online_attention(Q, K, V, block_size)`\nSame idea, but also keep a running (unnormalized) output `acc` per query. For each block `(K_b, V_b)` of `block_size` keys (the last block may be shorter):\n```\nS     = Q @ K_b.T / sqrt(d)                           # (n_q, B)\nm_new = maximum(m, rowmax(S))                         # (n_q, 1)\nscale = exp(m - m_new)                                # shrink old stats\nP     = exp(S - m_new)                                # (n_q, B)\nl     = l * scale + rowsum(P)\nacc   = acc * scale + P @ V_b                         # (n_q, d_v)\nm     = m_new\n```\nAt the end `output = acc / l`, which equals `softmax(Q K^T / sqrt(d)) @ V` exactly (up to float rounding), while only ever holding an `(n_q, block_size)` slice of scores.\n\n### Expected Return Format\n- `online_softmax(x, block_size)`: 1-D array, same shape as `x`, sums to 1\n- `online_attention(Q, K, V, block_size)`: `Q` `(n_q, d)`, `K` `(n_k, d)`, `V` `(n_k, d_v)`; returns `(n_q, d_v)`\n\nDon't compute the softmax over a whole row at once: process the keys block by block.\n",examples:[{input:`online_softmax(np.array([1000.0, 1001.0, 1002.0]), block_size=2)`,output:`[0.09, 0.2447, 0.6652]`,explanation:`Stable even for huge logits: every exp is taken relative to the running max.`},{input:`Q (3, 4), K (10, 4), V (10, 2), block_size=4`,output:`(3, 2)`,explanation:`Blocks of 4, 4 and 2 keys; result equals standard attention.`}],starterCode:`import numpy as np
+
+# O(N * d_model * d_ff) for N tokens, dominated by the three matmuls
+`},{id:`online-softmax`,title:`Online Softmax (the FlashAttention Trick)`,section:`llm-internals`,difficulty:`hard`,description:"\n## Online Softmax: the trick behind FlashAttention\n\n### What you'll build\nTwo functions that compute a softmax **in one streaming pass over blocks**: `online_softmax` for a 1-D vector, and `online_attention`, which computes exact attention block by block over the keys without ever forming the full score matrix.\n\n### Background\nStandard attention materializes the `(n_q, n_k)` score matrix, then takes a row softmax. For long sequences that matrix doesn't fit in fast on-chip memory (SRAM), and moving it to and from slow memory (HBM) dominates the runtime. **FlashAttention** (Dao et al., 2022) walks over the keys in blocks and keeps three running statistics per query. It is **exact**, not an approximation; it saves memory traffic, not FLOPs. The enabling idea is the **online softmax** (Milakov & Gimelshein, 2018): when the running max increases, rescale everything accumulated so far by `exp(m_old - m_new)`.\n\n### Formula: `online_softmax(x, block_size)`\nStart with a running max `m = -inf` and running sum `l = 0`. For each block `b` of `x` (the last block may be shorter):\n```text\nm_new = max(m, max(b))\nl     = l * exp(m - m_new) + sum(exp(b - m_new))     # rescale the old sum to the new max\nm     = m_new\n```\nAfter the pass: `softmax(x) = exp(x - m) / l`.\n\n### Formula: `online_attention(Q, K, V, block_size)`\nKeep per query row a running max `m` `(n_q, 1)`, a running denominator `l` `(n_q, 1)` and an unnormalized output `acc` `(n_q, d_v)`. For each block `(K_b, V_b)` of `block_size` keys:\n```text\nS     = Q @ K_b.T / sqrt(d)                # (n_q, B)\nm_new = maximum(m, rowmax(S))              # (n_q, 1)\nscale = exp(m - m_new)                     # shrink the old statistics\nP     = exp(S - m_new)                     # (n_q, B)\nl     = l * scale + rowsum(P)\nacc   = acc * scale + P @ V_b              # (n_q, d_v)\nm     = m_new\n```\nAt the end, `output = acc / l`, which equals `softmax(Q K^T / sqrt(d)) @ V` up to float rounding.\n\n### Inputs\n- `x`: 1-D float array; `block_size`: positive int\n- `Q` `(n_q, d)`, `K` `(n_k, d)`, `V` `(n_k, d_v)`; `block_size` keys per block\n\n### Expected Return Format\n- `online_softmax(x, block_size)`: 1-D array, same shape as `x`, sums to 1\n- `online_attention(Q, K, V, block_size)`: array `(n_q, d_v)`\n\n### Edge cases and conventions\n- `exp(-inf - m_new) = 0`, so the first block needs no special case.\n- Any `block_size` (1, a divisor of `n_k`, or larger than `n_k`) must give the same answer.\n- Logits around 1000 must not overflow.\n\n### Constraints\nNumPy only. Process the keys block by block; don't take a softmax over a whole row of scores at once.\n\n### Follow-up\n- What is the memory footprint of the score matrix for `n = 32k` tokens and 32 heads in fp16? What does FlashAttention store instead?\n- FlashAttention-2 delays the division by `l` to the very end and parallelises over query blocks. Why does that help?\n",examples:[{input:`online_softmax(np.array([1000.0, 1001.0, 1002.0]), block_size=2)`,output:`[0.09, 0.2447, 0.6652]`,explanation:`Every exp is taken relative to the running max, so huge logits are fine.`},{input:`online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), block_size=2)`,output:`[0.0001, 0.0003, 0.018, 0.0009, 0.9807]`,explanation:`The max changes from 1 to 5 to 9; each time, the running sum is rescaled by exp(m_old - m_new).`}],starterCode:`import numpy as np
 
 def online_softmax(x, block_size):
     """
-    Softmax of a 1-D array computed with a single streaming pass over blocks
+    Softmax of a 1-D array computed with one streaming pass over blocks
     (running max + running sum), then one normalization pass.
 
     Returns:
-        probs: same shape as x
+        probs: same shape as x, sums to 1
     """
     # Your code here
     pass
@@ -18706,19 +17633,22 @@ def online_attention(Q, K, V, block_size):
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`online_softmax matches the exact softmax`,input:`(lambda x: bool(np.allclose(online_softmax(x, 3), np.exp(x - x.max()) / np.exp(x - x.max()).sum())))(np.random.randn(10))`,expected:`True`,hidden:!1},{id:`2`,description:`online_attention output shape`,input:`online_attention(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2), 4).shape`,expected:`(3, 2)`,hidden:!1},{id:`3`,description:`online_attention matches standard attention`,input:`(lambda Q, K, V: (lambda S: bool(np.allclose(online_attention(Q, K, V, 4), (np.exp(S - S.max(1, keepdims=True)) / np.exp(S - S.max(1, keepdims=True)).sum(1, keepdims=True)) @ V)))(Q @ K.T / 2.0))(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2))`,expected:`True`,hidden:!1},{id:`4`,description:`Stable for huge logits`,input:`np.round(online_softmax(np.array([1000.0, 1001.0, 1002.0]), 2), 4).tolist()`,expected:`[0.09, 0.2447, 0.6652]`,hidden:!0},{id:`5`,description:`Max in a later block (old sum must be rescaled)`,input:`np.round(online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), 2), 4).tolist()`,expected:`[0.0001, 0.0003, 0.018, 0.0009, 0.9807]`,hidden:!0},{id:`6`,description:`Any block size gives the same answer`,input:`(lambda Q, K, V: bool(all(np.allclose(online_attention(Q, K, V, b), online_attention(Q, K, V, 7)) for b in [1, 2, 3, 7, 50])))(np.random.randn(2, 4), np.random.randn(7, 4), np.random.randn(7, 3))`,expected:`True`,hidden:!0},{id:`7`,description:`Attention output values`,input:`round(float(online_attention(np.random.randn(4, 8) * 3, np.random.randn(9, 8) * 3, np.random.randn(9, 5), 4).sum()), 4)`,expected:`2.4803`,hidden:!0}],hints:[`Start with m = -inf and l = 0. exp(-inf - m_new) = 0, so the first block needs no special case.`,`When the max grows from m to m_new, every term already in l was computed as exp(x - m); multiplying by exp(m - m_new) turns it into exp(x - m_new).`,`For attention, keep m and l as (n_q, 1) columns so they broadcast, and rescale acc with the same factor as l before adding P @ V_b.`,`Divide once at the very end: output = acc / l.`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`online_softmax matches the exact softmax`,input:`(lambda x: bool(np.allclose(online_softmax(x, 3), np.exp(x - x.max()) / np.exp(x - x.max()).sum())))(np.random.randn(10))`,expected:`True`,hidden:!1},{id:`2`,description:`Max in a later block (old sum must be rescaled)`,input:`np.round(online_softmax(np.array([0.0, 1.0, 5.0, 2.0, 9.0]), 2), 4).tolist()`,expected:`[0.0001, 0.0003, 0.018, 0.0009, 0.9807]`,hidden:!1},{id:`3`,description:`online_attention matches standard attention`,input:`(lambda Q, K, V: (lambda S: bool(np.allclose(online_attention(Q, K, V, 4), (np.exp(S - S.max(1, keepdims=True)) / np.exp(S - S.max(1, keepdims=True)).sum(1, keepdims=True)) @ V)))(Q @ K.T / 2.0))(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2))`,expected:`True`,hidden:!1},{id:`4`,description:`Stable for huge logits`,input:`np.round(online_softmax(np.array([1000.0, 1001.0, 1002.0]), 2), 4).tolist()`,expected:`[0.09, 0.2447, 0.6652]`,hidden:!0},{id:`5`,description:`online_attention output shape`,input:`online_attention(np.random.randn(3, 4), np.random.randn(10, 4), np.random.randn(10, 2), 4).shape`,expected:`(3, 2)`,hidden:!0},{id:`6`,description:`Any block size gives the same answer`,input:`(lambda Q, K, V: bool(all(np.allclose(online_attention(Q, K, V, b), online_attention(Q, K, V, 7)) for b in [1, 2, 3, 7, 50])))(np.random.randn(2, 4), np.random.randn(7, 4), np.random.randn(7, 3))`,expected:`True`,hidden:!0},{id:`7`,description:`Attention output values`,input:`round(float(online_attention(np.random.randn(4, 8) * 3, np.random.randn(9, 8) * 3, np.random.randn(9, 5), 4).sum()), 4)`,expected:`2.4803`,hidden:!0}],hints:[`If you knew the global max in advance, softmax would be one pass. What do you have to fix up when a later block reveals a bigger max?`,`Every term already summed into l was computed as exp(x - m_old). Multiplying l by exp(m_old - m_new) turns all of them into exp(x - m_new) at once; acc needs the same factor.`,`Start with m = -inf and l = 0 (np.full((n_q, 1), -np.inf) and np.zeros((n_q, 1)) for attention); loop over range(0, n_k, block_size); S.max(axis=1, keepdims=True); np.maximum(m, ...).`,`Rescale acc and l by the same scale before adding the new block, and divide by l only once at the end. Keep m and l as (n_q, 1) columns so they broadcast.`],solution:`import numpy as np
 
 def online_softmax(x, block_size):
+    """Returns softmax(x), same shape as x."""
     m, l = -np.inf, 0.0
     for start in range(0, len(x), block_size):
         block = x[start:start + block_size]
         m_new = max(m, block.max())
+        # Rescale the old sum to the new max, then add this block
         l = l * np.exp(m - m_new) + np.exp(block - m_new).sum()
         m = m_new
     return np.exp(x - m) / l
 
 
 def online_attention(Q, K, V, block_size):
+    """Returns output (n_q, d_v) equal to softmax(Q K^T / sqrt(d)) V."""
     n_q, d = Q.shape
     m = np.full((n_q, 1), -np.inf)     # running row max
     l = np.zeros((n_q, 1))             # running softmax denominator
@@ -18726,15 +17656,17 @@ def online_attention(Q, K, V, block_size):
     for start in range(0, K.shape[0], block_size):
         K_b = K[start:start + block_size]
         V_b = V[start:start + block_size]
-        S = Q @ K_b.T / np.sqrt(d)
+        S = Q @ K_b.T / np.sqrt(d)                      # (n_q, B): only one block of scores
         m_new = np.maximum(m, S.max(axis=1, keepdims=True))
-        scale = np.exp(m - m_new)
+        scale = np.exp(m - m_new)                       # 0 on the first block
         P = np.exp(S - m_new)
         l = l * scale + P.sum(axis=1, keepdims=True)
         acc = acc * scale + P @ V_b
         m = m_new
     return acc / l
-`},{id:`moe-routing`,title:`Mixture-of-Experts Routing`,section:`llm-internals`,difficulty:`hard`,description:"\n## Mixture-of-Experts (MoE) Routing\n\nMoE layers (Switch Transformer, Mixtral, DeepSeek-MoE) replace one big FFN with `E` smaller **experts** and a **router** that sends each token to only `k` of them. Parameters grow with `E`, but compute per token grows only with `k`.\n\nHere each expert is a linear map `expert_e(x) = x @ expert_weights[e]` (real experts are SwiGLU FFNs; the routing is the same).\n\n### 1. Router\n```\nlogits = x @ W_router                  # (T, E)\nprobs  = softmax(logits, axis=-1)      # full router distribution (used by the aux loss)\n```\n\n### 2. Top-k gating (Mixtral style)\n- `expert_indices`: the `k` experts with the largest logits for each token, **sorted by descending logit**\n- `gates = softmax(top-k logits)`: renormalized over the chosen `k` only, so each row sums to 1\n\n### 3. Dispatch and combine\nFor each expert `e`, gather the tokens routed to it, run the expert **only on those tokens**, and add the outputs back weighted by the gate:\n```\ny_t = sum_{j=1..k} gates[t, j] * expert_{expert_indices[t, j]}(x_t)\n```\n\n### 4. Load-balancing auxiliary loss (Switch Transformer)\nWithout it, the router collapses onto a few experts. With `T` tokens:\n```\nf_e = (number of tokens whose top-k includes e) / (T * k)    # fraction of routing slots\nP_e = mean over tokens of probs[:, e]                         # mean router probability\naux_loss = E * sum_e f_e * P_e\n```\nIt equals 1.0 when routing is perfectly uniform and grows toward `E` as routing collapses onto one expert. For `k = 1` this is exactly the Switch Transformer loss. In training it's added to the LM loss times a small coefficient (e.g. 0.01). `f` is not differentiable; the gradient flows through `P`.\n\n### Expected Return Format\nReturn a dictionary with these keys:\n- `'output'`: combined expert outputs, shape `(T, d_out)`\n- `'expert_indices'`: integer array `(T, k)`, sorted by descending router logit\n- `'gates'`: `(T, k)`, each row sums to 1\n- `'aux_loss'`: the load-balancing loss as a float\n",examples:[{input:`x (6, 4), W_router (4, 4), expert_weights (4, 4, 4), top_k=2`,output:`{'output': shape (6, 4), 'expert_indices': shape (6, 2), 'gates': shape (6, 2), 'aux_loss': float}`,explanation:`Each token is processed by its 2 highest-scoring experts.`},{input:`W_router = zeros`,output:`aux_loss = 1.0`,explanation:`Uniform router probabilities: P_e = 1/E for every expert.`}],starterCode:`import numpy as np
+
+# Same O(n_q * n_k * d) FLOPs as standard attention; extra memory O(n_q * (block_size + d_v))
+`},{id:`moe-routing`,title:`Mixture-of-Experts Routing`,section:`llm-internals`,difficulty:`hard`,description:"\n## Mixture-of-Experts (MoE) Routing\n\n### What you'll build\nA top-k mixture-of-experts layer: a router picks `k` experts per token, each expert runs only on the tokens routed to it, the outputs are combined with the gate weights, and a load-balancing auxiliary loss is returned.\n\n### Background\nMoE layers (Switch Transformer, Mixtral, DeepSeek-MoE) replace one big FFN with `E` smaller **experts** and a **router**. Parameters grow with `E`, but compute per token grows only with `k`: Mixtral 8x7B has about 47B parameters but uses about 13B per token. The cost is engineering: tokens must be dispatched to experts and gathered back, and the router must be kept from collapsing onto a few experts. Here each expert is a linear map `expert_e(x) = x @ expert_weights[e]` (real experts are SwiGLU FFNs; the routing is identical).\n\n### Algorithm\nWith `T` tokens and `E` experts:\n1. **Router**: `logits = x @ W_router` `(T, E)`; `probs = softmax(logits, axis=-1)` (used by the aux loss).\n2. **Top-k gating (Mixtral style)**: `expert_indices` = the `k` experts with the largest logits per token, **sorted by descending logit**; `gates = softmax(top-k logits)`, renormalized over the chosen `k` only.\n3. **Dispatch and combine**: for each expert `e`, gather the tokens routed to it, run the expert **only on those tokens**, and add the outputs back weighted by their gate:\n```text\ny_t = sum_{j=1..k} gates[t, j] * expert_{expert_indices[t, j]}(x_t)\n```\n4. **Load-balancing loss (Switch Transformer)**:\n```text\nf_e      = (number of tokens whose top-k includes e) / (T * k)    # fraction of routing slots\nP_e      = mean over tokens of probs[:, e]                        # mean router probability\naux_loss = E * sum_e f_e * P_e\n```\nIt is 1.0 for perfectly uniform routing and approaches `E` when everything collapses onto one expert. In training it is added to the LM loss times a small coefficient (e.g. 0.01); `f` is not differentiable, so the gradient flows through `P`.\n\n### Inputs\n- `x`: `(T, d)`\n- `W_router`: `(d, E)`\n- `expert_weights`: `(E, d, d_out)`\n- `top_k`: int, `1 <= top_k <= E`\n\n### Expected Return Format\nA dictionary with these keys:\n- `'output'`: combined expert outputs, `(T, d_out)`\n- `'expert_indices'`: integer array `(T, k)`, sorted by descending router logit\n- `'gates'`: `(T, k)`, each row sums to 1, aligned with `'expert_indices'`\n- `'aux_loss'`: the load-balancing loss as a Python float\n\n### Edge cases and conventions\n- `top_k = 1` (Switch): the gate is 1 and the output is the chosen expert's output.\n- Tests use random logits, so ties between experts don't occur; a stable sort of `-logits` is a safe choice.\n\n### Constraints\nNumPy only. Don't run every expert on every token and mask afterwards: run each expert on its routed tokens.\n\n### Follow-up\n- Real systems give each expert a **capacity** (`capacity_factor · T · k / E` slots) and drop overflow tokens. How would you implement that, and what happens to dropped tokens?\n- Why does expert parallelism need an all-to-all communication step?\n",examples:[{input:`x (6, 4), W_router (4, 4), expert_weights (4, 4, 3), top_k=2`,output:`{'output': shape (6, 3), 'expert_indices': shape (6, 2), 'gates': shape (6, 2), 'aux_loss': float}`,explanation:`Each token is processed by its 2 highest-scoring experts and gets a weighted sum of their outputs.`},{input:`W_router = np.zeros((4, 4)), any x, top_k=2`,output:`aux_loss = 1.0`,explanation:`Uniform router probabilities: P_e = 1/4 for every expert and the f_e sum to 1, so 4 * sum(f_e / 4) = 1.`},{input:`x = np.ones((6, 4)), router strongly prefers expert 0, top_k=1, E=4`,output:`aux_loss = 4.0`,explanation:`Collapse: f_0 = 1 and P_0 is about 1, so the loss reaches E.`}],starterCode:`import numpy as np
 
 def moe_layer(x, W_router, expert_weights, top_k):
     """
@@ -18747,12 +17679,13 @@ def moe_layer(x, W_router, expert_weights, top_k):
         top_k: experts per token
 
     Returns:
-        dict with 'output' (T, d_out), 'expert_indices' (T, k),
-        'gates' (T, k) and 'aux_loss' (float)
+        dict with 'output' (T, d_out), 'expert_indices' (T, k) sorted by
+        descending logit, 'gates' (T, k) rows summing to 1, and
+        'aux_loss' (float) = E * sum_e f_e * P_e
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Shapes, and gates sum to 1`,input:`(lambda r: (r['output'].shape, r['expert_indices'].shape, bool(np.allclose(r['gates'].sum(-1), 1))))(moe_layer(np.random.randn(6, 4), np.random.randn(4, 4), np.random.randn(4, 4, 3), 2))`,expected:`((6, 3), (6, 2), True)`,hidden:!1},{id:`2`,description:`Uniform router gives aux_loss = 1`,input:`round(moe_layer(np.random.randn(6, 4), np.zeros((4, 4)), np.random.randn(4, 4, 4), 2)['aux_loss'], 4)`,expected:`1.0`,hidden:!1},{id:`3`,description:`Output equals the dense per-token reference`,input:`(lambda x, Wr, We: (lambda r: bool(np.allclose(r['output'], np.stack([sum(r['gates'][t, j] * (x[t] @ We[r['expert_indices'][t, j]]) for j in range(2)) for t in range(6)]))))(moe_layer(x, Wr, We, 2)))(np.random.randn(6, 4), np.random.randn(4, 4), np.random.randn(4, 4, 3))`,expected:`True`,hidden:!1},{id:`4`,description:`Experts are chosen by descending router logit`,input:`moe_layer(np.random.randn(5, 4), np.random.randn(4, 6), np.random.randn(6, 4, 2), 3)['expert_indices'].tolist()`,expected:`[[5, 4, 2], [4, 2, 1], [5, 0, 1], [4, 2, 5], [4, 2, 1]]`,hidden:!0},{id:`5`,description:`Gates are a softmax over the top-k logits only`,input:`(lambda x, Wr: (lambda r, L: bool(np.allclose(r['gates'][:, 0], 1 / (1 + np.exp(np.take_along_axis(L, r['expert_indices'], -1)[:, 1] - np.take_along_axis(L, r['expert_indices'], -1)[:, 0])))))(moe_layer(x, Wr, np.random.randn(5, 4, 4), 2), x @ Wr))(np.random.randn(7, 4), np.random.randn(4, 5))`,expected:`True`,hidden:!0},{id:`6`,description:`Collapsed routing pushes aux_loss toward E`,input:`round(moe_layer(np.ones((6, 4)), np.hstack([np.full((4, 1), 10.0), np.zeros((4, 3))]), np.random.randn(4, 4, 4), 1)['aux_loss'], 4)`,expected:`4.0`,hidden:!0},{id:`7`,description:`top_k = 1: gate is 1 and output is the chosen expert`,input:`(lambda x, Wr, We: (lambda r: bool(np.allclose(r['gates'], 1) and np.allclose(r['output'], np.einsum('td,tdo->to', x, We[np.argmax(x @ Wr, axis=1)]))))(moe_layer(x, Wr, We, 1)))(np.random.randn(8, 4), np.random.randn(4, 3), np.random.randn(3, 4, 2))`,expected:`True`,hidden:!0},{id:`8`,description:`aux_loss value`,input:`round(moe_layer(np.random.randn(10, 4), np.random.randn(4, 4), np.random.randn(4, 4, 4), 2)['aux_loss'], 4)`,expected:`1.3995`,hidden:!0}],hints:[`Top-k: np.argsort(-logits, axis=-1, kind="stable")[:, :k]; get the matching logits with np.take_along_axis, then softmax them.`,`Dispatch: token_ids, slot = np.nonzero(expert_indices == e) gives every (token, slot) routed to expert e.`,`Combine: output[token_ids] += gates[token_ids, slot][:, None] * (x[token_ids] @ expert_weights[e]). A token appears at most once per expert.`,`Aux loss: f = np.bincount(expert_indices.ravel(), minlength=E) / (T * k); P = probs.mean(0); return E * sum(f * P).`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Shapes, and gates sum to 1`,input:`(lambda r: (r['output'].shape, r['expert_indices'].shape, bool(np.allclose(r['gates'].sum(-1), 1))))(moe_layer(np.random.randn(6, 4), np.random.randn(4, 4), np.random.randn(4, 4, 3), 2))`,expected:`((6, 3), (6, 2), True)`,hidden:!1},{id:`2`,description:`Uniform router gives aux_loss = 1`,input:`round(moe_layer(np.random.randn(6, 4), np.zeros((4, 4)), np.random.randn(4, 4, 4), 2)['aux_loss'], 4)`,expected:`1.0`,hidden:!1},{id:`3`,description:`Output equals the dense per-token reference`,input:`(lambda x, Wr, We: (lambda r: bool(np.allclose(r['output'], np.stack([sum(r['gates'][t, j] * (x[t] @ We[r['expert_indices'][t, j]]) for j in range(2)) for t in range(6)]))))(moe_layer(x, Wr, We, 2)))(np.random.randn(6, 4), np.random.randn(4, 4), np.random.randn(4, 4, 3))`,expected:`True`,hidden:!1},{id:`4`,description:`Experts are chosen by descending router logit`,input:`moe_layer(np.random.randn(5, 4), np.random.randn(4, 6), np.random.randn(6, 4, 2), 3)['expert_indices'].tolist()`,expected:`[[5, 4, 2], [4, 2, 1], [5, 0, 1], [4, 2, 5], [4, 2, 1]]`,hidden:!0},{id:`5`,description:`Gates are a softmax over the top-k logits only`,input:`(lambda x, Wr: (lambda r, L: bool(np.allclose(r['gates'][:, 0], 1 / (1 + np.exp(np.take_along_axis(L, r['expert_indices'], -1)[:, 1] - np.take_along_axis(L, r['expert_indices'], -1)[:, 0])))))(moe_layer(x, Wr, np.random.randn(5, 4, 4), 2), x @ Wr))(np.random.randn(7, 4), np.random.randn(4, 5))`,expected:`True`,hidden:!0},{id:`6`,description:`Collapsed routing pushes aux_loss toward E`,input:`round(moe_layer(np.ones((6, 4)), np.hstack([np.full((4, 1), 10.0), np.zeros((4, 3))]), np.random.randn(4, 4, 4), 1)['aux_loss'], 4)`,expected:`4.0`,hidden:!0},{id:`7`,description:`top_k = 1: gate is 1 and output is the chosen expert`,input:`(lambda x, Wr, We: (lambda r: bool(np.allclose(r['gates'], 1) and np.allclose(r['output'], np.einsum('td,tdo->to', x, We[np.argmax(x @ Wr, axis=1)]))))(moe_layer(x, Wr, We, 1)))(np.random.randn(8, 4), np.random.randn(4, 3), np.random.randn(3, 4, 2))`,expected:`True`,hidden:!0},{id:`8`,description:`aux_loss value`,input:`round(moe_layer(np.random.randn(10, 4), np.random.randn(4, 4), np.random.randn(4, 4, 4), 2)['aux_loss'], 4)`,expected:`1.3995`,hidden:!0}],hints:[`Split the layer into four steps: router probabilities, top-k selection with renormalized gates, per-expert dispatch/combine, and the aux loss from routing counts and mean probabilities.`,`Top-k: sort each row of logits in descending order and take the first k columns; gates are a softmax of just those k logits. Dispatch: for each expert, find the (token, slot) pairs that chose it.`,`np.argsort(-logits, axis=-1, kind="stable")[:, :k]; np.take_along_axis for the chosen logits; token_ids, slot = np.nonzero(expert_indices == e); output[token_ids] += gates[token_ids, slot][:, None] * (x[token_ids] @ expert_weights[e]).`,`f uses routing counts (np.bincount(expert_indices.ravel(), minlength=E) / (T * k)) and P uses the full softmax over all E experts, not the renormalized gates. Return aux_loss as a Python float.`],solution:`import numpy as np
 
 def softmax(z, axis=-1):
     e = np.exp(z - z.max(axis=axis, keepdims=True))
@@ -18760,6 +17693,10 @@ def softmax(z, axis=-1):
 
 
 def moe_layer(x, W_router, expert_weights, top_k):
+    """
+    Returns:
+        dict with 'output', 'expert_indices', 'gates', 'aux_loss'
+    """
     T = x.shape[0]
     E = W_router.shape[1]
 
@@ -18767,7 +17704,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
     logits = x @ W_router                       # (T, E)
     probs = softmax(logits)                     # full distribution, for the aux loss
 
-    # 2. Top-k experts per token, renormalized gates
+    # 2. Top-k experts per token (descending logit), renormalized gates
     expert_indices = np.argsort(-logits, axis=-1, kind='stable')[:, :top_k]   # (T, k)
     gates = softmax(np.take_along_axis(logits, expert_indices, axis=-1))       # (T, k)
 
@@ -18780,7 +17717,7 @@ def moe_layer(x, W_router, expert_weights, top_k):
         expert_out = x[token_ids] @ expert_weights[e]      # run e on its tokens only
         output[token_ids] += gates[token_ids, slot][:, None] * expert_out
 
-    # 4. Load-balancing loss
+    # 4. Load-balancing loss (Switch Transformer)
     f = np.bincount(expert_indices.ravel(), minlength=E) / (T * top_k)
     P = probs.mean(axis=0)
     aux_loss = E * np.sum(f * P)
@@ -18791,7 +17728,9 @@ def moe_layer(x, W_router, expert_weights, top_k):
         'gates': gates,
         'aux_loss': float(aux_loss),
     }
-`},{id:`perplexity`,title:`Token Cross-Entropy and Perplexity`,section:`llm-internals`,difficulty:`easy`,description:"\n## Token Cross-Entropy and Perplexity\n\nLanguage models are trained and evaluated with **next-token cross-entropy**. Given logits for every position and the true next tokens:\n```\nlog_probs  = log_softmax(logits, axis=-1)          # stable: z - max - log(sum(exp(z - max)))\ntoken_nll  = -log_probs[..., target]               # one number per position\nmean_nll   = sum(token_nll * mask) / sum(mask)\nperplexity = exp(mean_nll)\n```\n\n**Perplexity** is \"the effective number of tokens the model is choosing between\". A model that predicts uniformly over `V` tokens has perplexity exactly `V`; a perfect model has perplexity 1.\n\n### Padding mask\nBatches are padded to the same length. Padded positions must not count: `mask` is 1 for real tokens and 0 for padding. Masked positions get `token_nll = 0` and are excluded from the mean. If `mask` is None, every position counts.\n\n### Expected Return Format\nReturn a dictionary with these keys:\n- `'token_nll'`: per-position negative log-likelihood, same shape as `targets` (0 where masked)\n- `'mean_nll'`: mean NLL over unmasked positions (float, in nats)\n- `'perplexity'`: `exp(mean_nll)` (float)\n\n`logits` has shape `(..., V)` (e.g. `(T, V)` or `(B, T, V)`) and `targets` has shape `(...)` with integer token ids.\n",examples:[{input:`logits = zeros((3, 5)), targets = [0, 1, 2]`,output:`perplexity = 5.0`,explanation:`Uniform predictions over 5 tokens`},{input:`logits = [[2, 1, 0], [0, 0, 3]], targets = [0, 2]`,output:`token_nll = [0.4076, 0.0949]`,explanation:`-log softmax at the target index`}],starterCode:`import numpy as np
+
+# Expert compute O(T * k * d * d_out) instead of O(T * E * d * d_out) for a dense mixture
+`},{id:`perplexity`,title:`Token Cross-Entropy and Perplexity`,section:`llm-internals`,difficulty:`easy`,description:"\n## Token Cross-Entropy and Perplexity\n\n### What you'll build\nThe language-modeling loss and its standard evaluation metric: per-token negative log-likelihood from logits and targets, with a padding mask, averaged into a mean NLL and exponentiated into perplexity.\n\n### Background\nEvery LLM is pretrained by minimizing next-token cross-entropy, and **perplexity** is how papers report it: \"the effective number of tokens the model is choosing between\". A model that is uniform over `V` tokens has perplexity exactly `V`; a perfect model has perplexity 1. Batches are padded to a common length, so padded positions must be excluded, or the reported loss depends on how much padding the batch happened to have.\n\n### Formula\n```text\nlog_probs  = log_softmax(logits, axis=-1)          # z - max - log(sum(exp(z - max)))\ntoken_nll  = -log_probs[..., target]               # one value per position\nmean_nll   = sum(token_nll * mask) / sum(mask)     # nats per real token\nperplexity = exp(mean_nll)\n```\n\n### Inputs\n- `logits`: float array `(..., V)`, e.g. `(T, V)` or `(B, T, V)`\n- `targets`: integer array `(...)` of token ids in `[0, V)`; `targets[b, t]` is the token that follows position `t` (already shifted)\n- `mask`: array `(...)` with 1 for real tokens and 0 for padding, or None (every position counts)\n\n### Expected Return Format\nA dictionary with these keys:\n- `'token_nll'`: per-position NLL, same shape as `targets`, **0 where masked**\n- `'mean_nll'`: mean NLL over unmasked positions (Python float, in nats)\n- `'perplexity'`: `exp(mean_nll)` (Python float)\n\n### Edge cases and conventions\n- Use a stable log-softmax: logits around 1000 must not overflow.\n- Divide by the number of **real** tokens (`mask.sum()`), not by the number of positions.\n- Natural log (nats). Bits per token would be `mean_nll / ln 2`.\n\n### Constraints\nNumPy only, vectorised (`np.take_along_axis` for the target gather).\n\n### Follow-up\n- Why is perplexity only comparable between models that share a tokenizer? How does bits-per-byte fix that?\n- Training code often averages per sequence first, then over the batch. When does that differ from the per-token mean here?\n",examples:[{input:`perplexity(np.zeros((3, 5)), np.array([0, 1, 2]))`,output:`{'token_nll': [1.6094, 1.6094, 1.6094], 'mean_nll': 1.6094, 'perplexity': 5.0}`,explanation:`Uniform predictions over 5 tokens: NLL = log 5 at every position.`},{input:`perplexity(np.array([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), np.array([0, 2]))`,output:`token_nll = [0.4076, 0.0949]`,explanation:`-log softmax at the target index: the model is confident and right at both positions.`}],starterCode:`import numpy as np
 
 def perplexity(logits, targets, mask=None):
     """
@@ -18803,66 +17742,42 @@ def perplexity(logits, targets, mask=None):
         mask: (...) 1 for real tokens, 0 for padding (None = all real)
 
     Returns:
-        dict with 'token_nll' (same shape as targets), 'mean_nll' (float),
-        'perplexity' (float)
+        dict with 'token_nll' (same shape as targets, 0 where masked),
+        'mean_nll' (float, nats) and 'perplexity' (float, exp(mean_nll))
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Uniform logits give perplexity = vocab size`,input:`round(perplexity(np.zeros((3, 5)), np.array([0, 1, 2]))['perplexity'], 4)`,expected:`5.0`,hidden:!1},{id:`2`,description:`Per-token NLL values`,input:`np.round(perplexity(np.array([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), np.array([0, 2]))['token_nll'], 4).tolist()`,expected:`[0.4076, 0.0949]`,hidden:!1},{id:`3`,description:`Padding is excluded from the mean`,input:`(lambda L, y: bool(np.isclose(perplexity(L, y, np.array([[1, 1, 1], [1, 1, 0]]))['mean_nll'], perplexity(np.concatenate([L[0], L[1, :2]]), np.concatenate([y[0], y[1, :2]]))['mean_nll'])))(np.random.randn(2, 3, 4), np.array([[0, 3, 1], [2, 2, 0]]))`,expected:`True`,hidden:!0},{id:`4`,description:`Masked positions have token_nll = 0`,input:`np.round(perplexity(np.array([[[1.0, 0.0], [0.0, 1.0]]]), np.array([[0, 0]]), np.array([[1, 0]]))['token_nll'], 4).tolist()`,expected:`[[0.3133, 0.0]]`,hidden:!0},{id:`5`,description:`Stable for huge logits`,input:`round(perplexity(np.array([[1000.0, 999.0, 0.0]]), np.array([1]))['mean_nll'], 4)`,expected:`1.3133`,hidden:!0},{id:`6`,description:`perplexity = exp(mean_nll), values`,input:`(lambda r: (round(r['mean_nll'], 4), round(r['perplexity'], 4)))(perplexity(np.random.randn(2, 5, 6) * 2, np.random.randint(0, 6, size=(2, 5))))`,expected:`(3.8495, 46.9708)`,hidden:!0}],hints:[`Stable log-softmax: z - max(z) - log(sum(exp(z - max(z)))) along the last axis.`,`Select target log-probs with np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0].`,`Multiply token_nll by the mask, then divide the sum by mask.sum() (not by the number of positions).`],solution:`import numpy as np
+`,testCases:[{id:`1`,description:`Uniform logits give perplexity = vocab size`,input:`round(perplexity(np.zeros((3, 5)), np.array([0, 1, 2]))['perplexity'], 4)`,expected:`5.0`,hidden:!1},{id:`2`,description:`Per-token NLL values`,input:`np.round(perplexity(np.array([[2.0, 1.0, 0.0], [0.0, 0.0, 3.0]]), np.array([0, 2]))['token_nll'], 4).tolist()`,expected:`[0.4076, 0.0949]`,hidden:!1},{id:`3`,description:`Padding is excluded from the mean`,input:`(lambda L, y: bool(np.isclose(perplexity(L, y, np.array([[1, 1, 1], [1, 1, 0]]))['mean_nll'], perplexity(np.concatenate([L[0], L[1, :2]]), np.concatenate([y[0], y[1, :2]]))['mean_nll'])))(np.random.randn(2, 3, 4), np.array([[0, 3, 1], [2, 2, 0]]))`,expected:`True`,hidden:!0},{id:`4`,description:`Masked positions have token_nll = 0`,input:`np.round(perplexity(np.array([[[1.0, 0.0], [0.0, 1.0]]]), np.array([[0, 0]]), np.array([[1, 0]]))['token_nll'], 4).tolist()`,expected:`[[0.3133, 0.0]]`,hidden:!0},{id:`5`,description:`Stable for huge logits`,input:`round(perplexity(np.array([[1000.0, 999.0, 0.0]]), np.array([1]))['mean_nll'], 4)`,expected:`1.3133`,hidden:!0},{id:`6`,description:`perplexity = exp(mean_nll), values`,input:`(lambda r: (round(r['mean_nll'], 4), round(r['perplexity'], 4)))(perplexity(np.random.randn(2, 5, 6) * 2, np.random.randint(0, 6, size=(2, 5))))`,expected:`(3.8495, 46.9708)`,hidden:!0}],hints:[`Perplexity is just exp of the average per-token loss. The work is computing a stable per-token loss and averaging over the right positions.`,`Stable log-softmax over the last axis, pick the log-prob of each target, negate, mask, then average over real tokens only.`,`log_probs = z - m - np.log(np.exp(z - m).sum(-1, keepdims=True)); token_nll = -np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0].`,`Divide by mask.sum(), not token_nll.size, and set masked positions to 0 before summing. Return Python floats for the scalars.`],solution:`import numpy as np
 
 def perplexity(logits, targets, mask=None):
+    """
+    Returns:
+        dict with 'token_nll', 'mean_nll', 'perplexity'
+    """
     logits = np.asarray(logits, dtype=np.float64)
     targets = np.asarray(targets)
 
-    # Stable log-softmax
+    # Stable log-softmax over the vocabulary
     m = logits.max(axis=-1, keepdims=True)
     log_probs = logits - m - np.log(np.exp(logits - m).sum(axis=-1, keepdims=True))
 
-    # Pick the log-prob of the correct next token at every position
+    # Log-prob of the correct next token at every position
     token_nll = -np.take_along_axis(log_probs, targets[..., None], axis=-1)[..., 0]
 
     if mask is None:
         mask = np.ones_like(token_nll)
     mask = np.asarray(mask, dtype=np.float64)
-    token_nll = token_nll * mask
+    token_nll = token_nll * mask                 # padding contributes 0
 
-    mean_nll = token_nll.sum() / mask.sum()
+    mean_nll = token_nll.sum() / mask.sum()      # average over real tokens only
     return {
         'token_nll': token_nll,
         'mean_nll': float(mean_nll),
         'perplexity': float(np.exp(mean_nll)),
     }
-`}],W=[{id:`infonce-loss`,title:`CLIP Contrastive Loss (InfoNCE)`,section:`representation-learning`,difficulty:`medium`,description:`
-## Symmetric InfoNCE (CLIP)
 
-CLIP (Radford et al., 2021) learns a shared embedding space for images and text from (image, caption) pairs. In a batch of N pairs, the i-th image and i-th caption are a **positive** pair, and the other N − 1 captions are **negatives** for that image (and vice versa).
-
-### Steps
-1. **L2-normalise** each embedding (rows of both matrices) so dot products are cosine similarities:
-\`\`\`
-img_n = img / ||img||,   txt_n = txt / ||txt||      (per row; clamp the norm at 1e-12)
-\`\`\`
-2. **Similarity logits**, scaled by a temperature τ:
-\`\`\`
-logits = img_n @ txt_nᵀ / τ                         (N, N)
-\`\`\`
-3. **Cross-entropy in both directions**, with the correct match on the diagonal (labels = 0, 1, ..., N−1):
-\`\`\`
-loss_i2t = CE(logits,   labels)    each image picks its caption among N captions (rows)
-loss_t2i = CE(logitsᵀ,  labels)    each caption picks its image among N images (columns)
-CE(Z, y) = mean_i [ logsumexp(Z_i) - Z_{i, y_i} ]
-\`\`\`
-4. **Average** the two: \`loss = (loss_i2t + loss_t2i) / 2\`
-
-A lower temperature sharpens the softmax; CLIP learns τ (initialised to 0.07). Use a numerically stable log-sum-exp.
-
-### Expected Return Format
-\`clip_loss(img_emb, txt_emb, temperature=0.07)\` returns a dictionary:
-- \`'logits'\`: (N, N) array of scaled cosine similarities (row = image, column = text)
-- \`'loss_i2t'\`: image-to-text cross-entropy (Python float)
-- \`'loss_t2i'\`: text-to-image cross-entropy (Python float)
-- \`'loss'\`: their mean (Python float)
-    `,examples:[{input:`img = txt = [[1, 0], [0, 1]], temperature = 1.0`,output:`{'loss': 0.3133, ...}`,explanation:`logits = I, so each row is softmax([1, 0]) and CE = log(1 + e^-1) = 0.3133 in both directions`}],starterCode:`import numpy as np
+# O(N * V) for N positions
+`}],W=[{id:`infonce-loss`,title:`CLIP Contrastive Loss (InfoNCE)`,section:`representation-learning`,difficulty:`medium`,description:"\n## Symmetric InfoNCE (CLIP Loss)\n\n### What you'll build\nThe contrastive loss CLIP is trained with: L2-normalize image and text embeddings, build the temperature-scaled cosine similarity matrix, and average the cross-entropy over both directions with the matching pairs on the diagonal.\n\n### Background\nCLIP (Radford et al., 2021) learns one embedding space for images and text from 400M (image, caption) pairs, with no class labels. In a batch of `N` pairs, image `i` and caption `i` are a **positive** pair; the other `N - 1` captions are **negatives** for that image, and vice versa. The same loss trains text embedding models for retrieval (with (query, passage) pairs), SimCLR (two augmentations of one image) and many more. More negatives make the task harder and the representation better, which is why these models are trained with very large batches.\n\n### Formula\n```text\nimg_n  = img / max(||img||, 1e-12)                    # per row, (N, D)\ntxt_n  = txt / max(||txt||, 1e-12)                    # per row, (N, D)\nlogits = img_n @ txt_n.T / tau                        # (N, N); row = image, column = text\n\nCE(Z)    = mean_i [ logsumexp(Z[i, :]) - Z[i, i] ]    # correct class of row i is column i\nloss_i2t = CE(logits)                                 # each image picks its caption among N\nloss_t2i = CE(logits.T)                               # each caption picks its image among N\nloss     = (loss_i2t + loss_t2i) / 2\n```\nA lower temperature `tau` sharpens the softmax; CLIP learns it (initialised to 0.07).\n\n### Inputs\n- `img_emb`: float array `(N, D)`; row `i` pairs with `txt_emb` row `i`\n- `txt_emb`: float array `(N, D)`\n- `temperature`: float `> 0`, default 0.07\n\n### Expected Return Format\nA dictionary:\n- `'logits'`: `(N, N)` array of scaled cosine similarities (row = image, column = text)\n- `'loss_i2t'`: image-to-text cross-entropy (Python float)\n- `'loss_t2i'`: text-to-image cross-entropy (Python float)\n- `'loss'`: their mean (Python float)\n\n### Edge cases and conventions\n- Normalize the **rows** (each embedding), not the columns; rescaling an embedding must not change the loss.\n- Use a stable log-sum-exp: with `tau = 0.07` logits reach about 14, and smaller temperatures go higher.\n- The matrix is not symmetric in general, so `loss_i2t != loss_t2i`.\n\n### Constraints\nNumPy only, vectorised (no loop over the batch).\n\n### Follow-up\n- With `N` pairs, the loss of a random model is about `log N`. Why? What does that say about comparing losses across batch sizes?\n- SigLIP replaces the softmax with independent sigmoid losses per pair. What does that buy for distributed training?\n",examples:[{input:`clip_loss(np.eye(2), np.eye(2), temperature=1.0)`,output:`{'logits': [[1.0, 0.0], [0.0, 1.0]], 'loss_i2t': 0.3133, 'loss_t2i': 0.3133, 'loss': 0.3133}`,explanation:`Each row is softmax([1, 0]), so CE = log(1 + e^-1) = 0.3133 in both directions.`},{input:`clip_loss(np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]), np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), temperature=0.5)`,output:`{'loss_i2t': 1.1121, 'loss_t2i': 1.1433, 'loss': 1.1277, ...}`,explanation:`logits = [[1.6, 0, 1.4142], [1.92, 1.6, 1.9799], [1.2, 2.0, 1.4142]]: image 1 is closer to captions 0 and 2 than to its own, so the loss is high, and the two directions differ.`}],starterCode:`import numpy as np
 
 def clip_loss(img_emb, txt_emb, temperature=0.07):
     """
@@ -18871,37 +17786,42 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
     Args:
         img_emb: (N, D) image embeddings (row i pairs with txt_emb row i)
         txt_emb: (N, D) text embeddings
-        temperature: softmax temperature τ
+        temperature: softmax temperature tau
 
     Returns:
-        dict with 'logits' (N, N), 'loss_i2t', 'loss_t2i', 'loss' (floats)
+        dict with 'logits' (N, N) = cos / tau (row = image), and the Python
+        floats 'loss_i2t', 'loss_t2i' and 'loss' (their mean)
     """
     # Your code here
     pass
-`,testCases:[{id:`1`,description:`Perfectly aligned pairs, temperature 1`,input:`round(clip_loss(np.eye(2), np.eye(2), 1.0)['loss'], 4)`,expected:`0.3133`,hidden:!1},{id:`2`,description:`Logits shape and range (|cos| / τ <= 1 / τ)`,input:`(lambda r: (r['logits'].shape, bool(np.all(np.abs(r['logits']) <= 1 / 0.1 + 1e-9))))(clip_loss(np.random.randn(4, 8), np.random.randn(4, 8), 0.1))`,expected:`((4, 4), True)`,hidden:!1},{id:`3`,description:`Asymmetric batch: both directions and the mean (values)`,input:`(lambda r: (round(r['loss_i2t'], 4), round(r['loss_t2i'], 4), round(r['loss'], 4)))(clip_loss(
+`,testCases:[{id:`1`,description:`Perfectly aligned pairs, temperature 1`,input:`round(clip_loss(np.eye(2), np.eye(2), 1.0)['loss'], 4)`,expected:`0.3133`,hidden:!1},{id:`2`,description:`Logits shape and range (|cos| / tau <= 1 / tau)`,input:`(lambda r: (r['logits'].shape, bool(np.all(np.abs(r['logits']) <= 1 / 0.1 + 1e-9))))(clip_loss(np.random.randn(4, 8), np.random.randn(4, 8), 0.1))`,expected:`((4, 4), True)`,hidden:!1},{id:`3`,description:`Asymmetric batch: both directions and the mean (values)`,input:`(lambda r: (round(r['loss_i2t'], 4), round(r['loss_t2i'], 4), round(r['loss'], 4)))(clip_loss(
     np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]),
     np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), 0.5))`,expected:`(1.1121, 1.1433, 1.1277)`,hidden:!0},{id:`4`,description:`Embeddings are L2-normalised: rescaling the rows changes nothing`,input:`(lambda: (
     a := np.random.randn(5, 6), b := np.random.randn(5, 6),
     s := np.array([[0.5], [2.0], [3.0], [0.1], [7.0]]),
     bool(np.isclose(clip_loss(a * s, b * s[::-1], 0.2)['loss'], clip_loss(a, b, 0.2)['loss']))
-)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Lower temperature lowers the loss for aligned pairs`,input:`(lambda: (round(clip_loss(np.eye(3), np.eye(3), 0.5)['loss'], 4), round(clip_loss(np.eye(3), np.eye(3), 0.1)['loss'], 4)))()`,expected:`(0.2395, 0.0001)`,hidden:!0}],hints:[`Normalise rows: x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12)`,`logits = img_n @ txt_n.T / temperature; the correct pairs are on the diagonal`,`Stable CE: subtract the row max, log-sum-exp each row, and take -mean of the diagonal log-probs`,`loss_t2i is the same CE applied to logits.T`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0},{id:`5`,description:`Lower temperature lowers the loss for aligned pairs`,input:`(lambda: (round(clip_loss(np.eye(3), np.eye(3), 0.5)['loss'], 4), round(clip_loss(np.eye(3), np.eye(3), 0.1)['loss'], 4)))()`,expected:`(0.2395, 0.0001)`,hidden:!0},{id:`6`,description:`Logits values (row = image, column = text)`,input:`np.round(clip_loss(np.array([[1.0, 0.0], [0.6, 0.8], [0.0, 1.0]]), np.array([[0.8, 0.6], [0.0, 1.0], [1.0, 1.0]]), 0.5)['logits'], 4).tolist()`,expected:`[[1.6, 0.0, 1.4142], [1.92, 1.6, 1.9799], [1.2, 2.0, 1.4142]]`,hidden:!0}],hints:[`This is ordinary classification twice: each image is a sample whose N classes are the captions (and vice versa), and the correct class is on the diagonal.`,`Normalize both matrices row-wise, build the (N, N) logits, then take a cross-entropy over rows and another over columns (rows of the transpose).`,`x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), 1e-12); logits = img_n @ txt_n.T / temperature; log_probs = z - z.max(1, keepdims=True) - log-sum-exp; loss = -np.mean(np.diag(log_probs)).`,`Without normalization the logits aren't cosines and rescaling changes the loss; without the max subtraction a small temperature overflows. Return Python floats.`],solution:`import numpy as np
 
 def _l2_normalize(x, eps=1e-12):
     return x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), eps)
 
 
 def _cross_entropy_diag(logits):
-    # Correct class for row i is column i
-    z = logits - logits.max(axis=1, keepdims=True)
+    """Mean CE where the correct class of row i is column i."""
+    z = logits - logits.max(axis=1, keepdims=True)              # stable log-sum-exp
     log_probs = z - np.log(np.exp(z).sum(axis=1, keepdims=True))
     return float(-np.mean(np.diag(log_probs)))
 
 
 def clip_loss(img_emb, txt_emb, temperature=0.07):
+    """
+    Returns:
+        dict with 'logits' (N, N), 'loss_i2t', 'loss_t2i', 'loss'
+    """
     img = _l2_normalize(np.asarray(img_emb, dtype=float))
     txt = _l2_normalize(np.asarray(txt_emb, dtype=float))
 
-    logits = img @ txt.T / temperature        # (N, N) cosine / τ
+    logits = img @ txt.T / temperature        # (N, N) cosine / tau
 
     loss_i2t = _cross_entropy_diag(logits)    # rows: image -> texts
     loss_t2i = _cross_entropy_diag(logits.T)  # columns: text -> images
@@ -18912,7 +17832,9 @@ def clip_loss(img_emb, txt_emb, temperature=0.07):
         'loss_t2i': loss_t2i,
         'loss': (loss_i2t + loss_t2i) / 2,
     }
-`},{id:`embedding-search`,title:`Cosine Top-k Embedding Search`,section:`representation-learning`,difficulty:`easy`,description:"\n## Dense Retrieval with Cosine Similarity\n\nVector search finds the documents whose embeddings are closest to a query embedding. With L2-normalised vectors, cosine similarity is a plain dot product, so scoring every document for a batch of queries is one matrix multiply. (Vector databases use approximate indexes such as HNSW or IVF to avoid scoring everything; this is the exact brute-force version they approximate.)\n\n### Steps\n```\nq_n = queries / ||queries||        (Q, D), per row; clamp the norm at 1e-12\nd_n = docs / ||docs||              (N, D)\nscores = q_n @ d_nᵀ                (Q, N) cosine similarities\n```\nFor each query, return the k best documents sorted by score **descending**. When two documents have exactly the same score, the one with the **lower index comes first** (a stable sort of the negated scores does this; `np.argpartition` and `torch.topk` don't guarantee it).\n\n### Expected Return Format\n`cosine_topk(queries, docs, k)` returns a tuple `(indices, scores)`:\n- `indices`: (Q, k) integer array of document indices, best first\n- `scores`: (Q, k) array of the matching cosine similarities (non-increasing along each row)\n    ",examples:[{input:`queries = [[1, 0]], docs = [[1, 0], [0, 1], [1, 1], [-1, 0]], k = 2`,output:`indices = [[0, 2]], scores = [[1.0, 0.7071]]`,explanation:`Doc 0 points the same way as the query; doc 2 is at 45 degrees`}],starterCode:`import numpy as np
+
+# O(N^2 * D) for the similarity matrix
+`},{id:`embedding-search`,title:`Cosine Top-k Embedding Search`,section:`representation-learning`,difficulty:`easy`,description:"\n## Dense Retrieval with Cosine Similarity\n\n### What you'll build\nExact top-k nearest-neighbour search by cosine similarity: for each query embedding, return the `k` most similar documents and their scores.\n\n### Background\nThis is the \"retrieve\" step of a RAG system and of every semantic search engine. Embeddings come from a model trained with a contrastive loss (previous problem). With L2-normalized vectors, cosine similarity is a plain dot product, so scoring all documents for a batch of queries is one matrix multiply. Vector databases use approximate indexes (HNSW graphs, IVF clustering, product quantization) to avoid scoring every document; this brute-force version is what they approximate, and what their recall is measured against.\n\n### Algorithm\n```text\nq_n    = queries / max(||queries||, 1e-12)     # (Q, D), per row\nd_n    = docs / max(||docs||, 1e-12)           # (N, D), per row\nscores = q_n @ d_n.T                           # (Q, N) cosine similarities\n```\nFor each query row, sort the documents by score **descending** and keep the first `k`.\n\n### Inputs\n- `queries`: float array `(Q, D)`\n- `docs`: float array `(N, D)`\n- `k`: int, `1 <= k <= N`\n\n### Expected Return Format\nA tuple `(indices, scores)`:\n- `indices`: `(Q, k)` integer array of document indices, best first\n- `scores`: `(Q, k)` array of the matching cosine similarities, non-increasing along each row\n\n### Edge cases and conventions\n- **Ties**: equal scores keep the **lower document index first**. A stable sort of the negated scores does this; `np.argpartition` and `torch.topk` don't guarantee it.\n- Documents pointing the same way score the same regardless of their length (that's the point of cosine).\n\n### Constraints\nNumPy only, vectorised over queries and documents.\n\n### Follow-up\n- Use `np.argpartition` to get the top-k in `O(N)` per query, then sort only those `k`. How do you keep the tie rule?\n- When is maximum inner product (no normalization) the right similarity instead of cosine?\n",examples:[{input:`cosine_topk(np.array([[1.0, 0.0]]), np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [-1.0, 0.0]]), k=2)`,output:`(indices = [[0, 2]], scores = [[1.0, 0.7071]])`,explanation:`Doc 0 points the same way as the query; doc 2 is at 45 degrees; doc 3 is opposite (-1).`},{input:`cosine_topk(np.array([[1.0, 0.0]]), np.array([[0.0, 3.0], [2.0, 0.0], [1.0, 1.0], [1.0, 0.0], [5.0, 0.0]]), k=4)[0]`,output:`[[1, 3, 4, 2]]`,explanation:`Docs 1, 3 and 4 all have cosine 1 and stay in index order; doc 2 (0.7071) comes next.`}],starterCode:`import numpy as np
 
 def cosine_topk(queries, docs, k):
     """
@@ -18937,65 +17859,35 @@ def cosine_topk(queries, docs, k):
     cos := (Q / np.linalg.norm(Q, axis=1, keepdims=True)) @ (Dm / np.linalg.norm(Dm, axis=1, keepdims=True)).T,
     bool(np.all(np.diff(r[1], axis=1) <= 0) and np.allclose(np.take_along_axis(cos, r[0], axis=1), r[1])
          and np.allclose(r[1][:, 0], cos.max(axis=1)))
-)[-1])()`,expected:`True`,hidden:!0}],hints:[`Normalise both matrices row-wise, then scores = q_n @ d_n.T`,`np.argsort(-scores, axis=1, kind="stable") sorts descending and keeps equal scores in index order`,`Keep the first k columns, then np.take_along_axis(scores, idx, axis=1) for the scores`],solution:`import numpy as np
+)[-1])()`,expected:`True`,hidden:!0}],hints:[`Cosine similarity of unit vectors is a dot product, so all query-document scores come from one matrix multiply.`,`Normalize both matrices row-wise, compute the (Q, N) score matrix, sort each row in descending order, keep k columns.`,`np.argsort(-scores, axis=1, kind="stable")[:, :k] gives the indices; np.take_along_axis(scores, idx, axis=1) gives the matching scores.`,`np.argsort(scores)[:, ::-1] also sorts descending but reverses the order of ties (higher index first). Clamp norms at 1e-12 so zero vectors don't divide by zero.`],solution:`import numpy as np
 
 def _l2_normalize(x, eps=1e-12):
     return x / np.maximum(np.linalg.norm(x, axis=1, keepdims=True), eps)
 
 
 def cosine_topk(queries, docs, k):
+    """
+    Returns:
+        (indices (Q, k), scores (Q, k)), best first
+    """
     q = _l2_normalize(np.asarray(queries, dtype=float))
     d = _l2_normalize(np.asarray(docs, dtype=float))
-    scores = q @ d.T                                        # (Q, N)
+    scores = q @ d.T                                        # (Q, N) cosine similarities
 
     # Stable sort of -scores: descending, ties keep the lower index first
     order = np.argsort(-scores, axis=1, kind='stable')[:, :k]
     top_scores = np.take_along_axis(scores, order, axis=1)
     return order, top_scores
-`},{id:`retrieve-and-rerank`,title:`RAG Retrieval: BM25 + Embedding Rerank`,section:`representation-learning`,difficulty:`medium`,description:`
-## Hybrid Retrieval for RAG
 
-A retrieval-augmented generation (RAG) system first **retrieves** a few passages, then pastes them into the LLM's prompt. A common recipe is two-stage: a cheap lexical retriever (BM25) picks candidates, then a semantic signal (embedding similarity) **reranks** them.
-
-### Stage 1: BM25 (Robertson & Zaragoza)
-For a query q and document d (both lists of tokens):
-\`\`\`
-score(q, d) = Σ_{t in unique(q)}  IDF(t) · f(t,d) · (k1 + 1) / ( f(t,d) + k1 · (1 - b + b · |d| / avgdl) )
-
-IDF(t) = ln( (N - n_t + 0.5) / (n_t + 0.5) + 1 )
-\`\`\`
-- f(t, d): count of term t in d; |d|: number of tokens in d; avgdl: mean document length
-- N: number of documents; n_t: number of documents containing t
-- The \`+ 1\` inside the log (the Lucene variant) keeps IDF positive even for very common terms
-- Defaults: **k1 = 1.5** (term-frequency saturation), **b = 0.75** (length normalisation)
-- Each distinct query term counts once, in order of first appearance
-
-### Stage 2: candidates
-Take the top-n documents by BM25 (descending; ties go to the lower document index).
-
-### Stage 3: rerank with weighted score fusion
-For each candidate c, with \`cos_c\` the cosine similarity between the query embedding and the candidate's embedding:
-\`\`\`
-bm25_norm_c = bm25_c / max_{c' in candidates} bm25_c'      (0 for all if that max is 0)
-fused_c     = alpha · bm25_norm_c + (1 - alpha) · cos_c
-\`\`\`
-Sort candidates by \`fused\` descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a [0, 1] scale like cosine. (Reciprocal rank fusion, which adds 1 / (60 + rank) from each ranker, is a common alternative that ignores raw scores; this problem uses the weighted fusion above.)
-
-### Expected Return Format
-- \`bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)\` returns an (N,) array of BM25 scores
-- \`retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs, n=3, alpha=0.5, k1=1.5, b=0.75)\` returns a dictionary:
-  - \`'bm25'\`: (N,) BM25 scores of every document
-  - \`'candidates'\`: (n,) integer array of the top-n document indices by BM25
-  - \`'reranked'\`: (n,) the same documents in fused order
-  - \`'fused'\`: (n,) fused scores, aligned with \`'reranked'\`
-    `,examples:[{input:`query = ['cat', 'pet'], 5 short documents`,output:`bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0], reranked = [0, 2, 4]`,explanation:`BM25 ranks doc 4 (it contains both words) first, but doc 0's embedding is closest to the query, so the rerank moves it to the top. Doc 1 ('cats', 'pets') scores 0 because BM25 matches exact tokens (no stemming)`}],starterCode:`import numpy as np
+# O(Q * N * D) to score + O(Q * N log N) to sort
+`},{id:`retrieve-and-rerank`,title:`RAG Retrieval: BM25 + Embedding Rerank`,section:`representation-learning`,difficulty:`medium`,description:"\n## Hybrid Retrieval for RAG: BM25 + Embedding Rerank\n\n### What you'll build\nA two-stage retriever: score every document with BM25, take the top-`n` as candidates, then rerank them with a weighted fusion of normalized BM25 and embedding cosine similarity.\n\n### Background\nA retrieval-augmented generation (RAG) system answers a question by pasting a few retrieved passages into the LLM's prompt, so the answer can only be as good as the retrieval. Lexical search (BM25) finds rare exact terms that embeddings blur (names, error codes, IDs); dense search finds paraphrases that share no words. Production systems combine them: a cheap first stage over the whole corpus, then a more expensive or more semantic second stage over a few candidates (here a score fusion; often a cross-encoder).\n\n### Stage 1: BM25 (Robertson & Zaragoza)\nFor a query `q` and a document `d` (both token lists):\n```text\nscore(q, d) = sum over unique terms t of q:\n              IDF(t) * f(t, d) * (k1 + 1) / ( f(t, d) + k1 * (1 - b + b * |d| / avgdl) )\n\nIDF(t) = ln( (N - n_t + 0.5) / (n_t + 0.5) + 1 )\n```\n- `f(t, d)`: count of `t` in `d`; `|d|`: number of tokens in `d`; `avgdl`: mean document length\n- `N`: number of documents; `n_t`: number of documents containing `t`\n- `k1` (default 1.5) saturates repeated terms; `b` (default 0.75) normalizes for length\n- The `+ 1` inside the log (Lucene's variant) keeps IDF positive even for very common terms\n\n### Stage 2: candidates\nThe top-`n` documents by BM25, descending; ties go to the lower document index.\n\n### Stage 3: rerank by weighted score fusion\nFor each candidate `c`, with `cos_c` the cosine similarity between `query_emb` and `doc_embs[c]` (denominator `||q|| · ||d|| + 1e-12`):\n```text\nbm25_norm_c = bm25_c / max over candidates of bm25     (all 0 if that max is 0)\nfused_c     = alpha * bm25_norm_c + (1 - alpha) * cos_c\n```\nSort the candidates by `fused`, descending; ties keep the BM25 candidate order. Dividing by the max puts BM25 on a `[0, 1]` scale comparable with cosine.\n\n### Inputs\n- `query_tokens`: list of str; `docs_tokens`: list of `N` lists of str (no stemming: `'cats' != 'cat'`)\n- `query_emb`: `(D,)`; `doc_embs`: `(N, D)`\n- `n`: number of candidates (default 3); `alpha` in `[0, 1]` (default 0.5); `k1`, `b` as above\n\n### Expected Return Format\n- `bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75)`: `(N,)` float array\n- `retrieve_and_rerank(...)`: a dictionary with\n  - `'bm25'`: `(N,)` BM25 scores of every document\n  - `'candidates'`: `(n,)` integer array, top-`n` document indices by BM25\n  - `'reranked'`: `(n,)` the same documents in fused order\n  - `'fused'`: `(n,)` fused scores, aligned with `'reranked'`\n\n### Edge cases and conventions\n- Each distinct query term counts once (repeating a word in the query doesn't double its weight).\n- `alpha = 1` keeps the BM25 order; `alpha = 0` sorts the candidates by cosine alone.\n\n### Constraints\nNumPy and plain Python; no retrieval libraries.\n\n### Follow-up\n- Reciprocal rank fusion scores `sum over rankers of 1 / (60 + rank)` and ignores raw scores. When is it more robust than weighted fusion?\n- How would you measure the retriever on its own (recall@k, MRR) before blaming the LLM for a wrong answer?\n",examples:[{input:`query = ['cat', 'pet'], docs = ['the cat sat on the mat', 'dogs and cats are pets', 'the cat chased the mouse', 'stock markets fell sharply today', 'a cat is a small pet'] (split on spaces)`,output:`bm25 = [0.5133, 0.0, 0.5576, 0.0, 1.8336], candidates = [4, 2, 0]`,explanation:`Doc 4 contains both terms. Doc 1 ('cats', 'pets') scores 0: BM25 matches exact tokens only.`},{input:`same query and docs, query_emb = [1.0, 0.5, 0.0], doc_embs rows 0, 2, 4 = [1, 0.5, 0], [0.6, 0.6, 0.4], [0, 0.3, 1]; n=3, alpha=0.5`,output:`reranked = [0, 2, 4], fused = [0.64, 0.5811, 0.5643]`,explanation:`Doc 0's embedding matches the query exactly (cos = 1), so the rerank lifts it above doc 4, whose embedding is far from the query.`}],starterCode:`import numpy as np
 
 def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
     """
     BM25 score of every document for one query.
 
     Args:
-        query_tokens: list of query tokens
+        query_tokens: list of query tokens (each distinct term counts once)
         docs_tokens: list of N token lists
         k1, b: BM25 parameters
 
@@ -19009,7 +17901,8 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
 def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
                         n=3, alpha=0.5, k1=1.5, b=0.75):
     """
-    BM25 top-n, then rerank by alpha * normalised BM25 + (1 - alpha) * cosine.
+    BM25 top-n, then rerank by alpha * (bm25 / max candidate bm25)
+    + (1 - alpha) * cosine(query_emb, doc_emb).
 
     Args:
         query_emb: (D,) query embedding
@@ -19034,9 +17927,10 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
     retrieve_and_rerank(['cat'], docs, np.array([0.0, 1.0]), E, n=3, alpha=1.0)['reranked'].tolist(),
     retrieve_and_rerank(['cat'], docs, np.array([0.0, 1.0]), E, n=3, alpha=0.0)['reranked'].tolist(),
 ))([s.split() for s in ['cat cat dog', 'cat', 'dog bird', 'a cat b c']],
-   np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]]))`,expected:`([1, 0, 3], [3, 1, 0])`,hidden:!0}],hints:[`Precompute N, the document lengths and avgdl; loop over dict.fromkeys(query_tokens) to get unique terms in order`,`For each term: tf = np.array([d.count(t) for d in docs]); n_t = np.count_nonzero(tf); idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1)`,`Candidates: np.argsort(-bm25, kind="stable")[:n]`,`Cosine of the query against doc_embs[candidates]; fused = alpha * bm25_c / bm25_c.max() + (1 - alpha) * cos; stable argsort of -fused`],solution:`import numpy as np
+   np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]]))`,expected:`([1, 0, 3], [3, 1, 0])`,hidden:!0},{id:`6`,description:`A repeated query term counts once`,input:`(lambda D: bool(np.allclose(bm25_scores(['cat', 'cat', 'pet'], D), bm25_scores(['cat', 'pet'], D))))([s.split() for s in ['a cat', 'a pet store', 'cat and pet', 'nothing here']])`,expected:`True`,hidden:!0}],hints:[`Two independent pieces: a lexical scorer over the whole corpus, then a small rerank over n candidates. Get the BM25 numbers right first (the first test checks them alone).`,`BM25: precompute N, the document lengths and avgdl; for each distinct query term, compute its term frequency in every document and its IDF, and add the saturated, length-normalized contribution.`,`for t in dict.fromkeys(query_tokens): tf = np.array([d.count(t) for d in docs]); n_t = np.count_nonzero(tf); idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1). Candidates: np.argsort(-bm25, kind="stable")[:n].`,`Normalize BM25 by the max over the candidates (guard against a max of 0), compute cosine only for the candidates, and use a stable sort of -fused so ties keep the BM25 order.`],solution:`import numpy as np
 
 def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
+    """Returns an (N,) array of BM25 scores."""
     N = len(docs_tokens)
     lengths = np.array([len(d) for d in docs_tokens], dtype=float)
     avgdl = lengths.mean()
@@ -19045,20 +17939,23 @@ def bm25_scores(query_tokens, docs_tokens, k1=1.5, b=0.75):
         tf = np.array([d.count(term) for d in docs_tokens], dtype=float)
         n_t = np.count_nonzero(tf)
         idf = np.log((N - n_t + 0.5) / (n_t + 0.5) + 1.0)
+        # Saturating term frequency with length normalization
         scores += idf * tf * (k1 + 1) / (tf + k1 * (1 - b + b * lengths / avgdl))
     return scores
 
 
 def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
                         n=3, alpha=0.5, k1=1.5, b=0.75):
+    """Returns a dict with 'bm25', 'candidates', 'reranked', 'fused'."""
     bm25 = bm25_scores(query_tokens, docs_tokens, k1, b)
-    candidates = np.argsort(-bm25, kind='stable')[:n]
+    candidates = np.argsort(-bm25, kind='stable')[:n]   # ties: lower index first
 
     # Cosine similarity between the query and each candidate
     q = np.asarray(query_emb, dtype=float)
     D = np.asarray(doc_embs, dtype=float)[candidates]
     cos = D @ q / (np.linalg.norm(D, axis=1) * np.linalg.norm(q) + 1e-12)
 
+    # Put BM25 on a [0, 1] scale before mixing
     cand_bm25 = bm25[candidates]
     top = cand_bm25.max()
     bm25_norm = cand_bm25 / top if top > 0 else np.zeros_like(cand_bm25)
@@ -19071,6 +17968,8 @@ def retrieve_and_rerank(query_tokens, docs_tokens, query_emb, doc_embs,
         'reranked': candidates[order],
         'fused': fused[order],
     }
+
+# BM25: O(|q| * total corpus tokens) here (an inverted index makes it sublinear); rerank: O(n * D)
 `}],G=[{id:`grpo-advantages`,title:`GRPO: Group-Relative Advantages & Objective`,section:`post-training`,difficulty:`hard`,description:"\n## GRPO: Group-Relative Advantages & Objective\n\n### What you'll build\nTwo functions: `group_advantages`, which turns each prompt's group of rewards into normalized advantages, and `grpo_objective`, the clipped, masked GRPO objective with a k3 KL penalty.\n\n### Background\nGRPO (Group Relative Policy Optimization, DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a **group** of G responses and score each one with a reward model or a verifier (e.g. 1 if the final answer is correct, 0 otherwise). The group mean plays the role of the critic's baseline, so there is no critic to train. Compared with **PPO-RLHF Objective** (Reinforcement Learning), the KL to the reference model is a separate term in the objective rather than part of the reward, and it uses the k3 estimator, which is never negative (compare **KL Divergence Penalty (RLHF)**).\n\n### Formula\n**Step 1: group-normalized advantages.** For prompt b with rewards r_{b,1..G}:\n```text\nA_{b,i} = (r_{b,i} - mean_i r_{b,:}) / (std_i r_{b,:} + eps)\n```\n- `std` is the **population** standard deviation (ddof = 0: `np.std`'s default; PyTorch `unbiased=False`)\n- This is outcome supervision: every token of response i gets the same advantage A_{b,i}\n\n**Step 2: per-token clipped surrogate and k3 KL.** For token t of response i (log-probs of the sampled token):\n```text\nratio = exp(logp - old_logp)\nsurr  = min(ratio · A, clip(ratio, 1 - ε, 1 + ε) · A)\nd     = ref_logp - logp\nkl    = exp(d) - d - 1                 k3 estimate of KL(π_θ ‖ π_ref), always ≥ 0\nper_token = surr - β · kl\n```\n\n**Step 3: average** (as in the DeepSeekMath objective):\n```text\nJ = mean over all (b, i) of [ Σ_t mask_t · per_token_t / Σ_t mask_t ]\n```\nFirst average over each response's **valid** tokens (mask = 1 for real tokens, 0 for padding), then over all B·G responses. `'mean_kl'` uses the same averaging applied to `kl`. The training loss is -J.\n\n### Inputs\n- `rewards`: (B, G) floats, one scalar per response\n- `logp`, `old_logp`, `ref_logp`: (B, G, T) token log-probs under the current policy, the policy that sampled the data, and the frozen reference model\n- `mask`: (B, G, T) of 0/1, with at least one valid token per response\n- `epsilon` (clip range, default 0.2), `beta` (KL coefficient, default 0.04), `eps` (std epsilon, default 1e-8)\n\n### Expected return format\n`group_advantages(rewards, eps=1e-8)` returns the (B, G) float array of advantages.\n\n`grpo_objective(...)` returns a dictionary with these keys:\n- `'advantages'`: the (B, G) array from step 1\n- `'objective'`: J as a Python float (to maximize)\n- `'loss'`: -J as a Python float (to minimize)\n- `'mean_kl'`: the masked, averaged k3 KL as a Python float\n\n### Edge cases and conventions\n- A group where every response has the same reward gets advantage 0 everywhere: no learning signal, and no division by zero thanks to eps.\n- Values at padded positions (mask = 0) must not affect any output.\n- On-policy with no drift (logp = old_logp = ref_logp), ratio = 1 and kl = 0, so J is the mean advantage, which is 0.\n\n### Constraints\nNumPy only, fully vectorized (no Python loops over B, G or T).\n\n### Follow-up\n- Dr. GRPO argues that dividing by the response length (1/|o_i|) and by the group std biases training toward particular lengths and prompts. What changes if you drop them?\n- How large should G be? What happens to the advantage estimates with G = 2?\n    ",examples:[{input:`group_advantages([[1.0, 0.0, 0.0, 1.0]])`,output:`[[1.0, -1.0, -1.0, 1.0]]`,explanation:`Mean 0.5, population std 0.5: correct answers get +1, wrong ones -1`},{input:`group_advantages([[0.5, 0.5, 0.5], [1.0, 2.0, 3.0]])`,output:`[[0.0, 0.0, 0.0], [-1.224745, 0.0, 1.224745]]`,explanation:`Identical rewards give 0 (no NaN); the second group has std √(2/3) = 0.8165`},{input:`grpo_objective(logp=[[[0.0], [0.0]]], old_logp=[[[-1.0], [0.0]]], ref_logp=[[[0.0], [0.0]]], rewards=[[1.0, 0.0]], mask=[[[1], [1]]], epsilon=0.2, beta=0.0)`,output:`{'objective': 0.1, 'loss': -0.1, 'mean_kl': 0.0, ...}`,explanation:`A = [+1, -1]; response 1 has ratio e ≈ 2.72, clipped to 1.2; response 2 has ratio 1, so J = (1.2 - 1) / 2 = 0.1`}],starterCode:`import numpy as np
 
 def group_advantages(rewards, eps=1e-8):

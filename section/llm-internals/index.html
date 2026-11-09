@@ -78,70 +78,94 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>LLM Internals | ML Grind</title>
-<meta name="description" content="SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured." data-rh="true" />
+<meta name="description" content="How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention&#39;s online softmax, mixture-of-experts routing and perplexity." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/llm-internals" data-rh="true" />
 <meta property="og:title" content="LLM Internals | ML Grind" data-rh="true" />
-<meta property="og:description" content="SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured." data-rh="true" />
+<meta property="og:description" content="How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention&#39;s online softmax, mixture-of-experts routing and perplexity." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/llm-internals" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="LLM Internals | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured." data-rh="true" />
+<meta name="twitter:description" content="How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention&#39;s online softmax, mixture-of-experts routing and perplexity." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"LLM Internals","description":"SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.","url":"https://mlgrind.github.io/section/llm-internals","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"LLM Internals","description":"How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention's online softmax, mixture-of-experts routing and perplexity.","url":"https://mlgrind.github.io/section/llm-internals","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">LLM Internals</h1><p class="text-lg text-gray-600 dark:text-dark-200">SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.</p><div class="prose dark:prose-invert max-w-none"><h2>LLM Internals</h2>
-<p>You know how a Transformer block works. This section is about what changes when that block becomes a <strong>production LLM</strong>: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how we measure a language model at all. These are the details LLM engineering interviews probe.</p>
-<p>Some pieces of the pipeline below have their own problems elsewhere: BPE tokenization, RoPE and grouped-query attention in <strong>Transformer Architecture</strong>, and temperature, top-k/top-p sampling, the KV cache and speculative decoding in <strong>LLM Generation &amp; Decoding</strong>. This section covers the rest.</p>
-<h2>How an LLM generates text, end to end</h2>
-<pre><code>text -&gt; tokenizer -&gt; token ids (B, T)
-     -&gt; embedding lookup                         (B, T, d_model)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">LLM Internals</h1><p class="text-lg text-gray-600 dark:text-dark-200">How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention&#x27;s online softmax, mixture-of-experts routing and perplexity.</p><div class="prose dark:prose-invert max-w-none"><h2>LLM Internals</h2>
+<h2>Why it matters</h2>
+<p>You know how a Transformer block works. This section is about what changes when that block becomes a <strong>production LLM</strong>: the exact layers modern models use, how attention is made to fit long contexts, how sparse models scale, and how a language model is measured. LLM engineering interviews probe exactly these details, usually as &quot;why&quot; questions after you&#x27;ve written the code.</p>
+<h2>How an LLM works, end to end</h2>
+<p>Each stage has a problem somewhere on this site:</p>
+<pre><code class="language-text">text -&gt; tokenizer -&gt; ids (B, T)                       BPE, longest match       (Transformer Architecture)
+     -&gt; embedding lookup -&gt; h (B, T, d_model)
      -&gt; N x decoder block:
-            h = h + Attention(RMSNorm(h))        causal, multi-head, positions via RoPE
-            h = h + FFN(RMSNorm(h))              SwiGLU MLP, or a mixture of experts
-     -&gt; final RMSNorm -&gt; LM head                 logits (B, T, vocab)
-     -&gt; pick next token (greedy / sampling), append it, repeat
+          h = h + Attention(RMSNorm(h))               causal, RoPE, GQA        (Transformer Architecture)
+                                                      computed with the online softmax (this section)
+          h = h + FFN(RMSNorm(h))                     SwiGLU MLP or a mixture of experts (this section)
+     -&gt; final RMSNorm -&gt; LM head -&gt; logits (B, T, vocab)
+     -&gt; training: next-token cross-entropy / perplexity (this section)
+     -&gt; inference: KV cache + sampling, one token at a time (LLM Generation &amp; Decoding)
 </code></pre>
-<p>Training runs the whole sequence at once and minimizes next-token cross-entropy. Inference runs one token at a time, so <strong>memory bandwidth</strong> and <strong>cache size</strong> dominate, not FLOPs.</p>
-<h2>What each technique solves</h2>
-<table><thead><tr><th>Technique</th><th>Problem it solves</th><th>Axis</th><th>Problem here</th></tr></thead><tbody><tr><td>SwiGLU FFN + RMSNorm</td><td>Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm</td><td>Quality</td><td>SwiGLU Feed-Forward Block</td></tr><tr><td>Online softmax (FlashAttention)</td><td>The <code>(T, T)</code> score matrix doesn&#x27;t fit in fast memory for long sequences</td><td>Memory + speed</td><td>Online Softmax</td></tr><tr><td>Mixture of experts</td><td>More parameters without more compute per token</td><td>Speed (compute)</td><td>Mixture-of-Experts Routing</td></tr><tr><td>Cross-entropy / perplexity</td><td>One number to train on and to compare models with</td><td>Quality (evaluation)</td><td>Token Cross-Entropy and Perplexity</td></tr></tbody></table>
-<h2>Key formulas</h2>
+<p>Training runs the whole sequence at once and is compute-bound. Inference runs one token at a time, so <strong>memory bandwidth</strong> and <strong>cache size</strong> dominate, not FLOPs.</p>
+<h2>Core ideas</h2>
+<table><thead><tr><th>Technique</th><th>Problem it solves</th><th>Axis</th></tr></thead><tbody><tr><td>SwiGLU FFN + RMSNorm</td><td>Better quality per parameter than a ReLU MLP; cheaper normalization than LayerNorm</td><td>Quality</td></tr><tr><td>Online softmax (FlashAttention)</td><td>The <code>(T, T)</code> score matrix doesn&#x27;t fit in fast memory for long sequences</td><td>Memory traffic</td></tr><tr><td>Mixture of experts</td><td>More parameters without more compute per token</td><td>Compute</td></tr><tr><td>Cross-entropy / perplexity</td><td>One number to train on and to compare models with</td><td>Evaluation</td></tr></tbody></table>
 <p><strong>SwiGLU and RMSNorm</strong> (LLaMA):</p>
-<pre><code>rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
-ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,   silu(z) = z * sigmoid(z)
+<pre><code class="language-text">rms_norm(x) = x / sqrt(mean(x^2) + eps) * w
+ffn(x)      = (silu(x W_gate) * (x W_up)) W_down,     silu(z) = z * sigmoid(z)
 </code></pre>
-<p><strong>Online softmax</strong>: stream over key blocks, keeping a running max <code>m</code>, normalizer <code>l</code> and output <code>acc</code>:</p>
-<pre><code>m&#x27; = max(m, rowmax(S_b))
+<p><strong>Online softmax</strong>: stream over key blocks with a running max <code>m</code>, normalizer <code>l</code> and output <code>acc</code>:</p>
+<pre><code class="language-text">m&#x27; = max(m, rowmax(S_b))
 l  = l * exp(m - m&#x27;) + rowsum(exp(S_b - m&#x27;))
-acc = acc * exp(m - m&#x27;) + exp(S_b - m&#x27;) @ V_b
-output = acc / l
+acc = acc * exp(m - m&#x27;) + exp(S_b - m&#x27;) @ V_b          output = acc / l
 </code></pre>
 <p><strong>MoE routing</strong> (top-k gates, Switch Transformer load-balancing loss):</p>
-<pre><code>gates = softmax(top-k router logits)
-y = sum_j gates_j * expert_{i_j}(x)
-aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router prob)
+<pre><code class="language-text">gates    = softmax(top-k router logits)
+y        = sum_j gates_j * expert_{i_j}(x)
+aux_loss = E * sum_e f_e * P_e      (f_e: fraction of routing slots, P_e: mean router probability)
 </code></pre>
 <p><strong>Perplexity</strong>:</p>
-<pre><code>mean_nll   = -(1 / N) * sum_t log p(x_t | x_&lt;t)      (padding masked out)
-perplexity = exp(mean_nll)                           (uniform over V tokens -&gt; V)
+<pre><code class="language-text">mean_nll   = -(1 / N) * sum_t log p(x_t | x_&lt;t)        padding masked out
+perplexity = exp(mean_nll)                             uniform over V tokens -&gt; V
 </code></pre>
-<h2>Interview essentials</h2>
+<h2>Worked micro-example</h2>
+<p>Online softmax of <code>x = [0, 1, 5, 2, 9]</code> with blocks of 2:</p>
+<pre><code class="language-text">block [0, 1]: m = 1, l = e^-1 + e^0                   = 1.3679
+block [5, 2]: m = 5, l = 1.3679 * e^-4 + e^0 + e^-3   = 1.0748   (old sum rescaled by e^(1-5))
+block [9]   : m = 9, l = 1.0748 * e^-4 + e^0          = 1.0197
+softmax(x)  = exp(x - 9) / 1.0197 = [0.0001, 0.0003, 0.018, 0.0009, 0.9807]
+</code></pre>
+<p>The same numbers come out of a two-pass softmax; the online version never needed the global max up front. FlashAttention does this for every query row, with <code>acc</code> carrying the weighted values.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li>Why SwiGLU uses <code>d_ff ≈ (8/3) d_model</code> instead of <code>4 d_model</code></li>
-<li>Why FlashAttention is exact (not an approximation) and what it saves: memory traffic, not FLOPs</li>
-<li>What goes wrong in an MoE without the auxiliary loss (expert collapse) and how capacity factors drop tokens</li>
-<li>Why perplexity must exclude padding, and why it&#x27;s only comparable between models with the same tokenizer</li>
+<li><strong>RMSNorm is not LayerNorm</strong>: no mean subtraction and no bias; the residual adds the un-normalized input.</li>
+<li><strong>Online softmax</strong>: forgetting to rescale <code>acc</code> (not just <code>l</code>) when the max changes, or dividing by <code>l</code> inside the loop.</li>
+<li><strong>MoE</strong>: computing <code>f</code> from gates instead of routing counts, using the renormalized top-k gates for <code>P</code>, or running every expert on every token.</li>
+<li><strong>Perplexity</strong>: dividing by the number of positions instead of the number of real tokens; comparing perplexities across different tokenizers.</li>
+<li><strong>Overflow</strong> everywhere: log-softmax and attention need the max subtracted.</li>
 </ul>
-<p>Then put it all together in the capstone <strong>Mini GPT</strong> problem (E2E Implementations).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/llm-internals/rmsnorm-swiglu">SwiGLU Feed-Forward Block (LLaMA MLP) →</a></li><li><a href="/problem/llm-internals/online-softmax">Online Softmax (the FlashAttention Trick) →</a></li><li><a href="/problem/llm-internals/moe-routing">Mixture-of-Experts Routing →</a></li><li><a href="/problem/llm-internals/perplexity">Token Cross-Entropy and Perplexity →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview angle</h2>
+<ul>
+<li>Why does SwiGLU use <code>d_ff ≈ (8/3) d_model</code> instead of <code>4 d_model</code>?</li>
+<li>Why is FlashAttention exact, and what does it save? (Memory traffic and <code>O(T^2)</code> memory, not FLOPs.)</li>
+<li>What goes wrong in an MoE without the auxiliary loss (expert collapse)? How do capacity factors drop tokens? Total vs active parameters of Mixtral 8x7B (about 47B vs 13B).</li>
+<li>Why must perplexity exclude padding, and why is it only comparable between models with the same tokenizer?</li>
+</ul>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>SwiGLU Feed-Forward Block (LLaMA MLP)</strong>: RMSNorm, the gated MLP and the residual.</li>
+<li><strong>Online Softmax (the FlashAttention Trick)</strong>: streaming softmax and block-wise exact attention.</li>
+<li><strong>Mixture-of-Experts Routing</strong>: top-k routing, dispatch/combine and the load-balancing loss.</li>
+<li><strong>Token Cross-Entropy and Perplexity</strong>: the LM loss with a padding mask.</li>
+</ol>
+<p><strong>Related problems.</strong> The attention half of the LLaMA block (RoPE, GQA, causal mask) is in <strong>Transformer Architecture</strong>, along with <strong>Attention Backward Pass</strong>, whose <code>rowsum(dP * P)</code> term FlashAttention&#x27;s backward pass also needs. Decoding and the KV cache are in <strong>LLM Generation &amp; Decoding</strong>. <strong>Masked Cross-Entropy with Label Smoothing</strong> (Neural Networks) is a close cousin of the perplexity problem. Then assemble a full model in <strong>Mini GPT</strong>, debug one in <strong>Transformer Bug Hunt</strong>, and compare with the post-norm encoder in <strong>E2E: Transformer Encoder</strong> (all in E2E Implementations).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/llm-internals/rmsnorm-swiglu">SwiGLU Feed-Forward Block (LLaMA MLP) →</a></li><li><a href="/problem/llm-internals/online-softmax">Online Softmax (the FlashAttention Trick) →</a></li><li><a href="/problem/llm-internals/moe-routing">Mixture-of-Experts Routing →</a></li><li><a href="/problem/llm-internals/perplexity">Token Cross-Entropy and Perplexity →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

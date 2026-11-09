@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>KV Cache for Efficient Generation - LLM Generation &amp; Decoding | ML Grind</title>
 <meta name="description" content="Implement KV Cache for Efficient Generation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/llm-generation/llm-kv-cache" data-rh="true" />
@@ -100,60 +100,67 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"KV Cache for Efficient Generation - LLM Generation & Decoding","description":"Implement KV Cache for Efficient Generation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/llm-generation/llm-kv-cache","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">KV Cache for Efficient Generation - LLM Generation &amp; Decoding</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement KV Cache for Efficient Generation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>KV Cache for Efficient Generation</h2>
-<p>Implement KV (Key-Value) caching to make autoregressive generation efficient.</p>
-<h3>The Problem</h3>
-<p>In autoregressive generation, at each step we compute:</p>
-<pre><code>Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
+<h3>What you&#x27;ll build</h3>
+<p>One decoding step of single-head attention with a <strong>KV cache</strong>: project only the new token, append its key and value to the cache, and let its query attend over every cached position.</p>
+<h3>Background</h3>
+<p>Generation is autoregressive: to produce token <code>t+1</code> the model needs attention over tokens <code>0..t</code>. The keys and values of tokens <code>0..t-1</code> don&#x27;t change once computed (causal attention never lets old tokens see new ones), so recomputing them every step is wasted work. Caching them turns each step from &quot;re-run the whole prefix&quot; into &quot;process one token&quot;. This is why LLM serving has two phases: <strong>prefill</strong> (run the prompt in parallel and fill the cache) and <strong>decode</strong> (one token per step, reading the whole cache). The cache, <code>2 · n_layers · n_kv_heads · d_head · seq_len</code> numbers per sequence, is often bigger than the model&#x27;s activations; <strong>GQA</strong> (Transformer Architecture) and sliding windows exist to shrink it.</p>
+<h3>Algorithm</h3>
+<p>For the new token embedding <code>x_new</code> <code>(1, d_model)</code>:</p>
+<pre><code class="language-text">q = x_new @ W_Q            # (1, d_k)   only the new token is projected
+k = x_new @ W_K            # (1, d_k)
+v = x_new @ W_V            # (1, d_v)
+k_cache = concat(k_cache, k)  -&gt; (t + 1, d_k)     (start from k if the cache is None)
+v_cache = concat(v_cache, v)  -&gt; (t + 1, d_v)
+output  = softmax(q @ k_cache.T / sqrt(d_k)) @ v_cache    # (1, d_v)
 </code></pre>
-<p>Without caching, we recompute K and V for ALL previous tokens at every step. For a sequence of length n, this is O(n²) per token.</p>
-<h3>The Solution: KV Cache</h3>
-<p>Cache the K and V projections from previous steps:</p>
-<ol>
-<li><strong>First token</strong>: Compute K, V for the prompt. Cache them.</li>
-<li><strong>Each new token</strong>: Compute K_new, V_new for only the new token. Append to cache.</li>
-<li><strong>Attention</strong>: Use Q_new (just the new token) with the full cached K, V.</li>
-</ol>
-<h3>Implementation</h3>
-<pre><code># Step t: generating token t
-K_new = x_t @ W_K          # (1, d_k) - only new token
-V_new = x_t @ W_V          # (1, d_v) - only new token
-K_cache = concat(K_cache, K_new)  # (t, d_k)
-V_cache = concat(V_cache, V_new)  # (t, d_v)
-
-Q_t = x_t @ W_Q            # (1, d_k) - only new token
-output = attention(Q_t, K_cache, V_cache)  # attend to all
-</code></pre>
-<h3>Speedup</h3>
+<p>No mask is needed: the cache only contains the past and the current token, so this is exactly causal attention for the last position.</p>
+<h3>Inputs</h3>
 <ul>
-<li>Without cache: O(n²d) total for n tokens</li>
-<li>With cache: O(nd) total for n tokens</li>
+<li><code>x_new</code>: <code>(1, d_model)</code></li>
+<li><code>W_Q</code>, <code>W_K</code>: <code>(d_model, d_k)</code>; <code>W_V</code>: <code>(d_model, d_v)</code></li>
+<li><code>k_cache</code>: <code>(t, d_k)</code> or None; <code>v_cache</code>: <code>(t, d_v)</code> or None (None on the first step)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache, v_cache):
-    # Returns: output, updated_k_cache, updated_v_cache
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x_new (1, d_model), cache has 5 previous tokens
-Output: output (1, d_v), caches now have 6 entries each</pre><p>New K,V appended; attention computed over all 6 tokens</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A tuple <code>(output, k_cache, v_cache)</code>:</p>
+<ul>
+<li><code>output</code>: <code>(1, d_v)</code></li>
+<li><code>k_cache</code>: <code>(t + 1, d_k)</code>, <code>v_cache</code>: <code>(t + 1, d_v)</code>, with the new row <strong>appended at the end</strong></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>First step (<code>None</code> caches): the new token attends only to itself, so <code>output = v</code>.</li>
+<li>Stable softmax; scale by <code>sqrt(d_k)</code> where <code>d_k = W_Q.shape[1]</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Don&#x27;t recompute keys or values for cached tokens.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Per generated token, attention with a cache costs <code>O(t · d)</code> instead of <code>O(t^2 · d)</code> (or <code>O(t · d^2)</code> for the projections). Over <code>n</code> tokens: <code>O(n^2 d)</code> vs <code>O(n^3 d)</code>.</li>
+<li>How big is the KV cache of a 32-layer, 8-KV-head, <code>d_head = 128</code> model at 32k tokens in fp16? (About 4 GiB per sequence.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Step 1: kv_cache_attention(np.array([[1.0, 0.0]]), I, I, I); step 2 with x = [[0.0, 1.0]] and the returned caches (I = np.eye(2))
+Output: step 1 output [[1.0, 0.0]]; step 2 output [[0.3302, 0.6698]], caches of length 2</pre><p>Step 2: scores [0, 1] / sqrt(2) give weights [0.3302, 0.6698] over the two cached values.</p></div><div><pre class="overflow-auto">Input: x_new (1, 8), cache of 5 previous tokens, d_k = d_v = 4
+Output: output (1, 4), caches (6, 4)</pre><p>One new key/value is appended; the query attends over all 6 positions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def kv_cache_attention(x_new, W_Q, W_K, W_V, k_cache=None, v_cache=None):
     &quot;&quot;&quot;
-    Compute attention with KV caching for efficient autoregressive generation.
+    One decoding step of attention with a KV cache.
 
     Args:
         x_new: New token embedding (1, d_model)
-        W_Q: Query weight matrix (d_model, d_k)
-        W_K: Key weight matrix (d_model, d_k)
-        W_V: Value weight matrix (d_model, d_v)
-        k_cache: Cached keys from previous steps (seq_len, d_k) or None
-        v_cache: Cached values from previous steps (seq_len, d_v) or None
+        W_Q: Query weights (d_model, d_k)
+        W_K: Key weights (d_model, d_k)
+        W_V: Value weights (d_model, d_v)
+        k_cache: Cached keys (t, d_k) or None on the first step
+        v_cache: Cached values (t, d_v) or None on the first step
 
     Returns:
-        output: Attention output for new token (1, d_v)
-        k_cache: Updated key cache (seq_len+1, d_k)
-        v_cache: Updated value cache (seq_len+1, d_v)
+        output: Attention output for the new token (1, d_v)
+        k_cache: Updated key cache (t + 1, d_k), new row last
+        v_cache: Updated value cache (t + 1, d_v), new row last
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/llm-generation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Flow Matching (Rectified Flow) - Generative Models | ML Grind</title>
 <meta name="description" content="Implement Flow Matching (Rectified Flow) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/generative-models/flow-matching" data-rh="true" />
@@ -99,33 +99,52 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Flow Matching (Rectified Flow) - Generative Models","description":"Implement Flow Matching (Rectified Flow) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/generative-models/flow-matching","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Flow Matching (Rectified Flow) - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Flow Matching (Rectified Flow) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Conditional Flow Matching</h2>
-<p>Flow matching (Lipman et al., 2023) and rectified flow (Liu et al., 2023) train a network v_θ(x, t) to be a <strong>velocity field</strong> that carries noise to data along an ODE. With straight-line paths, training is plain regression.</p>
-<h3>Training target</h3>
-<p>Sample noise x0 ~ N(0, I), a data point x1, and a time t ~ U(0, 1) for each example. The point on the straight path and its velocity are:</p>
-<pre><code>x_t      = (1 - t) · x0 + t · x1
-target   = d x_t / dt = x1 - x0
-loss     = mean( (v_pred - target)² )        (mean over every element of the batch)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Flow Matching (Rectified Flow) - Generative Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Flow Matching (Rectified Flow) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Conditional Flow Matching (Rectified Flow)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The training target and loss of flow matching with straight paths, and an Euler sampler that integrates the learned velocity field from noise to data.</p>
+<h3>Background</h3>
+<p>Flow matching (Lipman et al., 2023) and rectified flow (Liu et al., 2023) train a network <code>v_θ(x, t)</code> to be a <strong>velocity field</strong> whose ODE carries noise to data. With straight-line paths between a noise sample and a data sample, training is plain regression, with no noise schedule or variance bookkeeping. Stable Diffusion 3 and Flux are trained this way.</p>
+<h3>Formula (training)</h3>
+<p>Sample noise <code>x0 ~ N(0, I)</code>, a data point <code>x1</code>, and <code>t ~ U(0, 1)</code> per example:</p>
+<pre><code class="language-text">x_t    = (1 − t) · x0 + t · x1           # point on the straight path
+target = d x_t / dt = x1 − x0            # its constant velocity
+loss   = mean( (v_pred − target)² )      # mean over every element of the batch
 </code></pre>
-<p>Here t = 0 is noise and t = 1 is data. <code>t</code> has shape (B,) and must broadcast over the remaining dimensions of x0 (reshape it to (B, 1, ..., 1)).</p>
-<h3>Sampling with Euler steps</h3>
-<p>Start at x0 ~ N(0, I) and integrate dx/dt = v(x, t) from t = 0 to t = 1:</p>
-<pre><code>x_{t+dt} = x_t + dt · v(x_t, t)
-</code></pre>
-<p>With n steps, dt = 1/n and the times are t = 0, 1/n, ..., (n-1)/n. If the learned field is exactly the straight-line velocity, a <strong>single</strong> Euler step already lands on the data: that is the appeal of straight (rectified) paths.</p>
-<h3>Expected Return Format</h3>
+<p>Here <strong>t = 0 is noise and t = 1 is data</strong> (some papers use the opposite convention). <code>t</code> has shape <code>(B,)</code>: reshape it to <code>(B, 1, ..., 1)</code> so it broadcasts over the remaining dimensions.</p>
+<h3>Algorithm (sampling with Euler steps)</h3>
+<ol>
+<li>Start from <code>x = x0</code> and set <code>dt = 1 / n_steps</code>.</li>
+<li>For <code>i = 0, ..., n_steps − 1</code>: <code>t = i · dt</code> (a Python float), <code>x ← x + dt · velocity_fn(x, t)</code>.</li>
+<li>Return <code>x</code>.</li>
+</ol>
+<p>If the learned field is exactly the straight-line velocity, a <strong>single</strong> Euler step lands on the data: that is the appeal of straight (rectified) paths.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>flow_matching_loss(x0, x1, t, v_pred)</code> returns a dictionary:
+<li><code>x0</code>, <code>x1</code>, <code>v_pred</code>: float arrays <code>(B, ...)</code> of the same shape</li>
+<li><code>t</code>: float array <code>(B,)</code> with values in [0, 1]</li>
+<li><code>velocity_fn(x, t)</code>: callable returning an array shaped like <code>x</code>; <code>n_steps</code>: int ≥ 1</li>
+</ul>
+<h3>Expected return format</h3>
 <ul>
-<li><code>&#x27;x_t&#x27;</code>: interpolated points, same shape as x0</li>
-<li><code>&#x27;target&#x27;</code>: target velocity x1 - x0, same shape as x0</li>
-<li><code>&#x27;loss&#x27;</code>: MSE between v_pred and target (Python float)</li>
+<li><code>flow_matching_loss(x0, x1, t, v_pred)</code> returns a dict:
+<ul>
+<li><code>&#x27;x_t&#x27;</code>: interpolated points, same shape as <code>x0</code></li>
+<li><code>&#x27;target&#x27;</code>: target velocity <code>x1 − x0</code>, same shape as <code>x0</code></li>
+<li><code>&#x27;loss&#x27;</code>: MSE between <code>v_pred</code> and <code>target</code> (Python float)</li>
 </ul>
 </li>
-<li><code>euler_step(x_t, v, dt)</code> returns x_t + dt · v</li>
-<li><code>euler_sample(x0, velocity_fn, n_steps)</code> calls <code>velocity_fn(x, t)</code> (t a Python float) at each step and returns the final x</li>
+<li><code>euler_step(x_t, v, dt)</code> returns <code>x_t + dt · v</code></li>
+<li><code>euler_sample(x0, velocity_fn, n_steps)</code> returns the final <code>x</code> (same shape as <code>x0</code>)</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; the Euler loop is over steps, never over elements.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>How is this related to diffusion? (With Gaussian paths, flow matching recovers a probability-flow ODE of a diffusion model.)</li>
+<li>What does &quot;reflow&quot; do to make one-step sampling work for a real, imperfect model?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x0 = [[0, 0], [1, 1]], x1 = [[2, 4], [3, -1]], t = [0.25, 0.5]
-Output: x_t = [[0.5, 1.0], [2.0, 0.0]], target = [[2, 4], [2, -2]]</pre><p>Row 0 is a quarter of the way to its data point, row 1 halfway</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: x_t = [[0.5, 1.0], [2.0, 0.0]], target = [[2, 4], [2, -2]]</pre><p>Row 0 is a quarter of the way to its data point, row 1 halfway</p></div><div><pre class="overflow-auto">Input: euler_sample(np.array([2.0]), lambda x, t: -x, 4)
+Output: array([0.6328])</pre><p>Each step multiplies x by (1 − 1/4), so 2 · 0.75⁴ = 0.6328 (the exact ODE solution is 2·e⁻¹ = 0.7358)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def flow_matching_loss(x0, x1, t, v_pred):
     &quot;&quot;&quot;

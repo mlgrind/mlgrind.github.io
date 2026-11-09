@@ -78,94 +78,78 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>End-to-End Implementations | ML Grind</title>
-<meta name="description" content="Build complete ML models from scratch." data-rh="true" />
+<meta name="description" content="Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/e2e-implementations" data-rh="true" />
 <meta property="og:title" content="End-to-End Implementations | ML Grind" data-rh="true" />
-<meta property="og:description" content="Build complete ML models from scratch." data-rh="true" />
+<meta property="og:description" content="Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/e2e-implementations" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="End-to-End Implementations | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Build complete ML models from scratch." data-rh="true" />
+<meta name="twitter:description" content="Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"End-to-End Implementations","description":"Build complete ML models from scratch.","url":"https://mlgrind.github.io/section/e2e-implementations","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"End-to-End Implementations","description":"Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.","url":"https://mlgrind.github.io/section/e2e-implementations","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build complete ML models from scratch.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Implementations</h2>
-<p>Put everything together to build complete models from scratch.</p>
-<h2>Why Build From Scratch?</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">End-to-End Implementations</h1><p class="text-lg text-gray-600 dark:text-dark-200">Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.</p><div class="prose dark:prose-invert max-w-none"><h2>End-to-End Implementations</h2>
+<h2>Why it matters</h2>
+<p>Single formulas are only half the job: real bugs live in the glue between layers, in caches, shapes, masks and loss reductions. &quot;Implement a small model from scratch&quot; is a standard ML coding interview, and these capstones are the models interviewers ask for most: an MLP with backprop, a Transformer, a CNN, a GPT and the main generative models.</p>
+<h2>Core ideas</h2>
+<h3>Think in a pipeline of shapes</h3>
+<p>Write the shape after every step before writing code. For a CNN on MNIST:</p>
+<table><thead><tr><th>Step</th><th>Shape</th></tr></thead><tbody><tr><td>input</td><td><code>(batch, 1, 28, 28)</code></td></tr><tr><td>conv 3×3 → pool 2</td><td><code>(batch, 32, 26, 26)</code> → <code>(batch, 32, 13, 13)</code></td></tr><tr><td>conv 3×3 → pool 2</td><td><code>(batch, 64, 11, 11)</code> → <code>(batch, 64, 5, 5)</code></td></tr><tr><td>flatten → fc → fc</td><td><code>(batch, 1600)</code> → <code>(batch, 128)</code> → <code>(batch, 10)</code></td></tr></tbody></table>
+<p>For sequence models the residual stream keeps one shape, <code>(batch, seq_len, d_model)</code>, and attention scores are <code>(batch, heads, seq_len, seq_len)</code>.</p>
+<h3>The recurring building blocks</h3>
+<table><thead><tr><th>Block</th><th>Formula</th><th>Where it appears</th></tr></thead><tbody><tr><td>Softmax cross-entropy</td><td><code>loss = mean(−log softmax(z)[y])</code>, <code>∂loss/∂z = (p − onehot(y)) / N</code></td><td>MLP, CNN, GPT, ViT</td></tr><tr><td>Scaled dot-product attention</td><td><code>softmax(Q Kᵀ / sqrt(d_k) + mask) V</code></td><td>Transformer, GPT, ViT, bug hunt</td></tr><tr><td>LayerNorm</td><td><code>γ · (x − mean) / sqrt(var + eps) + β</code> over the last axis</td><td>all Transformers</td></tr><tr><td>Residual block</td><td>post-norm <code>LN(x + f(x))</code> (2017 Transformer) or pre-norm <code>x + f(LN(x))</code> (GPT, ViT)</td><td>all Transformers</td></tr><tr><td>Reparameterization</td><td><code>z = μ + exp(0.5·log_var) ⊙ ε</code></td><td>VAE</td></tr><tr><td>Vector quantization</td><td>nearest code <code>argmin_k ‖z − e_k‖²</code>, straight-through gradient</td><td>VQ-VAE</td></tr><tr><td>Diffusion</td><td><code>x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε</code>; reverse step removes predicted ε</td><td>DDPM</td></tr></tbody></table>
+<h3>Contracts matter</h3>
+<p>Each problem spells out a <strong>method contract</strong>: which dict keys to return, what to cache, which values are floats. Treat it like an API: the tests call your methods exactly as documented. Losses follow one convention across the course: MSE over all elements; the VAE KL summed over latent dims and averaged over the batch.</p>
+<h2>Worked micro-example</h2>
+<p>Softmax cross-entropy and its gradient for one example with logits <code>z = [2.0, 1.0, 0.1]</code> and label 0:</p>
+<ul>
+<li><code>p = softmax(z) = [0.659, 0.2424, 0.0986]</code></li>
+<li><code>loss = −log 0.659 = 0.417</code></li>
+<li><code>∂loss/∂z = p − onehot(0) = [−0.341, 0.2424, 0.0986]</code> (divide by N for a batch mean)</li>
+</ul>
+<p>Parameter count of the MNIST CNN above: conv1 <code>32·1·9 + 32 = 320</code>, conv2 <code>64·32·9 + 64 = 18,496</code>, fc1 <code>1600·128 + 128 = 204,928</code>, fc2 <code>1,290</code>. The dense layer holds over 90% of the weights.</p>
+<h2>Common pitfalls</h2>
+<ul>
+<li><strong>Loss reduction</strong>: a mean loss needs the <code>/ N</code> in its gradient; averaging the KL over latent dims shrinks it.</li>
+<li><strong>Cache discipline</strong>: backward needs the pre-activation <code>z1</code> for the ReLU gate, not just <code>h</code>.</li>
+<li><strong>Masks</strong>: apply the causal mask as <code>−inf</code> <strong>before</strong> the softmax; zeroing probabilities afterwards breaks normalisation.</li>
+<li><strong>Residuals</strong>: in pre-norm blocks add to <code>x</code>, not to <code>LN(x)</code>.</li>
+<li><strong>Head reshapes</strong>: transpose heads back before merging, or features from different heads get interleaved.</li>
+<li><strong>Positions</strong>: they start at 0, and generation must crop the context to <code>block_size</code>.</li>
+<li><strong>Stop-gradients</strong>: in a VQ-VAE the codebook and commitment terms differ only in where <code>.detach()</code> goes.</li>
+<li><strong>Randomness</strong>: draw noise exactly where the contract says, so seeded tests can reproduce it.</li>
+</ul>
+<h2>Interview angle</h2>
+<ul>
+<li>Expect &quot;implement it, then extend it&quot;: add a mask, a KV cache, weight decay, a second layer, or a training loop.</li>
+<li>Be ready with complexity: attention is <code>O(T²·d)</code> time and <code>O(T²)</code> memory per head; a conv layer is <code>O(B·C_out·C_in·k²·H·W)</code>.</li>
+<li>Verify gradients with finite differences, and know the initial-loss sanity check: about <code>log(num_classes)</code>.</li>
+<li>Explain design choices: pre-norm vs post-norm, tied vs untied LM heads, why VAEs predict <code>log_var</code>, why DDPM predicts noise.</li>
+</ul>
+<h2>Problems in this section</h2>
 <ol>
-<li><strong>Deep Understanding</strong>: Know every component</li>
-<li><strong>Interview Preparation</strong>: Common coding questions</li>
-<li><strong>Debugging Skills</strong>: Understand what can go wrong</li>
-<li><strong>Framework Independence</strong>: Adapt to any library</li>
+<li><strong>E2E: 2-Layer MLP with Backprop</strong>: forward, cross-entropy, hand-derived gradients, SGD and a training loop.</li>
+<li><strong>E2E: Transformer Encoder</strong>: layer norm, sinusoidal positions, multi-head attention and a post-norm encoder stack.</li>
+<li><strong>E2E: Variational Autoencoder</strong>: encoder, reparameterization, sigmoid decoder, negative ELBO and prior sampling.</li>
+<li><strong>E2E: Vector Quantized VAE</strong>: codebook lookup, VQ losses, MLP encoder/decoder and codebook usage.</li>
+<li><strong>E2E: Diffusion Model</strong>: schedule, forward noising, ε-MSE loss, reverse step and the sampling loop.</li>
+<li><strong>E2E: Convolutional Neural Network</strong>: conv2d, max pooling, flatten and a two-block classifier.</li>
+<li><strong>Mini GPT (Character-Level Language Model)</strong>: causal pre-norm decoder, next-token loss, training and greedy generation.</li>
+<li><strong>E2E: Tiny Vision Transformer</strong>: patches, [CLS] token, position embeddings and a linear-probe training step.</li>
+<li><strong>Transformer Bug Hunt: Fix a Broken Mini-GPT</strong>: find four silent bugs in a working-looking forward pass.</li>
 </ol>
-<h2>Models Covered</h2>
-<h3>2-Layer MLP with Backprop</h3>
-<p>Complete neural network with:</p>
-<ul>
-<li>Forward pass through hidden layer</li>
-<li>Backpropagation of gradients</li>
-<li>Weight updates via gradient descent</li>
-</ul>
-<h3>Transformer Encoder</h3>
-<p>Full encoder block with:</p>
-<ul>
-<li>Multi-head self-attention</li>
-<li>Positional encoding</li>
-<li>Layer normalization</li>
-<li>Feed-forward network</li>
-<li>Residual connections</li>
-</ul>
-<h3>Variational Autoencoder (VAE)</h3>
-<p>Generative model with:</p>
-<ul>
-<li>Encoder → latent distribution</li>
-<li>Reparameterization trick</li>
-<li>Decoder → reconstruction</li>
-<li>ELBO loss (reconstruction + KL)</li>
-</ul>
-<h3>Diffusion Model</h3>
-<p>DDPM-style diffusion with:</p>
-<ul>
-<li>Noise schedule (β, α, ᾱ)</li>
-<li>Forward diffusion process</li>
-<li>Reverse denoising process</li>
-<li>Training objective</li>
-</ul>
-<h3>Convolutional Neural Network</h3>
-<p>Image classifier with:</p>
-<ul>
-<li>Conv2D layers</li>
-<li>Max pooling</li>
-<li>Flatten + FC layers</li>
-<li>Full forward pass</li>
-</ul>
-<h3>Mini GPT</h3>
-<p>Character-level decoder-only Transformer with:</p>
-<ul>
-<li>Token + position embeddings</li>
-<li>Causal self-attention blocks</li>
-<li>Next-token cross-entropy loss and training</li>
-<li>Greedy generation</li>
-</ul>
-<h3>Tiny Vision Transformer</h3>
-<p>Image classifier with:</p>
-<ul>
-<li>Patch embeddings + [CLS] token</li>
-<li>Position embeddings</li>
-<li>A pre-norm encoder block</li>
-<li>Classification from the CLS token</li>
-</ul>
-<p>Build these models to truly understand deep learning!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/e2e-implementations/e2e-mlp">E2E: 2-Layer MLP with Backprop →</a></li><li><a href="/problem/e2e-implementations/e2e-transformer">E2E: Transformer Encoder →</a></li><li><a href="/problem/e2e-implementations/e2e-vae">E2E: Variational Autoencoder →</a></li><li><a href="/problem/e2e-implementations/e2e-vqvae">E2E: Vector Quantized VAE →</a></li><li><a href="/problem/e2e-implementations/e2e-diffusion">E2E: Diffusion Model →</a></li><li><a href="/problem/e2e-implementations/e2e-cnn">E2E: Convolutional Neural Network →</a></li><li><a href="/problem/e2e-implementations/e2e-mini-gpt">Mini GPT (Character-Level Language Model) →</a></li><li><a href="/problem/e2e-implementations/e2e-vit-classifier">E2E: Tiny Vision Transformer →</a></li><li><a href="/problem/e2e-implementations/transformer-bug-hunt">Transformer Bug Hunt: Fix a Broken Mini-GPT →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<p>The single-concept versions live in earlier sections: <strong>Neural Networks</strong> (backprop, init), <strong>Transformer Architecture</strong> (attention, layer norm, masks), <strong>CNNs &amp; Computer Vision</strong> (convolution, pooling) and <strong>Generative Models</strong> (VAE, VQ, diffusion).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/e2e-implementations/e2e-mlp">E2E: 2-Layer MLP with Backprop →</a></li><li><a href="/problem/e2e-implementations/e2e-transformer">E2E: Transformer Encoder →</a></li><li><a href="/problem/e2e-implementations/e2e-vae">E2E: Variational Autoencoder →</a></li><li><a href="/problem/e2e-implementations/e2e-vqvae">E2E: Vector Quantized VAE →</a></li><li><a href="/problem/e2e-implementations/e2e-diffusion">E2E: Diffusion Model →</a></li><li><a href="/problem/e2e-implementations/e2e-cnn">E2E: Convolutional Neural Network →</a></li><li><a href="/problem/e2e-implementations/e2e-mini-gpt">Mini GPT (Character-Level Language Model) →</a></li><li><a href="/problem/e2e-implementations/e2e-vit-classifier">E2E: Tiny Vision Transformer →</a></li><li><a href="/problem/e2e-implementations/transformer-bug-hunt">Transformer Bug Hunt: Fix a Broken Mini-GPT →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

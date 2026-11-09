@@ -78,75 +78,85 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
+    <script type="module" crossorigin src="/assets/index-D33sTID9.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-CF9rJOef.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-CE3dHG3z.css">
   <title>Transformer Architecture | ML Grind</title>
-<meta name="description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<meta name="description" content="Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/transformers" data-rh="true" />
 <meta property="og:title" content="Transformer Architecture | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<meta property="og:description" content="Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/transformers" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Transformer Architecture | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master attention, positional encoding, and modern LLM architecture." data-rh="true" />
+<meta name="twitter:description" content="Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Transformer Architecture","description":"Master attention, positional encoding, and modern LLM architecture.","url":"https://mlgrind.github.io/section/transformers","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Transformer Architecture","description":"Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.","url":"https://mlgrind.github.io/section/transformers","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master attention, positional encoding, and modern LLM architecture.</p><div class="prose dark:prose-invert max-w-none"><h2>Attention and Transformers</h2>
-<p>Transformers have revolutionized NLP and are now used in vision, speech, and more.</p>
-<h2>Key Concepts</h2>
-<h3>Self-Attention</h3>
-<ul>
-<li><strong>Query, Key, Value</strong>: Three projections of input</li>
-<li><strong>Attention scores</strong>: Q @ K.T / sqrt(d_k)</li>
-<li><strong>Output</strong>: Weighted sum of values</li>
-</ul>
-<h3>Scaled Dot-Product Attention</h3>
-<pre><code>Attention(Q, K, V) = softmax(Q @ K.T / sqrt(d_k)) @ V
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Transformer Architecture</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.</p><div class="prose dark:prose-invert max-w-none"><h2>Transformer Architecture</h2>
+<h2>Why it matters</h2>
+<p>Every modern LLM (GPT, LLaMA, Mistral, Qwen) is a stack of the same Transformer block, and so are vision transformers and speech models. &quot;Implement attention&quot; is the single most common ML coding interview question, usually followed by &quot;now make it multi-head&quot;, &quot;now make it causal&quot; and &quot;how would you make it faster?&quot;.</p>
+<h2>The pipeline, end to end</h2>
+<p>This section builds every stage of a decoder-only LLM except decoding, which has its own section:</p>
+<pre><code class="language-text">text ──tokenize──&gt; ids (batch, seq_len)                     BPE / longest match
+     ──embed────&gt; x   (batch, seq_len, d_model)             lookup table (+ positions)
+     ──N blocks─&gt; x = x + Attn(Norm(x))                      causal multi-head attention, RoPE
+                  x = x + FFN(Norm(x))                       MLP (SwiGLU in LLaMA)
+     ──LM head──&gt; logits (batch, seq_len, vocab)            final norm, x @ W_vocab
+     ──decode───&gt; next token, append, repeat                LLM Generation &amp; Decoding
 </code></pre>
-<h3>Multi-Head Attention</h3>
+<p>Training feeds the whole sequence at once and uses the causal mask so position <code>t</code> only sees tokens <code>0..t</code>; generation runs the same network one token at a time.</p>
+<h2>Core ideas</h2>
+<p><strong>Attention</strong> is a soft lookup: each query scores every key, a softmax turns the scores into weights, and the output is the weighted mix of the values.</p>
+<table><thead><tr><th>Piece</th><th>Formula</th><th>Shape</th></tr></thead><tbody><tr><td>Scores</td><td><code>S = Q K^T / sqrt(d_k)</code></td><td><code>(seq_len, seq_len)</code></td></tr><tr><td>Causal mask</td><td><code>S[i, j] = -inf</code> for <code>j &gt; i</code></td><td>same</td></tr><tr><td>Weights</td><td><code>A = softmax(S, axis=-1)</code></td><td>rows sum to 1</td></tr><tr><td>Output</td><td><code>A V</code></td><td><code>(seq_len, d_v)</code></td></tr><tr><td>Multi-head</td><td>split <code>d_model</code> into <code>H</code> heads of <code>d_k = d_model / H</code>, attend per head, concatenate</td><td><code>(seq_len, d_model)</code></td></tr></tbody></table>
+<p>The <code>sqrt(d_k)</code> keeps the scores at unit variance so the softmax doesn&#x27;t saturate.</p>
+<p><strong>Positions.</strong> Attention ignores order, so position must be injected: sinusoidal or learned vectors <strong>added</strong> to the embeddings (original Transformer, GPT-2), or <strong>RoPE</strong>, which rotates <code>q</code> and <code>k</code> so that <code>q · k</code> depends only on the relative offset (LLaMA and most current LLMs).</p>
+<p><strong>Normalization and residuals.</strong> Each sub-layer is wrapped as <code>x + f(Norm(x))</code> (pre-norm). LayerNorm normalizes each token&#x27;s features: <code>gamma * (x - mean) / sqrt(var + eps) + beta</code>.</p>
+<p><strong>Efficient attention variants.</strong> Grouped-query attention shares K/V heads across query heads to shrink the KV cache; sliding-window attention limits each token to the last <code>W</code> positions, so cost drops from <code>O(n^2)</code> to <code>O(n · W)</code>.</p>
+<h2>Worked micro-example</h2>
+<p>Two tokens with <code>Q = K = [[1, 0], [0, 1]]</code>, <code>V = [[1, 2], [3, 4]]</code>, <code>d_k = 2</code>:</p>
+<pre><code class="language-text">S = Q K^T / sqrt(2) = [[0.7071, 0     ], [0,      0.7071]]
+A = softmax(S)      = [[0.6698, 0.3302], [0.3302, 0.6698]]
+out = A V           = [[1.6605, 2.6605], [2.3395, 3.3395]]
+</code></pre>
+<p>Each token leans toward its own value. With a causal mask, row 0 would become <code>[1, 0]</code> and its output exactly <code>[1, 2]</code>.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>Multiple heads</strong>: Parallel attention with different projections</li>
-<li><strong>Concatenate</strong>: Combine all head outputs</li>
-<li><strong>Project</strong>: Linear transformation back to model dimension</li>
+<li><strong>Unstable softmax</strong>: subtract the row max before <code>exp</code>, or large scores overflow to <code>inf</code> and give NaN.</li>
+<li><strong>Head reshapes</strong>: go <code>(seq_len, d_model) -&gt; (seq_len, H, d_k) -&gt; (H, seq_len, d_k)</code>; reshaping straight to <code>(H, seq_len, d_k)</code> mixes tokens across heads.</li>
+<li><strong>Wrong scale</strong>: per-head attention divides by <code>sqrt(d_k)</code>, not <code>sqrt(d_model)</code>.</li>
+<li><strong>Mask off-by-one</strong>: the diagonal must stay visible (<code>np.triu(..., k=1)</code>); a fully masked row gives NaN.</li>
+<li><strong>Biased vs unbiased variance</strong> in LayerNorm (use the biased one, as PyTorch does).</li>
+<li><strong>Layouts</strong>: interleaved RoPE pairs vs Hugging Face&#x27;s <code>rotate_half</code>; <code>np.repeat</code> vs <code>np.tile</code> when sharing KV heads. Both give plausible-looking but wrong numbers.</li>
 </ul>
-<h3>Transformer Components</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>Positional Encoding</strong>: Inject position information</li>
-<li><strong>Layer Normalization</strong>: Normalize across features</li>
-<li><strong>Feed-Forward Network</strong>: MLP after attention</li>
-<li><strong>Residual Connections</strong>: Add input to output</li>
+<li>Why scale by <code>sqrt(d_k)</code>? Why LayerNorm rather than BatchNorm?</li>
+<li>Complexity: attention is <code>O(n^2 · d)</code> time and <code>O(n^2)</code> memory per head; the MLP is <code>O(n · d^2)</code>. Which dominates at 128k context?</li>
+<li>Parameter count of one block: about <code>4 d^2</code> (attention) + <code>8 d^2</code> (a <code>4d</code>-wide MLP) = <code>12 d^2</code>.</li>
+<li>How do RoPE and GQA reduce the cost of serving long contexts? Derive the backward pass of attention.</li>
 </ul>
-<h3>Causal Masking</h3>
-<ul>
-<li><strong>Purpose</strong>: Prevent attending to future tokens</li>
-<li><strong>Implementation</strong>: Add -inf to upper triangle before softmax</li>
-</ul>
-<h3>Modern LLM Architecture</h3>
-<ul>
-<li><strong>BPE Tokenization</strong>: Subword tokenization used by GPT, LLaMA, and most LLMs</li>
-<li><strong>Rotary Positional Embeddings (RoPE)</strong>: Encodes relative positions via rotation, replacing sinusoidal</li>
-<li><strong>Grouped Query Attention (GQA)</strong>: Shares KV heads across query head groups for efficient inference</li>
-<li><strong>Sliding Window Attention</strong>: Local attention pattern for efficient long-context processing</li>
-</ul>
-<h3>Interview Essentials</h3>
-<ul>
-<li>Implement scaled dot-product attention</li>
-<li>Explain why we scale by sqrt(d_k)</li>
-<li>Multi-head attention benefits</li>
-<li>Positional encoding purpose</li>
-<li>BPE tokenization algorithm</li>
-<li>RoPE vs sinusoidal positional encoding</li>
-<li>GQA/MQA for efficient inference</li>
-</ul>
-<p>Let&#x27;s build transformers from scratch!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/transformers/scaled-dot-product-attention">Scaled Dot-Product Attention →</a></li><li><a href="/problem/transformers/multi-head-attention">Multi-Head Attention →</a></li><li><a href="/problem/transformers/positional-encoding">Sinusoidal Positional Encoding →</a></li><li><a href="/problem/transformers/layer-norm">Layer Normalization →</a></li><li><a href="/problem/transformers/causal-mask">Causal Attention Mask →</a></li><li><a href="/problem/transformers/bpe-tokenization">BPE Tokenization →</a></li><li><a href="/problem/transformers/rope-embeddings">Rotary Positional Embeddings (RoPE) →</a></li><li><a href="/problem/transformers/grouped-query-attention">Grouped Query Attention (GQA) →</a></li><li><a href="/problem/transformers/sliding-window-attention">Sliding Window Attention →</a></li><li><a href="/problem/transformers/attention-backward">Attention Backward Pass (dQ, dK, dV) →</a></li><li><a href="/problem/transformers/longest-match-tokenizer">Greedy Longest-Match Tokenizer →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Scaled Dot-Product Attention</strong>: the core <code>softmax(QK^T / sqrt(d_k)) V</code>, returning output and weights.</li>
+<li><strong>Multi-Head Attention</strong>: split into heads, attend in parallel, merge back.</li>
+<li><strong>Sinusoidal Positional Encoding</strong>: the original fixed position table.</li>
+<li><strong>Layer Normalization</strong>: per-token normalization with <code>gamma</code> and <code>beta</code>.</li>
+<li><strong>Causal Attention Mask</strong>: the <code>-inf</code> upper triangle that makes a model autoregressive.</li>
+<li><strong>BPE Tokenization</strong>: learn merge rules, the first stage of the pipeline.</li>
+<li><strong>Rotary Positional Embeddings (RoPE)</strong>: relative positions by rotating <code>q</code> and <code>k</code>.</li>
+<li><strong>Grouped Query Attention (GQA)</strong>: share K/V heads to shrink the KV cache.</li>
+<li><strong>Sliding Window Attention</strong>: a banded causal mask for long contexts.</li>
+<li><strong>Attention Backward Pass</strong>: <code>dQ</code>, <code>dK</code>, <code>dV</code> by hand, checked against finite differences.</li>
+<li><strong>Greedy Longest-Match Tokenizer</strong>: encode text with a fixed vocabulary (WordPiece style).</li>
+</ol>
+<p><strong>Where this leads.</strong> <strong>LLM Generation &amp; Decoding</strong> turns logits into text and adds the KV cache; <strong>LLM Internals</strong> swaps in RMSNorm + SwiGLU, FlashAttention&#x27;s online softmax, mixture-of-experts and perplexity; <strong>Representation Learning &amp; Retrieval</strong> uses the embeddings for search and RAG. The capstones assemble everything: <strong>E2E: Transformer Encoder</strong> (one encoder block), <strong>Mini GPT</strong> (a full decoder-only LM with training and generation) and <strong>Transformer Bug Hunt</strong> (find the four bugs in a broken mini-GPT).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/transformers/scaled-dot-product-attention">Scaled Dot-Product Attention →</a></li><li><a href="/problem/transformers/multi-head-attention">Multi-Head Attention →</a></li><li><a href="/problem/transformers/positional-encoding">Sinusoidal Positional Encoding →</a></li><li><a href="/problem/transformers/layer-norm">Layer Normalization →</a></li><li><a href="/problem/transformers/causal-mask">Causal Attention Mask →</a></li><li><a href="/problem/transformers/bpe-tokenization">BPE Tokenization →</a></li><li><a href="/problem/transformers/rope-embeddings">Rotary Positional Embeddings (RoPE) →</a></li><li><a href="/problem/transformers/grouped-query-attention">Grouped Query Attention (GQA) →</a></li><li><a href="/problem/transformers/sliding-window-attention">Sliding Window Attention →</a></li><li><a href="/problem/transformers/attention-backward">Attention Backward Pass (dQ, dK, dV) →</a></li><li><a href="/problem/transformers/longest-match-tokenizer">Greedy Longest-Match Tokenizer →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {
