@@ -30,7 +30,7 @@ NumPy / Python Tips, Next Steps — rendered by
 `ul`/`ol`, `li`, `code`, and `strong`; anything else falls back to unstyled
 defaults, so keep the system prompt's output shape in sync with it.
 
-CORS is an allowlist: `https://mlgrind.github.io` plus the Vite dev and preview
+CORS is an allowlist: `https://mlgrind.dev` plus the Vite dev and preview
 ports. Unknown origins get the production origin back, so the browser blocks them.
 
 ## Setup

@@ -1,6 +1,6 @@
 # Test UX - ML Grind
 
-Run an end-to-end UX test of ML Grind (production: https://mlgrind.github.io/) against a local production build, the way real learners use it.
+Run an end-to-end UX test of ML Grind (production: https://mlgrind.dev/) against a local production build, the way real learners use it.
 
 **Setup**
 
@@ -52,7 +52,7 @@ Test each persona in **light and dark** at **1440px** and **390px** (plus a pass
 - NumPy | PyTorch toggle swaps the starter code and saved code per track.
 - **Run Tests** with the starter code (fails), with a wrong solution (fails, Expected vs Actual), then reveal all hints → Reveal Solution → Load into Editor → Run Tests (all pass, green "All tests passed!" banner auto-dismisses after 3 s, "Next Problem →" appears, progress pill increments).
 - Infinite loop (`while True: pass`) → **Stop** appears next to Run; clicking it stops the run ("Execution stopped.") and Python is ready again. The layout must not shift while running.
-- ⋯ menu: Maximize editor / Restore layout, Reset code (confirm dialog), Copy share link (copies `https://mlgrind.github.io/problem/...`).
+- ⋯ menu: Maximize editor / Restore layout, Reset code (confirm dialog), Copy share link (copies `https://mlgrind.dev/problem/...`).
 - Console tabs: Tests (editable visible tests, "+ N hidden tests"), Output, Results, AI Feedback (when the worker is not configured it must fail gracefully).
 - **Mobile (390px)**: Problem | Code segmented control, sticky "Start coding" bar, Load into Editor from the Hints view, console tabs on one line, ⋯ menu inside the viewport.
 

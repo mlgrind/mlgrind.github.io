@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mlgrind.github.io/sitemap.xml
+Sitemap: https://mlgrind.dev/sitemap.xml

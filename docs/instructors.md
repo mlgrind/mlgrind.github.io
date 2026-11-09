@@ -6,10 +6,10 @@ Students need a current desktop browser and an internet connection for the initi
 
 | Session | Preparation | Exercises | Estimated time |
 | --- | --- | --- | --- |
-| NumPy foundations | Basic Python | [Array sum](https://mlgrind.github.io/problem/python-basics/numpy-array-sum), [matrix multiplication](https://mlgrind.github.io/problem/python-basics/numpy-matrix-multiply), [broadcasting](https://mlgrind.github.io/problem/python-basics/numpy-broadcast-add) | 60–90 minutes |
-| ML interview practice | NumPy and linear algebra | [Curated interview path](https://mlgrind.github.io/learn/ml-interview-prep) | 120–180 minutes |
-| Attention workshop | Arrays, matrix multiplication, neural networks | [Transformer path](https://mlgrind.github.io/learn/build-a-transformer) | 180–240 minutes |
-| Independent practice | Basic Python | [Seven-day challenge](https://mlgrind.github.io/challenge) | 15–30 minutes a day |
+| NumPy foundations | Basic Python | [Array sum](https://mlgrind.dev/problem/python-basics/numpy-array-sum), [matrix multiplication](https://mlgrind.dev/problem/python-basics/numpy-matrix-multiply), [broadcasting](https://mlgrind.dev/problem/python-basics/numpy-broadcast-add) | 60–90 minutes |
+| ML interview practice | NumPy and linear algebra | [Curated interview path](https://mlgrind.dev/learn/ml-interview-prep) | 120–180 minutes |
+| Attention workshop | Arrays, matrix multiplication, neural networks | [Transformer path](https://mlgrind.dev/learn/build-a-transformer) | 180–240 minutes |
+| Independent practice | Basic Python | [Seven-day challenge](https://mlgrind.dev/challenge) | 15–30 minutes a day |
 
 Times are estimates. Have students explain shapes and numerical stability, implement a solution, run tests, and then compare approaches. Use hints progressively. Reference solutions and client-side tests are accessible, so this tool is intended for practice rather than secure assessment.
 

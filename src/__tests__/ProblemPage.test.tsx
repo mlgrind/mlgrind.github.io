@@ -324,7 +324,7 @@ describe("decluttered problem page", () => {
 
     fireEvent.click(screen.getByRole("menuitem", { name: /Copy share link/ }));
     expect(writeText).toHaveBeenCalledWith(
-      "https://mlgrind.github.io/problem/python-basics/numpy-array-sum",
+      "https://mlgrind.dev/problem/python-basics/numpy-array-sum",
     );
   });
 });

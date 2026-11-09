@@ -38,14 +38,16 @@ const EFFORT = 'medium';
 const MAX_TOKENS = 8000;
 
 const ALLOWED_ORIGINS = [
-  'https://mlgrind.github.io',
+  'https://mlgrind.dev',
+  'https://www.mlgrind.dev',
+  'https://mlgrind.github.io', // old URL; redirects, but keep during the switch
   'http://localhost:5173',
   'http://localhost:4173',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:4173',
 ];
 
-const DEFAULT_ORIGIN = 'https://mlgrind.github.io';
+const DEFAULT_ORIGIN = 'https://mlgrind.dev';
 
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('Origin');

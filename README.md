@@ -2,16 +2,16 @@
 
 Practice machine learning by implementing algorithms in real Python, directly in your browser. No installation or account required.
 
-**[Solve your first problem](https://mlgrind.github.io/problem/python-basics/numpy-array-sum)** · **[Seven-day challenge](https://mlgrind.github.io/challenge)** · **[Live curriculum](https://mlgrind.github.io/)**
+**[Solve your first problem](https://mlgrind.dev/problem/python-basics/numpy-array-sum)** · **[Seven-day challenge](https://mlgrind.dev/challenge)** · **[Live curriculum](https://mlgrind.dev/)**
 
-![ML Grind: real Python, instant feedback, no setup](https://mlgrind.github.io/og-image.png)
+![ML Grind: real Python, instant feedback, no setup](https://mlgrind.dev/og-image.png)
 
 The curriculum contains **149 exercises across 21 sections**, covering NumPy, einsum, classical ML, neural networks, optimization, computer vision, sequence models, transformers, LLM decoding and internals, retrieval, generative models, reinforcement learning, post-training, and end-to-end implementations. Every problem can also be solved in PyTorch: a NumPy | PyTorch toggle swaps in a PyTorch track that runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build; see [docs/TORCH_TRACK.md](docs/TORCH_TRACK.md)).
 
 - Real CPython and NumPy via Pyodide, isolated in a Web Worker with Stop and a 30-second execution limit.
 - Monaco editor, progressive hints, reference solutions, and numerical test feedback.
 - Progress and code saved locally; optional Google sign-in syncs progress through Firebase.
-- Curated [NumPy](https://mlgrind.github.io/learn/numpy-foundations), [interview](https://mlgrind.github.io/learn/ml-interview-prep), and [transformer](https://mlgrind.github.io/learn/build-a-transformer) paths.
+- Curated [NumPy](https://mlgrind.dev/learn/numpy-foundations), [interview](https://mlgrind.dev/learn/ml-interview-prep), and [transformer](https://mlgrind.dev/learn/build-a-transformer) paths.
 - Shareable exercise links and downloadable completion cards.
 - Static descriptions and examples for every exercise, accessible without JavaScript; execution requires JavaScript and an initial runtime download.
 

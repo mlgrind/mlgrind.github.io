@@ -12,7 +12,7 @@ import {
   routeContent,
 } from "../src/components/SEO/StaticContent";
 
-const origin = "https://mlgrind.github.io";
+const origin = "https://mlgrind.dev";
 const escape = (text: string) =>
   text.replace(
     /[&<>"']/g,
@@ -22,7 +22,7 @@ const escape = (text: string) =>
       ]!,
   );
 const template = readFileSync("dist/index.html", "utf8");
-const card = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="630" fill="#10111b"/><circle cx="1100" cy="70" r="260" fill="#282042"/><text x="80" y="105" fill="#a79bff" font-family="sans-serif" font-weight="bold" font-size="36">ML GRIND</text><text x="80" y="250" fill="#ffffff" font-family="sans-serif" font-size="60" font-weight="bold">Learn machine learning</text><text x="80" y="330" fill="#a79bff" font-family="sans-serif" font-size="60">by building.</text><text x="80" y="450" fill="#c4c7d4" font-family="sans-serif" font-size="30">Real Python. Instant feedback. No setup.</text><text x="80" y="550" fill="#c4c7d4" font-family="sans-serif" font-size="26">mlgrind.github.io</text></svg>`;
+const card = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="630" fill="#10111b"/><circle cx="1100" cy="70" r="260" fill="#282042"/><text x="80" y="105" fill="#a79bff" font-family="sans-serif" font-weight="bold" font-size="36">ML GRIND</text><text x="80" y="250" fill="#ffffff" font-family="sans-serif" font-size="60" font-weight="bold">Learn machine learning</text><text x="80" y="330" fill="#a79bff" font-family="sans-serif" font-size="60">by building.</text><text x="80" y="450" fill="#c4c7d4" font-family="sans-serif" font-size="30">Real Python. Instant feedback. No setup.</text><text x="80" y="550" fill="#c4c7d4" font-family="sans-serif" font-size="26">mlgrind.dev</text></svg>`;
 await sharp(Buffer.from(card)).png().toFile("dist/og-image.png");
 await sharp(Buffer.from(card))
   .resize(480, 252)

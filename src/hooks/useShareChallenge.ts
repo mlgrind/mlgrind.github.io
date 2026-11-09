@@ -32,7 +32,7 @@ export function downloadCompletionCard(title: string) {
   context.fillStyle = "#b7bbc9";
   context.font = "26px sans-serif";
   context.fillText("Build ML algorithms. Run Python in your browser.", 80, 490);
-  context.fillText("mlgrind.github.io", 80, 550);
+  context.fillText("mlgrind.dev", 80, 550);
   const link = document.createElement("a");
   link.download = "mlgrind-challenge.png";
   link.href = canvas.toDataURL("image/png");
@@ -46,7 +46,7 @@ export function downloadCompletionCard(title: string) {
  */
 export function useShareChallenge(path: string, autoClear = false) {
   const [message, setMessage] = useState("");
-  const url = `https://mlgrind.github.io${path}`;
+  const url = `https://mlgrind.dev${path}`;
   useEffect(() => setMessage(""), [path]);
   useEffect(() => {
     if (!autoClear || message !== "Link copied") return;

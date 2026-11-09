@@ -21,7 +21,7 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     trackVisit();
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
-    window.gtag?.('event', 'page_view', { page_location: `https://mlgrind.github.io${pathname}`, page_path: pathname });
+    window.gtag?.('event', 'page_view', { page_location: `https://mlgrind.dev${pathname}`, page_path: pathname });
   }, [pathname]);
 
   // The editor routes are IDE-style: they own the viewport and scroll inside their

@@ -16,7 +16,7 @@ import { sections } from '../src/data/sections';
 import { allProblems } from '../src/data/problems';
 import { allPaths } from '../src/data/learningPaths';
 
-const ORIGIN = 'https://mlgrind.github.io';
+const ORIGIN = 'https://mlgrind.dev';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(__dirname, '../public');
 

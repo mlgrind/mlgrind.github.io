@@ -10,11 +10,11 @@ for (const route of staticRoutes) {
   assert(existsSync(file), `Missing route: ${route}`);
   const html = readFileSync(file, "utf8");
   assert(
-    html.includes(`href="https://mlgrind.github.io${route}"`),
+    html.includes(`href="https://mlgrind.dev${route}"`),
     `Missing canonical: ${route}`,
   );
   assert(
-    sitemap.includes(`<loc>https://mlgrind.github.io${route}</loc>`),
+    sitemap.includes(`<loc>https://mlgrind.dev${route}</loc>`),
     `Missing sitemap entry: ${route}`,
   );
   assert(html.includes("<h1"), `Missing static text: ${route}`);

@@ -61,5 +61,5 @@
   <text x="500" y="535" font-family="monospace" font-size="20" fill="white"> softmax(Q @ K.T / sqrt(d_k)) @ V</text>
 
   <!-- URL -->
-  <text x="600" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.6)" text-anchor="middle">mlgrind.github.io</text>
+  <text x="600" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="rgba(255,255,255,0.6)" text-anchor="middle">mlgrind.dev</text>
 </svg>

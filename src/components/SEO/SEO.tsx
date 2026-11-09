@@ -10,7 +10,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const BASE_URL = 'https://mlgrind.github.io';
+const BASE_URL = 'https://mlgrind.dev';
 const DEFAULT_TITLE = 'ML Grind - Learn Machine Learning by Building';
 const DEFAULT_DESCRIPTION = 'Practice hands-on machine learning coding problems. Implement NumPy, neural networks, CNNs, transformers, and more. Run Python code directly in your browser with instant feedback.';
 const DEFAULT_KEYWORDS = 'machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI';

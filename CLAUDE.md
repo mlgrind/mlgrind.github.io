@@ -16,7 +16,7 @@ This is a LeetCode/HelloInterview-style web application for learning ML by build
 - Submit feedback via in-app form (sends email via Formspree)
 - Sign in with Google to sync progress across devices (Firebase Auth + Firestore)
 
-**Live site:** https://mlgrind.github.io/
+**Live site:** https://mlgrind.dev/
 **Repository:** https://github.com/mlgrind/mlgrind.github.io
 
 ## Tech Stack
@@ -218,7 +218,7 @@ These are public Firebase identifiers (not secrets). Security is enforced by Fir
 
 ### Firebase Console Requirements
 
-- **Authentication**: Google sign-in provider enabled, `mlgrind.github.io` in authorized domains
+- **Authentication**: Google sign-in provider enabled, `mlgrind.dev` and `mlgrind.github.io` in authorized domains
 - **Firestore**: Production mode, `nam5` (US) location
 - **Firestore Rules**: Users can only read/write their own `users/{uid}` document
 
@@ -679,7 +679,7 @@ The site deploys to GitHub Pages via the `gh-pages` npm package:
 npm run deploy   # Builds and pushes to gh-pages branch
 ```
 
-The `base` path in `vite.config.ts` is set to `/` for GitHub Pages (org site at `mlgrind.github.io`).
+The `base` path in `vite.config.ts` is set to `/` for GitHub Pages (org site at `mlgrind.github.io`, served on the custom domain `mlgrind.dev` via `public/CNAME`).
 
 ## Known Limitations
 
