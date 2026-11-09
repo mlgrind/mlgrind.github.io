@@ -5,7 +5,7 @@ import { Lecture } from './Lecture';
 import type { LectureManifest } from './types';
 
 /** Lectures with a composition. Each needs scripts/<id>.md and `npm run narrate <id>`. */
-export const LECTURES = ['transformers', 'numpy-fundamentals', 'optimization', 'cnn'];
+export const LECTURES = ['transformers', 'numpy-fundamentals', 'optimization', 'cnn', 'sequence-models'];
 
 type Props = { manifest: LectureManifest | null };
 

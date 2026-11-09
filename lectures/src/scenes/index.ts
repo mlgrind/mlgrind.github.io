@@ -4,6 +4,7 @@ import type { LectureManifest, ManifestChapter, ManifestSentence } from '../type
 import { TransformersScenes } from './transformers';
 import { OptimizationScenes } from './optimization';
 import { CnnScenes } from './cnn';
+import { SequenceModelsScenes } from './sequence-models';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -25,4 +26,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   optimization: OptimizationScenes,
   cnn: CnnScenes,
+  'sequence-models': SequenceModelsScenes,
 };
