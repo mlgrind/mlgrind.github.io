@@ -63,7 +63,7 @@ export default {
         },
       },
       animation: {
-        'fade-up': 'fadeUp 0.5s ease both',
+        'fade-up': 'fadeUp 0.5s ease backwards',
         'pulse-dot': 'pulseDot 2s ease infinite',
       },
     },
