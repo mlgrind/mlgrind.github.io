@@ -3,6 +3,7 @@ import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
 import { LlmGenerationScenes } from './llm-generation';
+import { LlmInternalsScenes } from './llm-internals';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -23,4 +24,5 @@ export type SceneComponent = React.FC<SceneProps>;
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'llm-generation': LlmGenerationScenes,
+  'llm-internals': LlmInternalsScenes,
 };
