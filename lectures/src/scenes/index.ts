@@ -4,6 +4,7 @@ import type { LectureManifest, ManifestChapter, ManifestSentence } from '../type
 import { TransformersScenes } from './transformers';
 import { DataPreprocessingScenes } from './data-preprocessing';
 import { SupervisedLearningScenes } from './supervised-learning';
+import { UnsupervisedLearningScenes } from './unsupervised-learning';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -25,4 +26,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'data-preprocessing': DataPreprocessingScenes,
   'supervised-learning': SupervisedLearningScenes,
+  'unsupervised-learning': UnsupervisedLearningScenes,
 };
