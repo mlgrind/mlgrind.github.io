@@ -95,6 +95,8 @@ export interface MatrixProps {
   /** per-row emphasis 0..1 (dims other rows) */
   rowFocus?: (i: number) => number;
   showValues?: boolean;
+  /** font size of row/column labels (defaults 18 / 16) */
+  axisLabelSize?: number;
   style?: React.CSSProperties;
 }
 
@@ -115,6 +117,7 @@ export const Matrix: React.FC<MatrixProps> = ({
   textColor,
   rowFocus,
   showValues = true,
+  axisLabelSize,
   style,
 }) => {
   const rows = data.length;
@@ -152,7 +155,7 @@ export const Matrix: React.FC<MatrixProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   fontFamily: F.mono,
-                  fontSize: 18,
+                  fontSize: axisLabelSize ?? 18,
                   color: C.muted,
                   opacity: rowFocus ? 0.35 + 0.65 * rowFocus(i) : 1,
                 }}
@@ -166,7 +169,7 @@ export const Matrix: React.FC<MatrixProps> = ({
           {colLabels && (
             <div style={{ display: 'flex', gap, marginBottom: -2 }}>
               {colLabels.map((c, j) => (
-                <div key={j} style={{ width: cellW, textAlign: 'center', fontFamily: F.mono, fontSize: 16, color: C.muted }}>
+                <div key={j} style={{ width: cellW, textAlign: 'center', fontFamily: F.mono, fontSize: axisLabelSize ?? 16, color: C.muted }}>
                   {c}
                 </div>
               ))}

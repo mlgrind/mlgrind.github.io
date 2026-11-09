@@ -3,6 +3,7 @@ import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
 import { NumpyFundamentalsScenes } from './numpy-fundamentals';
+import { PythonBasicsScenes } from './python-basics';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -23,4 +24,5 @@ export type SceneComponent = React.FC<SceneProps>;
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'numpy-fundamentals': NumpyFundamentalsScenes,
+  'python-basics': PythonBasicsScenes,
 };
