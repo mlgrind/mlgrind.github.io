@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import LecturePlayer from '../components/LecturePlayer/LecturePlayer';
+import { lectures } from '../data/lectures';
 import remarkGfm from 'remark-gfm';
 import { sections } from '../data/sections';
 import { getProblemsBySection } from '../data/problems';
@@ -78,6 +80,8 @@ export default function SectionPage() {
           <span className="text-primary-600 dark:text-primary-300 font-medium font-mono text-sm">{progress}%</span>
         </div>
       </div>
+
+      {lectures[section.id] && <LecturePlayer lecture={lectures[section.id]} title={section.title} />}
 
       {/* Introduction */}
       <div className="bg-white dark:bg-dark-800 rounded-xl p-6 mb-8 border border-gray-200 dark:border-dark-500">

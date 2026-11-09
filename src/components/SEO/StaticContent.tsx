@@ -7,6 +7,7 @@ import { sections } from "../../data/sections";
 import { resolvedGroups } from "../../data/curriculum";
 import { allPaths, problemHref } from "../../data/learningPaths";
 import { getCompanyIndex } from "../../data/companyTags";
+import { lectures } from "../../data/lectures";
 
 export const staticRoutes = [
   "/",
@@ -196,6 +197,14 @@ export function StaticContent({ path }: { path: string }) {
         )}
         {"section" in content && content.section && (
           <>
+            {lectures[content.section.id] && (
+              <p>
+                <a href={`https://www.youtube.com/watch?v=${lectures[content.section.id].videoId}`}>
+                  Watch the animated {content.section.title} lecture (
+                  {Math.floor(lectures[content.section.id].durationSec / 60)} min) →
+                </a>
+              </p>
+            )}
             <Markdown>{content.section.introduction}</Markdown>
             <h2 className="text-2xl">Practice exercises</h2>
             <ol>

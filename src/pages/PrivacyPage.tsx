@@ -117,6 +117,15 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-100 mb-4">Lecture Videos</h2>
+            <p className="text-gray-600 dark:text-dark-200 mb-4">
+              Section pages offer an optional video lecture hosted on YouTube. Nothing is loaded from
+              YouTube until you press play; the player then uses YouTube&apos;s privacy-enhanced
+              (youtube-nocookie.com) mode, and Google&apos;s privacy policy applies to the video.
+            </p>
+          </section>
+
+          <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-100 mb-4">AI Feedback (Optional)</h2>
             <p className="text-gray-600 dark:text-dark-200 mb-4">When you request AI feedback, your current code, the exercise title and description, and test-result summaries are sent to our Cloudflare Worker and Anthropic to generate a response. This is separate from running Python locally. Data processing by those services is subject to their respective policies. Code is not included in our usage analytics.</p>
           </section>
