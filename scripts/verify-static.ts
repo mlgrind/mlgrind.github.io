@@ -6,7 +6,7 @@ import {
 } from "../src/components/SEO/StaticContent";
 const sitemap = readFileSync("dist/sitemap.xml", "utf8");
 for (const route of staticRoutes) {
-  const file = `dist${route === "/" ? "" : route}/index.html`;
+  const file = route === "/" ? "dist/index.html" : `dist${route}.html`;
   assert(existsSync(file), `Missing route: ${route}`);
   const html = readFileSync(file, "utf8");
   assert(

@@ -70,7 +70,11 @@ for (const path of staticRoutes) {
     "</head>",
     `<script type="application/ld+json">${JSON.stringify(schema).replace(/</g, "\\u003c")}</script></head>`,
   );
-  const file = resolve("dist", path.slice(1), "index.html");
+  // "/section/cnn" -> dist/section/cnn.html. GitHub Pages serves an extensionless
+  // URL from <path>.html with a 200, but from <path>/index.html only after a 301 to
+  // "<path>/", which made every sitemap/canonical URL a redirect.
+  const file =
+    path === "/" ? resolve("dist", "index.html") : resolve("dist", `${path.slice(1)}.html`);
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, html);
 }
