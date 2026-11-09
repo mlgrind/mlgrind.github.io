@@ -295,7 +295,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 18: Generative Models
 
 **URL**: /section/generative-models
-**Summary**: Learn VAEs, diffusion models, and generative AI fundamentals.
+**Summary**: Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step.
 **Problems** (9):
 
 1. **KL Divergence (Gaussians)** (`/problem/generative-models/kl-divergence`) — easy
@@ -348,7 +348,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 21: End-to-End Implementations
 
 **URL**: /section/e2e-implementations
-**Summary**: Build complete ML models from scratch.
+**Summary**: Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.
 **Problems** (9):
 
 1. **E2E: 2-Layer MLP with Backprop** (`/problem/e2e-implementations/e2e-mlp`) — hard
