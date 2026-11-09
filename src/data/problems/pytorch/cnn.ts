@@ -7,19 +7,19 @@ import { LanguageVariant } from '../../../types';
  */
 export const cnnPyTorch: Record<string, LanguageVariant> = {
   'conv2d-forward': {
-    note: "Implement with slicing and tensor ops. Don't use F.conv2d, nn.Conv2d or unfold. A hidden test compares your output with F.conv2d.",
+    note: `Implement with slicing and tensor ops. Don't use F.conv2d, nn.Conv2d or unfold. Like them, compute cross-correlation (no kernel flip); a hidden test compares your output with F.conv2d.`,
     starterCode: `import torch
 
 def conv2d(image, kernel):
     """
-    Apply 2D convolution (cross-correlation, no padding, stride 1) to an image.
+    Apply a 2D convolution (cross-correlation, no padding, stride 1).
 
     Args:
-        image: Input image tensor (H, W)
-        kernel: Convolution kernel tensor (kH, kW)
+        image: Float tensor, shape (H, W)
+        kernel: Float tensor, shape (kH, kW)
 
     Returns:
-        output: Convolved image tensor (H-kH+1, W-kW+1)
+        output: Float tensor of shape (H - kH + 1, W - kW + 1)
     """
     # Your code here
     pass
@@ -27,17 +27,28 @@ def conv2d(image, kernel):
     solution: `import torch
 
 def conv2d(image, kernel):
+    """
+    Apply a 2D convolution (cross-correlation, no padding, stride 1).
+
+    Args:
+        image: Float tensor, shape (H, W)
+        kernel: Float tensor, shape (kH, kW)
+
+    Returns:
+        output: Float tensor of shape (H - kH + 1, W - kW + 1)
+    """
     H, W = image.shape
     kH, kW = kernel.shape
-    out_H, out_W = H - kH + 1, W - kW + 1
+    H_out, W_out = H - kH + 1, W - kW + 1
 
-    # Slide the image under each kernel tap and accumulate:
-    # out[i, j] = sum_{a, b} image[i + a, j + b] * kernel[a, b]
-    output = torch.zeros(out_H, out_W)
+    # Loop over kernel taps: tap (a, b) multiplies image[i + a, j + b] for every (i, j)
+    output = torch.zeros(H_out, W_out)
     for a in range(kH):
         for b in range(kW):
-            output = output + kernel[a, b] * image[a:a + out_H, b:b + out_W]
+            output = output + kernel[a, b] * image[a:a + H_out, b:b + W_out]
     return output
+
+# Time O(H_out * W_out * kH * kW), extra space O(H_out * W_out).
 `,
     testCases: [
       {
@@ -72,28 +83,36 @@ def conv2d(image, kernel):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Float values and an asymmetric kernel',
+        input: 'conv2d(torch.tensor([[0.5, 1.5, -1.0], [2.0, 0.25, 1.0], [-0.5, 3.0, 2.0]]), torch.tensor([[1.0, -0.5], [0.5, 2.0]])).tolist()',
+        expected: '[[1.25, 4.125], [7.625, 5.25]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Output size is (H-kH+1, W-kW+1)',
-      'Nested loops over output positions work: (image[i:i+kH, j:j+kW] * kernel).sum()',
-      'Faster: loop over the kH*kW kernel taps and add kernel[a, b] * image[a:a+out_H, b:b+out_W]',
+      'Every output pixel is the dot product of the kernel with the patch under it. How many positions fit along each axis?',
+      'Allocate torch.zeros(H - kH + 1, W - kW + 1) and fill it, either per output position or per kernel tap.',
+      'Per position: (image[i:i+kH, j:j+kW] * kernel).sum(). Per tap (faster): output += kernel[a, b] * image[a:a+H_out, b:b+W_out].',
+      "Don't flip the kernel: F.conv2d is cross-correlation. Index the image as image[row, col], i.e. (H, W).",
     ],
   },
 
   'max-pool': {
-    note: "Implement with reshape/slicing and max. Don't use F.max_pool2d or nn.MaxPool2d.",
+    note: "Implement with reshape/slicing and max. Don't use F.max_pool2d or nn.MaxPool2d (a hidden test compares with F.max_pool2d).",
     starterCode: `import torch
 
 def max_pool2d(image, pool_size=2):
     """
-    Apply 2D max pooling (window = stride = pool_size).
+    Apply 2D max pooling with window = stride = pool_size.
 
     Args:
-        image: Input image tensor (H, W)
-        pool_size: Size of pooling window
+        image: Tensor, shape (H, W)
+        pool_size: Window size and stride p (default 2)
 
     Returns:
-        output: Pooled image tensor (H//pool_size, W//pool_size)
+        output: Tensor of shape (H // p, W // p); leftover rows/columns are dropped
     """
     # Your code here
     pass
@@ -101,13 +120,25 @@ def max_pool2d(image, pool_size=2):
     solution: `import torch
 
 def max_pool2d(image, pool_size=2):
+    """
+    Apply 2D max pooling with window = stride = pool_size.
+
+    Args:
+        image: Tensor, shape (H, W)
+        pool_size: Window size and stride p (default 2)
+
+    Returns:
+        output: Tensor of shape (H // p, W // p); leftover rows/columns are dropped
+    """
     H, W = image.shape
     p = pool_size
-    out_H, out_W = H // p, W // p
+    H_out, W_out = H // p, W // p
 
-    # Crop to a multiple of p, split each axis into (blocks, p), take the max per block
-    x = image[:out_H * p, :out_W * p].reshape(out_H, p, out_W, p)
+    # Crop to whole windows, split each axis into (window, offset), max over the offsets
+    x = image[:H_out * p, :W_out * p].reshape(H_out, p, W_out, p)
     return x.max(dim=3)[0].max(dim=1)[0]
+
+# Time O(H * W), extra space O(H_out * W_out).
 `,
     testCases: [
       {
@@ -141,27 +172,35 @@ def max_pool2d(image, pool_size=2):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Maximum is not always in the same corner',
+        input: 'max_pool2d(torch.tensor([[1.0, 3.0, 2.0, 0.0], [4.0, 2.0, 1.0, 5.0], [0.0, 1.0, 7.0, 2.0], [3.0, 2.0, 4.0, 6.0]])).tolist()',
+        expected: '[[4.0, 5.0], [3.0, 7.0]]',
+        hidden: false,
+      },
     ],
     hints: [
-      'Output size is (H // pool_size, W // pool_size)',
-      'Loop version: output[i, j] = image[i*p:(i+1)*p, j*p:(j+1)*p].max()',
-      'Vectorized: reshape to (out_H, p, out_W, p) and take .max(dim=...) twice',
+      'Each output depends only on its own non-overlapping p x p window. How many whole windows fit per axis?',
+      'Crop to (H // p * p, W // p * p), then reduce each window to its max.',
+      'image[:H_out*p, :W_out*p].reshape(H_out, p, W_out, p), then .max(dim=3)[0].max(dim=1)[0] (in real PyTorch, .amax(dim=(1, 3)) does both at once).',
+      'tensor.max(dim=...) returns a (values, indices) pair: take [0] or .values. Without dim it returns a single scalar.',
     ],
   },
 
   'flatten-layer': {
-    note: 'Use view/reshape. nn.Flatten would do it for you; write the reshape yourself.',
+    note: 'Use reshape. nn.Flatten / torch.flatten(X, 1) would do it for you; write the reshape yourself. The input is NHWC (batch, height, width, channels).',
     starterCode: `import torch
 
 def flatten(X):
     """
-    Flatten feature maps to vectors.
+    Flatten NHWC feature maps to vectors.
 
     Args:
-        X: Input tensor (batch, height, width, channels)
+        X: Tensor, shape (batch, height, width, channels)
 
     Returns:
-        output: Flattened tensor (batch, height*width*channels)
+        output: Tensor of shape (batch, height * width * channels), row-major order
     """
     # Your code here
     pass
@@ -169,8 +208,17 @@ def flatten(X):
     solution: `import torch
 
 def flatten(X):
-    batch_size = X.shape[0]
-    return X.reshape(batch_size, -1)
+    """
+    Flatten NHWC feature maps to vectors.
+
+    Args:
+        X: Tensor, shape (batch, height, width, channels)
+
+    Returns:
+        output: Tensor of shape (batch, height * width * channels), row-major order
+    """
+    # reshape (not view) also works on non-contiguous tensors, e.g. after a permute
+    return X.reshape(X.shape[0], -1)
 `,
     testCases: [
       {
@@ -194,30 +242,45 @@ def flatten(X):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '4',
+        description: 'Non-contiguous input (NCHW permuted to NHWC)',
+        input: 'flatten(torch.arange(24).reshape(2, 3, 2, 2).permute(0, 2, 3, 1)).tolist()',
+        expected: '[[0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11], [12, 16, 20, 13, 17, 21, 14, 18, 22, 15, 19, 23]]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Single sample stays 2D',
+        input: 'flatten(torch.randn(1, 3, 3, 2)).shape',
+        expected: '(1, 18)',
+        hidden: true,
+      },
     ],
     hints: [
-      'Batch size is X.shape[0]',
-      'X.reshape(batch_size, -1) infers the remaining size',
-      'X.view(X.size(0), -1) also works on contiguous tensors',
+      'Only the batch axis survives; height, width and channels merge into one feature axis.',
+      'Read the batch size from X.shape[0] and reshape to (batch_size, -1).',
+      'X.reshape(X.shape[0], -1); -1 infers H * W * C.',
+      'X.view(...) raises on a permuted (non-contiguous) tensor in real PyTorch; reshape copies when it has to. X.flatten() alone would also merge the batch axis.',
     ],
   },
 
   'conv-output-size': {
-    note: 'Plain integer arithmetic. A hidden test compares your formula with the shape F.conv2d actually produces.',
+    note: 'Plain integer arithmetic (return a Python int). A hidden test compares your formula with the shape F.conv2d actually produces.',
     starterCode: `import torch
 
 def conv_output_size(input_size, kernel_size, padding=0, stride=1):
     """
-    Calculate output size of a convolution layer.
+    Calculate the output size of a convolution (or pooling) layer.
 
     Args:
-        input_size: Input dimension (height or width)
-        kernel_size: Kernel dimension
-        padding: Zero-padding
-        stride: Stride
+        input_size: Input height or width
+        kernel_size: Kernel height or width
+        padding: Zero-padding added to each side
+        stride: Step between kernel positions
 
     Returns:
-        output_size: Output dimension (int)
+        output_size: Output height or width (int)
     """
     # Your code here
     pass
@@ -225,7 +288,20 @@ def conv_output_size(input_size, kernel_size, padding=0, stride=1):
     solution: `import torch
 
 def conv_output_size(input_size, kernel_size, padding=0, stride=1):
-    return (input_size - kernel_size + 2 * padding) // stride + 1
+    """
+    Calculate the output size of a convolution (or pooling) layer.
+
+    Args:
+        input_size: Input height or width
+        kernel_size: Kernel height or width
+        padding: Zero-padding added to each side
+        stride: Step between kernel positions
+
+    Returns:
+        output_size: Output height or width (int)
+    """
+    # Number of valid start positions in the padded input, stepping by stride
+    return (input_size + 2 * padding - kernel_size) // stride + 1
 `,
     testCases: [
       {
@@ -256,31 +332,41 @@ def conv_output_size(input_size, kernel_size, padding=0, stride=1):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Floor matters with padding and stride 3',
+        input: 'conv_output_size(10, 3, 1, 3)',
+        expected: '4',
+        hidden: true,
+      },
     ],
     hints: [
-      'Apply the formula: (input - kernel + 2*padding) / stride + 1',
-      'Use integer division (//) for the result',
+      'Count the positions the kernel can take: it starts at the left edge of the padded input and moves by stride.',
+      'The padded input has size input_size + 2 * padding; the last valid start index is that minus kernel_size.',
+      'output = (input_size + 2 * padding - kernel_size) // stride + 1',
+      'Use // so the result is an int; / gives a float such as 15.5.',
     ],
   },
 
   'conv2d-advanced': {
-    note: "Implement with tensor ops (F.pad for the padding is fine). Don't use F.conv2d, nn.Conv2d or unfold. Hidden tests compare against F.conv2d.",
+    note: `Implement with tensor ops (F.pad for the padding and torch.einsum are fine). Don't use F.conv2d, nn.Conv2d or unfold. Layout is NCHW with weights (C_out, C_in // groups, kH, kW), exactly like F.conv2d; hidden tests compare against it.`,
     starterCode: `import torch
 import torch.nn.functional as F
 
 def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
     """
-    Advanced 2D convolution with padding, stride, and groups.
+    2D convolution (cross-correlation) with padding, stride and groups, NCHW layout.
 
     Args:
-        input: Input tensor (batch, in_channels, H, W)
-        kernel: Convolution kernels (out_channels, in_channels//groups, kH, kW)
-        padding: Zero-padding added to input (default: 0)
-        stride: Stride of the convolution (default: 1)
-        groups: Number of groups for grouped convolution (default: 1)
+        input: Tensor, shape (N, C_in, H, W)
+        kernel: Tensor, shape (C_out, C_in // groups, kH, kW)
+        padding: Zeros added to each side of H and W (default 0)
+        stride: Step between kernel positions (default 1)
+        groups: Number of channel groups (default 1)
 
     Returns:
-        output: Convolved tensor (batch, out_channels, H_out, W_out)
+        output: Tensor, shape (N, C_out, H_out, W_out) with
+                H_out = (H + 2*padding - kH) // stride + 1 (same for W)
     """
     # Your code here
     pass
@@ -289,28 +375,42 @@ def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
 import torch.nn.functional as F
 
 def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
+    """
+    2D convolution (cross-correlation) with padding, stride and groups, NCHW layout.
+
+    Args:
+        input: Tensor, shape (N, C_in, H, W)
+        kernel: Tensor, shape (C_out, C_in // groups, kH, kW)
+        padding: Zeros added to each side of H and W (default 0)
+        stride: Step between kernel positions (default 1)
+        groups: Number of channel groups (default 1)
+
+    Returns:
+        output: Tensor, shape (N, C_out, H_out, W_out) with
+                H_out = (H + 2*padding - kH) // stride + 1 (same for W)
+    """
     if padding > 0:
-        input = F.pad(input, (padding, padding, padding, padding))
+        input = F.pad(input, (padding, padding, padding, padding))  # pads W, then H
 
-    B, C_in, H, W = input.shape
+    N, C_in, H, W = input.shape
     C_out, C_g, kH, kW = kernel.shape
-    G = groups
+    G, s = groups, stride
     O_g = C_out // G
-    H_out = (H - kH) // stride + 1
-    W_out = (W - kW) // stride + 1
+    H_out = (H - kH) // s + 1
+    W_out = (W - kW) // s + 1
 
-    # Split channels into groups: input (B, G, C_g, H, W), kernel (G, O_g, C_g, kH, kW)
-    x = input.reshape(B, G, C_g, H, W)
+    # Split channels into groups: x (N, G, C_g, H, W), k (G, O_g, C_g, kH, kW)
+    x = input.reshape(N, G, C_g, H, W)
     k = kernel.reshape(G, O_g, C_g, kH, kW)
 
-    out = torch.zeros(B, G, O_g, H_out, W_out)
+    out = torch.zeros(N, G, O_g, H_out, W_out)
     for a in range(kH):
         for b in range(kW):
             # Input pixels seen by kernel tap (a, b) at every output position
-            patch = x[:, :, :, a:a + stride * (H_out - 1) + 1:stride, b:b + stride * (W_out - 1) + 1:stride]
-            out = out + torch.einsum('bgchw,goc->bgohw', patch, k[:, :, :, a, b])
+            patch = x[:, :, :, a:a + s * (H_out - 1) + 1:s, b:b + s * (W_out - 1) + 1:s]
+            out = out + torch.einsum('ngchw,goc->ngohw', patch, k[:, :, :, a, b])
 
-    return out.reshape(B, C_out, H_out, W_out)
+    return out.reshape(N, C_out, H_out, W_out)
 `,
     testCases: [
       {
@@ -359,17 +459,542 @@ def conv2d_advanced(input, kernel, padding=0, stride=1, groups=1):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'Each group only sees its own channels (kernel 1 = ones, kernel 2 = twos)',
+        input: 'conv2d_advanced(torch.arange(32).float().reshape(1, 2, 4, 4), torch.stack([torch.ones(1, 2, 2), 2 * torch.ones(1, 2, 2)]), 0, 2, 2).tolist()',
+        expected: '[[[[10.0, 18.0], [42.0, 50.0]], [[148.0, 164.0], [212.0, 228.0]]]]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Pad with F.pad(input, (p, p, p, p)): it pads the last two dims',
-      'H_out = (H_padded - kH) // stride + 1',
-      'For groups: reshape input to (B, G, C_in//G, H, W) and kernel to (G, C_out//G, C_in//G, kH, kW)',
-      'Loop over kernel taps (a, b): take the strided slice x[..., a::stride, b::stride] (cropped to H_out, W_out) and contract channels with einsum',
+      'Three layers: pad, compute the output size from the padded input, then treat each group as an ordinary multi-channel convolution.',
+      'Reshape input to (N, G, C_in//G, H, W) and kernel to (G, C_out//G, C_in//G, kH, kW) so all groups are handled at once.',
+      `F.pad(input, (p, p, p, p)) pads the last two dims. For tap (a, b) take x[..., a:a + s*(H_out-1) + 1:s, b:b + s*(W_out-1) + 1:s] and contract channels with torch.einsum('ngchw,goc->ngohw', patch, k[..., a, b]).`,
+      'Common bugs: H_out from the unpadded size, a group seeing all input channels, or mixing up the (C_out, C_in // groups, kH, kW) weight layout.',
     ],
   },
-  // Ported with the new problems from the ML Coding Lab fork.
+
+  'iou-bounding-box': {
+    note: "Implement with tensor ops. torchvision.ops.box_iou isn't available in the browser (it also uses the xyxy format).",
+    starterCode: `import torch
+
+def iou(box_a, box_b):
+    """
+    Intersection over Union of two boxes in xyxy format.
+
+    Args:
+        box_a: Tensor [x1, y1, x2, y2], top-left (x1, y1) and bottom-right (x2, y2)
+        box_b: Tensor [x1, y1, x2, y2]
+
+    Returns:
+        IoU as a Python float in [0, 1], rounded to 4 decimal places
+        (0.0 when the union is 0)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def iou(box_a, box_b):
+    """
+    Intersection over Union of two boxes in xyxy format.
+
+    Args:
+        box_a: Tensor [x1, y1, x2, y2], top-left (x1, y1) and bottom-right (x2, y2)
+        box_b: Tensor [x1, y1, x2, y2]
+
+    Returns:
+        IoU as a Python float in [0, 1], rounded to 4 decimal places
+        (0.0 when the union is 0)
+    """
+    # Intersection rectangle: max of the top-left corners, min of the bottom-right corners
+    top_left = torch.maximum(box_a[:2], box_b[:2])
+    bottom_right = torch.minimum(box_a[2:], box_b[2:])
+    wh = (bottom_right - top_left).clamp(min=0)   # clamp width and height separately
+    intersection = wh[0] * wh[1]
+
+    area_a = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
+    area_b = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
+    union = area_a + area_b - intersection
+
+    if union.item() == 0:
+        return 0.0
+    return round((intersection / union).item(), 4)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Partial overlap',
+        input: 'iou(torch.tensor([0.0, 0.0, 2.0, 2.0]), torch.tensor([1.0, 1.0, 3.0, 3.0]))',
+        expected: '0.1429',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'No overlap',
+        input: 'iou(torch.tensor([0.0, 0.0, 1.0, 1.0]), torch.tensor([2.0, 2.0, 3.0, 3.0]))',
+        expected: '0.0',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'One box inside another',
+        input: 'iou(torch.tensor([0.0, 0.0, 4.0, 4.0]), torch.tensor([1.0, 1.0, 3.0, 3.0]))',
+        expected: '0.25',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Identical boxes',
+        input: 'iou(torch.tensor([0.0, 0.0, 5.0, 5.0]), torch.tensor([0.0, 0.0, 5.0, 5.0]))',
+        expected: '1.0',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Non-square boxes overlapping on one side',
+        input: 'iou(torch.tensor([1.0, 1.0, 5.0, 4.0]), torch.tensor([2.0, 0.0, 6.0, 3.0]))',
+        expected: '0.3333',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Boxes that only touch along an edge',
+        input: 'iou(torch.tensor([0.0, 0.0, 2.0, 2.0]), torch.tensor([2.0, 0.0, 4.0, 2.0]))',
+        expected: '0.0',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Disjoint in x but overlapping in y (clamp each side)',
+        input: 'iou(torch.tensor([0.0, 0.0, 1.0, 3.0]), torch.tensor([2.0, 1.0, 4.0, 2.0]))',
+        expected: '0.0',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'The intersection of two axis-aligned boxes is another box (possibly empty). Which corners define it?',
+      'Compute the intersection box, both areas, then union = area_a + area_b - intersection.',
+      'top_left = torch.maximum(box_a[:2], box_b[:2]); bottom_right = torch.minimum(box_a[2:], box_b[2:]); wh = (bottom_right - top_left).clamp(min=0).',
+      'Clamp before multiplying width by height, guard union == 0, and return round((intersection / union).item(), 4) as a Python float.',
+    ],
+  },
+
+  nms: {
+    note: "Implement the suppression loop yourself. torchvision.ops.nms isn't available in the browser (it uses the same xyxy boxes and IoU > threshold rule).",
+    starterCode: `import torch
+
+def nms(boxes, scores, iou_threshold=0.5):
+    """
+    Greedy Non-Maximum Suppression (class-agnostic).
+
+    Args:
+        boxes: Tensor (N, 4) of boxes in xyxy format [x1, y1, x2, y2]
+        scores: Tensor (N,) confidence score per box
+        iou_threshold: suppress boxes with IoU > iou_threshold (default 0.5)
+
+    Returns:
+        List of kept indices (Python ints), in decreasing score order
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def nms(boxes, scores, iou_threshold=0.5):
+    """
+    Greedy Non-Maximum Suppression (class-agnostic).
+
+    Args:
+        boxes: Tensor (N, 4) of boxes in xyxy format [x1, y1, x2, y2]
+        scores: Tensor (N,) confidence score per box
+        iou_threshold: suppress boxes with IoU > iou_threshold (default 0.5)
+
+    Returns:
+        List of kept indices (Python ints), in decreasing score order
+    """
+    x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
+    areas = (x2 - x1) * (y2 - y1)
+    order = torch.argsort(scores, descending=True)
+    keep = []
+
+    while order.numel() > 0:
+        i = order[0]
+        keep.append(int(i))
+        rest = order[1:]
+
+        # IoU of the kept box against every remaining box, vectorised
+        w = (torch.minimum(x2[rest], x2[i]) - torch.maximum(x1[rest], x1[i])).clamp(min=0)
+        h = (torch.minimum(y2[rest], y2[i]) - torch.maximum(y1[rest], y1[i])).clamp(min=0)
+        inter = w * h
+        union = areas[i] + areas[rest] - inter
+        ious = torch.where(union > 0, inter / union, torch.zeros_like(inter))
+
+        # Only IoU > threshold is suppressed
+        order = rest[ious <= iou_threshold]
+
+    return keep
+
+# Time O(N log N + N * K) for K kept boxes (O(N^2) worst case); space O(N).
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Suppress one overlapping box',
+        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [6.0, 6.0, 8.0, 8.0]]), torch.tensor([0.9, 0.75, 0.8]), 0.5)',
+        expected: '[0, 2]',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'No overlap: keep all, ordered by score',
+        input: 'nms(torch.tensor([[0.0, 0.0, 1.0, 1.0], [3.0, 3.0, 4.0, 4.0], [6.0, 6.0, 7.0, 7.0]]), torch.tensor([0.5, 0.9, 0.7]), 0.5)',
+        expected: '[1, 2, 0]',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Two clusters',
+        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [10.0, 10.0, 14.0, 14.0], [11.0, 11.0, 14.0, 14.0]]), torch.tensor([0.9, 0.85, 0.8, 0.7]), 0.5)',
+        expected: '[0, 2]',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Identical boxes: keep only the best',
+        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 4.0, 4.0]]), torch.tensor([0.6, 0.9, 0.7]), 0.5)',
+        expected: '[1]',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Higher threshold keeps a box with IoU 0.5625',
+        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [2.0, 0.0, 6.0, 4.0]]), torch.tensor([0.9, 0.8, 0.7]), 0.6)',
+        expected: '[0, 1, 2]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'IoU exactly at the threshold is kept (only IoU > threshold is suppressed)',
+        input: 'nms(torch.tensor([[0.0, 0.0, 2.0, 2.0], [0.0, 0.0, 2.0, 1.0]]), torch.tensor([0.9, 0.8]), 0.5)',
+        expected: '[0, 1]',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Suppression is checked against each kept box, not only the first',
+        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [3.0, 0.0, 7.0, 4.0], [4.0, 0.0, 8.0, 4.0]]), torch.tensor([0.9, 0.8, 0.7]), 0.5)',
+        expected: '[0, 1]',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Empty input',
+        input: 'nms(torch.zeros(0, 4), torch.zeros(0), 0.5)',
+        expected: '[]',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Greedy: the highest-scoring box is always kept. What happens to the boxes that overlap it?',
+      'Sort once, then loop: take the first index, compute its IoU with all remaining boxes, keep only the low-overlap ones.',
+      'order = torch.argsort(scores, descending=True); IoU with torch.maximum / torch.minimum and .clamp(min=0); filter with order = rest[ious <= iou_threshold].',
+      'Use <= so a box exactly at the threshold survives, and convert kept indices with int(i) so the result is a list of Python ints.',
+    ],
+  },
+
+  'focal-loss': {
+    note: `Implement the formula with tensor ops. Don't use torchvision.ops.sigmoid_focal_loss: it takes logits rather than probabilities and isn't available in the browser.`,
+    starterCode: `import torch
+
+def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
+    """
+    Mean binary focal loss.
+
+    Args:
+        predictions: Tensor of probabilities of class 1, shape (n,), values in [0, 1]
+        targets: Tensor of labels 0 or 1, shape (n,)
+        alpha: Weight of the positive class (negatives get 1 - alpha), default 0.25
+        gamma: Focusing parameter, default 2.0
+
+    Returns:
+        Mean focal loss as a Python float, rounded to 4 decimal places
+        (clamp p to [1e-7, 1 - 1e-7] before the log)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
+    """
+    Mean binary focal loss.
+
+    Args:
+        predictions: Tensor of probabilities of class 1, shape (n,), values in [0, 1]
+        targets: Tensor of labels 0 or 1, shape (n,)
+        alpha: Weight of the positive class (negatives get 1 - alpha), default 0.25
+        gamma: Focusing parameter, default 2.0
+
+    Returns:
+        Mean focal loss as a Python float, rounded to 4 decimal places
+        (clamp p to [1e-7, 1 - 1e-7] before the log)
+    """
+    p = predictions.float().clamp(1e-7, 1 - 1e-7)   # avoid log(0)
+    t = targets.float()
+
+    p_t = torch.where(t == 1, p, 1 - p)             # probability of the true class
+    alpha_t = alpha * t + (1 - alpha) * (1 - t)     # alpha weights positives
+
+    loss = -alpha_t * (1 - p_t) ** gamma * torch.log(p_t)
+    return round(loss.mean().item(), 4)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Easy examples are down-weighted',
+        input: 'focal_loss(torch.tensor([0.9, 0.1]), torch.tensor([1, 0]), 0.25, 2.0)',
+        expected: '0.0005',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Moderate predictions',
+        input: 'focal_loss(torch.tensor([0.6, 0.4]), torch.tensor([1, 0]), 0.25, 2.0)',
+        expected: '0.0409',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'gamma=0 reduces to alpha-weighted cross-entropy',
+        input: 'focal_loss(torch.tensor([0.9, 0.1]), torch.tensor([1, 0]), 0.25, 0.0)',
+        expected: '0.0527',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Hard (wrong) examples dominate',
+        input: 'focal_loss(torch.tensor([0.1, 0.9]), torch.tensor([1, 0]), 0.25, 2.0)',
+        expected: '0.9325',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Default alpha and gamma on four examples',
+        input: 'focal_loss(torch.tensor([0.7, 0.2, 0.55, 0.95]), torch.tensor([1, 0, 0, 1]))',
+        expected: '0.049',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'p of exactly 0 or 1 gives a finite loss (clamping)',
+        input: 'bool(np.isfinite(focal_loss(torch.tensor([1.0, 0.0]), torch.tensor([0, 1]))))',
+        expected: 'True',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Start from binary cross-entropy -log(p_t). Which factor shrinks the loss when p_t is close to 1?',
+      'Build p_t and alpha_t elementwise from the targets, compute the per-example loss, then average.',
+      'p_t = torch.where(t == 1, p, 1 - p); alpha_t = alpha * t + (1 - alpha) * (1 - t); loss = -alpha_t * (1 - p_t) ** gamma * torch.log(p_t).',
+      'Cast integer targets with .float(), clamp p before torch.log, and return round(loss.mean().item(), 4).',
+    ],
+  },
+
+  'smooth-l1-loss': {
+    note: "Implement with torch.where. Don't use F.smooth_l1_loss or F.huber_loss (note that F.huber_loss with delta = beta equals beta times this loss).",
+    starterCode: `import torch
+
+def smooth_l1_loss(predictions, targets, beta=1.0):
+    """
+    Mean Smooth L1 loss.
+
+    Args:
+        predictions: Tensor of predicted values, any shape
+        targets: Tensor of target values, same shape
+        beta: Quadratic-to-linear transition point, > 0 (default 1.0)
+
+    Returns:
+        Mean loss over all elements as a Python float, rounded to 4 decimal places
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def smooth_l1_loss(predictions, targets, beta=1.0):
+    """
+    Mean Smooth L1 loss.
+
+    Args:
+        predictions: Tensor of predicted values, any shape
+        targets: Tensor of target values, same shape
+        beta: Quadratic-to-linear transition point, > 0 (default 1.0)
+
+    Returns:
+        Mean loss over all elements as a Python float, rounded to 4 decimal places
+    """
+    diff = predictions.float() - targets.float()
+    abs_diff = diff.abs()
+
+    # Quadratic inside |x| < beta, linear outside
+    loss = torch.where(abs_diff < beta, 0.5 * diff ** 2 / beta, abs_diff - 0.5 * beta)
+    return round(loss.mean().item(), 4)
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Small errors (quadratic region)',
+        input: 'smooth_l1_loss(torch.tensor([0.2, -0.3]), torch.tensor([0.0, 0.0]), 1.0)',
+        expected: '0.0325',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Large errors (linear region)',
+        input: 'smooth_l1_loss(torch.tensor([3.0, -2.0]), torch.tensor([0.0, 0.0]), 1.0)',
+        expected: '2.0',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Mixed small and large errors',
+        input: 'smooth_l1_loss(torch.tensor([0.5, 1.5, -2.0]), torch.tensor([0.0, 0.0, 0.0]), 1.0)',
+        expected: '0.875',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Custom beta',
+        input: 'smooth_l1_loss(torch.tensor([0.3, 2.0]), torch.tensor([0.0, 0.0]), 0.5)',
+        expected: '0.92',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'Non-zero targets, 2D input, default beta',
+        input: 'smooth_l1_loss(torch.tensor([[1.0, 2.5], [-0.5, 4.0]]), torch.tensor([[0.5, 0.5], [0.0, 3.2]]))',
+        expected: '0.5175',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'Each element is treated independently, and the formula switches at |x| = beta.',
+      'Compute x = predictions - targets once, choose the branch per element, then average.',
+      'torch.where(x.abs() < beta, 0.5 * x ** 2 / beta, x.abs() - 0.5 * beta)',
+      'Keep the / beta in the quadratic branch (Smooth L1, not Huber), average over all elements and return round(loss.mean().item(), 4).',
+    ],
+  },
+
+  'seg-metrics': {
+    note: "Implement with tensor ops (sum, ==, mean). Return plain Python floats via .item(), with the keys 'iou', 'pixel_accuracy' and 'dice'.",
+    starterCode: `import torch
+
+def segmentation_metrics(prediction, target):
+    """
+    Binary segmentation metrics.
+
+    Args:
+        prediction: Tensor mask, shape (H, W), values 0 or 1
+        target: Tensor mask, shape (H, W), values 0 or 1
+
+    Returns:
+        dict with Python floats rounded to 4 decimals:
+            'iou': foreground IoU (0.0 if both masks are empty)
+            'pixel_accuracy': fraction of matching pixels
+            'dice': Dice coefficient (0.0 if both masks are empty)
+    """
+    # Your code here
+    pass
+`,
+    solution: `import torch
+
+def segmentation_metrics(prediction, target):
+    """
+    Binary segmentation metrics.
+
+    Args:
+        prediction: Tensor mask, shape (H, W), values 0 or 1
+        target: Tensor mask, shape (H, W), values 0 or 1
+
+    Returns:
+        dict with Python floats rounded to 4 decimals:
+            'iou': foreground IoU (0.0 if both masks are empty)
+            'pixel_accuracy': fraction of matching pixels
+            'dice': Dice coefficient (0.0 if both masks are empty)
+    """
+    pred = prediction.float()
+    targ = target.float()
+
+    intersection = (pred * targ).sum()     # pixels that are 1 in both
+    total = pred.sum() + targ.sum()        # |P| + |T|
+    union = total - intersection
+
+    iou_val = (intersection / union).item() if union.item() > 0 else 0.0
+    dice = (2 * intersection / total).item() if total.item() > 0 else 0.0
+    pixel_acc = (pred == targ).float().mean().item()
+
+    return {
+        'iou': round(iou_val, 4),
+        'pixel_accuracy': round(pixel_acc, 4),
+        'dice': round(dice, 4),
+    }
+`,
+    testCases: [
+      {
+        id: '1',
+        description: 'Partial overlap',
+        input: 'segmentation_metrics(torch.tensor([[1, 1], [0, 0]]), torch.tensor([[1, 0], [0, 1]]))',
+        expected: '{"iou": 0.3333, "pixel_accuracy": 0.5, "dice": 0.5}',
+        hidden: false,
+      },
+      {
+        id: '2',
+        description: 'Perfect prediction',
+        input: 'segmentation_metrics(torch.tensor([[1, 0], [0, 1]]), torch.tensor([[1, 0], [0, 1]]))',
+        expected: '{"iou": 1.0, "pixel_accuracy": 1.0, "dice": 1.0}',
+        hidden: false,
+      },
+      {
+        id: '3',
+        description: 'Dice on a 2x3 mask',
+        input: "segmentation_metrics(torch.tensor([[1, 1, 0], [0, 0, 0]]), torch.tensor([[0, 1, 1], [0, 0, 0]]))['dice']",
+        expected: '0.5',
+        hidden: true,
+      },
+      {
+        id: '4',
+        description: 'Disjoint masks have IoU 0',
+        input: "segmentation_metrics(torch.tensor([[1, 1], [0, 0]]), torch.tensor([[0, 0], [1, 1]]))['iou']",
+        expected: '0.0',
+        hidden: true,
+      },
+      {
+        id: '5',
+        description: 'All metrics on a 3x3 mask',
+        input: 'segmentation_metrics(torch.tensor([[1, 1, 0], [1, 1, 0], [0, 0, 0]]), torch.tensor([[1, 1, 1], [1, 0, 0], [0, 0, 0]]))',
+        expected: '{"iou": 0.6, "pixel_accuracy": 0.7778, "dice": 0.75}',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'Both masks empty: IoU and Dice 0.0, pixel accuracy 1.0',
+        input: 'segmentation_metrics(torch.zeros(2, 3), torch.zeros(2, 3))',
+        expected: '{"iou": 0.0, "pixel_accuracy": 1.0, "dice": 0.0}',
+        hidden: true,
+      },
+    ],
+    hints: [
+      'All three metrics come from a few counts: the overlap, the size of each mask and the number of agreeing pixels.',
+      'Compute intersection, |P| and |T| once, derive the union, then each metric; guard the zero denominators.',
+      'Cast with .float(); intersection = (pred * targ).sum(); union = pred.sum() + targ.sum() - intersection; pixel accuracy = (pred == targ).float().mean().',
+      'Convert with .item() before rounding so the dict holds Python floats, and handle the both-empty case (0 / 0).',
+    ],
+  },
+
   'resnet-block': {
-    note: 'The helpers use F.conv2d and a hand-written training-mode BatchNorm; the point is the residual wiring. (nn.Conv2d / nn.BatchNorm2d in train mode would compute the same thing.)',
+    note: 'The helpers use F.conv2d and a hand-written training-mode BatchNorm; the point is the residual wiring. (nn.Conv2d without bias and nn.BatchNorm2d in train mode would compute the same thing.) Layout is NCHW.',
     starterCode: `import math
 import torch
 import torch.nn.functional as F
@@ -491,6 +1116,8 @@ def residual_block(x, params, stride=1):
         shortcut = x
 
     return F.relu(out + shortcut)
+
+# Cost is dominated by the two 3x3 convs: about 9 * C_out * (C_in + C_out) * H_out * W_out MACs per image.
 `,
     testCases: [
       {
@@ -543,416 +1170,19 @@ def residual_block(x, params, stride=1):
         expected: 'True',
         hidden: true,
       },
-    ],
-    hints: [
-      'Main path: F.relu(batch_norm2d(conv2d(x, conv1_w, stride, 1), ...)), then conv2d(..., conv2_w, 1, 1) and batch_norm2d.',
-      'Projection when stride != 1 or C_in != C_out: batch_norm2d(conv2d(x, proj_w, stride=stride), proj_gamma, proj_beta).',
-      'F.relu(main + shortcut): the ReLU comes after the addition.',
-    ],
-  },
-  // Tracks for existing problems that had no PyTorch track yet.
-  'iou-bounding-box': {
-    note: "Implement with tensor ops. torchvision.ops.box_iou isn't available in the browser.",
-    starterCode: `import torch
-
-def iou(box_a, box_b):
-    """
-    Calculate Intersection over Union of two bounding boxes.
-
-    Args:
-        box_a: Tensor [x1, y1, x2, y2], first bounding box
-        box_b: Tensor [x1, y1, x2, y2], second bounding box
-
-    Returns:
-        IoU score as a Python float, rounded to 4 decimal places
-    """
-    # Your code here
-    pass
-`,
-    solution: `import torch
-
-def iou(box_a, box_b):
-    # Intersection rectangle: max of the top-left corners, min of the bottom-right corners
-    top_left = torch.maximum(box_a[:2], box_b[:2])
-    bottom_right = torch.minimum(box_a[2:], box_b[2:])
-    wh = (bottom_right - top_left).clamp(min=0)
-    intersection = wh[0] * wh[1]
-
-    area_a = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
-    area_b = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
-    union = area_a + area_b - intersection
-
-    if union.item() == 0:
-        return 0.0
-    return round((intersection / union).item(), 4)
-`,
-    testCases: [
       {
-        id: '1',
-        description: 'Partial overlap',
-        input: 'iou(torch.tensor([0.0, 0.0, 2.0, 2.0]), torch.tensor([1.0, 1.0, 3.0, 3.0]))',
-        expected: '0.1429',
+        id: '7',
+        description: 'Output is non-negative and not just ReLU(x)',
+        input: '(lambda x: (lambda out: bool(out.min().item() >= 0 and bool((out == 0).any()) and not bool(torch.allclose(out, torch.relu(x)))))(residual_block(x, init_block_params(4, 4, 1), 1)))(torch.randn(2, 4, 5, 5))',
+        expected: 'True',
         hidden: false,
-      },
-      {
-        id: '2',
-        description: 'No overlap',
-        input: 'iou(torch.tensor([0.0, 0.0, 1.0, 1.0]), torch.tensor([2.0, 2.0, 3.0, 3.0]))',
-        expected: '0.0',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'One box inside another',
-        input: 'iou(torch.tensor([0.0, 0.0, 4.0, 4.0]), torch.tensor([1.0, 1.0, 3.0, 3.0]))',
-        expected: '0.25',
-        hidden: true,
-      },
-      {
-        id: '4',
-        description: 'Identical boxes',
-        input: 'iou(torch.tensor([0.0, 0.0, 5.0, 5.0]), torch.tensor([0.0, 0.0, 5.0, 5.0]))',
-        expected: '1.0',
-        hidden: true,
-      },
-      {
-        id: '5',
-        description: 'Non-square boxes overlapping on one side',
-        input: 'iou(torch.tensor([1.0, 1.0, 5.0, 4.0]), torch.tensor([2.0, 0.0, 6.0, 3.0]))',
-        expected: '0.3333',
-        hidden: true,
       },
     ],
     hints: [
-      'Intersection corners: torch.maximum of the top-left corners (box[:2]) and torch.minimum of the bottom-right corners (box[2:])',
-      'Clamp the intersection width and height at 0 with .clamp(min=0) so disjoint boxes give 0',
-      'Union = area_a + area_b - intersection; return round((intersection / union).item(), 4)',
-    ],
-  },
-
-  nms: {
-    note: "Implement the suppression loop yourself. torchvision.ops.nms isn't available in the browser.",
-    starterCode: `import torch
-
-def nms(boxes, scores, iou_threshold=0.5):
-    """
-    Apply Non-Maximum Suppression.
-
-    Args:
-        boxes: Tensor (N, 4) of [x1, y1, x2, y2] bounding boxes
-        scores: Tensor (N,) of confidence scores for each box
-        iou_threshold: IoU threshold for suppression (default: 0.5)
-
-    Returns:
-        List of indices (Python ints) of kept boxes, sorted by decreasing score
-    """
-    # Your code here
-    pass
-`,
-    solution: `import torch
-
-def nms(boxes, scores, iou_threshold=0.5):
-    x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
-    areas = (x2 - x1) * (y2 - y1)
-    order = torch.argsort(scores, descending=True)
-    keep = []
-
-    while order.numel() > 0:
-        i = order[0]
-        keep.append(int(i))
-        rest = order[1:]
-
-        # IoU of the picked box against every remaining box, vectorized
-        w = (torch.minimum(x2[rest], x2[i]) - torch.maximum(x1[rest], x1[i])).clamp(min=0)
-        h = (torch.minimum(y2[rest], y2[i]) - torch.maximum(y1[rest], y1[i])).clamp(min=0)
-        inter = w * h
-        union = areas[i] + areas[rest] - inter
-        ious = torch.where(union > 0, inter / union, torch.zeros_like(inter))
-
-        # Keep only the boxes that don't overlap the picked one too much
-        order = rest[ious <= iou_threshold]
-
-    return keep
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Suppress one overlapping box',
-        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [6.0, 6.0, 8.0, 8.0]]), torch.tensor([0.9, 0.75, 0.8]), 0.5)',
-        expected: '[0, 2]',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'No overlap: keep all, ordered by score',
-        input: 'nms(torch.tensor([[0.0, 0.0, 1.0, 1.0], [3.0, 3.0, 4.0, 4.0], [6.0, 6.0, 7.0, 7.0]]), torch.tensor([0.5, 0.9, 0.7]), 0.5)',
-        expected: '[1, 2, 0]',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'Two clusters',
-        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [10.0, 10.0, 14.0, 14.0], [11.0, 11.0, 14.0, 14.0]]), torch.tensor([0.9, 0.85, 0.8, 0.7]), 0.5)',
-        expected: '[0, 2]',
-        hidden: true,
-      },
-      {
-        id: '4',
-        description: 'Identical boxes: keep only the best',
-        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 4.0, 4.0]]), torch.tensor([0.6, 0.9, 0.7]), 0.5)',
-        expected: '[1]',
-        hidden: true,
-      },
-      {
-        id: '5',
-        description: 'Higher threshold keeps a box with IoU 0.5625',
-        input: 'nms(torch.tensor([[0.0, 0.0, 4.0, 4.0], [1.0, 1.0, 4.0, 4.0], [2.0, 0.0, 6.0, 4.0]]), torch.tensor([0.9, 0.8, 0.7]), 0.6)',
-        expected: '[0, 1, 2]',
-        hidden: true,
-      },
-      {
-        id: '6',
-        description: 'IoU exactly at the threshold is kept (only IoU > threshold is suppressed)',
-        input: 'nms(torch.tensor([[0.0, 0.0, 2.0, 2.0], [0.0, 0.0, 2.0, 1.0]]), torch.tensor([0.9, 0.8]), 0.5)',
-        expected: '[0, 1]',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'order = torch.argsort(scores, descending=True) gives the visiting order',
-      'Pick order[0], then compute its IoU with all of order[1:] at once using torch.maximum / torch.minimum and .clamp(min=0)',
-      'Filter with a boolean mask: order = rest[ious <= iou_threshold]; convert kept indices with int(i)',
-    ],
-  },
-
-  'focal-loss': {
-    note: "Implement the formula with tensor ops. Don't use torchvision.ops.sigmoid_focal_loss (it takes logits, not probabilities, and isn't available in the browser).",
-    starterCode: `import torch
-
-def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
-    """
-    Compute focal loss for binary classification.
-
-    Args:
-        predictions: Tensor of predicted probabilities in [0, 1]
-        targets: Tensor of ground truth labels (0s and 1s)
-        alpha: Balancing factor (default: 0.25)
-        gamma: Focusing parameter (default: 2.0)
-
-    Returns:
-        Mean focal loss as a Python float, rounded to 4 decimal places
-    """
-    # Your code here
-    pass
-`,
-    solution: `import torch
-
-def focal_loss(predictions, targets, alpha=0.25, gamma=2.0):
-    p = predictions.float().clamp(1e-7, 1 - 1e-7)
-    t = targets.float()
-
-    # Probability and weight of the true class
-    p_t = torch.where(t == 1, p, 1 - p)
-    alpha_t = alpha * t + (1 - alpha) * (1 - t)
-
-    loss = -alpha_t * (1 - p_t) ** gamma * torch.log(p_t)
-    return round(loss.mean().item(), 4)
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Easy examples are down-weighted',
-        input: 'focal_loss(torch.tensor([0.9, 0.1]), torch.tensor([1, 0]), 0.25, 2.0)',
-        expected: '0.0005',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Moderate predictions',
-        input: 'focal_loss(torch.tensor([0.6, 0.4]), torch.tensor([1, 0]), 0.25, 2.0)',
-        expected: '0.0409',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'gamma=0 reduces to alpha-weighted cross-entropy',
-        input: 'focal_loss(torch.tensor([0.9, 0.1]), torch.tensor([1, 0]), 0.25, 0.0)',
-        expected: '0.0527',
-        hidden: true,
-      },
-      {
-        id: '4',
-        description: 'Hard (wrong) examples dominate',
-        input: 'focal_loss(torch.tensor([0.1, 0.9]), torch.tensor([1, 0]), 0.25, 2.0)',
-        expected: '0.9325',
-        hidden: true,
-      },
-      {
-        id: '5',
-        description: 'Default alpha and gamma on four examples',
-        input: 'focal_loss(torch.tensor([0.7, 0.2, 0.55, 0.95]), torch.tensor([1, 0, 0, 1]))',
-        expected: '0.049',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'p_t = torch.where(targets == 1, p, 1 - p)',
-      'alpha_t = alpha * t + (1 - alpha) * (1 - t)',
-      'Clamp p to [1e-7, 1 - 1e-7] before torch.log; return round(loss.mean().item(), 4)',
-    ],
-  },
-
-  'smooth-l1-loss': {
-    note: "Implement with torch.where. Don't use F.smooth_l1_loss or F.huber_loss.",
-    starterCode: `import torch
-
-def smooth_l1_loss(predictions, targets, beta=1.0):
-    """
-    Compute Smooth L1 (Huber) Loss.
-
-    Args:
-        predictions: Tensor of predicted values
-        targets: Tensor of target values
-        beta: Threshold for quadratic-to-linear transition (default: 1.0)
-
-    Returns:
-        Mean smooth L1 loss as a Python float, rounded to 4 decimal places
-    """
-    # Your code here
-    pass
-`,
-    solution: `import torch
-
-def smooth_l1_loss(predictions, targets, beta=1.0):
-    diff = predictions.float() - targets.float()
-    abs_diff = diff.abs()
-
-    # Quadratic inside |x| < beta, linear outside
-    loss = torch.where(abs_diff < beta, 0.5 * diff ** 2 / beta, abs_diff - 0.5 * beta)
-    return round(loss.mean().item(), 4)
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Small errors (quadratic region)',
-        input: 'smooth_l1_loss(torch.tensor([0.2, -0.3]), torch.tensor([0.0, 0.0]), 1.0)',
-        expected: '0.0325',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Large errors (linear region)',
-        input: 'smooth_l1_loss(torch.tensor([3.0, -2.0]), torch.tensor([0.0, 0.0]), 1.0)',
-        expected: '2.0',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'Mixed small and large errors',
-        input: 'smooth_l1_loss(torch.tensor([0.5, 1.5, -2.0]), torch.tensor([0.0, 0.0, 0.0]), 1.0)',
-        expected: '0.875',
-        hidden: true,
-      },
-      {
-        id: '4',
-        description: 'Custom beta',
-        input: 'smooth_l1_loss(torch.tensor([0.3, 2.0]), torch.tensor([0.0, 0.0]), 0.5)',
-        expected: '0.92',
-        hidden: true,
-      },
-      {
-        id: '5',
-        description: 'Non-zero targets, 2D input, default beta',
-        input: 'smooth_l1_loss(torch.tensor([[1.0, 2.5], [-0.5, 4.0]]), torch.tensor([[0.5, 0.5], [0.0, 3.2]]))',
-        expected: '0.5175',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'x = predictions - targets, then x.abs()',
-      'torch.where(abs_x < beta, 0.5 * x ** 2 / beta, abs_x - 0.5 * beta)',
-      'Return round(loss.mean().item(), 4)',
-    ],
-  },
-
-  'seg-metrics': {
-    starterCode: `import torch
-
-def segmentation_metrics(prediction, target):
-    """
-    Compute segmentation evaluation metrics.
-
-    Args:
-        prediction: Binary predicted mask (2D tensor of 0s and 1s)
-        target: Binary ground truth mask (2D tensor of 0s and 1s)
-
-    Returns:
-        Dictionary with 'iou', 'pixel_accuracy', 'dice' (Python floats rounded to 4 dp)
-    """
-    # Your code here
-    pass
-`,
-    solution: `import torch
-
-def segmentation_metrics(prediction, target):
-    pred = prediction.float()
-    targ = target.float()
-
-    intersection = (pred * targ).sum()
-    total = pred.sum() + targ.sum()
-    union = total - intersection
-
-    iou_val = (intersection / union).item() if union > 0 else 0.0
-    pixel_acc = (pred == targ).float().mean().item()
-    dice = (2 * intersection / total).item() if total > 0 else 0.0
-
-    return {
-        'iou': round(iou_val, 4),
-        'pixel_accuracy': round(pixel_acc, 4),
-        'dice': round(dice, 4),
-    }
-`,
-    testCases: [
-      {
-        id: '1',
-        description: 'Partial overlap',
-        input: 'segmentation_metrics(torch.tensor([[1, 1], [0, 0]]), torch.tensor([[1, 0], [0, 1]]))',
-        expected: '{"iou": 0.3333, "pixel_accuracy": 0.5, "dice": 0.5}',
-        hidden: false,
-      },
-      {
-        id: '2',
-        description: 'Perfect prediction',
-        input: 'segmentation_metrics(torch.tensor([[1, 0], [0, 1]]), torch.tensor([[1, 0], [0, 1]]))',
-        expected: '{"iou": 1.0, "pixel_accuracy": 1.0, "dice": 1.0}',
-        hidden: false,
-      },
-      {
-        id: '3',
-        description: 'Dice on a 2x3 mask',
-        input: "segmentation_metrics(torch.tensor([[1, 1, 0], [0, 0, 0]]), torch.tensor([[0, 1, 1], [0, 0, 0]]))['dice']",
-        expected: '0.5',
-        hidden: true,
-      },
-      {
-        id: '4',
-        description: 'Disjoint masks have IoU 0',
-        input: "segmentation_metrics(torch.tensor([[1, 1], [0, 0]]), torch.tensor([[0, 0], [1, 1]]))['iou']",
-        expected: '0.0',
-        hidden: true,
-      },
-      {
-        id: '5',
-        description: 'All metrics on a 3x3 mask',
-        input: 'segmentation_metrics(torch.tensor([[1, 1, 0], [1, 1, 0], [0, 0, 0]]), torch.tensor([[1, 1, 1], [1, 0, 0], [0, 0, 0]]))',
-        expected: '{"iou": 0.6, "pixel_accuracy": 0.7778, "dice": 0.75}',
-        hidden: true,
-      },
-    ],
-    hints: [
-      'Cast masks with .float(); intersection = (pred * targ).sum()',
-      'Union = pred.sum() + targ.sum() - intersection',
-      'Pixel accuracy: (pred == targ).float().mean(); use .item() to get Python floats before rounding',
+      'Two branches meet at an addition: the main path learns F(x), the shortcut carries x (resized when the shape changes).',
+      'Main path: F.relu(batch_norm2d(conv2d(x, conv1_w, stride, 1), bn1_gamma, bn1_beta)), then batch_norm2d(conv2d(..., conv2_w, 1, 1), bn2_gamma, bn2_beta).',
+      'Projection when stride != 1 or C_in != C_out: batch_norm2d(conv2d(x, proj_w, stride=stride), proj_gamma, proj_beta). Finish with F.relu(main + shortcut).',
+      'Common bugs: a ReLU after BN2 (before the addition), skipping the projection BatchNorm, or padding the 1x1 projection.',
     ],
   },
 };

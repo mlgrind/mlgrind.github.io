@@ -6,24 +6,24 @@ import { LanguageVariant } from '../../../types';
  * Rules: docs/TORCH_TRACK.md.
  */
 export const sequenceModelsPyTorch: Record<string, LanguageVariant> = {
-  // Ported with the new problems from the ML Coding Lab fork.
   'rnn-forward': {
-    note: "Implement both functions from scratch with tensor ops; nn.RNN isn't allowed (and isn't in the browser shim). Write rnn_backward by hand: a hidden test checks it against autograd.",
+    note: `Implement both functions from scratch with tensor ops; nn.RNN isn't allowed (and isn't in the browser shim). Weights are (in, out) here, used as x @ W_xh; nn.RNN stores the transpose. Write rnn_backward by hand: a hidden test checks it against autograd.`,
     starterCode: `import torch
 
 def rnn_forward(X, h0, W_xh, W_hh, b):
     """
-    Run a vanilla RNN over a batch of sequences.
+    Run a vanilla RNN over a batch of sequences:
+    h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b).
 
     Args:
-        X: Inputs (N, T, D)
+        X: Inputs (N, T, D), batch first
         h0: Initial hidden state (N, H)
         W_xh: Input-to-hidden weights (D, H)
         W_hh: Hidden-to-hidden weights (H, H)
         b: Bias (H,)
 
     Returns:
-        H_all: Hidden states for every step (N, T, H)
+        H_all: Hidden states for every step (N, T, H), h0 not included
     """
     # Your code here
     pass
@@ -39,7 +39,8 @@ def rnn_backward(X, h0, W_xh, W_hh, H_all, dH):
         dH: Gradient of the loss w.r.t. H_all (N, T, H)
 
     Returns:
-        dict with 'dX', 'dh0', 'dW_xh', 'dW_hh', 'db'
+        dict with 'dX' (N, T, D), 'dh0' (N, H), 'dW_xh' (D, H),
+        'dW_hh' (H, H) and 'db' (H,)
     """
     # Your code here
     pass
@@ -73,13 +74,15 @@ def rnn_backward(X, h0, W_xh, W_hh, H_all, dH):
         h_prev = H_all[:, t - 1] if t > 0 else h0
         dh = dH[:, t] + dh_next            # direct gradient + gradient from the future
         da = dh * (1 - h_t ** 2)           # back through tanh
-        dW_xh = dW_xh + X[:, t].T @ da
+        dW_xh = dW_xh + X[:, t].T @ da     # shared weights: accumulate over time
         dW_hh = dW_hh + h_prev.T @ da
         db = db + da.sum(dim=0)
         dX[:, t] = da @ W_xh.T
-        dh_next = da @ W_hh.T
+        dh_next = da @ W_hh.T              # gradient flowing into h_{t-1}
 
     return {'dX': dX, 'dh0': dh_next, 'dW_xh': dW_xh, 'dW_hh': dW_hh, 'db': db}
+
+# Forward and backward: time O(T * N * (D*H + H^2)), memory O(N * T * H) for the stored states.
 `,
     testCases: [
       {
@@ -125,20 +128,35 @@ def rnn_backward(X, h0, W_xh, W_hh, H_all, dH):
       {
         id: '5',
         description: 'Gradient values for a 2-step scalar RNN',
-        input: "(lambda: (X := torch.tensor([[[1.0], [2.0]]]), h0 := torch.tensor([[0.5]]), Wx := torch.tensor([[0.3]]), Wh := torch.tensor([[-0.7]]), b := torch.tensor([0.1]), Hs := rnn_forward(X, h0, Wx, Wh, b), g := rnn_backward(X, h0, Wx, Wh, Hs, torch.ones(1, 2, 1)), [round(g[k].sum().item(), 5) for k in ('dX', 'dh0', 'dW_xh', 'dW_hh', 'db')])[-1])()",
+        input: `(lambda: (X := torch.tensor([[[1.0], [2.0]]]), h0 := torch.tensor([[0.5]]), Wx := torch.tensor([[0.3]]), Wh := torch.tensor([[-0.7]]), b := torch.tensor([0.1]), Hs := rnn_forward(X, h0, Wx, Wh, b), g := rnn_backward(X, h0, Wx, Wh, Hs, torch.ones(1, 2, 1)), [round(g[k].sum().item(), 5) for k in ('dX', 'dh0', 'dW_xh', 'dW_hh', 'db')])[-1])()`,
         expected: '[0.35914, -0.37487, 1.85877, 0.30082, 1.19715]',
+        hidden: true,
+      },
+      {
+        id: '6',
+        description: 'rnn_backward returns every key with the right shape',
+        input: '(lambda: (X := torch.randn(2, 3, 4), h0 := torch.randn(2, 5), Wx := torch.randn(4, 5), Wh := torch.randn(5, 5), Hs := rnn_forward(X, h0, Wx, Wh, torch.zeros(5)), {k: tuple(v.shape) for k, v in rnn_backward(X, h0, Wx, Wh, Hs, torch.ones_like(Hs)).items()})[-1])()',
+        expected: "{'dX': (2, 3, 4), 'dh0': (2, 5), 'dW_xh': (4, 5), 'dW_hh': (5, 5), 'db': (5,)}",
+        hidden: false,
+      },
+      {
+        id: '7',
+        description: 'A single step (T = 1) uses h0 and b',
+        input: 'round(rnn_forward(torch.tensor([[[1.0, -1.0]]]), torch.tensor([[0.5]]), torch.tensor([[0.3], [0.2]]), torch.tensor([[0.4]]), torch.tensor([0.1]))[0, 0, 0].item(), 5)',
+        expected: '0.37995',
         hidden: true,
       },
     ],
     hints: [
-      'Forward: loop over t, h = torch.tanh(X[:, t] @ W_xh + h @ W_hh + b), then torch.stack(hs, dim=1).',
-      'Backward: start from torch.zeros_like(...) gradients and dh_next = torch.zeros_like(h0); loop t from T-1 down to 0.',
-      'da = (dH[:, t] + dh_next) * (1 - h_t ** 2); accumulate X[:, t].T @ da, h_prev.T @ da and da.sum(dim=0).',
-      'Check yourself: build the graph with requires_grad=True, call (H * dH).sum().backward() and compare with .grad.',
+      'Forward is a loop over time with shared weights. Backward walks the same loop in reverse; the gradient into h_t has a direct part and a part from h_{t+1}.',
+      'Forward: h = torch.tanh(X[:, t] @ W_xh + h @ W_hh + b), then torch.stack(hs, dim=1). Backward: start from torch.zeros_like(...) gradients and dh_next = torch.zeros_like(h0); loop t from T-1 down to 0.',
+      'da = (dH[:, t] + dh_next) * (1 - h_t ** 2); accumulate X[:, t].T @ da, h_prev.T @ da and da.sum(dim=0); dX[:, t] = da @ W_xh.T; dh_next = da @ W_hh.T.',
+      'Check yourself with autograd: build the graph with requires_grad=True, call (H * dH).sum().backward() and compare with .grad. Common bugs: overwriting instead of accumulating, and zeros instead of h0 before step 0.',
     ],
   },
+
   'lstm-cell': {
-    note: "Implement it with tensor ops (@, torch.sigmoid, torch.tanh, .chunk); nn.LSTM and nn.LSTMCell aren't allowed (and aren't in the browser shim). The weight layout is the same as nn.LSTMCell's, so in real PyTorch your function reproduces it exactly.",
+    note: `Implement it with tensor ops (@, torch.sigmoid, torch.tanh, .chunk); nn.LSTM and nn.LSTMCell aren't allowed (and aren't in the browser shim). The weight layout is nn.LSTMCell's: (4H, D) and (4H, H), gate order i, f, g, o, so in real PyTorch your function reproduces it exactly.`,
     starterCode: `import torch
 
 def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
@@ -149,8 +167,8 @@ def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
         x: Input (N, D)
         h_prev: Previous hidden state (N, H)
         c_prev: Previous cell state (N, H)
-        W_ih: Input weights (4H, D)
-        W_hh: Hidden weights (4H, H)
+        W_ih: Input weights (4H, D), row blocks [i; f; g; o]
+        W_hh: Hidden weights (4H, H), row blocks [i; f; g; o]
         b_ih, b_hh: Biases (4H,)
 
     Returns:
@@ -165,10 +183,10 @@ def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
     """
     One LSTM step (gate order i, f, g, o, as in nn.LSTMCell).
     """
-    gates = x @ W_ih.T + b_ih + h_prev @ W_hh.T + b_hh
+    gates = x @ W_ih.T + b_ih + h_prev @ W_hh.T + b_hh   # (N, 4H)
     i, f, g, o = gates.chunk(4, dim=-1)
     i, f, g, o = torch.sigmoid(i), torch.sigmoid(f), torch.tanh(g), torch.sigmoid(o)
-    c = f * c_prev + i * g
+    c = f * c_prev + i * g        # additive cell update: the gradient highway
     h = o * torch.tanh(c)
     return h, c
 `,
@@ -211,15 +229,24 @@ def lstm_cell(x, h_prev, c_prev, W_ih, W_hh, b_ih, b_hh):
         expected: '([[-0.01003, 0.32941], [-0.0162, 0.33173]], [[-0.08157, 0.52188], [-0.26482, 0.59716]])',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Worked example: pre-activations (i, f, g, o) = (0, 2, 1, 0)',
+        input: 'tuple(round(a.item(), 5) for a in lstm_cell(torch.tensor([[1.0]]), torch.zeros(1, 1), torch.tensor([[1.0]]), torch.tensor([[0.0], [2.0], [1.0], [0.0]]), torch.zeros(4, 1), torch.zeros(4), torch.zeros(4)))',
+        expected: '(0.42575, 1.26159)',
+        hidden: true,
+      },
     ],
     hints: [
+      'All four gates are linear in the same [x, h_prev]: compute them together, then split. c is the memory; h is a gated, squashed view of it.',
       'gates = x @ W_ih.T + b_ih + h_prev @ W_hh.T + b_hh has shape (N, 4H).',
-      'gates.chunk(4, dim=-1) returns i, f, g, o in that order.',
-      'torch.sigmoid for i, f, o; torch.tanh for g. Then c = f * c_prev + i * g and h = o * torch.tanh(c).',
+      'i, f, g, o = gates.chunk(4, dim=-1); torch.sigmoid for i, f, o and torch.tanh for g; c = f * c_prev + i * g; h = o * torch.tanh(c).',
+      'Order is i, f, g, o (not i, f, o, g), the weights need .T, and h uses tanh of the new c, not c_prev.',
     ],
   },
+
   'gru-cell': {
-    note: "Implement it with tensor ops (@, torch.sigmoid, torch.tanh, .chunk); nn.GRU and nn.GRUCell aren't allowed (and aren't in the browser shim). Follow nn.GRUCell's conventions: gate order r, z, n, and r multiplies (h_prev @ W_hn.T + b_hn).",
+    note: `Implement it with tensor ops (@, torch.sigmoid, torch.tanh, .chunk); nn.GRU and nn.GRUCell aren't allowed (and aren't in the browser shim). Follow nn.GRUCell's conventions: weights (3H, D) and (3H, H), gate order r, z, n, r multiplies (h_prev @ W_hn.T + b_hn), and z = 1 keeps h_prev.`,
     starterCode: `import torch
 
 def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
@@ -229,8 +256,8 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
     Args:
         x: Input (N, D)
         h_prev: Previous hidden state (N, H)
-        W_ih: Input weights (3H, D)
-        W_hh: Hidden weights (3H, H)
+        W_ih: Input weights (3H, D), row blocks [r; z; n]
+        W_hh: Hidden weights (3H, H), row blocks [r; z; n]
         b_ih, b_hh: Biases (3H,)
 
     Returns:
@@ -251,7 +278,7 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
     r = torch.sigmoid(i_r + h_r)
     z = torch.sigmoid(i_z + h_z)
     n = torch.tanh(i_n + r * h_n)      # reset gate applied after the matmul
-    return (1 - z) * n + z * h_prev
+    return (1 - z) * n + z * h_prev    # z = 1 keeps the old state
 `,
     testCases: [
       {
@@ -291,11 +318,19 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
         expected: '[[0.95395, -0.69198], [-0.29984, -0.87107]]',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Worked example with distinct r, z and n',
+        input: 'round(gru_cell(torch.tensor([[1.0]]), torch.tensor([[0.5]]), torch.tensor([[0.0], [1.0], [1.0]]), torch.tensor([[1.0], [0.0], [2.0]]), torch.zeros(3), torch.zeros(3)).item(), 5)',
+        expected: '0.61429',
+        hidden: true,
+      },
     ],
     hints: [
-      'Keep the input and hidden projections separate: (x @ W_ih.T + b_ih).chunk(3, dim=-1) and (h_prev @ W_hh.T + b_hh).chunk(3, dim=-1).',
-      'r = torch.sigmoid(i_r + h_r), z = torch.sigmoid(i_z + h_z).',
-      'n = torch.tanh(i_n + r * h_n), then h = (1 - z) * n + z * h_prev.',
+      'z decides how much of the old state to keep, r decides how much of it feeds the candidate. The new state interpolates between h_prev and the candidate.',
+      'Keep the projections separate: (x @ W_ih.T + b_ih).chunk(3, dim=-1) and (h_prev @ W_hh.T + b_hh).chunk(3, dim=-1).',
+      'r = torch.sigmoid(i_r + h_r), z = torch.sigmoid(i_z + h_z), n = torch.tanh(i_n + r * h_n), h = (1 - z) * n + z * h_prev.',
+      'Pitfalls: order r, z, n (not z, r, n); r multiplies h_n including b_hn; and (1 - z) goes with n, not with h_prev.',
     ],
   },
 };

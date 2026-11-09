@@ -832,120 +832,209 @@ Related: the optimizers and schedules themselves (SGD with Momentum, Adam Optimi
   {
     id: 'cnn',
     title: 'CNNs & Computer Vision',
-    description: 'Implement convolutions, pooling, object detection, and segmentation.',
+    description: 'Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.',
     icon: '🖼️',
     introduction: `
 # Convolutional Neural Networks (CNNs)
 
-CNNs are the backbone of computer vision. They learn hierarchical features from images.
+## Why It Matters
 
-## Key Concepts
+Convolutions are how neural networks see. Image classifiers, object detectors (Faster R-CNN, RetinaNet, YOLO), segmentation models (U-Net, Mask R-CNN) and the image encoders of diffusion models and vision-language models are built from the same few pieces. Interviews test them directly: compute an output shape in your head, write a convolution with loops, implement IoU and NMS without bugs, explain why ResNet trains.
 
-### Convolution Operation
-- **Kernel/Filter**: Small matrix that slides over input
-- **Feature maps**: Output of applying filters
-- **Parameters**: Stride, padding, kernel size
+## Core Ideas
 
-### Pooling Layers
-- **Max pooling**: Take maximum in each region
-- **Average pooling**: Take average in each region
-- **Purpose**: Reduce spatial dimensions, add translation invariance
+### Convolution = a small dense layer slid over the image
+A conv layer applies the **same** small weight tensor (the kernel) at every spatial position. That gives two inductive biases: **locality** (each output looks at a \`k x k\` patch) and **weight sharing** (a cat ear detector works anywhere in the image). Deep learning "convolution" is really **cross-correlation**: the kernel is not flipped.
 
-### CNN Architecture Components
-1. **Convolutional layers**: Extract features
-2. **Pooling layers**: Reduce dimensions
-3. **Flatten**: Convert 2D to 1D
-4. **Fully connected**: Classification
-
-### Output Size Formula
-\`\`\`
-output = (input - kernel + 2*padding) / stride + 1
+\`\`\`text
+out[n, o, i, j] = b[o] + sum over c, a, b' of  x[n, c, i*s + a, j*s + b'] * w[o, c, a, b']
 \`\`\`
 
-### Classic Architectures
-- **LeNet**: First successful CNN
-- **AlexNet**: Deep CNNs for ImageNet
-- **VGG**: Very deep, small kernels
-- **ResNet**: Skip connections
+### Shape conventions (get these right first)
 
-### Residual Blocks
-A ResNet basic block computes \`ReLU(F(x) + shortcut(x))\` with \`F = conv-BN-ReLU-conv-BN\`. The shortcut is the identity, or a strided 1x1 conv + BN when the channels or resolution change. If the identity is optimal, the block only has to drive \`F\` to zero, which is what makes 100+ layer networks trainable.
+| Name | Layout | Used by |
+|------|--------|---------|
+| **NCHW** | \`(batch, channels, height, width)\` | PyTorch (\`nn.Conv2d\`), and the conv problems here |
+| **NHWC** | \`(batch, height, width, channels)\` | TensorFlow/Keras, image files; used in **Flatten Layer** |
+| Conv weight | \`(C_out, C_in // groups, kH, kW)\` | PyTorch and **Advanced 2D Convolution** |
+| Single image | \`(H, W)\` | **2D Convolution** and **Max Pooling** (one channel, no batch) |
 
-### Object Detection
-- **IoU (Intersection over Union)**: Measures overlap between predicted and ground truth boxes
-- **Non-Maximum Suppression (NMS)**: Filters redundant detections by keeping only the highest-scoring box per object
-- **Focal Loss**: Addresses class imbalance by down-weighting easy examples (RetinaNet)
-- **Smooth L1 Loss**: Bounding box regression loss — less sensitive to outliers than L2
+Box formats in detection differ too: the problems here use **\`xyxy\`** = \`[x1, y1, x2, y2]\` (top-left and bottom-right corners, \`x2 > x1\`, \`y2 > y1\`). COCO stores **\`xywh\`** = \`[x, y, width, height]\` and YOLO uses **\`cxcywh\`** (centre plus size), so convert before computing IoU.
 
-### Image Segmentation
-- **Pixel-level classification**: Assign a label to every pixel
-- **Evaluation metrics**: IoU (Jaccard), Dice Coefficient, Pixel Accuracy
-- **Key architectures**: U-Net, FCN, Mask R-CNN
+### Output size, parameters and compute
 
-Let's implement CNN operations and detection/segmentation fundamentals!
+\`\`\`text
+H_out = floor((H + 2*padding - kH) / stride) + 1
+params = C_out * (C_in // groups) * kH * kW  (+ C_out biases)
+MACs   = params_without_bias * H_out * W_out  (per image)
+\`\`\`
+
+| Building block | What it does |
+|----------------|--------------|
+| Padding \`p = (k-1)/2\`, stride 1 | "same" convolution: keeps \`H, W\` |
+| Stride 2 conv or 2x2 max pool | halves the resolution |
+| Grouped conv (\`groups = G\`) | \`G\` independent convs on channel slices, \`1/G\` of the params |
+| Depthwise conv (\`groups = C_in = C_out\`) + 1x1 conv | MobileNet's depthwise separable conv |
+| Flatten + linear | turn the final feature map into class logits |
+| Residual block | \`out = ReLU(F(x) + shortcut(x))\`, makes 100+ layers trainable |
+
+### Detection and segmentation
+A detector outputs many scored boxes: **IoU** measures overlap, **NMS** removes duplicates, **focal loss** stops easy background anchors from swamping the classifier, and **smooth L1** regresses box offsets robustly. Segmentation predicts a class per pixel, scored with mask **IoU** and **Dice**.
+
+## Worked Micro-Example
+
+Cross-correlate a \`3 x 3\` image with a \`2 x 2\` kernel (no padding, stride 1, so the output is \`(3 - 2) + 1 = 2\` per side):
+
+\`\`\`text
+image = [[1, 2, 0],      kernel = [[1,  0],
+         [0, 1, 3],                [0, -1]]
+         [2, 1, 0]]
+
+out[0, 0] = 1*1 + 2*0 + 0*0 + 1*(-1) =  0
+out[0, 1] = 2*1 + 0*0 + 1*0 + 3*(-1) = -1
+out[1, 0] = 0*1 + 1*0 + 2*0 + 1*(-1) = -1
+out[1, 1] = 1*1 + 3*0 + 1*0 + 0*(-1) =  1
+\`\`\`
+
+Shapes through the ResNet stem: a \`224 x 224\` image, conv 7x7 stride 2 padding 3 gives \`(224 + 6 - 7) // 2 + 1 = 112\`, then max pool 3x3 stride 2 padding 1 gives \`(112 + 2 - 3) // 2 + 1 = 56\`. A 3x3 conv from 64 to 128 channels at \`56 x 56\` has \`3*3*64*128 = 73,728\` weights and costs about \`73,728 * 56 * 56 ≈ 231M\` multiply-adds per image.
+
+IoU of \`xyxy\` boxes \`[0, 0, 4, 4]\` and \`[2, 0, 6, 4]\`: the intersection is \`2 x 4 = 8\`, the union is \`16 + 16 - 8 = 24\`, so IoU \`= 1/3\`.
+
+## Common Pitfalls
+
+- **Layout mix-ups**: NCHW vs NHWC, \`(H, W)\` vs \`(W, H)\`, \`xyxy\` vs \`xywh\`. Write the shape next to every line.
+- **Flipping the kernel**: frameworks compute cross-correlation; flipping gives a different answer for asymmetric kernels.
+- **Truncating floats**: \`astype(int)\` on a convolution output silently corrupts non-integer results.
+- **Output size**: use floor division; forgetting the \`+ 1\` or the \`2 * padding\` is the classic off-by-one.
+- **IoU**: clamp the intersection width and height at 0, or disjoint boxes get a positive "overlap". Guard a zero-area union.
+- **NMS**: suppress with \`IoU > threshold\` against the box you just kept, not against the original top box only.
+- **Losses**: clip probabilities before \`log\`; in focal loss, \`alpha\` weights the **positive** class.
+- **Residual blocks**: the final ReLU comes **after** the addition; the shortcut needs a projection whenever the shape changes.
+
+## Interview Angle
+
+- "What is the output shape and parameter count of this layer?" Answer in seconds with the formulas above.
+- "Write conv2d with loops, then vectorise it" (loop over kernel taps, or im2col + one matmul).
+- "Why do two 3x3 convs beat one 5x5?" (same 5x5 receptive field, \`18 C^2\` vs \`25 C^2\` weights, an extra non-linearity.) "What does a 1x1 conv do?"
+- "Implement IoU and NMS." Follow-ups: batched IoU as an \`(N, M)\` matrix, soft-NMS, class-aware NMS, \`O(N^2)\` cost.
+- "Why focal loss, and what do \`alpha\` and \`gamma\` do?" "Why smooth L1 rather than L2 for boxes?"
+- "Why does ResNet work?" Identity paths keep gradients flowing; a block can fall back to the identity by pushing \`F\` to 0.
+
+## Problems in This Section
+
+1. **Convolution Output Size**: the \`floor((H + 2p - k) / s) + 1\` formula.
+2. **2D Convolution**: a single-channel \`(H, W)\` cross-correlation, no padding, stride 1.
+3. **Max Pooling**: non-overlapping \`k x k\` max pooling on an \`(H, W)\` map.
+4. **Flatten Layer**: \`(N, H, W, C)\` (NHWC) feature maps to \`(N, H*W*C)\` vectors.
+5. **Advanced 2D Convolution**: NCHW batches with padding, stride and groups (depthwise conv).
+6. **IoU (Intersection over Union)**: overlap of two \`xyxy\` boxes.
+7. **Non-Maximum Suppression (NMS)**: greedy duplicate removal for detections.
+8. **Focal Loss**: RetinaNet's loss for extreme class imbalance.
+9. **Smooth L1 Loss**: the box regression loss of Fast/Faster R-CNN.
+10. **Segmentation Metrics**: IoU, pixel accuracy and Dice for binary masks.
+11. **ResNet Basic Block**: conv-BN-ReLU-conv-BN plus an identity or projection shortcut.
+
+Related: **Batch Normalization** (Neural Networks), **Precision and Recall** (Model Evaluation, the basis of detection mAP) and **E2E: Convolutional Neural Network** (End-to-End Implementations).
     `,
     problems: ['conv-output-size', 'conv2d-forward', 'max-pool', 'flatten-layer', 'conv2d-advanced', 'iou-bounding-box', 'nms', 'focal-loss', 'smooth-l1-loss', 'seg-metrics', 'resnet-block'],
   },
   {
     id: 'sequence-models',
     title: 'Sequence Models',
-    description: 'RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.',
+    description: 'Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.',
     icon: '🔁',
     introduction: `
 # Sequence Models
 
-Text, audio, time series and user sessions are all **sequences**: the order matters, and the length varies. Before transformers, recurrent networks were the standard way to model them. They still show up in streaming and on-device models, and modern state-space models (Mamba, RWKV) bring back the same recurrent idea.
-
-## The Recurrent Idea
-
-An RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the same weights at every step:
-
-\`\`\`
-h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)
-\`\`\`
-
-Training unrolls the loop over time and backpropagates through every step: **backpropagation through time (BPTT)**. The gradient reaching step 1 from step T is a product of T Jacobians:
-
-\`\`\`
-dh_T/dh_1 = prod_t  diag(1 - h_t^2) @ W_hh.T
-\`\`\`
-
-If the largest singular value of \`W_hh\` is below 1, this product **vanishes**; above 1, it can **explode**. Plain RNNs therefore struggle to learn dependencies longer than a few dozen steps (clipping helps with exploding gradients, but not with vanishing ones).
-
-## Gated Cells
-
-Gates are sigmoids in \`[0, 1]\` that decide, per dimension, how much information flows.
-
-| Cell | State | Gates | Key equation |
-|------|-------|-------|--------------|
-| **RNN** | \`h\` | none | \`h = tanh(W x + U h)\` |
-| **LSTM** | \`h\`, \`c\` | input \`i\`, forget \`f\`, output \`o\` (+ candidate \`g\`) | \`c = f*c + i*g\`, \`h = o*tanh(c)\` |
-| **GRU** | \`h\` | reset \`r\`, update \`z\` | \`h = (1-z)*n + z*h_prev\` |
-
-The LSTM's cell state is updated **additively**: when \`f ≈ 1\`, \`dc_t/dc_{t-1} ≈ 1\` and gradients can travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.
-
-## PyTorch Conventions (worth memorizing)
-
-| | LSTM (\`nn.LSTMCell\`) | GRU (\`nn.GRUCell\`) |
-|---|---|---|
-| Gate order in \`weight_ih\` / \`weight_hh\` | \`i, f, g, o\` | \`r, z, n\` |
-| Weight shapes | \`(4H, D)\`, \`(4H, H)\` | \`(3H, D)\`, \`(3H, H)\` |
-| Parameters (with both biases) | \`4(HD + H² + 2H)\` | \`3(HD + H² + 2H)\` |
-
-## RNNs vs Transformers
-
-| | RNN / LSTM | Transformer |
-|---|---|---|
-| Training | Sequential over time (slow) | Parallel over positions |
-| Inference per token | O(1) memory and compute | O(T) with a KV cache |
-| Long-range dependencies | Hard (bounded state) | Direct attention to any position |
-
 ## Why It Matters
 
-- **Interviews** ask you to write an LSTM step, explain vanishing gradients and how gating fixes them, or count the parameters of a GRU.
-- **In practice**, understanding recurrence makes state-space models, streaming ASR and RNN-style inference tricks easy to follow.
+Text, audio, time series and user sessions are all **sequences**: order matters and length varies. Before transformers, recurrent networks (RNN, LSTM, GRU) were the standard way to model them, and they still power streaming speech recognition, on-device keyboards and many forecasting systems. State-space models (Mamba, RWKV) bring the same recurrent idea back to LLMs, and interviewers still ask you to write an LSTM step or explain vanishing gradients.
 
-Let's build these cells from scratch!
+## Core Ideas
+
+### The recurrence
+An RNN reads one element at a time and updates a fixed-size **hidden state** that summarizes the past, reusing the **same weights at every step**:
+
+\`\`\`text
+h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        x_t: (N, D),  h_t: (N, H)
+\`\`\`
+
+All problems here are **batch first**: a batch of sequences is \`X\` of shape \`(N, T, D)\` = \`(batch, seq_len, features)\` and the stacked hidden states are \`(N, T, H)\`.
+
+### Backpropagation through time (BPTT)
+Training unrolls the loop and backpropagates through every step. The gradient reaching \`h_1\` from \`h_T\` is a product of \`T - 1\` Jacobians:
+
+\`\`\`text
+dh_T/dh_1 = prod over t = T..2 of  diag(1 - h_t^2) @ W_hh.T
+\`\`\`
+
+If the largest singular value of \`W_hh\` (times the tanh slope, at most 1) is below 1 the product **vanishes**; above 1 it can **explode**. Gradient clipping fixes explosions but not vanishing, so plain RNNs struggle beyond a few dozen steps.
+
+### Gated cells
+Gates are sigmoids in \`[0, 1]\` that decide, per dimension, how much information flows.
+
+| Cell | State | Gates | Update |
+|------|-------|-------|--------|
+| **RNN** | \`h\` | none | \`h = tanh(x W_xh + h W_hh + b)\` |
+| **LSTM** | \`h\`, \`c\` | input \`i\`, forget \`f\`, output \`o\` (+ candidate \`g\`) | \`c = f*c_prev + i*g\`, \`h = o*tanh(c)\` |
+| **GRU** | \`h\` | reset \`r\`, update \`z\` (+ candidate \`n\`) | \`h = (1-z)*n + z*h_prev\` |
+
+The LSTM's cell state is updated **additively**: when \`f ≈ 1\`, \`dc_t/dc_{t-1} ≈ 1\` and gradients travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.
+
+### Conventions used in this section (memorize them)
+
+| | Vanilla RNN problem | LSTM (\`nn.LSTMCell\`) | GRU (\`nn.GRUCell\`) |
+|---|---|---|---|
+| Weight layout | \`x @ W_xh\`, \`W_xh: (D, H)\`, \`W_hh: (H, H)\` | \`x @ W_ih.T\`, \`W_ih: (4H, D)\`, \`W_hh: (4H, H)\` | \`x @ W_ih.T\`, \`W_ih: (3H, D)\`, \`W_hh: (3H, H)\` |
+| Biases | one \`b: (H,)\` | \`b_ih\`, \`b_hh: (4H,)\` | \`b_ih\`, \`b_hh: (3H,)\` |
+| Gate order (row blocks of \`H\`) | none | **\`i, f, g, o\`** | **\`r, z, n\`** |
+| Parameters | \`DH + H^2 + H\` | \`4(HD + H^2 + 2H)\` | \`3(HD + H^2 + 2H)\` |
+
+Note the layout switch: the RNN problem uses \`(in, out)\` weights, the LSTM and GRU problems use PyTorch's \`(out, in)\` weights, hence the \`.T\`. TensorFlow/Keras orders LSTM gates \`i, f, c, o\` too, but stores kernels as \`(D, 4H)\`.
+
+## Worked Micro-Example
+
+**RNN**, scalar (\`D = H = 1\`), \`W_xh = 0.5\`, \`W_hh = 1\`, \`b = 0\`, \`h_0 = 0\`, input \`x_t = 1\` for 3 steps:
+
+\`\`\`text
+h_1 = tanh(0.5)            = 0.4621
+h_2 = tanh(0.5 + 0.4621)   = 0.7452
+h_3 = tanh(0.5 + 0.7452)   = 0.8469
+\`\`\`
+
+**LSTM**, one step with \`H = 1\`, \`c_prev = 1\` and gate pre-activations \`(i, f, g, o) = (0, 2, 1, 0)\`:
+
+\`\`\`text
+i = sigmoid(0) = 0.5,  f = sigmoid(2) = 0.8808,  g = tanh(1) = 0.7616,  o = 0.5
+c = 0.8808 * 1 + 0.5 * 0.7616 = 1.2616
+h = 0.5 * tanh(1.2616)       = 0.4258
+\`\`\`
+
+**Vanishing in numbers**: a per-step gradient factor of 0.5 over 20 steps leaves \`0.5^20 ≈ 9.5e-7\` of the signal; a factor of 1.1 over 50 steps blows it up to about 117.
+
+## Common Pitfalls
+
+- **Gate order**: splitting an LSTM's \`4H\` block as \`i, f, o, g\` (or a GRU's as \`z, r, n\`) runs without errors and gives wrong numbers. PyTorch is \`i, f, g, o\` and \`r, z, n\`.
+- **Weight orientation**: \`x @ W\` vs \`x @ W.T\`. Check the shape table before multiplying.
+- **GRU reset gate**: PyTorch applies \`r\` *after* the hidden matmul, to \`h_prev @ W_hn.T + b_hn\`; the original paper applies it to \`h_prev\` first. The numbers differ.
+- **GRU update gate**: in PyTorch \`z = 1\` **keeps** \`h_prev\`; some papers swap \`z\` and \`1 - z\`.
+- **BPTT**: weights are shared, so their gradients **accumulate** over time; the gradient into \`h_t\` has a direct part and a part from \`h_{t+1}\`.
+- **Batch vs time axis**: \`nn.RNN\` defaults to \`(T, N, D)\` unless \`batch_first=True\`. These problems are batch first.
+
+## Interview Angle
+
+- "Write an LSTM cell from scratch." Then: "count its parameters", "why does the cell state help gradients?", "why initialize the forget bias to 1?"
+- "Explain vanishing and exploding gradients in RNNs and the fixes": gating, clipping, orthogonal init, shorter truncated BPTT windows.
+- "LSTM vs GRU?" GRU has 3 weight blocks instead of 4 (25% fewer parameters) and no separate cell state; quality is usually similar.
+- "RNN vs Transformer?" RNN training is sequential in \`T\` but inference costs \`O(1)\` per token; attention trains in parallel but costs \`O(T)\` per token with a KV cache and \`O(T^2)\` for the full sequence.
+
+## Problems in This Section
+
+1. **Vanilla RNN: Forward & BPTT**: unroll \`h_t = tanh(x_t W_xh + h_{t-1} W_hh + b)\` over \`(N, T, D)\` inputs and backpropagate through time by hand.
+2. **LSTM Cell**: one step of \`nn.LSTMCell\` with gate order \`i, f, g, o\`.
+3. **GRU Cell**: one step of \`nn.GRUCell\` with gate order \`r, z, n\` and PyTorch's reset-gate placement.
+
+Related: **Gradient Clipping by Global Norm** (Optimization & Training) for exploding gradients, and **Scaled Dot-Product Attention** (Transformer Architecture), which replaced recurrence in most language models.
     `,
     problems: ['rnn-forward', 'lstm-cell', 'gru-cell'],
   },
