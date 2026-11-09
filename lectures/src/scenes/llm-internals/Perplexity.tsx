@@ -49,6 +49,9 @@ export const PerplexityScene: React.FC<SceneProps> = ({ cues, durationInFrames }
         <div style={{ marginTop: 8, fontFamily: F.body, fontSize: 22, color: C.muted, opacity: ease(frame, pAt, 16) }}>p = model's probability of the true next token</div>
 
         <div style={{ position: 'relative', marginTop: 40, opacity: nll }}>
+          {/* mean NLL line, behind the bars so value labels stay readable */}
+          <div style={{ position: 'absolute', left: -10, right: -10, top: 34 + (300 - 34) * (1 - MEAN_NLL / 2), height: 3, background: C.amber, opacity: meanY }} />
+          <div style={{ position: 'relative' }}>
           <Bars
             values={TOKEN_NLL.map((v, i) => (PPL_MASK[i] ? v : mask > 0.5 ? 0 : -Math.log(PPL_P_TRUE[i])))}
             width={W}
@@ -58,8 +61,7 @@ export const PerplexityScene: React.FC<SceneProps> = ({ cues, durationInFrames }
             reveal={() => nll}
             color={(_, i) => (PPL_MASK[i] ? C.violet : C.rose)}
           />
-          {/* mean NLL line */}
-          <div style={{ position: 'absolute', left: -10, right: -10, top: 34 + (300 - 34) * (1 - MEAN_NLL / 2), height: 3, background: C.amber, opacity: meanY }} />
+          </div>
           <div style={{ position: 'absolute', right: -10, top: 314, fontFamily: F.mono, fontSize: 26, color: C.amber, opacity: meanY }}>
             — mean NLL {MEAN_NLL.toFixed(3)}
           </div>

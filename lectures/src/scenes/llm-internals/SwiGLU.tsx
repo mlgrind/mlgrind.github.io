@@ -24,7 +24,7 @@ const curve = (f: (z: number) => number, upto = 1) => {
   return pts.join(' ');
 };
 
-const ROW = { cellW: 80, cellH: 58, fontSize: 20, labelSize: 34, shape: false };
+const ROW = { cellW: 80, cellH: 58, fontSize: 22, labelSize: 34, shape: false };
 
 export const SwiGLUScene: React.FC<SceneProps> = ({ cues, durationInFrames }) => {
   const frame = useCurrentFrame();

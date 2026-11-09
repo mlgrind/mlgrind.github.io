@@ -56,13 +56,14 @@ export const KLScene: React.FC<SceneProps> = ({ cues, durationInFrames }) => {
         <text x={px(qm)} y={py(pdf(qm, qm, qs)) - 16} fill={C.teal} fontFamily={F.mono} fontSize={26} textAnchor="middle" opacity={1 - match}>
           Q = N({qm.toFixed(1)}, {qs.toFixed(1)}²)
         </text>
-        <text x={px(-3.9)} y={py(0.5)} fill={C.muted} fontFamily={F.body} fontSize={24} opacity={windowed(frame, surpriseAt, formAt + 10)}>
-          samples from P where Q puts little mass
-        </text>
-        <text x={px(-3.9)} y={py(0.5) + 32} fill={C.muted} fontFamily={F.body} fontSize={24} opacity={windowed(frame, surpriseAt, formAt + 10)}>
-          cost extra surprise under Q
-        </text>
       </svg>
+
+      {/* shown before the formula panel takes this spot, so it never collides with the curve labels */}
+      <div style={{ position: 'absolute', left: 960, top: 60, width: 720, fontFamily: F.body, fontSize: 30, lineHeight: 1.4, color: C.muted, opacity: windowed(frame, surpriseAt, formAt) }}>
+        samples from <span style={{ color: C.violetLight }}>P</span> where <span style={{ color: C.teal }}>Q</span> puts little mass
+        <br />
+        cost extra surprise under <span style={{ color: C.teal }}>Q</span>
+      </div>
 
       <div style={{ position: 'absolute', left: 960, top: 40, width: 720, display: 'flex', flexDirection: 'column', gap: 26 }}>
         <Panel style={{ opacity: ease(frame, formAt, 18) }}>

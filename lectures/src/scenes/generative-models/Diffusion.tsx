@@ -17,7 +17,7 @@ const line = (vals: number[], max: number, upto: number) => {
 };
 
 const P = 290; // scatter panel size
-const ps = (v: number) => P / 2 + v * (P / 4.4);
+const ps = (v: number) => P / 2 + v * (P / 6); // ±3 units, so pure-noise samples stay inside the panel
 
 export const DiffusionScene: React.FC<SceneProps> = ({ cues, durationInFrames }) => {
   const frame = useCurrentFrame();

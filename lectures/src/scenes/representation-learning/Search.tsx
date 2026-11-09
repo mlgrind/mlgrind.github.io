@@ -39,7 +39,7 @@ export const SearchScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =>
                 <span style={{ width: 50, fontFamily: F.mono, fontSize: 24, color: C.muted }}>{d}</span>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {DOCS_UNIT[i].map((v, k) => (
-                    <div key={k} style={{ width: 66, height: 38, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.mono, fontSize: 19, color: C.text, background: rgba(v >= 0 ? C.violet : C.teal, 0.08 + 0.5 * Math.abs(v)) }}>
+                    <div key={k} style={{ width: 70, height: 38, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.mono, fontSize: 22, color: C.text, background: rgba(v >= 0 ? C.violet : C.teal, 0.08 + 0.5 * Math.abs(v)) }}>
                       {fmt(v, 2)}
                     </div>
                   ))}

@@ -103,7 +103,9 @@ export const GuidanceFlowScene: React.FC<SceneProps> = ({ cues, durationInFrames
             t = {tFlow.toFixed(2)}
           </Readout>
           <div style={{ fontFamily: F.body, fontSize: 22, color: C.muted, opacity: ease(frame, singleAt, 16) }}>
-            one Euler step x_0 + 1·v: max error {EULER_ERR.toFixed(3)}
+            one Euler step:
+            <br />x_0 + 1·v lands on x_1
+            <br />max error {EULER_ERR.toFixed(3)}
           </div>
         </div>
       </Panel>
