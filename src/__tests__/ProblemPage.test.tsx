@@ -225,6 +225,40 @@ describe("section default track", () => {
   });
 });
 
+describe("track examples", () => {
+  const path = "/problem/pytorch-basics/tensor-creation";
+  const problem = getProblemById("tensor-creation")!;
+  const showExamples = () => fireEvent.click(screen.getByRole("button", { name: "Examples" }));
+  let saved: Pick<typeof problem, "examples"> & { torch: typeof problem.examples | undefined };
+  beforeEach(() => {
+    saved = { examples: problem.examples, torch: problem.pytorch!.examples };
+    problem.examples = [{ input: "np.zeros(2)", output: "NUMPY_EXAMPLE" }];
+  });
+  afterEach(() => {
+    problem.examples = saved.examples;
+    problem.pytorch!.examples = saved.torch;
+  });
+
+  it("shows the PyTorch track's examples in PyTorch and the NumPy ones in NumPy", () => {
+    problem.pytorch!.examples = [{ input: "torch.zeros(2)", output: "TORCH_EXAMPLE" }];
+    mount(path);
+    showExamples();
+    expect(screen.getAllByText("TORCH_EXAMPLE").length).toBeGreaterThan(0);
+    expect(screen.queryByText("NUMPY_EXAMPLE")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "NumPy" }));
+    expect(screen.getAllByText("NUMPY_EXAMPLE").length).toBeGreaterThan(0);
+    expect(screen.queryByText("TORCH_EXAMPLE")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the NumPy examples when the PyTorch track has none", () => {
+    delete problem.pytorch!.examples;
+    mount(path);
+    showExamples();
+    expect(screen.getByRole("button", { name: "PyTorch" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByText("NUMPY_EXAMPLE").length).toBeGreaterThan(0);
+  });
+});
+
 describe("decluttered problem page", () => {
   it("shows the title once: the H1 stays, a repeated leading heading is hidden", () => {
     // The scaled dot-product attention description opens with "## Scaled Dot-Product Attention".

@@ -56,9 +56,10 @@ export default function ProblemPage() {
     chosenLanguage ?? (savedNumpyWork ? 'numpy' : section?.defaultLanguage ?? 'numpy');
   // Problems without a PyTorch track always use NumPy.
   const activeLanguage: Language = language === 'pytorch' && problem?.pytorch ? 'pytorch' : 'numpy';
-  // Starter code, solution, tests and hints of the active track.
+  // Starter code, solution, tests, hints and examples of the active track.
   const variant = activeLanguage === 'pytorch' && problem?.pytorch ? problem.pytorch : problem;
   const variantHints = (activeLanguage === 'pytorch' && problem?.pytorch?.hints) || problem?.hints || [];
+  const variantExamples = (activeLanguage === 'pytorch' && problem?.pytorch?.examples) || problem?.examples || [];
 
   const [code, setCode] = useState('');
   const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -441,7 +442,7 @@ export default function ProblemPage() {
             <>
               <div className="flex-1 overflow-y-auto p-4">
                 <ProblemDescription problem={problem} hideTitle />
-                <Examples examples={problem.examples} />
+                <Examples examples={variantExamples} />
                 <Hints
                   key={`${problem.id}-${activeLanguage}`}
                   hints={variantHints}
@@ -603,7 +604,7 @@ export default function ProblemPage() {
               )}
               {descriptionTab === 'examples' && (
                 <div>
-                  <Examples examples={problem.examples} />
+                  <Examples examples={variantExamples} />
                 </div>
               )}
               {descriptionTab === 'hints' && (

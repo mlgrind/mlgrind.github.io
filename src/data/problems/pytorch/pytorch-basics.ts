@@ -7,7 +7,19 @@ import { LanguageVariant } from '../../../types';
  */
 export const pytorchBasicsPyTorch: Record<string, LanguageVariant> = {
   'tensor-creation': {
-    note: 'Use the real torch creation functions. torch.manual_seed(42) makes torch.randn reproducible.',
+    note: 'Use the torch creation functions. torch.tensor infers int64 from a list of ints, so pass dtype=torch.float32; torch.manual_seed(42) makes torch.randn reproducible.',
+    examples: [
+      {
+        input: 'r = create_tensors()\nr["linspace"]',
+        output: 'tensor([0.0000, 0.2500, 0.5000, 0.7500, 1.0000])',
+        explanation: 'linspace includes both endpoints, so 5 points are spaced 0.25 apart.',
+      },
+      {
+        input: 'r["from_list"].dtype, r["zeros"].shape, r["arange"].dtype',
+        output: '(torch.float32, torch.Size([3, 4]), torch.int64)',
+        explanation: 'from_list asks for float32 explicitly; arange of integers gives int64, the default integer dtype.',
+      },
+    ],
     starterCode: `import torch
 
 def create_tensors() -> dict:
@@ -76,14 +88,27 @@ def create_tensors() -> dict:
       },
     ],
     hints: [
-      'torch.tensor(data, dtype=torch.float32) builds a tensor from a list',
-      'torch.zeros(3, 4), torch.ones(2, 3), torch.randn(2, 3) take sizes as arguments',
-      'torch.full((2, 3), 7.0) fills a tensor with one value',
+      'Each key maps to one torch creation function; the table in the description names them all.',
+      'Sizes can be separate integers, torch.zeros(3, 4) and torch.randn(2, 3); torch.full takes the size as a tuple: torch.full((2, 3), 7.0).',
+      'torch.tensor([1, 2, 3, 4], dtype=torch.float32) sets the dtype; torch.linspace(0, 1, 5) includes both endpoints; torch.eye(4) is the identity.',
+      'torch.tensor on a list of ints gives int64, not float32, so pass dtype. And keep torch.manual_seed(42) before torch.randn, or "randn" changes on every call.',
     ],
   },
 
   'tensor-operations': {
     note: 'Use tensor methods with dim= (not axis=). torch.std is unbiased by default; pass unbiased=False to match np.std.',
+    examples: [
+      {
+        input: 'r = tensor_ops(torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), torch.tensor([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]]))\nr["sum_axis0"], r["sum_axis1"]',
+        output: '(tensor([5., 7., 9.]), tensor([ 6., 15.]))',
+        explanation: 'dim=0 sums down the columns (3 values); dim=1 sums along each row (2 values).',
+      },
+      {
+        input: 'r["std"], r["argmax"], r["unsqueeze"].shape',
+        output: '(tensor(1.7078), tensor(5), torch.Size([1, 2, 3]))',
+        explanation: 'Population std of 1..6 (unbiased=False); argmax indexes the flattened tensor; unsqueeze(0) adds a leading dim.',
+      },
+    ],
     starterCode: `import torch
 
 def tensor_ops(x: torch.Tensor, y: torch.Tensor) -> dict:
@@ -166,14 +191,27 @@ def tensor_ops(x: torch.Tensor, y: torch.Tensor) -> dict:
       },
     ],
     hints: [
-      'Element-wise ops work directly: x + y, x * y',
-      'Reductions take dim=: x.sum(dim=0)',
-      'x.unsqueeze(0) adds a leading dimension; .squeeze(0) removes it',
+      'Group the keys: arithmetic is element-wise, reductions collapse dimensions, shape ops only rearrange the same six numbers.',
+      'Arithmetic: x + y, x * y, x ** 2. Reductions are methods that take dim=: x.sum(), x.sum(dim=0), x.mean(), x.max(), x.argmax().',
+      'Shape ops: x.reshape(3, 2) (or x.view(3, 2)), x.flatten(), x.unsqueeze(0) and then .squeeze(0), x.T.',
+      'x.std() divides by n - 1 in PyTorch; pass unbiased=False for the population std the problem asks for (1.7078, not 1.8708).',
     ],
   },
 
   'autograd-concepts': {
     note: 'Let autograd compute the gradients: create tensors with requires_grad=True, call .backward(), then read .grad.',
+    examples: [
+      {
+        input: 'compute_gradients(2.0)',
+        output: '{\'y\': 11.0, \'grad\': 7.0}',
+        explanation: 'y = 4 + 6 + 1 = 11 and autograd gives dy/dx = 2*2 + 3 = 7.',
+      },
+      {
+        input: 'linear_layer_gradients(torch.tensor([[1.0, 2.0], [3.0, 4.0]]), torch.tensor([[1.0, 0.0, -1.0], [2.0, 1.0, 0.0]]), torch.zeros(3), torch.ones(2, 3))',
+        output: '{\'grad_W\': tensor([[4., 4., 4.], [6., 6., 6.]]), \'grad_b\': tensor([2., 2., 2.]), \'grad_X\': tensor([[0., 3.], [0., 3.]])}',
+        explanation: 'Y.backward(grad_output) fills W.grad = X.T @ G, b.grad = G.sum(dim=0) and X.grad = G @ W.T.',
+      },
+    ],
     starterCode: `import torch
 
 def compute_gradients(x: float) -> dict:
@@ -294,15 +332,27 @@ def linear_layer_gradients(X: torch.Tensor, W: torch.Tensor, b: torch.Tensor,
       },
     ],
     hints: [
-      'torch.tensor(2.0, requires_grad=True) creates a leaf tensor that records operations',
-      'Call y.backward() on a scalar; the gradient lands in x.grad',
-      'For a non-scalar output Y, call Y.backward(grad_output)',
-      'Use .item() to turn a 0-d tensor into a Python float',
+      'Autograd needs leaf tensors that record operations: torch.tensor(float(x), requires_grad=True).',
+      'Run the forward pass with ordinary tensor ops, call y.backward() on the scalar result, then read x.grad; .item() turns a 0-d tensor into a Python float.',
+      'Y is not a scalar, so pass the upstream gradient: Y.backward(grad_output). X.grad, W.grad and b.grad then hold dL/dX, dL/dW and dL/db.',
+      'The inputs arrive without requires_grad, so .grad would stay None: make leaf copies first with X.detach().clone().requires_grad_(True), and the same for W and b.',
     ],
   },
 
   'nn-modules': {
     note: 'Subclass nn.Module and register weights as nn.Parameter so parameters() finds them. Don\'t just wrap nn.Linear or nn.Sequential.',
+    examples: [
+      {
+        input: 'create_mlp(10, 20, 5)(torch.randn(4, 10)).shape',
+        output: 'torch.Size([4, 5])',
+        explanation: 'Calling the module runs forward: (4, 10) -> (4, 20) -> ReLU -> (4, 5).',
+      },
+      {
+        input: 'sum(p.numel() for p in create_mlp(10, 20, 5).parameters())',
+        output: '325',
+        explanation: 'parameters() finds every nn.Parameter in the tree: 10*20 + 20 + 20*5 + 5.',
+      },
+    ],
     starterCode: `import torch
 import torch.nn as nn
 
@@ -437,15 +487,32 @@ def create_mlp(input_dim: int, hidden_dim: int, output_dim: int):
       },
     ],
     hints: [
-      'self.W = nn.Parameter(torch.randn(in_features, out_features) * 0.01)',
-      'ReLU: torch.clamp(x, min=0)',
-      'Sequential.forward applies each layer in order: x = layer(x)',
-      'nn.Module.parameters() finds every nn.Parameter, including those in sub-modules',
+      'Every class subclasses nn.Module and calls super().__init__() first; that is what makes parameter and sub-module registration work.',
+      'self.W = nn.Parameter(torch.randn(in_features, out_features) * 0.01) and self.b = nn.Parameter(torch.zeros(out_features)); forward returns x @ self.W + self.b.',
+      'ReLU: torch.clamp(x, min=0). Sequential.forward: for layer in self.layers: x = layer(x) (call the module, not layer.forward, so hooks run).',
+      'A plain tensor attribute (no nn.Parameter) or a Python list of layers (instead of nn.ModuleList) is invisible to parameters(), so the optimizer would never update it.',
     ],
   },
 
   'loss-functions': {
     note: 'This is the PyTorch Basics section: use the built-in losses (F.softmax, F.cross_entropy, F.mse_loss, F.binary_cross_entropy). Return Python floats with .item().',
+    examples: [
+      {
+        input: 'cross_entropy_loss(torch.tensor([[2.0, 1.0, 0.1]]), torch.tensor([0]))',
+        output: '0.4170',
+        explanation: 'F.cross_entropy applies log_softmax to the logits and picks the target class: -log(0.659).',
+      },
+      {
+        input: 'binary_cross_entropy(torch.tensor([0.9, 0.1, 0.8]), torch.tensor([1.0, 0.0, 1.0]))',
+        output: '0.1446',
+        explanation: 'F.binary_cross_entropy takes probabilities and float 0/1 targets.',
+      },
+      {
+        input: 'cross_entropy_loss(torch.tensor([[1000.0, 0.0]]), torch.tensor([1]))',
+        output: '1000.0',
+        explanation: 'Working in log space keeps the loss exact even when the softmax probability underflows to 0.',
+      },
+    ],
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -536,17 +603,31 @@ def binary_cross_entropy(y_pred: torch.Tensor, y_true: torch.Tensor) -> float:
         expected: '0.1446',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Cross-entropy is exact even when one logit dominates',
+        input: 'round(cross_entropy_loss(torch.tensor([[1000.0, 0.0]]), torch.tensor([1])), 4)',
+        expected: '1000.0',
+        hidden: true,
+      },
     ],
     hints: [
-      'F.softmax(x, dim=-1) normalizes over the last dimension',
-      'F.cross_entropy takes raw logits and integer class indices (it applies log_softmax for you)',
-      'F.binary_cross_entropy takes probabilities; F.binary_cross_entropy_with_logits takes raw scores',
-      'Call .item() on a 0-d tensor to get a Python float',
+      'F.softmax(x, dim=-1) normalises over the last dimension.',
+      'F.cross_entropy takes raw logits (batch, C) and int64 class indices (batch,); it applies log_softmax for you and averages over the batch.',
+      'F.mse_loss(pred, target) and F.binary_cross_entropy(probs, targets) also average by default (reduction="mean").',
+      'Don\'t softmax before F.cross_entropy (that applies softmax twice), and give F.binary_cross_entropy probabilities, not logits. Call .item() to return Python floats.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
   'training-loop': {
     note: 'Use nn.Linear, nn.MSELoss and torch.optim.SGD, and let loss.backward() compute the gradients. Initialize the weight and bias to zeros with nn.init.zeros_ so the run is deterministic.',
+    examples: [
+      {
+        input: 'r = train_linear_model(torch.tensor([[1.0], [2.0], [3.0]]), torch.tensor([2.0, 4.0, 6.5]), lr=0.05, epochs=4)\n[round(l, 4) for l in r["losses"]], r["w"], round(r["b"], 4)',
+        output: '([20.75, 4.2638, 0.9907, 0.3383], tensor([1.7160]), 0.6924)',
+        explanation: 'losses[0] = mean(y ** 2) is the loss of the zero-initialised model; every step lowers it.',
+      },
+    ],
     starterCode: `import torch
 import torch.nn as nn
 
@@ -642,10 +723,23 @@ def train_linear_model(X, y, lr=0.1, epochs=100) -> dict:
       'The five steps, in order: optimizer.zero_grad(), pred = model(X).squeeze(-1), loss = loss_fn(pred, y), loss.backward(), optimizer.step().',
       'nn.Linear returns shape (N, 1); squeeze the last dim so it matches y of shape (N,). Otherwise MSELoss broadcasts to (N, N).',
       'Record loss.item() (a Python float) each epoch; return model.weight.detach().view(-1) and model.bias.item().',
+      'Forget optimizer.zero_grad() and .grad accumulates across epochs, so each step uses the sum of all past gradients and the loss stops decreasing.',
     ],
   },
   'dataloader-batching': {
     note: "Use torch.utils.data.TensorDataset and DataLoader with generator=torch.Generator().manual_seed(seed). The shuffle order then comes from torch's RNG rather than np.random.default_rng, so the tests check coverage, pairing and determinism instead of an exact order.",
+    examples: [
+      {
+        input: '[yb.tolist() for _, yb in make_batches(torch.arange(20).view(10, 2), torch.arange(10), 4, shuffle=False)]',
+        output: '[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]',
+        explanation: 'Three batches; the last holds the 2 leftover samples.',
+      },
+      {
+        input: '[yb.tolist() for _, yb in make_batches(torch.arange(20).view(10, 2), torch.arange(10), 4, shuffle=False, drop_last=True)]',
+        output: '[[0, 1, 2, 3], [4, 5, 6, 7]]',
+        explanation: 'drop_last=True drops the incomplete batch.',
+      },
+    ],
     starterCode: `import torch
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -721,11 +815,24 @@ def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -> lis
       'TensorDataset(X, y)[i] returns the pair (X[i], y[i]).',
       'DataLoader(dataset, batch_size=..., shuffle=..., drop_last=..., generator=torch.Generator().manual_seed(seed)) handles shuffling and batching.',
       'Iterating the loader yields [xb, yb] batches; collect them into a list of tuples.',
+      'Create a fresh torch.Generator().manual_seed(seed) on every call: a shared or unseeded generator gives different batches each time.',
     ],
   },
   // Tracks for existing problems that had no PyTorch track yet.
   'gelu-activation': {
     note: "Implement the tanh approximation with tensor ops (torch.tanh). Don't call F.gelu or nn.GELU: the hidden tests compare against them.",
+    examples: [
+      {
+        input: 'gelu(torch.tensor([-1.0, 0.0, 1.0]))',
+        output: 'tensor([-0.1588,  0.0000,  0.8412])',
+        explanation: 'GELU(0) = 0; GELU(1) ≈ 0.8412; GELU(-1) is slightly negative, unlike ReLU.',
+      },
+      {
+        input: 'gelu(torch.tensor([-3.0, 3.0]))',
+        output: 'tensor([-0.0036,  2.9964])',
+        explanation: 'Far from 0 it behaves like ReLU.',
+      },
+    ],
     starterCode: `import math
 import torch
 
@@ -804,14 +911,26 @@ def gelu(x: torch.Tensor) -> torch.Tensor:
       },
     ],
     hints: [
-      'math.sqrt(2 / math.pi) ≈ 0.7979',
-      'torch.tanh works element-wise on tensors of any shape',
-      'The formula is: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))',
-      'You never write the derivative: autograd builds it from the ops you use',
+      'GELU multiplies x by a smooth gate between 0 and 1; the tanh expression builds that gate.',
+      'math.sqrt(2 / math.pi) ≈ 0.7979 is a plain Python constant; torch.tanh works element-wise on tensors of any shape.',
+      'The formula is: 0.5 * x * (1 + torch.tanh(c * (x + 0.044715 * x ** 3))).',
+      'Use torch.tanh, not math.tanh (which only accepts Python floats). You never write the derivative: autograd builds it from the ops you use.',
     ],
   },
   'leaky-relu-swish': {
     note: "Implement both with tensor ops (torch.where, torch.sigmoid). Don't call F.leaky_relu, F.silu, nn.LeakyReLU or nn.SiLU.",
+    examples: [
+      {
+        input: 'leaky_relu(torch.tensor([-2.0, -1.0, 0.0, 1.0, 2.0]))',
+        output: 'tensor([-0.0200, -0.0100,  0.0000,  1.0000,  2.0000])',
+        explanation: 'Negative values are scaled by alpha = 0.01.',
+      },
+      {
+        input: 'swish(torch.tensor([-1.0, 0.0, 1.0, 2.0]))',
+        output: 'tensor([-0.2689,  0.0000,  0.7311,  1.7616])',
+        explanation: 'swish(1) = sigmoid(1) = 0.7311; with beta = 1 this is F.silu.',
+      },
+    ],
     starterCode: `import torch
 
 def leaky_relu(x: torch.Tensor, alpha: float = 0.01) -> torch.Tensor:
@@ -906,13 +1025,26 @@ def swish(x: torch.Tensor, beta: float = 1.0) -> torch.Tensor:
       },
     ],
     hints: [
-      'torch.where(x > 0, x, alpha * x) picks element-wise between the two branches',
-      'torch.sigmoid(z) = 1 / (1 + exp(-z))',
-      'Swish is x * torch.sigmoid(beta * x)',
+      'Both are element-wise; LeakyReLU chooses between two values per element, Swish multiplies by a smooth gate.',
+      'torch.where(x > 0, x, alpha * x) picks element-wise between the two branches.',
+      'Swish is x * torch.sigmoid(beta * x); torch.sigmoid is numerically stable for large |x|.',
+      'beta scales the sigmoid\'s input, not its output. Autograd through torch.where gives a gradient of alpha for negatives and 1 for positives.',
     ],
   },
   'softmax-temperature': {
     note: "Implement softmax with tensor ops (subtract the max, torch.exp, divide by the sum). Don't call F.softmax or torch.softmax.",
+    examples: [
+      {
+        input: 'softmax_temperature(torch.tensor([2.0, 1.0, 0.1]), 0.5)',
+        output: 'tensor([0.8638, 0.1169, 0.0193])',
+        explanation: 'Halving T doubles the logit gaps, so the top class takes more mass.',
+      },
+      {
+        input: 'softmax_temperature(torch.tensor([1000.0, 1001.0, 1002.0]), 0.5)',
+        output: 'tensor([0.0159, 0.1173, 0.8668])',
+        explanation: 'The max shift keeps torch.exp finite; only the differences between logits matter.',
+      },
+    ],
     starterCode: `import torch
 
 def softmax_temperature(logits: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
@@ -989,13 +1121,26 @@ def softmax_temperature(logits: torch.Tensor, temperature: float = 1.0) -> torch
       },
     ],
     hints: [
-      'Divide by the temperature first: scaled = logits / temperature',
-      'x.max(dim=-1, keepdim=True) returns (values, indices); use .values',
-      'keepdim=True keeps the reduced dim so the subtraction and division broadcast',
+      'Temperature only rescales the logits; afterwards it is an ordinary softmax.',
+      'scaled = logits / temperature, then subtract scaled.max(dim=-1, keepdim=True).values (max with dim returns values and indices).',
+      'exp = torch.exp(shifted); divide by exp.sum(dim=-1, keepdim=True). keepdim=True keeps the shapes broadcastable.',
+      'Skip the max shift and torch.exp overflows to inf in float32 for logits above about 88; inf / inf is nan.',
     ],
   },
   rmsnorm: {
     note: "Implement RMSNorm with tensor ops. Don't call F.rms_norm or nn.RMSNorm: the hidden tests compare against them.",
+    examples: [
+      {
+        input: 'rmsnorm(torch.tensor([[1.0, 2.0, 3.0]]), torch.ones(3))',
+        output: 'tensor([[0.4629, 0.9258, 1.3887]])',
+        explanation: 'rms = sqrt(14/3) ≈ 2.1602.',
+      },
+      {
+        input: 'rmsnorm(torch.tensor([[3.0, 4.0], [1.0, 1.0]]), torch.ones(2))',
+        output: 'tensor([[0.8485, 1.1314], [1.0000, 1.0000]])',
+        explanation: 'Each row uses its own rms; nothing is centred.',
+      },
+    ],
     starterCode: `import torch
 
 def rmsnorm(x: torch.Tensor, gamma: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
@@ -1079,13 +1224,26 @@ def rmsnorm(x: torch.Tensor, gamma: torch.Tensor, eps: float = 1e-6) -> torch.Te
       },
     ],
     hints: [
-      'rms = torch.sqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps)',
-      'No mean subtraction: that is the difference from LayerNorm',
-      'gamma has shape (features,) and broadcasts over the leading dims',
+      'Each vector along the last dim is divided by one number, its root mean square; gamma is applied afterwards.',
+      'rms = torch.sqrt(x.pow(2).mean(dim=-1, keepdim=True) + eps); return x / rms * gamma.',
+      'gamma has shape (features,) and broadcasts over the leading dims; torch.rsqrt(ms + eps) is an equivalent, slightly faster idiom.',
+      'No mean subtraction (that would be LayerNorm), and eps goes inside the square root, as in nn.RMSNorm.',
     ],
   },
   'group-norm': {
     note: "Implement GroupNorm with reshape, mean and var. Don't call F.group_norm or nn.GroupNorm: the hidden tests compare against them.",
+    examples: [
+      {
+        input: 'group_norm(torch.tensor([[1.0, 2.0, 3.0, 5.0]]), 2, torch.ones(4), torch.zeros(4))',
+        output: 'tensor([[-1.0000,  1.0000, -1.0000,  1.0000]])',
+        explanation: 'Groups {1, 2} and {3, 5} are normalised separately.',
+      },
+      {
+        input: 'group_norm(torch.tensor([[1.0, 2.0, 3.0, 5.0]]), 2, torch.full((4,), 2.0), torch.ones(4))',
+        output: 'tensor([[-1.0000,  3.0000, -1.0000,  3.0000]])',
+        explanation: 'gamma = 2 and beta = 1 scale and shift every channel.',
+      },
+    ],
     starterCode: `import torch
 
 def group_norm(x: torch.Tensor, num_groups: int, gamma: torch.Tensor, beta: torch.Tensor, eps: float = 1e-5) -> torch.Tensor:
@@ -1180,13 +1338,21 @@ def group_norm(x: torch.Tensor, num_groups: int, gamma: torch.Tensor, beta: torc
       },
     ],
     hints: [
-      'x.reshape(N, num_groups, C // num_groups) puts each group on its own row',
-      'Reduce over the last dim with keepdim=True; use var(..., unbiased=False)',
-      'Reshape back to (N, C) before applying gamma and beta',
+      'Reshape so that each group of each sample is one row; then it is a plain "normalise each row" problem.',
+      'xg = x.reshape(N, num_groups, C // num_groups); mean = xg.mean(dim=-1, keepdim=True); var = xg.var(dim=-1, unbiased=False, keepdim=True).',
+      'x_hat = ((xg - mean) / torch.sqrt(var + eps)).reshape(N, C); return x_hat * gamma + beta.',
+      'Tensor.var is unbiased by default; normalisation layers use the population variance, so pass unbiased=False. Apply gamma and beta after reshaping back: they are per channel, not per group.',
     ],
   },
   'adam-optimizer': {
     note: "Implement the Adam update with tensor ops. Don't use torch.optim.Adam: the hidden tests check your steps against it.",
+    examples: [
+      {
+        input: 'adam_step(torch.tensor([1.0, 2.0]), torch.tensor([0.5, -0.3]), torch.zeros(2), torch.zeros(2), 1)',
+        output: '{\'params\': tensor([0.9990, 2.0010]), \'m\': tensor([ 0.0500, -0.0300]), \'v\': tensor([2.5000e-04, 9.0000e-05])}',
+        explanation: 'At t = 1 the bias-corrected step is lr * sign(g): each parameter moves by 0.001.',
+      },
+    ],
     starterCode: `import torch
 
 def adam_step(params, grads, m, v, t, lr=0.001, beta1=0.9, beta2=0.999, eps=1e-8):
@@ -1281,13 +1447,25 @@ def adam_step(params, grads, m, v, t, lr=0.001, beta1=0.9, beta2=0.999, eps=1e-8
     ],
     hints: [
       'm = beta1 * m + (1 - beta1) * grads; v = beta2 * v + (1 - beta2) * grads ** 2',
-      'Bias correction divides by (1 - beta ** t)',
-      'params - lr * m_hat / (torch.sqrt(v_hat) + eps)',
-      'Real optimizers update under torch.no_grad() so the step itself is not recorded by autograd',
+      'Bias correction divides by (1 - beta ** t); return m and v without it.',
+      'params - lr * m_hat / (torch.sqrt(v_hat) + eps); eps goes after the square root, as in torch.optim.Adam.',
+      'Real optimizers update under torch.no_grad() so the step itself is not recorded by autograd.',
     ],
   },
   'sgd-momentum': {
     note: "Implement the momentum update with tensor ops. Don't use torch.optim.SGD: the hidden tests check your steps against it.",
+    examples: [
+      {
+        input: 'sgd_momentum_step(torch.tensor([1.0]), torch.tensor([1.0]), torch.zeros(1), lr=0.1, momentum=0.9)',
+        output: '{\'params\': tensor([0.9000]), \'velocity\': tensor([1.])}',
+        explanation: 'From zero velocity the first step is plain SGD.',
+      },
+      {
+        input: 'sgd_momentum_step(torch.tensor([0.9]), torch.tensor([1.0]), torch.tensor([1.0]), lr=0.1, momentum=0.9)',
+        output: '{\'params\': tensor([0.7100]), \'velocity\': tensor([1.9000])}',
+        explanation: 'The second step with the same gradient is larger: v = 0.9 * 1 + 1 = 1.9.',
+      },
+    ],
     starterCode: `import torch
 
 def sgd_momentum_step(params, grads, velocity, lr=0.01, momentum=0.9):
@@ -1374,12 +1552,25 @@ def sgd_momentum_step(params, grads, velocity, lr=0.01, momentum=0.9):
     ],
     hints: [
       'Velocity update: v = momentum * v + grads',
-      'Parameter update: params = params - lr * v',
-      'With momentum=0 this is plain SGD',
+      'Parameter update: params = params - lr * v (with the new v)',
+      'Wrap both lines in torch.no_grad(); with momentum=0 this is plain SGD.',
+      'Add the raw gradient, without a (1 - momentum) factor: that is torch.optim.SGD\'s convention, and the hidden tests compare against it.',
     ],
   },
   'lr-scheduling': {
     note: 'Return a Python float (use math.cos). In a real training loop you plug this function into torch.optim.lr_scheduler.LambdaLR, which is what the hidden tests do.',
+    examples: [
+      {
+        input: '[lr_schedule(s, 100, 1000) for s in (0, 50, 100)]',
+        output: '[0.0, 0.0005, 0.001]',
+        explanation: 'Linear warmup up to base_lr.',
+      },
+      {
+        input: '[lr_schedule(s, 100, 1000) for s in (550, 1000)]',
+        output: '[0.0005005, 1e-06]',
+        explanation: 'Half way through the decay lr = (base_lr + min_lr) / 2; the last step reaches min_lr.',
+      },
+    ],
     starterCode: `import math
 import torch
 
@@ -1479,6 +1670,18 @@ def lr_schedule(step, warmup_steps, total_steps, base_lr=0.001, min_lr=1e-6):
   },
   'gradient-accumulation': {
     note: 'PyTorch accumulates gradients for you: every backward() adds into .grad. The solution uses that, the way real accumulation loops do (loss / accumulation_steps, then backward() per micro-batch).',
+    examples: [
+      {
+        input: 'gradient_accumulation([torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])], 2)',
+        output: 'tensor([2., 3.])',
+        explanation: 'The mean of the two micro-batch gradients.',
+      },
+      {
+        input: 'gradient_accumulation([torch.tensor([1.0, 0.0]), torch.tensor([3.0, 2.0]), torch.tensor([100.0, 100.0])], 2)',
+        output: 'tensor([2., 1.])',
+        explanation: 'Only the first accumulation_steps gradients count.',
+      },
+    ],
     starterCode: `import torch
 
 def gradient_accumulation(micro_batches_grads, accumulation_steps):
@@ -1551,13 +1754,21 @@ def gradient_accumulation(micro_batches_grads, accumulation_steps):
       },
     ],
     hints: [
-      'backward() adds into .grad instead of overwriting it; that is why loops call optimizer.zero_grad()',
-      'Divide each micro-batch loss by accumulation_steps so the accumulated sum is a mean',
-      'A simpler equivalent: torch.stack(grads[:accumulation_steps]).sum(dim=0) / accumulation_steps',
+      'backward() adds into .grad instead of overwriting it; that is why training loops call optimizer.zero_grad().',
+      'Use a stand-in parameter whose micro-batch "loss" (param * g).sum() has gradient g, and call backward() once per micro-batch.',
+      'Divide each micro-batch loss by accumulation_steps so the accumulated sum is a mean. A one-line equivalent: torch.stack(grads[:accumulation_steps]).mean(dim=0).',
+      'Only micro_batches_grads[:accumulation_steps] count. Without the 1 / accumulation_steps scaling you return the sum, which acts like a K times larger learning rate.',
     ],
   },
   'instance-norm': {
     note: "Implement instance norm with mean and var over the spatial dims. Don't call F.instance_norm or nn.InstanceNorm2d: the hidden tests compare against them.",
+    examples: [
+      {
+        input: 'instance_norm(torch.tensor([[[[1.0, 2.0], [3.0, 4.0]]]]), torch.ones(1), torch.zeros(1))',
+        output: 'tensor([[[[-1.3416, -0.4472], [ 0.4472,  1.3416]]]])',
+        explanation: 'Mean 2.5 and population variance 1.25 for the single 2x2 map.',
+      },
+    ],
     starterCode: `import torch
 
 def instance_norm(x, gamma, beta, eps=1e-5):
@@ -1656,13 +1867,26 @@ def instance_norm(x, gamma, beta, eps=1e-5):
       },
     ],
     hints: [
-      'Reduce over dim=(2, 3) with keepdim=True',
-      'Use x.var(..., unbiased=False): normalization layers use the population variance',
-      'gamma.view(1, -1, 1, 1) broadcasts the per-channel scale over N, H and W',
+      'Every (sample, channel) pair is an independent H x W image with its own mean and variance.',
+      'mean = x.mean(dim=(2, 3), keepdim=True); var = x.var(dim=(2, 3), unbiased=False, keepdim=True).',
+      'gamma.view(1, -1, 1, 1) and beta.view(1, -1, 1, 1) broadcast the per-channel affine over N, H and W.',
+      'A (C,) gamma multiplied directly with an (N, C, H, W) tensor broadcasts against W, not C; and var() is unbiased unless you say otherwise.',
     ],
   },
   'vit-patch-embeddings': {
     note: "Extract patches with reshape/permute (or Tensor.unfold) instead of Python loops. Don't use nn.Conv2d: the hidden tests check that your result equals the conv formulation.",
+    examples: [
+      {
+        input: 'patch_embed(torch.randn(3, 8, 8), 4, 16, torch.randn(48, 16), torch.randn(16), torch.randn(5, 16)).shape',
+        output: 'torch.Size([5, 16])',
+        explanation: '2 x 2 = 4 patches plus the CLS token.',
+      },
+      {
+        input: 'patch_embed(torch.zeros(1, 4, 4), 2, 3, torch.ones(4, 3), torch.tensor([1.0, 2.0, 3.0]), torch.full((5, 3), 0.5))',
+        output: 'tensor([[1.5000, 2.5000, 3.5000], [0.5000, 0.5000, 0.5000], [0.5000, 0.5000, 0.5000], [0.5000, 0.5000, 0.5000], [0.5000, 0.5000, 0.5000]])',
+        explanation: 'A blank image projects to zeros, so only the CLS token (row 0) and the positions remain.',
+      },
+    ],
     starterCode: `import torch
 
 def patch_embed(image, patch_size, embed_dim, W_proj, cls_token, pos_embed):
@@ -1776,13 +2000,26 @@ def patch_embed(image, patch_size, embed_dim, W_proj, cls_token, pos_embed):
       },
     ],
     hints: [
-      'image.reshape(C, H // P, P, W // P, P) splits both spatial dims into (patch index, offset)',
-      'permute(1, 3, 0, 2, 4) moves the patch indices first; reshape(-1, C * P * P) flattens each patch',
-      'torch.cat([cls_token.unsqueeze(0), tokens], dim=0) prepends the CLS token',
+      'image.reshape(C, H // P, P, W // P, P) splits both spatial dims into (patch index, offset).',
+      'permute(1, 3, 0, 2, 4) moves the patch indices first; reshape(-1, C * P * P) flattens each patch in (C, P, P) order.',
+      'tokens = patches @ W_proj; torch.cat([cls_token.unsqueeze(0), tokens], dim=0) + pos_embed.',
+      'image.reshape(-1, C * P * P) without the permute does not extract patches: it mixes rows of different patches, and only the value tests notice.',
     ],
   },
   'cross-attention': {
     note: "Implement attention with matmul and softmax (F.softmax is fine). Don't call F.scaled_dot_product_attention or nn.MultiheadAttention: the hidden tests compare against them.",
+    examples: [
+      {
+        input: 'cross_attention(torch.tensor([[2.0, 0.0]]), torch.tensor([[1.0, 0.0], [0.0, 1.0]]), torch.tensor([[1.0, 0.0], [0.0, 1.0]]))',
+        output: 'tensor([[0.8044, 0.1956]])',
+        explanation: 'Scores [2, 0] / sqrt(2); their softmax weights the rows of V.',
+      },
+      {
+        input: 'cross_attention(torch.randn(4, 8), torch.randn(6, 8), torch.randn(6, 16)).shape',
+        output: 'torch.Size([4, 16])',
+        explanation: 'One output per query, with the value size.',
+      },
+    ],
     starterCode: `import math
 import torch
 import torch.nn.functional as F
@@ -1877,13 +2114,26 @@ def cross_attention(Q, K, V):
       },
     ],
     hints: [
-      'scores = Q @ K.T / math.sqrt(d_k), shape (seq_q, seq_kv)',
-      'F.softmax(scores, dim=-1) normalizes over the keys',
-      'weights @ V gives one d_v vector per query',
+      'scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k), shape (seq_q, seq_kv).',
+      'F.softmax(scores, dim=-1) normalises over the keys.',
+      'weights @ V gives one d_v vector per query.',
+      'Normalise over dim=-1 (keys), not dim=0 (queries), and scale by sqrt(d_k) with d_k = Q.shape[-1]. K.transpose(-2, -1) also works once you add batch or head dims, unlike K.T.',
     ],
   },
   'depthwise-separable-conv': {
     note: "Implement both convolutions with tensor ops (Tensor.unfold + torch.einsum, or loops). Don't use F.conv2d or nn.Conv2d: the hidden tests compare against them (depthwise = conv2d with groups=C).",
+    examples: [
+      {
+        input: 'depthwise_conv(torch.ones(1, 3, 3), torch.ones(1, 2, 2))',
+        output: 'tensor([[[4., 4.], [4., 4.]]])',
+        explanation: 'Each 2x2 window of ones sums to 4.',
+      },
+      {
+        input: 'pointwise_conv(torch.tensor([[[1.0]], [[2.0]]]), torch.tensor([[[[1.0]], [[1.0]]], [[[2.0]], [[-1.0]]]]))',
+        output: 'tensor([[[3.]], [[0.]]])',
+        explanation: 'A 1x1 conv mixes channels at each pixel: 1 + 2 = 3 and 2 - 2 = 0.',
+      },
+    ],
     starterCode: `import torch
 
 def depthwise_conv(x, kernel):
@@ -1981,13 +2231,26 @@ def pointwise_conv(x, kernel):
       },
     ],
     hints: [
-      'x.unfold(1, kH, 1).unfold(2, kW, 1) gives a (C, out_H, out_W, kH, kW) view of all windows',
-      "torch.einsum('chwij,cij->chw', windows, kernel) multiplies each window by its channel's filter and sums",
-      "Pointwise: torch.einsum('oc,chw->ohw', kernel[:, :, 0, 0], x)",
+      'x.unfold(1, kH, 1).unfold(2, kW, 1) gives a (C, out_H, out_W, kH, kW) view of all windows.',
+      'torch.einsum(\'chwij,cij->chw\', windows, kernel) multiplies each window by its channel\'s filter and sums over the window.',
+      'Pointwise: torch.einsum(\'oc,chw->ohw\', kernel[:, :, 0, 0], x).',
+      'Keep c in the depthwise output (no sum over channels) and don\'t flip the kernel: conv layers compute a cross-correlation.',
     ],
   },
   'label-smoothing': {
     note: "Implement the smoothed targets yourself (F.log_softmax and F.one_hot are fine). Don't use F.cross_entropy(..., label_smoothing=...) or nn.CrossEntropyLoss: the hidden tests compare against them. Return a Python float.",
+    examples: [
+      {
+        input: 'label_smoothing_loss(torch.tensor([[2.0, 1.0, 0.1]]), torch.tensor([0]), 3, 0.1)',
+        output: '0.5137',
+        explanation: 'Targets [0.9333, 0.0333, 0.0333] raise the loss from 0.4170.',
+      },
+      {
+        input: 'label_smoothing_loss(torch.tensor([[2.0, 1.0], [1.0, 2.0]]), torch.tensor([0, 1]), 2, 0.1)',
+        output: '0.3633',
+        explanation: 'The mean over a batch of two samples.',
+      },
+    ],
     starterCode: `import torch
 import torch.nn.functional as F
 
@@ -2078,6 +2341,13 @@ def label_smoothing_loss(logits, targets, num_classes, smoothing=0.1):
   },
   'lora-adapter': {
     note: "Use plain matmuls. Compute (x @ A) @ B rather than materializing A @ B: that is what keeps LoRA cheap. The hidden tests also check that autograd trains only A and B when W is frozen.",
+    examples: [
+      {
+        input: 'lora_forward(torch.tensor([[1.0, 2.0]]), torch.eye(2), torch.tensor([[1.0], [1.0]]), torch.tensor([[1.0, 0.0]]), alpha=2, r=1)',
+        output: 'tensor([[7., 2.]])',
+        explanation: 'Base [1, 2] plus 2 * [3] @ [[1, 0]] = [6, 0].',
+      },
+    ],
     starterCode: `import torch
 
 def lora_forward(x, W, A, B, alpha, r):
@@ -2172,13 +2442,26 @@ def lora_forward(x, W, A, B, alpha, r):
       },
     ],
     hints: [
-      'Base: x @ W',
-      'LoRA path: (alpha / r) * (x @ A) @ B',
-      'In an nn.Module you would store W with requires_grad=False and A, B as nn.Parameter (B initialized to zeros)',
+      'Base path: x @ W.',
+      'Low-rank path: (x @ A) @ B * (alpha / r).',
+      'In an nn.Module you would store W with requires_grad=False and A, B as nn.Parameter (B initialised to zeros), so only A and B get gradients.',
+      'Scale by alpha / r, not alpha, and multiply x @ A first: x @ (A @ B) gives the same numbers but builds a full (in, out) matrix.',
     ],
   },
   'gradient-checkpointing': {
     note: "torch.utils.checkpoint isn't available in the browser, so you build the idea yourself: run the forward under torch.no_grad() so autograd keeps no intermediate activations, save only the checkpoints (detached), and recompute a segment with autograd enabled when you need it.",
+    examples: [
+      {
+        input: 'layers = [lambda t: t * 2, lambda t: t + 1, lambda t: t * 3, lambda t: t - 1]\nout, saved = checkpoint_forward(layers, torch.tensor([1.0]), [1, 3])\nout, sorted(saved)',
+        output: '(tensor([8.]), [-1, 1, 3])',
+        explanation: 'Activations are 2, 3, 9, 8; only the input and layers 1 and 3 are kept.',
+      },
+      {
+        input: 'checkpoint_recompute(layers, saved, [1, 3], 2)',
+        output: 'tensor([9.])',
+        explanation: 'Restart from the saved output of layer 1 and re-run layer 2 only.',
+      },
+    ],
     starterCode: `import torch
 
 def checkpoint_forward(layers, x, checkpoint_indices):
