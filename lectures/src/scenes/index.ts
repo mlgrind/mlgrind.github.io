@@ -4,6 +4,7 @@ import type { LectureManifest, ManifestChapter, ManifestSentence } from '../type
 import { TransformersScenes } from './transformers';
 import { NumpyFundamentalsScenes } from './numpy-fundamentals';
 import { PythonBasicsScenes } from './python-basics';
+import { EinsumScenes } from './einsum';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -25,4 +26,5 @@ export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
   'numpy-fundamentals': NumpyFundamentalsScenes,
   'python-basics': PythonBasicsScenes,
+  einsum: EinsumScenes,
 };
