@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>ROC Curve &amp; AUC (with Ties) - Model Evaluation | ML Grind</title>
 <meta name="description" content="Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/roc-auc" data-rh="true" />
@@ -99,34 +99,49 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"ROC Curve & AUC (with Ties) - Model Evaluation","description":"Implement ROC Curve & AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/roc-auc","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ROC Curve &amp; AUC (with Ties) - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ROC Curve and AUC</h2>
-<p>A classifier that outputs scores can be turned into a yes/no decision with a threshold: predict positive when <code>score &gt;= t</code>. The <strong>ROC curve</strong> traces, over all thresholds,</p>
-<pre><code>TPR(t) = TP(t) / P        (recall: fraction of positives with score &gt;= t)
-FPR(t) = FP(t) / N        (fraction of negatives with score &gt;= t)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ROC Curve &amp; AUC (with Ties) - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ROC Curve &amp; AUC (with Ties) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ROC Curve &amp; AUC (with Ties)</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>roc_curve_auc(y_true, scores)</code>: the ROC curve at every distinct score threshold and the area under it, with tied scores handled the way scikit-learn handles them.</p>
+<h3>Background</h3>
+<p>A classifier that outputs scores becomes a yes/no decision with a threshold: predict positive when <code>score &gt;= t</code>. The <strong>ROC curve</strong> shows every trade-off between catching positives and raising false alarms, and its area (<strong>AUC</strong>) summarises ranking quality in one threshold-free number: 1.0 is a perfect ranking, 0.5 is random.</p>
+<h3>Formula</h3>
+<p>For a threshold <code>t</code>, with <code>P</code> positives and <code>N</code> negatives:</p>
+<pre><code class="language-text">TPR(t) = #{score &gt;= t and y = 1} / P        (recall)
+FPR(t) = #{score &gt;= t and y = 0} / N
 </code></pre>
-<p>where <code>P</code> and <code>N</code> are the numbers of positive and negative samples. <strong>AUC</strong> is the area under this curve.</p>
-<p>Implement <code>roc_curve_auc(y_true, scores)</code>.</p>
-<h3>Thresholds</h3>
+<p><strong>Thresholds</strong>: <code>+inf</code> first (nothing predicted positive: the point <code>(0, 0)</code>), then <strong>every distinct score in decreasing order</strong>. The last threshold is the smallest score, where everything is predicted positive: <code>(1, 1)</code>.</p>
+<p><strong>AUC by the trapezoidal rule</strong> over consecutive curve points:</p>
+<pre><code class="language-text">AUC = sum_i (FPR[i+1] - FPR[i]) * (TPR[i+1] + TPR[i]) / 2
+</code></pre>
+<p>With ties handled as below, this equals the normalised <strong>Mann-Whitney U statistic</strong>, the probability that a random positive outscores a random negative, counting ties as one half:</p>
+<pre><code class="language-text">AUC = (1 / (P * N)) * sum_{i in pos} sum_{j in neg} ( [s_i &gt; s_j] + 0.5 * [s_i == s_j] )
+</code></pre>
+<h3>Inputs</h3>
 <ul>
-<li>Use <code>+inf</code> first (nothing is predicted positive, giving the point <code>(0, 0)</code>), then <strong>every distinct score in decreasing order</strong>.</li>
-<li>The last threshold is the smallest score, where everything is predicted positive: <code>(1, 1)</code>.</li>
-<li><strong>Tied scores form a single threshold.</strong> Several samples cross the threshold together, so the curve takes one diagonal step instead of a staircase. Never break ties by sample order.</li>
+<li><code>y_true</code>: binary labels (0/1), shape <code>(n,)</code>, with <strong>both classes present</strong></li>
+<li><code>scores</code>: real-valued scores, shape <code>(n,)</code>; higher means more likely positive</li>
 </ul>
-<p>This matches <code>sklearn.metrics.roc_curve(y_true, scores, drop_intermediate=False)</code>.</p>
-<h3>AUC by the trapezoidal rule</h3>
-<pre><code>AUC = sum_i (FPR[i+1] - FPR[i]) * (TPR[i+1] + TPR[i]) / 2
-</code></pre>
-<p>With ties handled as above, this equals <code>sklearn.metrics.roc_auc_score</code> and the normalized <strong>Mann-Whitney U statistic</strong>: the probability that a random positive outscores a random negative, counting ties as one half:</p>
-<pre><code>AUC = (1 / (P * N)) * sum_{i in pos} sum_{j in neg} ( [s_i &gt; s_j] + 0.5 * [s_i == s_j] )
-</code></pre>
-<p>You may assume both classes are present.</p>
 <h3>Expected Return Format</h3>
-<p>Return a dictionary with these keys:</p>
+<p>Return a dictionary with these keys (<code>T</code> = number of distinct scores):</p>
 <ul>
-<li><code>&#x27;thresholds&#x27;</code>: array of shape <code>(T + 1,)</code>, <code>[inf, s_max, ..., s_min]</code> for <code>T</code> distinct scores</li>
-<li><code>&#x27;fpr&#x27;</code>: array of shape <code>(T + 1,)</code>, starting at <code>0.0</code> and ending at <code>1.0</code></li>
-<li><code>&#x27;tpr&#x27;</code>: array of shape <code>(T + 1,)</code>, starting at <code>0.0</code> and ending at <code>1.0</code></li>
-<li><code>&#x27;auc&#x27;</code>: float</li>
+<li><code>&#x27;thresholds&#x27;</code>: float array of shape <code>(T + 1,)</code>: <code>[inf, s_max, ..., s_min]</code></li>
+<li><code>&#x27;fpr&#x27;</code>: float array of shape <code>(T + 1,)</code>, from <code>0.0</code> to <code>1.0</code>, non-decreasing</li>
+<li><code>&#x27;tpr&#x27;</code>: float array of shape <code>(T + 1,)</code>, from <code>0.0</code> to <code>1.0</code>, non-decreasing</li>
+<li><code>&#x27;auc&#x27;</code>: Python float</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><strong>Tied scores form a single threshold.</strong> All the tied samples cross it together, so the curve takes one diagonal step instead of a staircase. Never break ties by sample order: that would make the AUC depend on how the data happens to be sorted.</li>
+<li>This matches <code>sklearn.metrics.roc_curve(y_true, scores, drop_intermediate=False)</code> (recent versions also start with <code>inf</code>), and the AUC matches <code>sklearn.metrics.roc_auc_score</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only (no sklearn). Vectorise the counts.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Compute the AUC in <code>O(n log n)</code> from ranks alone (average ranks for ties).</li>
+<li>Why can ROC-AUC look excellent on a heavily imbalanced problem where precision is poor?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y_true = [0, 0, 1, 1], scores = [0.1, 0.4, 0.35, 0.8]
 Output: thresholds [inf, 0.8, 0.4, 0.35, 0.1], fpr [0, 0, 0.5, 0.5, 1], tpr [0, 0.5, 0.5, 1, 1], auc 0.75</pre><p>3 of the 4 positive/negative pairs are ranked correctly.</p></div><div><pre class="overflow-auto">Input: y_true = [0, 1], scores = [0.5, 0.5]
 Output: fpr [0, 1], tpr [0, 1], auc 0.5</pre><p>A tie is a single diagonal step: worth half a correctly ranked pair.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np

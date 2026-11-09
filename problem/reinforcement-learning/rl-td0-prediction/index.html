@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>TD(0) Value Prediction - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement TD(0) Value Prediction in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-td0-prediction" data-rh="true" />
@@ -100,25 +100,37 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"TD(0) Value Prediction - Reinforcement Learning","description":"Implement TD(0) Value Prediction in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-td0-prediction","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">TD(0) Value Prediction - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement TD(0) Value Prediction in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>TD(0) Value Prediction</h2>
-<p>Implement TD(0), the simplest temporal difference learning algorithm for value estimation.</p>
-<h3>TD(0) Update</h3>
-<pre><code>V(s) ← V(s) + α * [r + γ * V(s&#x27;) - V(s)]
+<h3>What you&#x27;ll build</h3>
+<p>The TD(0) update for state values: after one transition (s, r, s&#x27;), move V(s) toward the bootstrapped target r + γ·V(s&#x27;).</p>
+<h3>Background</h3>
+<p>Temporal-difference learning updates estimates from other estimates (<strong>bootstrapping</strong>), so it learns online after every step instead of waiting for the episode to end like Monte Carlo. The TD error δ is the learning signal in actor-critic methods and the building block of GAE.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">target = r + γ · V(s&#x27;)       if s&#x27; is not terminal
+target = r                   if done (a terminal state has value 0)
+δ      = target - V(s)
+V(s)  ← V(s) + α · δ
 </code></pre>
-<h3>Key Concepts</h3>
+<table><thead><tr><th></th><th>TD(0)</th><th>Monte Carlo</th></tr></thead><tbody><tr><td>Target</td><td>r + γ·V(s&#x27;)</td><td>full return G_t</td></tr><tr><td>Update</td><td>every step</td><td>end of episode</td></tr><tr><td>Bias</td><td>biased (uses an estimate)</td><td>unbiased</td></tr><tr><td>Variance</td><td>low</td><td>high</td></tr></tbody></table>
+<h3>Inputs</h3>
 <ul>
-<li><strong>TD Error (δ)</strong>: <code>r + γ * V(s&#x27;) - V(s)</code></li>
-<li><strong>Bootstrap</strong>: Uses estimated V(s&#x27;) rather than waiting for episode end</li>
-<li><strong>Online</strong>: Updates after each step, not at episode end</li>
+<li><code>V</code>: 1-D array of state values, length n_states</li>
+<li><code>state</code>, <code>next_state</code>: int indices</li>
+<li><code>reward</code>, <code>alpha</code>, <code>gamma</code>: floats</li>
+<li><code>done</code>: bool, True if <code>next_state</code> is terminal</li>
 </ul>
-<h3>TD vs Monte Carlo</h3>
-<table><thead><tr><th>Aspect</th><th>TD(0)</th><th>Monte Carlo</th></tr></thead><tbody><tr><td>Update</td><td>Every step</td><td>End of episode</td></tr><tr><td>Bias</td><td>Some bias</td><td>Unbiased</td></tr><tr><td>Variance</td><td>Low variance</td><td>High variance</td></tr><tr><td>Bootstrap</td><td>Yes</td><td>No</td></tr></tbody></table>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def td0_update(V: np.ndarray, state: int, reward: float,
-               next_state: int, alpha: float, gamma: float,
-               done: bool = False) -&gt; np.ndarray:
-</code></pre>
-<p>If <code>done=True</code>, the next state is terminal (V(s&#x27;)=0).</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: V=[0,0,0], s=0, r=1, s&#x27;=1, α=0.1, γ=0.9, done=False
-Output: V=[0.1, 0, 0]</pre><p>V[0] += 0.1 * (1 + 0.9*0 - 0) = 0.1</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>The updated value array (a list also passes), <strong>rounded to 2 decimals</strong>. Work on a copy; only V[state] changes.</p>
+<h3>Edge cases and conventions</h3>
+<p>When <code>done=True</code>, ignore V[next_state] entirely, whatever value is stored there.</p>
+<h3>Constraints</h3>
+<p>NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>On a fixed batch of data, TD(0) and Monte Carlo converge to different answers. Which one fits the maximum-likelihood Markov model?</li>
+<li>How does TD(λ) interpolate between TD(0) and Monte Carlo?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: V = [0, 0, 0], s = 0, r = 1, s&#x27; = 1, α = 0.1, γ = 0.9, done = False
+Output: [0.1, 0.0, 0.0]</pre><p>δ = 1 + 0.9·0 - 0 = 1, so V[0] = 0.1</p></div><div><pre class="overflow-auto">Input: V = [5, 10, 15], s = 1, r = 2, s&#x27; = 2, α = 0.1, γ = 0.9, done = False
+Output: [5.0, 10.55, 15.0]</pre><p>δ = 2 + 0.9·15 - 10 = 5.5, so V[1] = 10 + 0.55 = 10.55</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def td0_update(V: np.ndarray, state: int, reward: float,
                next_state: int, alpha: float, gamma: float,
@@ -127,21 +139,21 @@ def td0_update(V: np.ndarray, state: int, reward: float,
     Perform one TD(0) value update.
 
     Args:
-        V: Value function array V(s) for each state
-        state: Current state s
-        reward: Reward received r
-        next_state: Next state s&#x27;
-        alpha: Learning rate
-        gamma: Discount factor
-        done: Whether next_state is terminal
+        V: (n_states,) value estimates
+        state: current state s
+        reward: reward received r
+        next_state: next state s&#x27;
+        alpha: learning rate
+        gamma: discount factor
+        done: True if next_state is terminal (its value counts as 0)
 
     Returns:
-        Updated value function
+        Updated (n_states,) values (a copy), rounded to 2 decimals
     &quot;&quot;&quot;
     V = np.array(V, dtype=float)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,61 +78,81 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>NumPy Fundamentals | ML Grind</title>
-<meta name="description" content="Master NumPy array operations essential for ML development." data-rh="true" />
+<meta name="description" content="Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/numpy-fundamentals" data-rh="true" />
 <meta property="og:title" content="NumPy Fundamentals | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master NumPy array operations essential for ML development." data-rh="true" />
+<meta property="og:description" content="Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/numpy-fundamentals" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="NumPy Fundamentals | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master NumPy array operations essential for ML development." data-rh="true" />
+<meta name="twitter:description" content="Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"NumPy Fundamentals","description":"Master NumPy array operations essential for ML development.","url":"https://mlgrind.github.io/section/numpy-fundamentals","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"NumPy Fundamentals","description":"Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on.","url":"https://mlgrind.github.io/section/numpy-fundamentals","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master NumPy array operations essential for ML development.</p><div class="prose dark:prose-invert max-w-none"><h2>NumPy Fundamentals</h2>
-<p>NumPy is the backbone of scientific computing in Python. Every ML library builds on it.</p>
-<h2>Key Concepts</h2>
-<h3>Array Creation</h3>
-<ul>
-<li><code>np.array()</code>: Create from lists</li>
-<li><code>np.zeros()</code>, <code>np.ones()</code>: Initialize with values</li>
-<li><code>np.arange()</code>, <code>np.linspace()</code>: Numeric ranges</li>
-<li><code>np.eye()</code>: Identity matrix</li>
-</ul>
-<h3>Indexing &amp; Slicing</h3>
-<ul>
-<li>Basic: <code>arr[0]</code>, <code>arr[1:5]</code></li>
-<li>Advanced: <code>arr[[0, 2, 4]]</code>, <code>arr[arr &gt; 0]</code></li>
-<li>Multi-dimensional: <code>arr[1, :]</code>, <code>arr[:, 2:4]</code></li>
-</ul>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on.</p><div class="prose dark:prose-invert max-w-none"><h2>NumPy Fundamentals</h2>
+<h2>Why it matters</h2>
+<p>Every ML system speaks arrays. A batch of images is a <code>(batch, height, width, channels)</code> array, a linear layer&#x27;s weights are a <code>(d_in, d_out)</code> matrix, and PyTorch tensors copy NumPy&#x27;s API almost name for name. Interviewers use NumPy questions to check that you think in whole arrays instead of Python loops, and most &quot;the model trains but the numbers are wrong&quot; bugs turn out to be shape or axis mistakes.</p>
+<h2>Core ideas</h2>
+<h3>An array is a buffer plus a shape</h3>
+<p>An <code>ndarray</code> is one flat block of memory plus metadata: a <code>dtype</code> (<code>float64</code>, <code>int64</code>, ...), a <code>shape</code> and <code>strides</code> (how many bytes to jump per axis). Many operations only rewrite the metadata, so they are O(1) and return a <strong>view</strong> that shares memory with the original:</p>
+<table><thead><tr><th>Operation</th><th>Returns</th><th>Cost</th></tr></thead><tbody><tr><td>Basic slice <code>a[1:3, ::2]</code></td><td>view</td><td>O(1)</td></tr><tr><td><code>reshape</code> (contiguous input), <code>.T</code>, <code>transpose</code></td><td>view</td><td>O(1)</td></tr><tr><td>Fancy index <code>a[[0, 2]]</code>, boolean mask <code>a[a &gt; 0]</code></td><td>copy</td><td>O(k)</td></tr><tr><td><code>flatten()</code>, arithmetic, reductions</td><td>new array</td><td>O(n)</td></tr></tbody></table>
+<h3>Creation</h3>
+<p><code>np.zeros(shape)</code>, <code>np.ones(shape)</code> and <code>np.eye(n)</code> take sizes; <code>np.arange(stop)</code> (half-open, excludes <code>stop</code>) and <code>np.linspace(start, stop, num)</code> (closed, includes <code>stop</code>) take ranges.</p>
+<h3>Axes and reductions</h3>
+<p><code>arr.sum(axis=k)</code> removes axis <code>k</code>. For a <code>(n_rows, n_cols)</code> array, <code>axis=0</code> gives one value per column and <code>axis=1</code> one value per row. <code>keepdims=True</code> keeps the reduced axis with size 1, which is what you want when you subtract the result back from the array.</p>
 <h3>Broadcasting</h3>
-<p>Arrays of different shapes can be combined:</p>
+<p>Two shapes are compatible when, compared <strong>from the right</strong>, each pair of dimensions is equal or one of them is 1 (missing leading dimensions count as 1). Size-1 dimensions are stretched without copying:</p>
+<table><thead><tr><th>Left</th><th>Right</th><th>Result</th></tr></thead><tbody><tr><td><code>(batch, d)</code></td><td><code>(d,)</code></td><td><code>(batch, d)</code>: a bias added to every row</td></tr><tr><td><code>(batch, d)</code></td><td><code>(batch, 1)</code></td><td><code>(batch, d)</code>: a per-row scale</td></tr><tr><td><code>(n, 1)</code></td><td><code>(1, m)</code></td><td><code>(n, m)</code>: an outer operation</td></tr><tr><td><code>(3, 4)</code></td><td><code>(3,)</code></td><td>error: 4 and 3 don&#x27;t match</td></tr></tbody></table>
+<h3>Reshape versus transpose</h3>
+<p>Arrays are stored in row-major (C) order, so the last axis changes fastest. <code>reshape</code> keeps that order and regroups it: entry <code>[i, j]</code> of a <code>(4, 6)</code> reshape is element <code>6*i + j</code> of the vector. <code>transpose</code> keeps the data and reorders the axes: <code>a.T[j, i] = a[i, j]</code>. Both can produce a <code>(6, 4)</code> array from a <code>(4, 6)</code> one, with different values.</p>
+<h2>Worked example: standardising features</h2>
+<p>Standardisation turns each column into mean 0 and standard deviation 1, using one reduction and one broadcast:</p>
+<pre><code class="language-python">X = np.array([[1., 10.],
+              [2., 20.],
+              [3., 30.]])          # (n_samples=3, n_features=2)
+mu = X.mean(axis=0)                # [ 2., 20.]        shape (2,)
+sigma = X.std(axis=0)              # [0.8165, 8.165]   shape (2,), population std
+Z = (X - mu) / sigma               # (3, 2) - (2,) broadcasts over rows
+# Z = [[-1.2247, -1.2247],
+#      [ 0.    ,  0.    ],
+#      [ 1.2247,  1.2247]]
+</code></pre>
+<p>Both columns end up identical because the second column is just 10 times the first: standardisation removes scale.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li>(3, 4) + (4,) → broadcasts to (3, 4)</li>
-<li>(3, 1) * (1, 4) → broadcasts to (3, 4)</li>
+<li><strong><code>(n,)</code> versus <code>(n, 1)</code></strong>: a 1D array lines up with the <em>last</em> axis. <code>X - X.mean(axis=1)</code> fails for non-square <code>X</code> and, worse, silently subtracts along the wrong axis when <code>X</code> is square. Use <code>keepdims=True</code>.</li>
+<li><strong>Views alias memory</strong>: <code>b = a[0]; b[:] = 0</code> zeroes a row of <code>a</code>. Call <code>.copy()</code> when you need independence.</li>
+<li><strong>Integer dtypes truncate</strong>: assigning <code>0.7</code> into an <code>int64</code> array stores <code>0</code>. Create float arrays when you&#x27;ll store floats.</li>
+<li><strong><code>ddof</code></strong>: <code>np.std</code> divides by <code>N</code> (<code>ddof=0</code>); <code>torch.std</code> and pandas divide by <code>N - 1</code> by default.</li>
+<li><strong>Float equality</strong>: compare with <code>np.allclose</code>, never <code>==</code>.</li>
+<li><strong>Accidental huge broadcasts</strong>: <code>(n, 1, d) - (1, m, d)</code> builds an <code>(n, m, d)</code> array. That&#x27;s fine for pairwise distances on small data, and an out-of-memory error at scale.</li>
 </ul>
-<h3>Aggregations</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><code>sum()</code>, <code>mean()</code>, <code>std()</code> - with axis parameter</li>
-<li><code>argmax()</code>, <code>argmin()</code> - find indices</li>
+<li>&quot;Vectorise this loop&quot; is the classic opener: replace per-element Python with one array expression, then explain why it&#x27;s faster (no interpreter overhead per element, contiguous memory, SIMD).</li>
+<li>Expect &quot;what shape comes out?&quot; questions about broadcasting, <code>axis=</code> and <code>keepdims</code>, and be ready to state the broadcasting rule from memory.</li>
+<li>Complexity: elementwise ops and reductions are O(n); reshape, transpose and slicing are O(1) views; fancy indexing copies.</li>
+<li>Follow-ups: views versus copies, contiguity (why PyTorch&#x27;s <code>.view</code> fails after a transpose), and the memory cost of broadcasting.</li>
 </ul>
-<h3>Shape Manipulation</h3>
-<ul>
-<li><code>reshape()</code>: Change dimensions</li>
-<li><code>transpose()</code>, <code>.T</code>: Swap axes</li>
-<li><code>flatten()</code>, <code>ravel()</code>: To 1D</li>
-</ul>
-<p>Master these operations to write efficient ML code!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/numpy-fundamentals/numpy-array-creation">Array Creation Methods →</a></li><li><a href="/problem/numpy-fundamentals/numpy-indexing">Advanced Indexing →</a></li><li><a href="/problem/numpy-fundamentals/numpy-broadcasting">Broadcasting Operations →</a></li><li><a href="/problem/numpy-fundamentals/numpy-aggregations">Aggregation Functions →</a></li><li><a href="/problem/numpy-fundamentals/numpy-reshape-transpose">Reshape and Transpose →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Array Creation Methods</strong>: build zeros, ones, <code>arange</code>, <code>linspace</code> and identity arrays and learn which take shapes and which take ranges.</li>
+<li><strong>Indexing and Slicing</strong>: extract rows, columns, sub-blocks, the diagonal and reversed rows, with half-open slices.</li>
+<li><strong>Broadcasting Operations</strong>: centre rows and columns, add a bias and scale rows without loops.</li>
+<li><strong>Aggregation Functions</strong>: global, per-row and per-column statistics plus a 2D <code>argmax</code>/<code>argmin</code>.</li>
+<li><strong>Reshape and Transpose</strong>: regroup a vector into 2D and 3D arrays, permute axes and flatten back.</li>
+</ol>
+<p>Next: <strong>Python Basics for ML</strong> for quick vectorisation warm-ups, <strong>Einstein Summation</strong> for a single notation covering all of these operations, and <strong>Normalize Features</strong> in Data Preprocessing, which reuses the standardisation above.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/numpy-fundamentals/numpy-array-creation">Array Creation Methods →</a></li><li><a href="/problem/numpy-fundamentals/numpy-indexing">Indexing and Slicing →</a></li><li><a href="/problem/numpy-fundamentals/numpy-broadcasting">Broadcasting Operations →</a></li><li><a href="/problem/numpy-fundamentals/numpy-aggregations">Aggregation Functions →</a></li><li><a href="/problem/numpy-fundamentals/numpy-reshape-transpose">Reshape and Transpose →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

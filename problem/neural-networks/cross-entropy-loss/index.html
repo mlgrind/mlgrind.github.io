@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Cross-Entropy Loss - Neural Networks | ML Grind</title>
 <meta name="description" content="Implement Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/cross-entropy-loss" data-rh="true" />
@@ -100,36 +100,56 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Cross-Entropy Loss - Neural Networks","description":"Implement Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/cross-entropy-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Cross-Entropy Loss - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Cross-Entropy Loss in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Cross-Entropy Loss</h2>
-<p>Implement the cross-entropy loss function for multi-class classification.</p>
+<h3>What you&#x27;ll build</h3>
+<p>The mean cross-entropy loss between predicted class probabilities and one-hot labels, rounded to 4 decimals.</p>
+<h3>Background</h3>
+<p>Cross-entropy is the standard classification loss. Minimising it is maximum likelihood: it is the average negative log-probability the model gave to the correct class. A confident correct prediction costs almost nothing; a confident wrong one costs a lot (<code>-log(0.01) ≈ 4.6</code>).</p>
 <h3>Formula</h3>
-<pre><code>L = -1/m * sum(Y * log(Y_pred))
+<pre><code class="language-text">L = -(1/m) * sum_i sum_c  Y[i, c] * log(Y_pred[i, c] + eps)        eps = 1e-15
 </code></pre>
-<p>Where:</p>
 <ul>
-<li>Y is one-hot encoded true labels</li>
-<li>Y_pred is predicted probabilities</li>
-<li>m is batch size</li>
+<li><code>m</code>: batch size (number of rows)</li>
+<li><code>Y[i, c]</code>: 1 if example <code>i</code> belongs to class <code>c</code>, else 0</li>
+<li><code>Y_pred[i, c]</code>: predicted probability of class <code>c</code> for example <code>i</code></li>
+<li>With one-hot labels, only the true class contributes: <code>L = mean_i(-log(p_i,true))</code>.</li>
 </ul>
-<h3>Numerical Stability</h3>
-<p>Add small epsilon to avoid log(0):</p>
-<pre><code class="language-python">np.log(Y_pred + 1e-15)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Y_pred = [[0.7, 0.2, 0.1], [0.1, 0.8, 0.1]], Y = [[1,0,0], [0,1,0]]
-Output: 0.2899</pre><p>-1/2 * (log(0.7) + log(0.8))</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>Y_pred</code>: probabilities, shape <code>(m, n_classes)</code>, each row sums to 1, values in <code>[0, 1]</code></li>
+<li><code>Y_true</code>: one-hot labels, shape <code>(m, n_classes)</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p>A Python <code>float</code>: the mean loss over the batch, <strong>rounded to 4 decimals</strong> with <code>round(loss, 4)</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Add <code>eps = 1e-15</code> inside the log so a predicted probability of exactly 0 gives a large finite loss (<code>-log(1e-15) = 34.5388</code>) instead of <code>inf</code>.</li>
+<li>A perfect prediction gives <code>0.0</code> (up to the sign of a tiny rounding error).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised. Use the probabilities as given (this function does not apply softmax).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>In practice frameworks take <strong>logits</strong>, not probabilities, and compute <code>logsumexp(z) - z_y</code>, which is stable without an eps. Why is that better than <code>log(softmax(z))</code>?</li>
+<li>With class indices instead of one-hot labels, use <code>-log(p[np.arange(m), y])</code>.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: cross_entropy_loss(np.array([[0.7, 0.2, 0.1], [0.1, 0.8, 0.1]]), np.array([[1, 0, 0], [0, 1, 0]]))
+Output: 0.2899</pre><p>-(log(0.7) + log(0.8)) / 2 = (0.3567 + 0.2231) / 2.</p></div><div><pre class="overflow-auto">Input: cross_entropy_loss(np.array([[0.0, 1.0]]), np.array([[1, 0]]))
+Output: 34.5388</pre><p>The true class got probability 0, so the loss is -log(1e-15): large but finite thanks to eps.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def cross_entropy_loss(Y_pred, Y_true):
     &quot;&quot;&quot;
-    Compute cross-entropy loss.
+    Mean cross-entropy loss for one-hot labels.
 
     Args:
-        Y_pred: Predicted probabilities (batch_size, n_classes)
-        Y_true: One-hot encoded true labels (batch_size, n_classes)
+        Y_pred: Predicted probabilities (m, n_classes)
+        Y_true: One-hot true labels (m, n_classes)
 
     Returns:
-        loss: Scalar cross-entropy loss
+        loss: Mean cross-entropy as a float, rounded to 4 decimals
+              (use eps = 1e-15 inside the log)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>MLP Forward &amp; Backward Pass - Neural Networks | ML Grind</title>
 <meta name="description" content="Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward" data-rh="true" />
@@ -100,32 +100,63 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"MLP Forward & Backward Pass - Neural Networks","description":"Implement MLP Forward & Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/mlp-forward-backward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">MLP Forward &amp; Backward Pass - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement MLP Forward &amp; Backward Pass in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>MLP Forward &amp; Backward Pass</h2>
-<p>Implement both forward and backward passes for a 2-layer MLP (Multi-Layer Perceptron).</p>
+<h3>What you&#x27;ll build</h3>
+<p>Two functions for a 2-layer MLP classifier: <code>mlp_forward</code> computes class probabilities and a cache, and <code>mlp_backward</code> uses the cache to compute the gradients of the mean cross-entropy loss with respect to every weight and bias, by hand (backpropagation).</p>
+<h3>Background</h3>
+<p>Backprop is the chain rule applied layer by layer, from the loss back to the inputs, reusing values saved during the forward pass. &quot;Write the backward pass of a small MLP in NumPy&quot; is one of the most common ML coding interview questions, and getting the shapes right is most of the work.</p>
 <h3>Architecture</h3>
-<pre><code>Input (n_features) → Hidden (n_hidden) → Output (n_classes)
+<pre><code class="language-text">X (m, n_features) -&gt; [W1, b1] -&gt; ReLU -&gt; (m, n_hidden) -&gt; [W2, b2] -&gt; softmax -&gt; (m, n_classes)
 </code></pre>
-<h3>Forward Pass</h3>
-<pre><code>Z1 = X @ W1 + b1
-A1 = ReLU(Z1)
-Z2 = A1 @ W2 + b2
-output = softmax(Z2)
+<h3>Forward pass</h3>
+<pre><code class="language-text">Z1 = X @ W1 + b1          # (m, n_hidden)
+A1 = relu(Z1)             # (m, n_hidden)
+Z2 = A1 @ W2 + b2         # (m, n_classes), the logits
+output = softmax(Z2)      # row-wise probabilities
+cache = (X, Z1, A1, Z2, W1, W2)
 </code></pre>
-<p>Return: <code>(output, cache)</code> where cache = <code>(X, Z1, A1, Z2, W1, W2)</code></p>
-<h3>Backward Pass (Backpropagation)</h3>
-<p>Using the chain rule, gradients flow backwards:</p>
-<pre><code>Loss → dZ2 → dW2, db2 → dA1 → dZ1 (ReLU) → dW1, db1
+<h3>Backward pass</h3>
+<p>The loss is the mean cross-entropy <code>L = -(1/m) * sum(Y * log(output))</code>, with <code>Y</code> one-hot. Softmax followed by cross-entropy has a famously simple gradient with respect to the logits, <code>output - Y</code> (per example; the <code>1/m</code> comes from the mean):</p>
+<pre><code class="language-text">dZ2 = output - Y                      # (m, n_classes)
+dW2 = (1/m) * A1.T @ dZ2              # (n_hidden, n_classes)
+db2 = (1/m) * sum(dZ2, axis=0)        # (n_classes,)
+dA1 = dZ2 @ W2.T                      # (m, n_hidden)
+dZ1 = dA1 * (Z1 &gt; 0)                  # ReLU passes gradient only where Z1 &gt; 0
+dW1 = (1/m) * X.T @ dZ1               # (n_features, n_hidden)
+db1 = (1/m) * sum(dZ1, axis=0)        # (n_hidden,)
 </code></pre>
-<p><strong>Key Formulas:</strong></p>
+<p>Every gradient has the same shape as its parameter: a quick sanity check.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>dZ2 = output - Y_onehot</code> (softmax + cross-entropy derivative)</li>
-<li><code>dW2 = (1/m) * A1.T @ dZ2</code></li>
-<li><code>db2 = (1/m) * sum(dZ2, axis=0)</code></li>
-<li><code>dZ1 = (dZ2 @ W2.T) * (Z1 &gt; 0)</code> (ReLU derivative)</li>
-<li><code>dW1 = (1/m) * X.T @ dZ1</code></li>
-<li><code>db1 = (1/m) * sum(dZ1, axis=0)</code></li>
+<li><code>X</code>: <code>(m, n_features)</code>; <code>W1</code>: <code>(n_features, n_hidden)</code>; <code>b1</code>: <code>(n_hidden,)</code>; <code>W2</code>: <code>(n_hidden, n_classes)</code>; <code>b2</code>: <code>(n_classes,)</code></li>
+<li><code>Y</code>: one-hot labels <code>(m, n_classes)</code>; <code>output</code> and <code>cache</code> come from <code>mlp_forward</code></li>
 </ul>
-<p>Return: <code>{&#x27;dW1&#x27;: ..., &#x27;db1&#x27;: ..., &#x27;dW2&#x27;: ..., &#x27;db2&#x27;: ...}</code></p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X shape (2, 3), hidden_size=4, output_size=2
-Output: Forward: probabilities (2, 2), rows sum to 1. Backward: gradients for all weights/biases</pre><p>Forward computes predictions; backward computes gradients for training</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<ul>
+<li><code>mlp_forward</code> returns the tuple <code>(output, cache)</code>: <code>output</code> has shape <code>(m, n_classes)</code> with rows summing to 1, and <code>cache</code> is the tuple <code>(X, Z1, A1, Z2, W1, W2)</code> in that order.</li>
+<li><code>mlp_backward</code> returns a dictionary with these keys:
+<ul>
+<li><code>&#x27;dW1&#x27;</code>: <code>(n_features, n_hidden)</code></li>
+<li><code>&#x27;db1&#x27;</code>: <code>(n_hidden,)</code></li>
+<li><code>&#x27;dW2&#x27;</code>: <code>(n_hidden, n_classes)</code></li>
+<li><code>&#x27;db2&#x27;</code>: <code>(n_classes,)</code></li>
+</ul>
+</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>The ReLU derivative at exactly <code>Z1 = 0</code> is taken as 0 (<code>Z1 &gt; 0</code>).</li>
+<li>Gradients are averaged over the batch (divide by <code>m</code>), matching a mean loss.</li>
+<li>The <code>relu</code> and <code>softmax</code> helpers (stable, row-wise) are provided in the starter code.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, fully vectorised over the batch (no loops over examples). Don&#x27;t modify the inputs.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Check your gradients numerically: perturb one weight by <code>±1e-5</code> and compare <code>(L+ - L-) / 2e-5</code> with your analytic value.</li>
+<li>Add L2 weight decay: what changes in <code>dW1</code> and <code>dW2</code>? (Add <code>λ * W</code>.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: mlp_forward(np.array([[1.0, 0.0], [0.0, 1.0]]), np.eye(2), np.zeros(2), np.eye(2), np.zeros(2))[0]
+Output: [[0.7311, 0.2689], [0.2689, 0.7311]] (rounded)</pre><p>With identity weights the logits equal the inputs, so each row is softmax([1, 0]) or softmax([0, 1]).</p></div><div><pre class="overflow-auto">Input: X = [[1, 2]], W1 = I, b1 = 0, W2 = zeros((2, 2)), b2 = 0, Y = [[1, 0]]: mlp_backward(Y, *mlp_forward(X, W1, b1, W2, b2))
+Output: {&#x27;dW1&#x27;: [[0, 0], [0, 0]], &#x27;db1&#x27;: [0, 0], &#x27;dW2&#x27;: [[-0.5, 0.5], [-1.0, 1.0]], &#x27;db2&#x27;: [-0.5, 0.5]}</pre><p>output = [0.5, 0.5], so dZ2 = [-0.5, 0.5] and dW2 = A1.T @ dZ2 with A1 = [1, 2]. W2 = 0 blocks any gradient into layer 1.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def relu(x):
     return np.maximum(0, x)
@@ -136,17 +167,17 @@ def softmax(x):
 
 def mlp_forward(X, W1, b1, W2, b2):
     &quot;&quot;&quot;
-    Forward pass for a 2-layer MLP.
+    Forward pass for a 2-layer MLP (ReLU hidden layer, softmax output).
 
     Args:
-        X: Input data (batch_size, n_features)
+        X: Input data (m, n_features)
         W1: First layer weights (n_features, n_hidden)
         b1: First layer bias (n_hidden,)
         W2: Second layer weights (n_hidden, n_classes)
         b2: Second layer bias (n_classes,)
 
     Returns:
-        output: Class probabilities (batch_size, n_classes)
+        output: Class probabilities (m, n_classes), rows sum to 1
         cache: Tuple (X, Z1, A1, Z2, W1, W2) for backprop
     &quot;&quot;&quot;
     # Your code here
@@ -154,22 +185,23 @@ def mlp_forward(X, W1, b1, W2, b2):
 
 def mlp_backward(Y, output, cache):
     &quot;&quot;&quot;
-    Backward pass (backpropagation) for 2-layer MLP.
+    Backward pass for the 2-layer MLP with mean cross-entropy loss.
 
     Args:
-        Y: One-hot encoded labels (batch_size, n_classes)
-        output: Predicted probabilities from forward pass
-        cache: Cached values from forward pass (X, Z1, A1, Z2, W1, W2)
+        Y: One-hot labels (m, n_classes)
+        output: Probabilities from mlp_forward (m, n_classes)
+        cache: Tuple (X, Z1, A1, Z2, W1, W2) from mlp_forward
 
     Returns:
-        grads: Dictionary with dW1, db1, dW2, db2
+        grads: dict with &#x27;dW1&#x27; (n_features, n_hidden), &#x27;db1&#x27; (n_hidden,),
+               &#x27;dW2&#x27; (n_hidden, n_classes), &#x27;db2&#x27; (n_classes,)
     &quot;&quot;&quot;
     X, Z1, A1, Z2, W1, W2 = cache
     m = X.shape[0]  # batch size
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

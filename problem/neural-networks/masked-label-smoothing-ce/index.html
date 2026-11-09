@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Masked Cross-Entropy with Label Smoothing - Neural Networks | ML Grind</title>
 <meta name="description" content="Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce" data-rh="true" />
@@ -100,28 +100,47 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Masked Cross-Entropy with Label Smoothing - Neural Networks","description":"Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/masked-label-smoothing-ce","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Masked Cross-Entropy with Label Smoothing - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Masked Cross-Entropy with Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Masked Cross-Entropy with Label Smoothing</h2>
-<p>Language-model training computes a cross-entropy loss per token, but batches are padded to a common length and the padding tokens must not count. Most LM training recipes also use <strong>label smoothing</strong>. Implement token-level cross-entropy with both, matching PyTorch&#x27;s <code>F.cross_entropy(logits, targets, ignore_index=..., label_smoothing=...)</code>.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Token-level cross-entropy from <strong>logits</strong>, with a padding mask (<code>ignore_index</code>) and <strong>label smoothing</strong>, matching PyTorch&#x27;s <code>F.cross_entropy(logits, targets, ignore_index=..., label_smoothing=...)</code> with mean reduction.</p>
+<h3>Background</h3>
+<p>Language-model training computes a loss per token, but batches are padded to a common length and padding tokens must not count. Many training recipes also smooth the labels: instead of a one-hot target, the model is trained towards <code>(1 - eps)</code> on the true class plus <code>eps</code> spread over all classes, which discourages over-confident logits and often improves calibration.</p>
 <h3>Formula</h3>
-<p>For a token with logits <code>z</code> (V classes) and target class <code>y</code>:</p>
-<pre><code>log_p = z - logsumexp(z)                        # log-softmax, computed stably
+<p>For one token with logits <code>z</code> (<code>V</code> classes) and target class <code>y</code>:</p>
+<pre><code class="language-text">log_p = z - logsumexp(z)                        # log-softmax, computed stably
 q_c   = (1 - eps) * [c == y] + eps / V          # smoothed target: eps spread over ALL V classes
 loss  = -sum_c q_c * log_p_c
       = (1 - eps) * (-log_p_y) + eps * mean_c(-log_p_c)
 </code></pre>
-<p>The final loss is the <strong>mean over non-padded tokens only</strong> (tokens whose target is <code>ignore_index</code>):</p>
-<pre><code>L = sum_{tokens with y != ignore_index} loss / (number of such tokens)
+<p>The final loss is the <strong>mean over non-ignored tokens only</strong>:</p>
+<pre><code class="language-text">L = sum_{tokens with y != ignore_index} loss / (number of such tokens)
 </code></pre>
-<h3>Details</h3>
+<p>where <code>logsumexp(z) = m + log(sum_c exp(z_c - m))</code> with <code>m = max(z)</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>logits</code> has shape <code>(N, V)</code> or <code>(B, T, V)</code>; <code>targets</code> has the matching shape <code>(N,)</code> or <code>(B, T)</code>. Flatten the leading dimensions.</li>
-<li><code>ignore_index</code> may be a value outside <code>[0, V)</code> (the default <code>-100</code>) or a real class id (e.g. a pad id of 0). Never use the target of an ignored token as an index.</li>
-<li>If every token is ignored, return <code>nan</code> (that is what PyTorch&#x27;s mean reduction gives).</li>
-<li>With <code>smoothing = 0</code> this is the ordinary cross-entropy.</li>
+<li><code>logits</code>: float array <code>(N, V)</code> or <code>(B, T, V)</code></li>
+<li><code>targets</code>: int array <code>(N,)</code> or <code>(B, T)</code>, matching the leading dimensions of <code>logits</code></li>
+<li><code>ignore_index</code>: target value that marks padding (default <code>-100</code>; may also be a real class id such as a pad id of 0)</li>
+<li><code>smoothing</code>: label smoothing <code>eps</code> in <code>[0, 1]</code> (default 0)</li>
 </ul>
-<h3>Expected Return Format</h3>
-<p>Return the loss as a Python <code>float</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]))
-Output: 0.2084</pre><p>The third token is padding, so the loss is the mean of the other three per-token losses (rounded here).</p></div><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]), smoothing=0.1)
-Output: 0.3906</pre><p>Smoothing moves 10% of the target mass onto all classes, which raises the loss of confident correct predictions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A Python <code>float</code>: the mean loss over non-ignored tokens.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Flatten the leading dimensions to <code>(N, V)</code> and <code>(N,)</code> first.</li>
+<li>Select the kept tokens <strong>before</strong> indexing by target: <code>-100</code> is not a valid class index.</li>
+<li>If every token is ignored, return <code>nan</code> (what PyTorch&#x27;s mean reduction gives).</li>
+<li>With <code>smoothing = 0</code> this is the ordinary cross-entropy.</li>
+<li>Logits of magnitude 1000 must not overflow: use the max-shift inside <code>logsumexp</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (no Python loop over tokens).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>PyTorch&#x27;s <code>reduction=&#x27;sum&#x27;</code> divides by nothing; why do LM trainers often normalise by the number of tokens across the whole (accumulated) batch instead of per micro-batch?</li>
+<li>What is the minimum achievable loss with smoothing <code>eps &gt; 0</code>? (It is the entropy of <code>q</code>, not 0.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]))
+Output: 0.2084 (rounded)</pre><p>The third token is padding, so the loss is the mean of the other three per-token losses.</p></div><div><pre class="overflow-auto">Input: masked_label_smoothing_ce(np.array([[2.0, 1.0, 0.1], [0.5, 2.5, -1.0], [1.0, 1.0, 1.0], [-2.0, 0.0, 3.0]]), np.array([0, 1, -100, 2]), smoothing=0.1)
+Output: 0.3906 (rounded)</pre><p>Smoothing moves 10% of the target mass onto all classes, which raises the loss of confident correct predictions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def masked_label_smoothing_ce(logits, targets, ignore_index=-100, smoothing=0.0):
     &quot;&quot;&quot;

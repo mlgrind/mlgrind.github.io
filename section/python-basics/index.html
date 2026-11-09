@@ -78,50 +78,78 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Python Basics for ML | ML Grind</title>
-<meta name="description" content="Master NumPy arrays and essential Python operations for machine learning." data-rh="true" />
+<meta name="description" content="Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/python-basics" data-rh="true" />
 <meta property="og:title" content="Python Basics for ML | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master NumPy arrays and essential Python operations for machine learning." data-rh="true" />
+<meta property="og:description" content="Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/python-basics" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Python Basics for ML | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master NumPy arrays and essential Python operations for machine learning." data-rh="true" />
+<meta name="twitter:description" content="Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Python Basics for ML","description":"Master NumPy arrays and essential Python operations for machine learning.","url":"https://mlgrind.github.io/section/python-basics","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Python Basics for ML","description":"Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows.","url":"https://mlgrind.github.io/section/python-basics","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Python Basics for ML</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master NumPy arrays and essential Python operations for machine learning.</p><div class="prose dark:prose-invert max-w-none"><h2>Python Basics for Machine Learning</h2>
-<p>NumPy is the foundation of nearly all machine learning in Python. Before diving into complex algorithms, you need to master array operations.</p>
-<h2>Key Concepts</h2>
-<h3>NumPy Arrays</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Python Basics for ML</h1><p class="text-lg text-gray-600 dark:text-dark-200">Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows.</p><div class="prose dark:prose-invert max-w-none"><h2>Python Basics for ML</h2>
+<h2>Why it matters</h2>
+<p>ML code runs on arrays, and the single biggest habit to build is <strong>vectorisation</strong>: expressing a computation as one operation on whole arrays instead of a Python loop over elements. Summing a million floats with a Python loop takes about a hundred times longer than <code>arr.sum()</code>. Every forward pass, loss and gradient you write later is built from the three operations in this section: reductions, matrix multiplication and broadcasting.</p>
+<h2>Core ideas</h2>
+<h3>Vectorise, don&#x27;t loop</h3>
+<p>A Python loop pays interpreter overhead for every element. A NumPy call runs one compiled loop over contiguous memory, often with SIMD instructions. Rule of thumb: if you are writing <code>for i in range(len(arr))</code>, there is almost always an array expression that does the same thing.</p>
+<h3>Reductions</h3>
+<p>A reduction collapses values into fewer values: <code>arr.sum()</code>, <code>arr.mean()</code>, <code>arr.max()</code>. With no <code>axis</code> it reduces everything to a scalar; <code>axis=0</code> reduces down the rows (one result per column) and <code>axis=1</code> across the columns (one result per row).</p>
+<h3>Matrix multiplication</h3>
+<p>For <code>A</code> of shape <code>(m, n)</code> and <code>B</code> of shape <code>(n, p)</code>:</p>
+<pre><code class="language-text">C[i, j] = sum over k of A[i, k] * B[k, j]        C has shape (m, p)
+</code></pre>
+<p>The inner dimensions (<code>n</code>) must match and disappear. It costs <code>m * n * p</code> multiply-adds. Three spellings:</p>
+<table><thead><tr><th>Call</th><th>2D inputs</th><th>Batched 3D inputs</th></tr></thead><tbody><tr><td><code>A @ B</code> / <code>np.matmul(A, B)</code></td><td>matrix product</td><td>batched product, <code>(b, m, n) @ (b, n, p) -&gt; (b, m, p)</code></td></tr><tr><td><code>np.dot(A, B)</code></td><td>matrix product</td><td>a different contraction: <code>(2, 3, 4)</code> dot <code>(2, 4, 5)</code> gives <code>(2, 3, 2, 5)</code></td></tr><tr><td><code>A * B</code></td><td><strong>elementwise</strong> product, not matmul</td><td>elementwise</td></tr></tbody></table>
+<p>Prefer <code>@</code>: it reads like the maths and does the right thing for batches.</p>
+<h3>Broadcasting</h3>
+<p>When shapes differ, NumPy compares them from the right; dimensions must be equal or 1, and size-1 (or missing) dimensions are stretched. That is how a bias vector of shape <code>(n,)</code> is added to every row of an <code>(m, n)</code> matrix without copying it <code>m</code> times.</p>
+<h2>Worked example: a linear layer by hand</h2>
+<p>A linear layer computes <code>y = x @ W + b</code>. With a batch of 2 samples, 2 input features and 2 outputs:</p>
+<pre><code class="language-python">x = np.array([[1, 2],
+              [3, 4]])           # (batch=2, d_in=2)
+W = np.array([[5, 6],
+              [7, 8]])           # (d_in=2, d_out=2)
+b = np.array([10, 20])           # (d_out,)
+
+x @ W        # [[19, 22], [43, 50]]   e.g. 19 = 1*5 + 2*7
+x @ W + b    # [[29, 42], [53, 70]]   b broadcasts over the batch
+(x @ W).sum()  # 134                  a reduction to one number
+</code></pre>
+<p>All three operations of this section show up in one line of a neural network.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>Creation</strong>: <code>np.array()</code>, <code>np.zeros()</code>, <code>np.ones()</code>, <code>np.arange()</code></li>
-<li><strong>Shape manipulation</strong>: <code>reshape()</code>, <code>flatten()</code>, <code>transpose()</code></li>
-<li><strong>Indexing</strong>: Slicing, boolean indexing, fancy indexing</li>
+<li><strong><code>*</code> is not matrix multiplication</strong>: <code>A * B</code> multiplies elementwise (and broadcasts), so it can silently &quot;work&quot; with the wrong meaning.</li>
+<li><strong>Shape mismatches</strong>: <code>(2, 3) @ (2, 3)</code> raises a <code>ValueError</code> (3 vs 2 in the inner dimension). Transpose the operand you meant: <code>A @ B.T</code>.</li>
+<li><strong>1D vectors are neither rows nor columns</strong>: <code>v @ A</code> treats <code>v</code> as a row and <code>A @ v</code> as a column, and both return 1D. Reshape to <code>(n, 1)</code> when you need an explicit column.</li>
+<li><strong>Integer overflow</strong>: small integer dtypes wrap around (two <code>int8</code> values of 100 add up to -56). Use float arrays for numeric work.</li>
+<li><strong>Floats aren&#x27;t exact</strong>: <code>0.1 + 0.2 == 0.3</code> is <code>False</code>. Compare floats with a tolerance (<code>np.isclose</code>, <code>np.allclose</code>).</li>
 </ul>
-<h3>Essential Operations</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>Element-wise</strong>: Addition, multiplication, mathematical functions</li>
-<li><strong>Aggregations</strong>: <code>sum()</code>, <code>mean()</code>, <code>std()</code>, <code>min()</code>, <code>max()</code></li>
-<li><strong>Broadcasting</strong>: Automatic expansion of arrays for operations</li>
+<li>&quot;Implement matrix multiply&quot; usually means: state the shape rule, write <code>A @ B</code>, then possibly the triple loop, and give its O(m·n·p) cost.</li>
+<li>Follow-ups: why is the vectorised version faster; what&#x27;s the difference between <code>np.dot</code>, <code>np.matmul</code> and <code>*</code>; how would you multiply a batch of matrices; what happens with mismatched shapes.</li>
+<li>Be ready to say how broadcasting adds a bias to a batch, and what shape the result has.</li>
 </ul>
-<h3>Why It Matters</h3>
-<p>Every ML algorithm processes data as arrays. Understanding these operations lets you:</p>
-<ul>
-<li>Prepare data efficiently</li>
-<li>Debug model issues</li>
-<li>Optimize performance</li>
-</ul>
-<p>Let&#x27;s practice with hands-on problems!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/python-basics/numpy-array-sum">Array Sum →</a></li><li><a href="/problem/python-basics/numpy-matrix-multiply">Matrix Multiplication →</a></li><li><a href="/problem/python-basics/numpy-broadcast-add">Broadcasting Addition →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Array Sum</strong>: reduce an array to a single number with <code>np.sum</code>.</li>
+<li><strong>Matrix Multiplication</strong>: multiply <code>(m, n)</code> by <code>(n, p)</code> with <code>@</code>, and check the shape rule.</li>
+<li><strong>Broadcasting Addition</strong>: add a vector to every row of a matrix with one <code>+</code>.</li>
+</ol>
+<p>For deeper practice, see <strong>NumPy Fundamentals</strong> (indexing, axes, reshape) and <strong>Einstein Summation</strong>, which writes matrix products as index expressions like <code>&#x27;ik,kj-&gt;ij&#x27;</code>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/python-basics/numpy-array-sum">Array Sum →</a></li><li><a href="/problem/python-basics/numpy-matrix-multiply">Matrix Multiplication →</a></li><li><a href="/problem/python-basics/numpy-broadcast-add">Broadcasting Addition →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

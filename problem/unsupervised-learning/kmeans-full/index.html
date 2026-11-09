@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning | ML Grind</title>
 <meta name="description" content="Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full" data-rh="true" />
@@ -99,37 +99,54 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning","description":"Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/kmeans-full","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Means from Scratch</h2>
-<p>Implement the complete k-means algorithm (Lloyd&#x27;s algorithm): seeding with <strong>k-means++</strong>, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty.</p>
-<p>You write two functions:</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The complete k-means algorithm (Lloyd&#x27;s algorithm): <strong>k-means++</strong> seeding, alternating assignment and update steps, a convergence test, and a rule for clusters that end up empty. Two functions:</p>
 <ul>
 <li><code>kmeans_pp_init(X, k, seed=0)</code>: k-means++ seeding, returns the <code>(k, d)</code> initial centroids</li>
 <li><code>kmeans(X, k, init=&#x27;k-means++&#x27;, max_iter=100, tol=1e-4, seed=0)</code>: the full algorithm</li>
 </ul>
+<h3>Background</h3>
+<p>k-means minimises the inertia <code>sum_i ||x_i - C[label_i]||^2</code>. Each assignment step and each update step can only lower it, so the algorithm converges, but only to a local minimum: initialisation matters. k-means++ spreads the initial centroids out by sampling each new one with probability proportional to its squared distance from the centroids chosen so far, which gives an <code>O(log k)</code> approximation guarantee in expectation.</p>
 <h3>k-means++ seeding (follow exactly, so results are reproducible)</h3>
 <p>Create one generator <code>rng = np.random.default_rng(seed)</code> and draw every random number with <code>u = rng.random()</code>:</p>
 <ol>
 <li>First centroid: the point at index <code>floor(u * n)</code>.</li>
-<li>Each further centroid: compute <code>D2[i]</code>, the squared distance from point <code>i</code> to its <strong>nearest already chosen</strong> centroid, and <code>cdf = cumsum(D2)</code>. Pick the <strong>first</strong> index <code>i</code> with <code>cdf[i] &gt; u * cdf[-1]</code>. This samples a point with probability proportional to <code>D2</code>.</li>
-<li>If <code>cdf[-1] == 0</code> (every point coincides with a chosen centroid), pick index <code>floor(u * n)</code> instead.</li>
+<li>Each further centroid: compute <code>D2[i]</code>, the squared distance from point <code>i</code> to its <strong>nearest already chosen</strong> centroid, and <code>cdf = np.cumsum(D2)</code>. Draw <code>u</code> and pick the <strong>first</strong> index <code>i</code> with <code>cdf[i] &gt; u * cdf[-1]</code>.</li>
+<li>If <code>cdf[-1] == 0</code> (every point coincides with a chosen centroid), pick index <code>floor(u * n)</code> instead (using the <code>u</code> already drawn for this centroid).</li>
 </ol>
 <h3>Lloyd iterations</h3>
-<p>Starting from the initial centroids <code>C</code> (k-means++ when <code>init == &#x27;k-means++&#x27;</code>, otherwise <code>init</code> is a <code>(k, d)</code> array), repeat for <code>it = 1, 2, ..., max_iter</code>:</p>
+<p>Start from the initial centroids <code>C</code> (k-means++ when <code>init == &#x27;k-means++&#x27;</code>, otherwise <code>init</code> is a <code>(k, d)</code> array). For <code>it = 1, 2, ..., max_iter</code>:</p>
 <ol>
-<li><strong>Assign</strong>: each point goes to its nearest centroid (squared Euclidean distance); ties go to the lowest centroid index.</li>
+<li><strong>Assign</strong>: each point goes to its nearest centroid by squared Euclidean distance; ties go to the lowest centroid index.</li>
 <li><strong>Update</strong>: each non-empty cluster&#x27;s centroid becomes the mean of its points.</li>
-<li><strong>Empty clusters</strong>: a cluster with no points is moved onto the point that is <strong>farthest from its assigned centroid</strong> in this iteration&#x27;s assignment (largest squared distance; ties go to the lowest point index). If several clusters are empty, handle them in increasing cluster index, and a point can be used only once.</li>
+<li><strong>Empty clusters</strong>: a cluster with no points is moved onto the point <strong>farthest from its assigned centroid</strong> in this iteration&#x27;s assignment (largest squared distance; ties go to the lowest point index). Handle several empty clusters in increasing cluster index; each point can be used only once.</li>
 <li><strong>Stop</strong> if the labels did not change since the previous iteration, or if the largest centroid shift <code>max_j ||C_new[j] - C[j]||</code> is below <code>tol</code>.</li>
 </ol>
-<pre><code>inertia = sum_i ||x_i - C[label_i]||^2
-</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: data, shape <code>(n, d)</code>; <code>k</code>: number of clusters, <code>1 &lt;= k &lt;= n</code></li>
+<li><code>init</code>: <code>&#x27;k-means++&#x27;</code> or a <code>(k, d)</code> array of initial centroids</li>
+<li><code>max_iter</code> (int <code>&gt;= 1</code>), <code>tol</code> (absolute shift threshold), <code>seed</code> (int, used only by k-means++)</li>
+</ul>
 <h3>Expected Return Format</h3>
-<p><code>kmeans</code> returns a dictionary with these keys:</p>
+<p><code>kmeans_pp_init</code> returns a <code>(k, d)</code> float array. <code>kmeans</code> returns a dictionary with these keys:</p>
 <ul>
 <li><code>&#x27;centroids&#x27;</code>: <code>(k, d)</code> float array, the centroids after the last update</li>
 <li><code>&#x27;labels&#x27;</code>: <code>(n,)</code> int array, each point&#x27;s nearest <strong>returned</strong> centroid (one final assignment step against the returned centroids)</li>
-<li><code>&#x27;inertia&#x27;</code>: Python float, computed from those labels and centroids</li>
+<li><code>&#x27;inertia&#x27;</code>: Python float, <code>sum_i ||x_i - centroids[labels_i]||^2</code> for those labels</li>
 <li><code>&#x27;n_iter&#x27;</code>: int, the number of assign/update iterations performed (<code>1 &lt;= n_iter &lt;= max_iter</code>)</li>
+</ul>
+<h3>Differences from scikit-learn&#x27;s <code>KMeans</code></h3>
+<p>scikit-learn&#x27;s k-means++ tries several candidates per step and keeps the best (&quot;greedy k-means++&quot;), scales <code>tol</code> by the data variance, and runs several initialisations (<code>n_init</code>). This problem uses the plain version so every number is reproducible.</p>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; vectorise the distance computations.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>How do you choose <code>k</code>? (Elbow on inertia, silhouette score.)</li>
+<li>What is mini-batch k-means, and when would you use it?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: kmeans(np.array([[1.0, 1.0], [1.5, 2.0], [3.0, 4.0], [5.0, 7.0], [3.5, 5.0], [4.5, 5.0], [3.5, 4.5]]), 2, init=np.array([[1.0, 1.0], [5.0, 7.0]]))
 Output: {&#x27;centroids&#x27;: [[1.25, 1.5], [3.9, 5.1]], &#x27;labels&#x27;: [0, 0, 1, 1, 1, 1, 1], &#x27;inertia&#x27;: 8.525, &#x27;n_iter&#x27;: 3}</pre><p>(3, 4) is equally far from both initial centroids, so iteration 1 puts it in cluster 0 (lowest index); iteration 2 moves it to cluster 1; iteration 3 changes no label, so the loop stops.</p></div><div><pre class="overflow-auto">Input: kmeans_pp_init(np.array([[0.0, 0.0], [0.0, 1.0], [10.0, 10.0], [10.0, 11.0], [20.0, 0.0]]), 3, seed=0)
 Output: array([[10., 11.], [0., 0.], [20., 0.]])</pre><p>The first draw u = 0.637 picks index floor(0.637 * 5) = 3; each later pick is drawn in proportion to the squared distance to the nearest centroid chosen so far.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np

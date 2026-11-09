@@ -78,72 +78,95 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Reinforcement Learning | ML Grind</title>
-<meta name="description" content="Master RL fundamentals from Q-learning to policy gradients." data-rh="true" />
+<meta name="description" content="From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/reinforcement-learning" data-rh="true" />
 <meta property="og:title" content="Reinforcement Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master RL fundamentals from Q-learning to policy gradients." data-rh="true" />
+<meta property="og:description" content="From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/reinforcement-learning" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Reinforcement Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master RL fundamentals from Q-learning to policy gradients." data-rh="true" />
+<meta name="twitter:description" content="From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Reinforcement Learning","description":"Master RL fundamentals from Q-learning to policy gradients.","url":"https://mlgrind.github.io/section/reinforcement-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Reinforcement Learning","description":"From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.","url":"https://mlgrind.github.io/section/reinforcement-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master RL fundamentals from Q-learning to policy gradients.</p><div class="prose dark:prose-invert max-w-none"><h2>Reinforcement Learning</h2>
-<p>Reinforcement learning (RL) trains agents to make decisions by learning from rewards and punishments through trial and error.</p>
-<h2>Key Concepts</h2>
-<h3>The RL Framework</h3>
-<ul>
-<li><strong>Agent</strong>: The learner/decision-maker</li>
-<li><strong>Environment</strong>: What the agent interacts with</li>
-<li><strong>State (s)</strong>: Current situation</li>
-<li><strong>Action (a)</strong>: What the agent can do</li>
-<li><strong>Reward (r)</strong>: Feedback signal</li>
-<li><strong>Policy (π)</strong>: Strategy for choosing actions</li>
-</ul>
-<h3>Value Functions</h3>
-<ul>
-<li><strong>State Value V(s)</strong>: Expected return starting from state s</li>
-<li><strong>Action Value Q(s,a)</strong>: Expected return taking action a in state s</li>
-</ul>
-<h3>Bellman Equations</h3>
-<pre><code class="language-python">V(s) = E[r + γ * V(s&#x27;)]
-Q(s,a) = E[r + γ * max_a&#x27; Q(s&#x27;,a&#x27;)]
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.</p><div class="prose dark:prose-invert max-w-none"><h2>Reinforcement Learning</h2>
+<h2>Why it matters</h2>
+<p>Reinforcement learning (RL) trains an agent by trial and error to maximize reward instead of imitating labels. It powers game-playing agents, robotics, recommendation and, most visibly today, the post-training of LLMs (RLHF, DPO, GRPO). Interviews test both layers: the tabular basics (Bellman equations, Q-learning vs SARSA) and the policy-gradient machinery behind PPO and RLHF.</p>
+<h2>Core ideas</h2>
+<p>An agent in state <code>s</code> picks action <code>a</code> from its policy <code>π(a|s)</code>, receives reward <code>r</code> and lands in <code>s&#x27;</code>. It wants to maximize the <strong>discounted return</strong>:</p>
+<pre><code class="language-text">G_t = r_t + γ·r_{t+1} + γ²·r_{t+2} + ...  =  r_t + γ·G_{t+1}        (0 ≤ γ ≤ 1)
 </code></pre>
-<h3>Key Algorithms</h3>
-<table><thead><tr><th>Algorithm</th><th>Type</th><th>Policy</th></tr></thead><tbody><tr><td>Q-Learning</td><td>Value-based</td><td>Off-policy</td></tr><tr><td>SARSA</td><td>Value-based</td><td>On-policy</td></tr><tr><td>REINFORCE</td><td>Policy-based</td><td>On-policy</td></tr><tr><td>Actor-Critic</td><td>Hybrid</td><td>On-policy</td></tr><tr><td>PPO</td><td>Policy-based</td><td>On-policy</td></tr></tbody></table>
-<h3>Exploration vs Exploitation</h3>
+<p><strong>Value functions</strong> predict that return: <code>V(s)</code> from a state, <code>Q(s, a)</code> after taking <code>a</code>. They satisfy the Bellman equations:</p>
+<pre><code class="language-text">V(s)    = E[ r + γ·V(s&#x27;) ]                      expectation: evaluate a policy
+Q*(s,a) = E[ r + γ·max_a&#x27; Q*(s&#x27;, a&#x27;) ]          optimality: find the best policy
+</code></pre>
+<p>Most algorithms solve these equations, exactly or from samples:</p>
+<table><thead><tr><th>Family</th><th>Learns</th><th>Update target</th><th>Examples</th></tr></thead><tbody><tr><td>Dynamic programming</td><td>V with a known model</td><td>full expectation over s&#x27;</td><td>value iteration</td></tr><tr><td>TD, value-based</td><td>V or Q from samples</td><td>r + γ·(estimate at s&#x27;)</td><td>TD(0), SARSA, Q-learning, DQN</td></tr><tr><td>Policy gradient</td><td>the policy π_θ directly</td><td>return or advantage × ∇ log π</td><td>REINFORCE, PPO</td></tr><tr><td>Actor-critic</td><td>π_θ and a critic V</td><td>advantage A = Q - V, e.g. from GAE</td><td>A2C, PPO with GAE</td></tr></tbody></table>
+<p>Key distinctions:</p>
 <ul>
-<li><strong>Exploration</strong>: Try new actions to discover better strategies</li>
-<li><strong>Exploitation</strong>: Use known good actions to maximize reward</li>
-<li><strong>ε-greedy</strong>: Simple balance (random with probability ε)</li>
+<li><strong>On-policy vs off-policy.</strong> SARSA bootstraps from the next action it actually takes (on-policy). Q-learning bootstraps from the greedy action whatever it does next (off-policy).</li>
+<li><strong>Bias vs variance.</strong> Monte Carlo returns are unbiased but noisy. TD targets use the critic&#x27;s estimate: biased, but low variance. n-step returns and GAE&#x27;s λ interpolate between the two.</li>
+<li><strong>Exploration.</strong> ε-greedy acts randomly with probability ε so that better actions can still be found.</li>
+<li><strong>Policy gradient.</strong> <code>∇J = E[ A_t · ∇ log π(a_t|s_t) ]</code>. PPO clips the ratio <code>π_θ / π_old</code> to <code>[1-ε, 1+ε]</code> so that several gradient steps on one batch stay safe.</li>
 </ul>
-<h3>RL for LLMs (RLHF)</h3>
+<h2>RL for language models</h2>
+<p>For an LLM, the state is the prompt plus the tokens so far, an action is the next token, and the reward usually comes once per response.</p>
 <ul>
-<li><strong>Reward Modeling</strong>: Learn preferences from human feedback</li>
-<li><strong>PPO for LLMs</strong>: Fine-tune with KL constraints</li>
-<li><strong>DPO</strong>: Direct preference optimization without reward model</li>
-<li><strong>GRPO</strong>: Group-relative advantages without a critic (see Post-training &amp; Efficiency)</li>
+<li><strong>Reward model:</strong> learn a scalar score from human preference pairs with the Bradley–Terry loss <code>-log σ(r_chosen - r_rejected)</code>.</li>
+<li><strong>KL penalty:</strong> keep π_θ close to the frozen reference model, <code>reward - β·KL(π_θ ‖ π_ref)</code>, so it doesn&#x27;t reward-hack.</li>
+<li><strong>PPO-RLHF:</strong> the clipped surrogate, with the KL folded into the reward.</li>
+<li><strong>DPO:</strong> skip the reward model and the RL loop: <code>-log σ(β·(Δ_chosen - Δ_rejected))</code> on policy-vs-reference log-ratios.</li>
 </ul>
-<h3>Interview Essentials</h3>
+<h2>Worked micro-example</h2>
+<p>Discounted return of rewards <code>[1, 1, 1, 1]</code> with γ = 0.9:</p>
+<pre><code class="language-text">G_0 = 1 + 0.9 + 0.81 + 0.729 = 3.439
+</code></pre>
+<p>One Q-learning step with <code>Q(s, a) = 1</code>, <code>r = 5</code>, <code>Q(s&#x27;, ·) = [3, 4]</code>, γ = 0.9, α = 0.5:</p>
+<pre><code class="language-text">target  = 5 + 0.9 · max(3, 4) = 8.6
+δ       = 8.6 - 1 = 7.6
+Q(s, a) = 1 + 0.5 · 7.6 = 4.8
+</code></pre>
+<p>SARSA with next action <code>a&#x27; = 0</code> uses <code>Q(s&#x27;, 0) = 3</code> instead: target 7.7, new value 4.35.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li>Implement Q-learning and SARSA from scratch</li>
-<li>Explain on-policy vs off-policy</li>
-<li>Understand policy gradients and REINFORCE</li>
-<li>Know GAE and PPO for modern deep RL</li>
-<li><strong>RLHF</strong>: Reward modeling, KL penalties, DPO</li>
+<li><strong>Terminal states:</strong> a terminal next state has value 0, so don&#x27;t bootstrap through <code>done</code>. A truncated (time-limit) episode is different: it still bootstraps from <code>V(s_T)</code>.</li>
+<li><strong>Off-by-one in returns:</strong> the first reward has discount γ⁰; <code>values</code> for GAE has length T + 1.</li>
+<li><strong>In-place updates:</strong> a synchronous value-iteration sweep reads the old V only. Copy Q-tables instead of mutating the caller&#x27;s array.</li>
+<li><strong>Wrong sign:</strong> policy gradients and PPO objectives are maximized; the training loss is their negative.</li>
+<li><strong>Unstable log-sigmoid:</strong> <code>log(sigmoid(x))</code> underflows and <code>log(p + 1e-10)</code> caps the loss. Use <code>-logaddexp(0, -x)</code> (NumPy) or <code>F.logsigmoid</code> (PyTorch).</li>
+<li><strong>Double-counting KL:</strong> in PPO-RLHF, put the KL either in the reward or in the loss, never both.</li>
 </ul>
-<p>Master these concepts for ML interviews at top companies!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/reinforcement-learning/rl-discounted-return">Discounted Return →</a></li><li><a href="/problem/reinforcement-learning/rl-epsilon-greedy">Epsilon-Greedy Policy →</a></li><li><a href="/problem/reinforcement-learning/rl-bellman-value">Bellman Expectation (State Value) →</a></li><li><a href="/problem/reinforcement-learning/rl-q-learning-update">Q-Learning Update →</a></li><li><a href="/problem/reinforcement-learning/rl-sarsa-update">SARSA Update →</a></li><li><a href="/problem/reinforcement-learning/rl-td0-prediction">TD(0) Value Prediction →</a></li><li><a href="/problem/reinforcement-learning/rl-value-iteration">Value Iteration Step →</a></li><li><a href="/problem/reinforcement-learning/rl-n-step-return">N-Step Return →</a></li><li><a href="/problem/reinforcement-learning/rl-policy-gradient">REINFORCE Policy Gradient →</a></li><li><a href="/problem/reinforcement-learning/rl-advantage-estimation">Advantage Estimation (GAE) →</a></li><li><a href="/problem/reinforcement-learning/rl-ppo-clip">PPO Clipped Objective →</a></li><li><a href="/problem/reinforcement-learning/rl-reward-modeling">RLHF Reward Model Loss →</a></li><li><a href="/problem/reinforcement-learning/rl-dpo-loss">Direct Preference Optimization (DPO) →</a></li><li><a href="/problem/reinforcement-learning/rl-kl-penalty">KL Divergence Penalty (RLHF) →</a></li><li><a href="/problem/reinforcement-learning/rl-ppo-llm-objective">PPO-RLHF Objective →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview angle</h2>
+<p>Expect to derive the Q-learning and SARSA updates, explain why Q-learning overestimates (the max of noisy estimates; Double DQN fixes it) and contrast on- and off-policy learning. For policy gradients: derive <code>∇ log π</code> for a softmax, say why a baseline reduces variance without adding bias, and walk through how PPO&#x27;s min and clip behave for positive and negative advantages. For RLHF: why the KL penalty is there, how DPO&#x27;s implicit reward <code>β·log(π_θ/π_ref)</code> arises, and what changes in GRPO. Complexity: a value-iteration sweep is O(|S|²·|A|); a TD update is O(1) and GAE is O(T) per trajectory.</p>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Discounted Return</strong>: vectorized G_0 with a discount vector.</li>
+<li><strong>Epsilon-Greedy Policy</strong>: explore or exploit, with deterministic tie-breaking.</li>
+<li><strong>Bellman Expectation (State Value)</strong>: a one-state expected backup.</li>
+<li><strong>Q-Learning Update</strong>: off-policy TD control with a max over next actions.</li>
+<li><strong>SARSA Update</strong>: on-policy TD control with the action actually taken.</li>
+<li><strong>TD(0) Value Prediction</strong>: bootstrapped value learning with terminal handling.</li>
+<li><strong>Value Iteration Step</strong>: a synchronous Bellman optimality sweep over a known MDP.</li>
+<li><strong>N-Step Return</strong>: n real rewards plus a bootstrap, with truncation.</li>
+<li><strong>REINFORCE Policy Gradient</strong>: the Monte Carlo policy gradient for a softmax policy.</li>
+<li><strong>Advantage Estimation (GAE)</strong>: the backward GAE(γ, λ) recursion.</li>
+<li><strong>PPO Clipped Objective</strong>: the clipped surrogate.</li>
+<li><strong>RLHF Reward Model Loss</strong>: the Bradley–Terry pairwise loss, computed stably.</li>
+<li><strong>Direct Preference Optimization (DPO)</strong>: preference learning without a reward model.</li>
+<li><strong>KL Divergence Penalty (RLHF)</strong>: the sampled k1 KL estimate.</li>
+<li><strong>PPO-RLHF Objective</strong>: the clipped surrogate with a KL-shaped reward.</li>
+</ol>
+<p>Next, <strong>Post-training &amp; Efficiency</strong> builds GRPO (PPO without a critic, with a k3 KL term) and int8 quantization. Softmax and cross-entropy, which policy gradients rely on, are practiced in <strong>Neural Networks</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/reinforcement-learning/rl-discounted-return">Discounted Return →</a></li><li><a href="/problem/reinforcement-learning/rl-epsilon-greedy">Epsilon-Greedy Policy →</a></li><li><a href="/problem/reinforcement-learning/rl-bellman-value">Bellman Expectation (State Value) →</a></li><li><a href="/problem/reinforcement-learning/rl-q-learning-update">Q-Learning Update →</a></li><li><a href="/problem/reinforcement-learning/rl-sarsa-update">SARSA Update →</a></li><li><a href="/problem/reinforcement-learning/rl-td0-prediction">TD(0) Value Prediction →</a></li><li><a href="/problem/reinforcement-learning/rl-value-iteration">Value Iteration Step →</a></li><li><a href="/problem/reinforcement-learning/rl-n-step-return">N-Step Return →</a></li><li><a href="/problem/reinforcement-learning/rl-policy-gradient">REINFORCE Policy Gradient →</a></li><li><a href="/problem/reinforcement-learning/rl-advantage-estimation">Advantage Estimation (GAE) →</a></li><li><a href="/problem/reinforcement-learning/rl-ppo-clip">PPO Clipped Objective →</a></li><li><a href="/problem/reinforcement-learning/rl-reward-modeling">RLHF Reward Model Loss →</a></li><li><a href="/problem/reinforcement-learning/rl-dpo-loss">Direct Preference Optimization (DPO) →</a></li><li><a href="/problem/reinforcement-learning/rl-kl-penalty">KL Divergence Penalty (RLHF) →</a></li><li><a href="/problem/reinforcement-learning/rl-ppo-llm-objective">PPO-RLHF Objective →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

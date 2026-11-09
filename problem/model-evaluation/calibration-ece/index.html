@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Expected Calibration Error - Model Evaluation | ML Grind</title>
 <meta name="description" content="Implement Expected Calibration Error in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/calibration-ece" data-rh="true" />
@@ -99,38 +99,54 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Expected Calibration Error - Model Evaluation","description":"Implement Expected Calibration Error in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/calibration-ece","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Expected Calibration Error - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Expected Calibration Error in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Expected Calibration Error (ECE)</h2>
-<p>A classifier is <strong>calibrated</strong> if, among the predictions it makes with confidence 0.8, about 80% are correct. Modern neural networks are often <em>over-confident</em>, and ECE measures by how much.</p>
-<p>Implement <code>expected_calibration_error(probs, labels, n_bins=10)</code>.</p>
-<h3>Confidence and correctness</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Expected Calibration Error - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Expected Calibration Error in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Expected Calibration Error</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>expected_calibration_error(probs, labels, n_bins=10)</code>: bin predictions by confidence and measure the average gap between confidence and accuracy, returning the per-bin statistics too (the data behind a reliability diagram).</p>
+<h3>Background</h3>
+<p>A classifier is <strong>calibrated</strong> if, among the predictions it makes with confidence 0.8, about 80% are correct. Calibrated probabilities matter whenever a downstream decision uses the number itself: thresholds, expected-cost calculations, abstaining when unsure. Modern neural networks are often over-confident, and ECE measures by how much.</p>
+<h3>Formula</h3>
 <p>For each sample <code>i</code> with predicted class probabilities <code>probs[i]</code> (shape <code>(C,)</code>):</p>
-<pre><code>confidence_i = max_c probs[i, c]
-prediction_i = argmax_c probs[i, c]
-correct_i    = (prediction_i == labels[i])
+<pre><code class="language-text">confidence_i = max_c probs[i, c]
+prediction_i = argmax_c probs[i, c]          (ties: the lowest class index, as np.argmax)
+correct_i    = 1 if prediction_i == labels[i] else 0
 </code></pre>
-<h3>Equal-width bins: (lo, hi] convention</h3>
-<p>Split <code>[0, 1]</code> into <code>M = n_bins</code> bins with edges <code>np.linspace(0, 1, M + 1)</code>. Bin <code>m</code> is the half-open interval</p>
-<pre><code>B_m = (m/M, (m+1)/M]       for m = 0 .. M-1     (bin 0 also includes 0.0)
-</code></pre>
-<p>so a confidence exactly on an edge goes to the bin <strong>below</strong> it (e.g. with <code>M = 4</code>, 0.5 goes to bin 1 = (0.25, 0.5] and 1.0 goes to bin 3).
-In NumPy, the bin index is <code>np.searchsorted(edges[1:-1], confidence, side=&#x27;left&#x27;)</code>, which equals the number of interior edges strictly below the confidence.</p>
-<h3>Per-bin statistics and ECE</h3>
-<pre><code>count_m = |B_m|
+<p>Split <code>[0, 1]</code> into <code>M = n_bins</code> equal-width bins with edges <code>np.linspace(0, 1, M + 1)</code>. Bin <code>m</code> is the half-open interval <code>(m/M, (m+1)/M]</code> (bin 0 also includes <code>0.0</code>). Then</p>
+<pre><code class="language-text">count_m = |B_m|
 acc_m   = mean(correct_i     for i in B_m)     (0 for an empty bin)
 conf_m  = mean(confidence_i  for i in B_m)     (0 for an empty bin)
-
-ECE = sum_m (count_m / n) * |acc_m - conf_m|
+ECE     = sum_m (count_m / n) * |acc_m - conf_m|
 </code></pre>
-<p>ECE is 0 for a perfectly calibrated model and at most 1.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>probs</code>: predicted probabilities, shape <code>(n, C)</code>, rows sum to 1</li>
+<li><code>labels</code>: true class indices, shape <code>(n,)</code></li>
+<li><code>n_bins</code>: number of equal-width bins <code>M</code> (<code>&gt;= 1</code>)</li>
+</ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;ece&#x27;</code>: float</li>
-<li><code>&#x27;bin_acc&#x27;</code>: array of shape <code>(M,)</code>, accuracy per bin</li>
-<li><code>&#x27;bin_conf&#x27;</code>: array of shape <code>(M,)</code>, mean confidence per bin</li>
-<li><code>&#x27;bin_count&#x27;</code>: int array of shape <code>(M,)</code>, number of samples per bin</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: probs = [[0.9, 0.1], [0.8, 0.2], [0.4, 0.6], [0.3, 0.7]], labels = [0, 1, 1, 0], n_bins = 2
-Output: bin_count [0, 4], bin_conf [0, 0.75], bin_acc [0, 0.5], ece 0.25</pre><p>All confidences (0.9, 0.8, 0.6, 0.7) fall in (0.5, 1]; mean confidence 0.75 but only 2 of 4 are correct.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>&#x27;ece&#x27;</code>: Python float in <code>[0, 1]</code></li>
+<li><code>&#x27;bin_acc&#x27;</code>: float array of shape <code>(M,)</code>: accuracy per bin</li>
+<li><code>&#x27;bin_conf&#x27;</code>: float array of shape <code>(M,)</code>: mean confidence per bin</li>
+<li><code>&#x27;bin_count&#x27;</code>: int array of shape <code>(M,)</code>: number of samples per bin</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><strong>Edges go to the bin below</strong>: with <code>M = 4</code>, a confidence of exactly 0.5 is in bin 1 = <code>(0.25, 0.5]</code> and 1.0 is in bin 3. In NumPy the bin index is <code>np.searchsorted(edges[1:-1], confidence, side=&#x27;left&#x27;)</code>, the number of interior edges strictly below the confidence.</li>
+<li>Empty bins report <code>acc = conf = 0</code> and contribute nothing to the ECE.</li>
+<li>ECE is 0 for a perfectly calibrated model (on the binned data).</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised (<code>np.searchsorted</code>, <code>np.bincount</code> with <code>weights</code>).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>ECE depends on the number of bins. What are the alternatives (adaptive equal-mass bins, the Brier score)?</li>
+<li>How does temperature scaling fix over-confidence without changing the model&#x27;s accuracy?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: expected_calibration_error(np.array([[0.9, 0.1], [0.8, 0.2], [0.4, 0.6], [0.3, 0.7]]), np.array([0, 1, 1, 0]), n_bins=2)
+Output: {&#x27;ece&#x27;: 0.25, &#x27;bin_acc&#x27;: [0.0, 0.5], &#x27;bin_conf&#x27;: [0.0, 0.75], &#x27;bin_count&#x27;: [0, 4]}</pre><p>All confidences (0.9, 0.8, 0.6, 0.7) fall in (0.5, 1]: mean confidence 0.75 but only 2 of 4 are correct, so ECE = 1.0 * |0.5 - 0.75| = 0.25.</p></div><div><pre class="overflow-auto">Input: expected_calibration_error(np.array([[0.75, 0.25]] * 4 + [[0.5, 0.5]] * 2), np.array([0, 0, 0, 1, 0, 1]), n_bins=4)
+Output: {&#x27;ece&#x27;: 0.0, &#x27;bin_acc&#x27;: [0.0, 0.5, 0.75, 0.0], &#x27;bin_conf&#x27;: [0.0, 0.5, 0.75, 0.0], &#x27;bin_count&#x27;: [0, 2, 4, 0]}</pre><p>Confidence 0.5 lands in bin 1 = (0.25, 0.5] (edges go to the bin below) with 1 of 2 correct; the four 0.75 predictions have 3 of 4 correct. Every bin is calibrated, so ECE = 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def expected_calibration_error(probs, labels, n_bins=10):
     &quot;&quot;&quot;

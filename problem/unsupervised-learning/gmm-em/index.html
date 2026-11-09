@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Gaussian Mixture Model (EM) - Unsupervised Learning | ML Grind</title>
 <meta name="description" content="Implement Gaussian Mixture Model (EM) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/gmm-em" data-rh="true" />
@@ -99,42 +99,65 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gaussian Mixture Model (EM) - Unsupervised Learning","description":"Implement Gaussian Mixture Model (EM) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/gmm-em","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gaussian Mixture Model (EM) - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gaussian Mixture Model (EM) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gaussian Mixture Model with Expectation-Maximization (1D)</h2>
-<p>A Gaussian mixture models the density of <code>x</code> as a weighted sum of <code>K</code> Gaussians:</p>
-<pre><code>p(x) = sum_k  pi_k * N(x | mu_k, var_k),     sum_k pi_k = 1
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gaussian Mixture Model (EM) - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gaussian Mixture Model (EM) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gaussian Mixture Model (EM)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>Two functions for a 1-D Gaussian mixture: a numerically stable <strong>E-step</strong> that computes responsibilities in log space, and the full <strong>EM loop</strong> that fits the weights, means and variances from given initial values.</p>
+<h3>Background</h3>
+<p>A Gaussian mixture models the density of <code>x</code> as a weighted sum of <code>K</code> Gaussians. It is &quot;soft k-means&quot;: instead of a hard label, each point gets a probability (<strong>responsibility</strong>) for each component. EM alternates between computing responsibilities from the current parameters (E-step) and re-estimating the parameters from the responsibilities (M-step), and the log-likelihood never decreases. scikit-learn&#x27;s <code>GaussianMixture</code> does the same with full covariance matrices in higher dimensions.</p>
+<h3>Model</h3>
+<pre><code class="language-text">p(x) = sum_k  weights[k] * N(x | means[k], variances[k]),      sum_k weights[k] = 1
+log N(x | mu, var) = -0.5 * log(2*pi*var) - (x - mu)^2 / (2*var)
 </code></pre>
-<p>EM alternates between softly assigning points to components (E-step) and re-estimating each component from its soft assignments (M-step). This problem uses <strong>1-D data</strong> (<code>x</code> has shape <code>(n,)</code>); each component has its own mean and variance. The initial parameters are passed in, so the result is deterministic.</p>
-<p>Implement two functions.</p>
-<h3>1. <code>gmm_e_step(x, means, variances, weights)</code>: responsibilities in log space</h3>
-<pre><code>log N(x | mu, var) = -0.5 * log(2*pi*var) - (x - mu)^2 / (2*var)
-log_joint[i, k]    = log(weights[k]) + log N(x_i | mu_k, var_k)        # (n, K)
-log_px[i]          = logsumexp_k log_joint[i, k]                       # log p(x_i)
-resp[i, k]         = exp(log_joint[i, k] - log_px[i])
-log_likelihood     = sum_i log_px[i]
+<h3>1. <code>gmm_e_step(x, means, variances, weights)</code></h3>
+<pre><code class="language-text">log_joint[i, k] = log(weights[k]) + log N(x[i] | means[k], variances[k])     # (n, K)
+log_px[i]       = logsumexp_k log_joint[i, k]                               # log p(x_i)
+resp[i, k]      = exp(log_joint[i, k] - log_px[i])
+log_likelihood  = sum_i log_px[i]
+logsumexp(a)    = max(a) + log(sum(exp(a - max(a))))
 </code></pre>
-<p>Working in log space matters: for a point far from every component, all the densities underflow to <code>0.0</code> and the naive <code>pdf / pdf.sum()</code> becomes <code>0/0 = nan</code>.</p>
-<p>Returns <code>(resp, log_likelihood)</code>, with <code>resp</code> of shape <code>(n, K)</code> (rows sum to 1) and <code>log_likelihood</code> a float.</p>
 <h3>2. <code>gmm_em(x, means, variances, weights, n_iters, reg_covar=1e-6)</code></h3>
 <p>Repeat <code>n_iters</code> times:</p>
 <ol>
 <li><strong>E-step</strong> at the current parameters: <code>resp, ll = gmm_e_step(...)</code>; append <code>ll</code> to the history.</li>
-<li><strong>M-step</strong>:</li>
+<li><strong>M-step</strong>, with <code>N_k = sum_i resp[i, k]</code>:</li>
 </ol>
-<pre><code>N_k        = sum_i resp[i, k]
-weights_k  = N_k / n
-means_k    = sum_i resp[i, k] * x_i / N_k
-variances_k = sum_i resp[i, k] * (x_i - means_k)^2 / N_k  +  reg_covar
+<pre><code class="language-text">weights[k]   = N_k / n
+means[k]     = sum_i resp[i, k] * x[i] / N_k
+variances[k] = sum_i resp[i, k] * (x[i] - means[k])^2 / N_k  +  reg_covar     # uses the NEW means
 </code></pre>
-<p>(<code>reg_covar</code> stops a component from collapsing onto a single point; scikit-learn&#x27;s <code>GaussianMixture</code> uses the same default.)</p>
-<p>EM never decreases the likelihood, so <code>log_likelihoods</code> is <strong>non-decreasing</strong>.</p>
-<h3>Expected Return Format</h3>
-<p><code>gmm_em</code> returns a dictionary with these keys:</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;means&#x27;</code>, <code>&#x27;variances&#x27;</code>, <code>&#x27;weights&#x27;</code>: final parameters, each of shape <code>(K,)</code></li>
-<li><code>&#x27;log_likelihoods&#x27;</code>: list of <code>n_iters</code> floats; entry <code>t</code> is the log-likelihood of the parameters <strong>before</strong> the <code>t</code>-th M-step (so entry 0 is the initial parameters)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gmm_e_step(np.array([0.0, 4.0]), means=[0, 4], variances=[1, 1], weights=[0.5, 0.5])
-Output: resp ≈ [[0.99966, 0.00034], [0.00034, 0.99966]], ll ≈ -3.2235</pre><p>Each point is almost entirely explained by the component centred on it.</p></div><div><pre class="overflow-auto">Input: gmm_em(x, means=[-1, 1], variances=[1, 1], weights=[0.5, 0.5], n_iters=20) on two clusters at -3 and 3
-Output: means ≈ [-3, 3], log_likelihoods increasing</pre><p>Starting near the middle, EM pulls each component onto one cluster.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>x</code>: 1-D float array, shape <code>(n,)</code></li>
+<li><code>means</code>, <code>variances</code>, <code>weights</code>: initial parameters, each shape <code>(K,)</code>; variances <code>&gt; 0</code>, weights sum to 1</li>
+<li><code>n_iters</code>: number of EM iterations (<code>&gt;= 1</code>); <code>reg_covar</code>: small float added to every variance</li>
+</ul>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>gmm_e_step</code> returns a tuple <code>(resp, log_likelihood)</code>: <code>resp</code> has shape <code>(n, K)</code> with rows summing to 1, and <code>log_likelihood</code> is a Python float.</li>
+<li><code>gmm_em</code> returns a dictionary with these keys:
+<ul>
+<li><code>&#x27;means&#x27;</code>, <code>&#x27;variances&#x27;</code>, <code>&#x27;weights&#x27;</code>: final parameters, each shape <code>(K,)</code></li>
+<li><code>&#x27;log_likelihoods&#x27;</code>: list of <code>n_iters</code> floats; entry <code>t</code> is the log-likelihood <strong>before</strong> the <code>t</code>-th M-step (entry 0 belongs to the initial parameters)</li>
+</ul>
+</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><strong>Underflow</strong>: for a point far from every component all densities are <code>0.0</code> in floating point, and the naive <code>pdf / pdf.sum()</code> gives <code>0/0 = nan</code>. Log space with logsumexp avoids it.</li>
+<li><code>reg_covar</code> (default <code>1e-6</code>, as in scikit-learn) stops a component from collapsing onto a single point with variance 0.</li>
+<li>The log-likelihood history is non-decreasing (up to floating-point error).</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised over points and components.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>How would you choose <code>K</code>? (BIC/AIC, held-out likelihood.)</li>
+<li>Show that k-means is the limit of EM with equal, shared variances shrinking to 0.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gmm_e_step(np.array([0.0, 4.0]), np.array([0.0, 4.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]))
+Output: (array([[0.999665, 0.000335], [0.000335, 0.999665]]), -3.223501)</pre><p>Each point is almost entirely explained by the component centred on it (values rounded to 6 decimals).</p></div><div><pre class="overflow-auto">Input: gmm_em(x, np.array([-1.0, 1.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]), 30), where x has 60 points around -3 and 40 points around 3
+Output: means ≈ [-2.9, 3.0], weights ≈ [0.6, 0.4]</pre><p>Starting near the middle, EM pulls each component onto one cluster and the weights converge to the cluster fractions.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def gmm_e_step(x, means, variances, weights):
     &quot;&quot;&quot;

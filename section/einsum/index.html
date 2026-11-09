@@ -78,63 +78,89 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Einstein Summation (Einsum) | ML Grind</title>
-<meta name="description" content="Master einsum for elegant tensor operations." data-rh="true" />
+<meta name="description" content="Write sums, matrix products and batched multi-head attention as einsum index strings." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/einsum" data-rh="true" />
 <meta property="og:title" content="Einstein Summation (Einsum) | ML Grind" data-rh="true" />
-<meta property="og:description" content="Master einsum for elegant tensor operations." data-rh="true" />
+<meta property="og:description" content="Write sums, matrix products and batched multi-head attention as einsum index strings." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/einsum" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Einstein Summation (Einsum) | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Master einsum for elegant tensor operations." data-rh="true" />
+<meta name="twitter:description" content="Write sums, matrix products and batched multi-head attention as einsum index strings." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Einstein Summation (Einsum)","description":"Master einsum for elegant tensor operations.","url":"https://mlgrind.github.io/section/einsum","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Einstein Summation (Einsum)","description":"Write sums, matrix products and batched multi-head attention as einsum index strings.","url":"https://mlgrind.github.io/section/einsum","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Einstein Summation (Einsum)</h1><p class="text-lg text-gray-600 dark:text-dark-200">Master einsum for elegant tensor operations.</p><div class="prose dark:prose-invert max-w-none"><h2>Einstein Summation (Einsum)</h2>
-<p>Einsum is a powerful notation for expressing tensor operations concisely.</p>
-<h2>Why Einsum?</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Einstein Summation (Einsum)</h1><p class="text-lg text-gray-600 dark:text-dark-200">Write sums, matrix products and batched multi-head attention as einsum index strings.</p><div class="prose dark:prose-invert max-w-none"><h2>Einstein Summation (Einsum)</h2>
+<h2>Why it matters</h2>
+<p>Einsum describes a tensor operation by <strong>naming its axes</strong>: <code>&#x27;bqd,bkd-&gt;bqk&#x27;</code> says &quot;for every batch <code>b</code>, query <code>q</code> and key <code>k</code>, sum over <code>d</code>&quot;, which is exactly attention&#x27;s score computation. Research code for transformers, mixture-of-experts layers and bilinear models uses einsum because the subscripts document the shapes. In interviews it&#x27;s a fast way to show you understand which axes are kept, broadcast or contracted, and the same strings work in <code>np.einsum</code> and <code>torch.einsum</code>.</p>
+<h2>Core ideas</h2>
+<h3>The rules</h3>
+<p>In <code>np.einsum(&#x27;&lt;inputs&gt;-&gt;&lt;output&gt;&#x27;, *operands)</code>, each operand gets one letter per axis.</p>
+<ol>
+<li>A letter that appears in the <strong>output</strong> is kept, in the order written after <code>-&gt;</code>.</li>
+<li>A letter that appears in the inputs but <strong>not</strong> in the output is summed over (contracted).</li>
+<li>A letter shared by several operands pairs those axes up; their sizes must match.</li>
+<li>A letter repeated <strong>within one operand</strong> (<code>&#x27;ii&#x27;</code>) walks its diagonal.</li>
+</ol>
+<p>Mentally, einsum is a nested loop over every distinct letter that multiplies the matching entries and accumulates them into the output slot:</p>
+<pre><code class="language-python"># C = np.einsum(&#x27;ik,kj-&gt;ij&#x27;, A, B)
+for i in range(m):
+    for j in range(n):
+        for k in range(K):             # k is missing from the output: summed
+            C[i, j] += A[i, k] * B[k, j]
+</code></pre>
+<p>The cost of a two-operand einsum is the product of the sizes of all distinct letters: <code>m * K * n</code> here.</p>
+<h3>Common patterns</h3>
+<table><thead><tr><th>Subscripts</th><th>Meaning</th><th>Equivalent</th></tr></thead><tbody><tr><td><code>&#x27;ij-&gt;&#x27;</code></td><td>sum of all entries</td><td><code>A.sum()</code></td></tr><tr><td><code>&#x27;ij-&gt;i&#x27;</code> / <code>&#x27;ij-&gt;j&#x27;</code></td><td>row sums / column sums</td><td><code>A.sum(axis=1)</code> / <code>A.sum(axis=0)</code></td></tr><tr><td><code>&#x27;ij-&gt;ji&#x27;</code></td><td>transpose</td><td><code>A.T</code></td></tr><tr><td><code>&#x27;ii-&gt;i&#x27;</code> / <code>&#x27;ii-&gt;&#x27;</code></td><td>diagonal / trace</td><td><code>np.diag(A)</code> / <code>np.trace(A)</code></td></tr><tr><td><code>&#x27;i,i-&gt;&#x27;</code></td><td>dot product</td><td><code>u @ v</code></td></tr><tr><td><code>&#x27;i,j-&gt;ij&#x27;</code></td><td>outer product</td><td><code>np.outer(u, v)</code></td></tr><tr><td><code>&#x27;ij,j-&gt;i&#x27;</code></td><td>matrix-vector</td><td><code>A @ v</code></td></tr><tr><td><code>&#x27;ik,kj-&gt;ij&#x27;</code></td><td>matrix multiply</td><td><code>A @ B</code></td></tr><tr><td><code>&#x27;ij,ij-&gt;ij&#x27;</code> / <code>&#x27;ij,ij-&gt;&#x27;</code></td><td>Hadamard product / Frobenius inner product</td><td><code>A * B</code> / <code>(A * B).sum()</code></td></tr><tr><td><code>&#x27;bij,bjk-&gt;bik&#x27;</code></td><td>batched matmul</td><td><code>A @ B</code> on 3D arrays</td></tr><tr><td><code>&#x27;bqd,bkd-&gt;bqk&#x27;</code></td><td>attention scores, <code>(batch, seq_q, d) x (batch, seq_k, d)</code></td><td><code>Q @ K.transpose(0, 2, 1)</code></td></tr><tr><td><code>&#x27;bhqk,bhkd-&gt;bhqd&#x27;</code></td><td>multi-head weighted sum of values</td><td><code>A @ V</code> on 4D arrays</td></tr></tbody></table>
+<h2>Worked example</h2>
+<pre><code class="language-python">A = np.array([[1, 2],
+              [3, 4]])
+B = np.array([[5, 6],
+              [7, 8]])
+np.einsum(&#x27;ik,kj-&gt;ij&#x27;, A, B)   # [[19, 22], [43, 50]]   C[0, 0] = 1*5 + 2*7 = 19
+np.einsum(&#x27;ii-&gt;&#x27;, A)           # 5                      1 + 4
+np.einsum(&#x27;ij,ij-&gt;&#x27;, A, A)     # 30                     1 + 4 + 9 + 16
+
+Q = np.array([[[1., 0.], [0., 1.]]])               # (batch=1, seq_q=2, d=2)
+K = np.array([[[1., 1.], [2., 0.], [0., 3.]]])     # (batch=1, seq_k=3, d=2)
+np.einsum(&#x27;bqd,bkd-&gt;bqk&#x27;, Q, K)                    # (1, 2, 3)
+# [[[1., 2., 0.],      query 0 picks feature 0 of each key
+#   [1., 0., 3.]]]     query 1 picks feature 1 of each key
+</code></pre>
+<p>Divide those scores by <code>sqrt(d) = 1.414</code> and softmax each row, and query 0&#x27;s attention weights over the three keys are <code>[0.284, 0.576, 0.140]</code>.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li>Express complex operations in one line</li>
-<li>Often faster than chained operations</li>
-<li>Essential for attention mechanisms</li>
+<li><strong>A dropped letter is summed, silently</strong>: <code>&#x27;bij,bjk-&gt;ik&#x27;</code> sums over the batch as well as <code>j</code>. Check that every axis you want to keep appears after <code>-&gt;</code>.</li>
+<li><strong>Output order matters</strong>: <code>&#x27;ij-&gt;ji&#x27;</code> transposes; <code>&#x27;bqk&#x27;</code> versus <code>&#x27;bkq&#x27;</code> gives scores of a different layout.</li>
+<li><strong>Implicit mode surprises</strong>: without <code>-&gt;</code>, the output letters are sorted alphabetically, so <code>np.einsum(&#x27;ji&#x27;, A)</code> returns <code>A.T</code>. Always write the arrow.</li>
+<li><strong>Repeated letters need equal sizes</strong>: <code>&#x27;ii-&gt;i&#x27;</code> on a <code>(2, 3)</code> array raises an error; check for squareness first.</li>
+<li><strong>Integer inputs stay integer</strong>: einsum of int arrays returns ints. Convert to float before dividing by <code>sqrt(d)</code> or taking a softmax.</li>
+<li><strong>Many operands can be slow</strong>: <code>np.einsum</code> doesn&#x27;t optimise the contraction order by default; pass <code>optimize=True</code> for three or more operands.</li>
 </ul>
-<h2>Syntax</h2>
-<pre><code class="language-python">np.einsum(&#x27;subscripts&#x27;, operands)
-</code></pre>
-<h2>Common Patterns</h2>
-<h3>Basic Operations</h3>
-<pre><code>&#x27;ij-&gt;&#x27;      Sum all elements
-&#x27;ij-&gt;i&#x27;     Sum along axis 1 (row sums)
-&#x27;ij-&gt;j&#x27;     Sum along axis 0 (column sums)
-&#x27;ij-&gt;ji&#x27;    Transpose
-&#x27;ii-&gt;i&#x27;     Extract diagonal
-&#x27;ii-&gt;&#x27;      Trace (sum of diagonal)
-</code></pre>
-<h3>Matrix Operations</h3>
-<pre><code>&#x27;ik,kj-&gt;ij&#x27;   Matrix multiplication (A @ B)
-&#x27;ij,ij-&gt;ij&#x27;   Element-wise product (A * B)
-&#x27;ij,ij-&gt;&#x27;     Frobenius inner product
-&#x27;i,j-&gt;ij&#x27;     Outer product
-&#x27;i,i-&gt;&#x27;       Dot product
-</code></pre>
-<h3>Batch Operations</h3>
-<pre><code>&#x27;bij,bjk-&gt;bik&#x27;   Batch matrix multiply
-&#x27;bqd,bkd-&gt;bqk&#x27;   Attention scores (Q @ K.T)
-&#x27;bhqk,bhkd-&gt;bhqd&#x27; Multi-head attention output
-</code></pre>
-<h2>Key Insight</h2>
-<p>Letters that appear on both sides are kept.
-Letters that disappear are summed over (contracted).</p>
-<p>Master einsum to write clean, efficient deep learning code!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/einsum/einsum-basics">Einsum Fundamentals →</a></li><li><a href="/problem/einsum/einsum-matrix-ops">Matrix Operations with Einsum →</a></li><li><a href="/problem/einsum/einsum-batch-ops">Batch Operations with Einsum →</a></li><li><a href="/problem/einsum/einsum-advanced">Advanced Einsum Patterns →</a></li><li><a href="/problem/einsum/einsum-vs-matmul">Einsum vs Traditional Operations →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview angle</h2>
+<ul>
+<li>&quot;Write attention with einsum&quot; is common: name the axes, write <code>&#x27;bqd,bkd-&gt;bqk&#x27;</code> and <code>&#x27;bqk,bkd-&gt;bqd&#x27;</code>, and state the cost, <code>O(batch * seq_q * seq_k * d)</code>.</li>
+<li>Expect to translate between einsum and <code>@</code>/<code>transpose</code>/<code>sum</code> in both directions, and to explain which letters are contracted.</li>
+<li>Follow-ups: multi-head attention without explicit transposes (<code>&#x27;bqhd,bkhd-&gt;bhqk&#x27;</code>), a bilinear form <code>x^T W y</code> as <code>&#x27;bi,ij,bj-&gt;b&#x27;</code>, and when einsum is slower than a hand-written <code>@</code>.</li>
+</ul>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Einsum Fundamentals</strong>: sums, transpose and diagonal of one matrix.</li>
+<li><strong>Matrix Operations with Einsum</strong>: matmul, matrix-vector, outer, Hadamard, Frobenius and trace.</li>
+<li><strong>Batch Operations with Einsum</strong>: batched attention scores, softmax weights and the weighted sum of values.</li>
+<li><strong>Multi-Head Attention with Einsum</strong>: split heads, attend per head and merge, without transposes.</li>
+<li><strong>Einsum vs Traditional Operations</strong>: check each einsum against its NumPy equivalent.</li>
+</ol>
+<p>The attention problems lead straight into <strong>Scaled Dot-Product Attention</strong> and <strong>Multi-Head Attention</strong> in the Transformers section.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/einsum/einsum-basics">Einsum Fundamentals →</a></li><li><a href="/problem/einsum/einsum-matrix-ops">Matrix Operations with Einsum →</a></li><li><a href="/problem/einsum/einsum-batch-ops">Batch Operations with Einsum →</a></li><li><a href="/problem/einsum/einsum-advanced">Multi-Head Attention with Einsum →</a></li><li><a href="/problem/einsum/einsum-vs-matmul">Einsum vs Traditional Operations →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

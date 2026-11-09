@@ -78,58 +78,75 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Softmax Function - Deep Learning Basics | ML Grind</title>
-<meta name="description" content="Implement Softmax Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Numerically Stable Softmax - Deep Learning Basics | ML Grind</title>
+<meta name="description" content="Implement Numerically Stable Softmax in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/deep-learning/backpropagation" data-rh="true" />
-<meta property="og:title" content="Softmax Function - Deep Learning Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Softmax Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Numerically Stable Softmax - Deep Learning Basics | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Numerically Stable Softmax in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/deep-learning/backpropagation" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Softmax Function - Deep Learning Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Softmax Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Numerically Stable Softmax - Deep Learning Basics | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Numerically Stable Softmax in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Softmax Function - Deep Learning Basics","description":"Implement Softmax Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/deep-learning/backpropagation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Numerically Stable Softmax - Deep Learning Basics","description":"Implement Numerically Stable Softmax in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/deep-learning/backpropagation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Softmax Function - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Softmax Function in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Softmax Function</h2>
-<p>Implement the softmax function, used to convert raw scores to probabilities in multi-class classification.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Numerically Stable Softmax - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Numerically Stable Softmax in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Numerically Stable Softmax</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The softmax function for a 1-D vector of scores (logits), implemented so it never overflows: <code>softmax(x)</code> returns a probability vector of the same length.</p>
+<h3>Background</h3>
+<p>Classifiers and language models output unnormalised scores. Softmax turns them into a probability distribution: every output is positive, they sum to 1, and larger scores get larger probabilities. Done naively, <code>np.exp(1000)</code> overflows to <code>inf</code> and the result is <code>nan</code>. The fix is a one-line identity that every interviewer expects you to know.</p>
 <h3>Formula</h3>
-<pre><code>softmax(x)_i = exp(x_i) / sum(exp(x_j))
+<pre><code class="language-text">softmax(x)_i = exp(x_i) / sum_j exp(x_j)
+
+Shift invariance: softmax(x - c) = softmax(x) for any constant c, because exp(-c) cancels.
+Choose c = max(x): the largest exponent becomes exp(0) = 1, so nothing overflows,
+and the denominator is at least 1, so nothing divides by zero.
 </code></pre>
-<h3>Properties</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Output sums to 1</li>
-<li>All outputs are positive</li>
-<li>Larger inputs get larger probabilities</li>
+<li><code>x</code>: 1-D NumPy array of length <code>n &gt;= 1</code> (ints or floats, possibly very large or very negative).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def softmax(x: np.ndarray) -&gt; np.ndarray:
-</code></pre>
-<p><strong>Note</strong>: For numerical stability, subtract max(x) before computing exp.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([1, 2, 3])
-Output: [0.090031, 0.244728, 0.665241]</pre><p>Higher values get higher probabilities, sum = 1</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A 1-D float array of length <code>n</code> with positive entries summing to 1.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Equal inputs give the uniform distribution <code>1/n</code>.</li>
+<li><code>softmax([100, 101, 102])</code> equals <code>softmax([1, 2, 3])</code> (shift invariance), and <code>softmax([1000, 1001, 1002])</code> must not produce <code>nan</code>.</li>
+<li>Very negative entries may get probabilities that are tiny but still positive.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; vectorised, no loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Generalise to a batch: <code>softmax(X, axis=-1)</code>, using <code>keepdims=True</code> for the max and the sum.</li>
+<li>The Jacobian is <code>diag(p) - p pᵀ</code>; combined with cross-entropy, the gradient with respect to the logits is simply <code>p - y</code> (used in MLP Forward &amp; Backward Pass).</li>
+<li>Log-softmax: <code>x - max(x) - log(sum(exp(x - max(x))))</code> is more stable than <code>log(softmax(x))</code> (used in Masked Cross-Entropy with Label Smoothing).</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: softmax(np.array([1.0, 2.0, 3.0]))
+Output: [0.09, 0.2447, 0.6652] (rounded to 4 decimals)</pre><p>exp([1, 2, 3]) = [2.718, 7.389, 20.086], divided by their sum 30.193.</p></div><div><pre class="overflow-auto">Input: softmax(np.array([1000.0, 1001.0, 1002.0]))
+Output: [0.09, 0.2447, 0.6652] (rounded to 4 decimals)</pre><p>Shifting by max(x) = 1002 gives exp([-2, -1, 0]); the naive version computes inf / inf = nan.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def softmax(x: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Compute softmax probabilities.
+    Numerically stable softmax of a 1-D vector.
 
     Args:
-        x: Input array (1D)
+        x: Scores (logits), 1-D array of length n
 
     Returns:
-        Array of same shape with softmax probabilities
+        Probabilities, 1-D float array of length n (positive, sums to 1)
     &quot;&quot;&quot;
     # Your code here
-    # Hint: subtract max for numerical stability
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

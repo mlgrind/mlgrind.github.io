@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Gradient Checkpointing - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Gradient Checkpointing in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/gradient-checkpointing" data-rh="true" />
@@ -100,47 +100,88 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gradient Checkpointing - PyTorch Basics","description":"Implement Gradient Checkpointing in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/gradient-checkpointing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gradient Checkpointing - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gradient Checkpointing in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gradient Checkpointing</h2>
-<p>Trade compute for memory: only save activations at checkpoint layers, recompute the rest during backward pass.</p>
-<h3>Memory: O(sqrt(n)) instead of O(n)</h3>
-<h3>Task</h3>
+<p><strong>What you&#x27;ll build:</strong> the two halves of activation checkpointing: a forward pass that keeps only selected activations, and a recompute function that rebuilds any activation from the nearest saved one.</p>
+<h3>Background</h3>
+<p>Backpropagation needs the activations of the forward pass, so memory grows linearly with depth: <code>O(n)</code> for <code>n</code> layers. Checkpointing stores only some of them and recomputes the rest during the backward pass. With <code>sqrt(n)</code> evenly spaced checkpoints, memory falls to <code>O(sqrt(n))</code> at the cost of roughly one extra forward pass. It is how large transformers fit long sequences on a GPU (<code>torch.utils.checkpoint</code>).</p>
+<h3>Conventions</h3>
+<ul>
+<li><code>layers</code> is a list of callables; activation <code>i</code> is the <strong>output</strong> of <code>layers[i]</code>.</li>
+<li>The input <code>x</code> is always saved, under the key <code>-1</code>.</li>
+<li><code>checkpoint_indices</code> lists which layer outputs to keep.</li>
+</ul>
+<h3>Algorithm</h3>
+<p><strong><code>checkpoint_forward(layers, x, checkpoint_indices)</code></strong></p>
 <ol>
-<li>Forward pass saving only checkpoint activations</li>
-<li>Recompute any activation from nearest prior checkpoint</li>
-</ol></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: 4 layers, checkpoints at [1, 3]
-Output: 3 activations saved (input + 2 checkpoints)</pre><p>Layers 0 and 2 recomputed when needed</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>saved = {-1: copy of x}</code>.</li>
+<li>Run the layers in order. After layer <code>i</code>, if <code>i</code> is in <code>checkpoint_indices</code>, store a copy of its output under key <code>i</code>.</li>
+<li>Return <code>(final_output, saved)</code>.</li>
+</ol>
+<p><strong><code>checkpoint_recompute(layers, saved_activations, checkpoint_indices, layer_idx)</code></strong></p>
+<ol>
+<li>Find the nearest saved key <strong>strictly below</strong> <code>layer_idx</code>: <code>start = max(k for k in saved if k &lt; layer_idx)</code> (<code>-1</code> always qualifies).</li>
+<li>Starting from <code>saved[start]</code>, run <code>layers[start + 1], ..., layers[layer_idx]</code>.</li>
+<li>Return the result, the output of layer <code>layer_idx</code>.</li>
+</ol>
+<h3>Inputs</h3>
+<ul>
+<li><code>layers</code>: list of functions mapping an array to an array.</li>
+<li><code>x</code>: input array; <code>checkpoint_indices</code>: list of layer indices (may be empty).</li>
+<li><code>layer_idx</code>: index of the activation to rebuild, <code>0 &lt;= layer_idx &lt; len(layers)</code>.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>checkpoint_forward</code> returns a tuple <code>(output, saved)</code>: the final activation and a dict <code>{index: activation}</code> containing exactly <code>-1</code> and the checkpoint indices.</li>
+<li><code>checkpoint_recompute</code> returns the activation of layer <code>layer_idx</code>.</li>
+</ul>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Store <strong>copies</strong>, so later in-place changes can&#x27;t corrupt the checkpoints.</li>
+<li>Recompute runs only the layers after the nearest checkpoint, never the whole network.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li><strong>PyTorch track:</strong> <code>torch.utils.checkpoint</code> isn&#x27;t available in the browser; run the forward under <code>torch.no_grad()</code> (no graph, so no stored intermediates) and recompute with autograd enabled.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why is <code>sqrt(n)</code> the best number of evenly spaced checkpoints?</li>
+<li>Which layers are cheapest to recompute and most expensive to store in a transformer block?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: layers = [x*2, x+1, x*3, x-1], checkpoint_forward(layers, np.array([1.0]), [1, 3])
+Output: (array([8.]), {-1: array([1.]), 1: array([3.]), 3: array([8.])})</pre><p>Activations are 2, 3, 9, 8; only the input and the outputs of layers 1 and 3 are kept.</p></div><div><pre class="overflow-auto">Input: checkpoint_recompute(layers, saved, [1, 3], 2)
+Output: array([9.])</pre><p>The nearest saved activation below 2 is index 1 (value 3); only layer 2 (x*3) is re-run.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def checkpoint_forward(layers, x, checkpoint_indices):
     &quot;&quot;&quot;
-    Forward pass with selective activation saving.
+    Forward pass that saves only the input and the checkpoint activations.
 
     Args:
         layers: List of layer functions
         x: Input array
-        checkpoint_indices: Layer indices to save
+        checkpoint_indices: Indices of the layers whose outputs to save
 
     Returns:
-        output: Final output
-        saved: Dict mapping index -&gt; activation (-1 for input)
+        (output, saved): the final output and a dict index -&gt; activation
+        (key -1 holds the input)
     &quot;&quot;&quot;
     # Your code here
     pass
 
 def checkpoint_recompute(layers, saved_activations, checkpoint_indices, layer_idx):
     &quot;&quot;&quot;
-    Recompute activation at layer_idx from nearest prior checkpoint.
+    Recompute the output of layer layer_idx from the nearest saved activation below it.
 
     Args:
         layers: List of layer functions
-        saved_activations: Dict of saved activations
-        checkpoint_indices: Saved indices
-        layer_idx: Target layer
+        saved_activations: Dict index -&gt; activation from checkpoint_forward
+        checkpoint_indices: Indices that were saved
+        layer_idx: Layer whose output to rebuild
 
     Returns:
-        Activation at layer_idx
+        Activation (output) of layer layer_idx
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

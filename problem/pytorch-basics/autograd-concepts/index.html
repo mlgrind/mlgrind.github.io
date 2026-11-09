@@ -78,57 +78,74 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Autograd Concepts (Manual) - PyTorch Basics | ML Grind</title>
-<meta name="description" content="Implement Autograd Concepts (Manual) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Autograd Basics - PyTorch Basics | ML Grind</title>
+<meta name="description" content="Implement Autograd Basics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts" data-rh="true" />
-<meta property="og:title" content="Autograd Concepts (Manual) - PyTorch Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Autograd Concepts (Manual) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Autograd Basics - PyTorch Basics | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Autograd Basics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Autograd Concepts (Manual) - PyTorch Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Autograd Concepts (Manual) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Autograd Basics - PyTorch Basics | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Autograd Basics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Autograd Concepts (Manual) - PyTorch Basics","description":"Implement Autograd Concepts (Manual) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Autograd Basics - PyTorch Basics","description":"Implement Autograd Basics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/autograd-concepts","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Autograd Concepts (Manual) - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Autograd Concepts (Manual) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Autograd Concepts</h2>
-<p>Understand automatic differentiation by implementing it manually.</p>
-<h3>PyTorch Autograd</h3>
-<pre><code class="language-python">x = torch.tensor([2.0], requires_grad=True)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Autograd Basics - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Autograd Basics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Autograd Basics</h2>
+<p><strong>What you&#x27;ll build:</strong> two gradient computations: the derivative of a scalar polynomial, and the backward pass of a linear layer <code>Y = X @ W + b</code>.</p>
+<h3>Background</h3>
+<p>Autograd records every operation of the forward pass in a graph, then walks it backwards applying the chain rule. In PyTorch you mark inputs with <code>requires_grad=True</code>, call <code>.backward()</code> and read <code>.grad</code>:</p>
+<pre><code class="language-python">x = torch.tensor(2.0, requires_grad=True)
 y = x ** 2 + 3 * x + 1
 y.backward()
-print(x.grad)  # dy/dx = 2x + 3 = 7
+x.grad  # tensor(7.) because dy/dx = 2x + 3
 </code></pre>
-<h3>Manual Gradient Computation</h3>
-<p>For y = x² + 3x + 1:</p>
+<p>The <strong>PyTorch track</strong> uses autograd exactly like this. The <strong>NumPy track</strong> writes the same gradients by hand, which is what <code>backward()</code> computes under the hood and a favourite interview question.</p>
+<h3>Formulas</h3>
+<p><strong>1. Scalar function.</strong> For <code>y = x² + 3x + 1</code>: <code>dy/dx = 2x + 3</code>.</p>
+<p><strong>2. Linear layer.</strong> Forward: <code>Y = X @ W + b</code> with</p>
+<table><thead><tr><th>Symbol</th><th>Meaning</th><th>Shape</th></tr></thead><tbody><tr><td><code>X</code></td><td>input batch</td><td><code>(batch, in_features)</code></td></tr><tr><td><code>W</code></td><td>weights</td><td><code>(in_features, out_features)</code></td></tr><tr><td><code>b</code></td><td>bias, broadcast over the batch</td><td><code>(out_features,)</code></td></tr><tr><td><code>G</code> = <code>grad_output</code></td><td>upstream gradient dL/dY</td><td><code>(batch, out_features)</code></td></tr></tbody></table>
+<p>Backward, given <code>G</code>:</p>
+<pre><code class="language-text">dL/dW = X.T @ G          shape (in_features, out_features)
+dL/db = G.sum(axis=0)    shape (out_features,)   (b was broadcast over the batch)
+dL/dX = G @ W.T          shape (batch, in_features)
+</code></pre>
+<p>A quick check that never fails: every gradient has the same shape as the tensor it belongs to, and there is only one way to multiply the available matrices to get that shape.</p>
+<h3>Expected Return Format</h3>
 <ul>
-<li>dy/dx = 2x + 3</li>
+<li><code>compute_gradients(x)</code> returns <code>{&#x27;y&#x27;: float, &#x27;grad&#x27;: float}</code>: the forward value and dy/dx.</li>
+<li><code>linear_layer_gradients(X, W, b, grad_output)</code> returns a dict with <code>&#x27;grad_W&#x27;</code>, <code>&#x27;grad_b&#x27;</code> and <code>&#x27;grad_X&#x27;</code>, shaped like <code>W</code>, <code>b</code> and <code>X</code>.</li>
 </ul>
-<h3>Task</h3>
-<p>Implement two functions:</p>
-<ol>
-<li><code>compute_gradients(x)</code>: forward pass and derivative of y = x² + 3x + 1. Return <code>{&#x27;y&#x27;: ..., &#x27;grad&#x27;: ...}</code></li>
-<li><code>linear_layer_gradients(X, W, b, grad_output)</code>: backward pass of Y = X @ W + b. Return <code>{&#x27;grad_W&#x27;: X.T @ grad_output, &#x27;grad_b&#x27;: grad_output summed over the batch, &#x27;grad_X&#x27;: grad_output @ W.T}</code></li>
-</ol></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: compute_gradients(x=2.0)
-Output: {&#x27;y&#x27;: 11.0, &#x27;grad&#x27;: 7.0}</pre><p>Forward and backward pass</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Constraints</h3>
+<ul>
+<li>NumPy track: compute the gradients analytically with the formulas above.</li>
+<li>PyTorch track: let autograd do it (<code>requires_grad=True</code>, then <code>.backward()</code>; for the non-scalar <code>Y</code>, call <code>Y.backward(grad_output)</code>).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does <code>Y.backward()</code> without an argument fail when <code>Y</code> is not a scalar?</li>
+<li>What is <code>dL/dX</code> used for, if <code>X</code> is the input data and is never updated?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: compute_gradients(2.0)
+Output: {&#x27;y&#x27;: 11.0, &#x27;grad&#x27;: 7.0}</pre><p>y = 4 + 6 + 1 = 11 and dy/dx = 2*2 + 3 = 7.</p></div><div><pre class="overflow-auto">Input: X = [[1, 2], [3, 4]], W = [[1, 0, -1], [2, 1, 0]], b = [0, 0, 0], grad_output = ones((2, 3))
+Output: {&#x27;grad_W&#x27;: [[4, 4, 4], [6, 6, 6]], &#x27;grad_b&#x27;: [2, 2, 2], &#x27;grad_X&#x27;: [[0, 3], [0, 3]]}</pre><p>X.T @ G sums the columns of X; G summed over the batch is 2 per output; G @ W.T sums each row of W.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def compute_gradients(x: float) -&gt; dict:
     &quot;&quot;&quot;
-    Compute forward and backward pass for y = x^2 + 3x + 1.
+    Compute the forward value and derivative of y = x^2 + 3x + 1.
 
     Args:
         x: Input value
 
     Returns:
-        Dictionary with &#x27;y&#x27; (forward result) and &#x27;grad&#x27; (dy/dx)
+        dict with &#x27;y&#x27; (forward result) and &#x27;grad&#x27; (dy/dx), both floats
     &quot;&quot;&quot;
     # Your code here
     pass
@@ -137,20 +154,21 @@ def compute_gradients(x: float) -&gt; dict:
 def linear_layer_gradients(X: np.ndarray, W: np.ndarray, b: np.ndarray,
                            grad_output: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Compute gradients for a linear layer: Y = X @ W + b
+    Compute the gradients of a linear layer Y = X @ W + b.
 
     Args:
         X: Input (batch, in_features)
         W: Weights (in_features, out_features)
         b: Bias (out_features,)
-        grad_output: Gradient from next layer (batch, out_features)
+        grad_output: Upstream gradient dL/dY (batch, out_features)
 
     Returns:
-        Dictionary with gradients for X, W, and b
+        dict with &#x27;grad_W&#x27; (in_features, out_features), &#x27;grad_b&#x27;
+        (out_features,) and &#x27;grad_X&#x27; (batch, in_features)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 2 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

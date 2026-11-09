@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency | ML Grind</title>
 <meta name="description" content="Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/post-training/int8-quantization" data-rh="true" />
@@ -99,54 +99,100 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Int8 Weight Quantization (absmax) - Post-training & Efficiency","description":"Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/post-training/int8-quantization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Symmetric Int8 Quantization</h2>
-<p>Storing weights in int8 instead of float32 cuts memory by 4×. <strong>Absmax</strong> (symmetric) quantization maps the largest magnitude to 127:</p>
-<pre><code>scale = max|w| / 127
-w_q   = clip(round(w / scale), -127, 127)     (stored as int8)
-w_hat = w_q * scale                            (dequantized)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Int8 Weight Quantization (absmax) - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Int8 Weight Quantization (absmax) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Int8 Weight Quantization (absmax)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>Symmetric (absmax) int8 quantization of a weight matrix, per output channel and per tensor; dequantization; an int8 matmul that rescales an int32 accumulator; and a report comparing the two schemes&#x27; errors.</p>
+<h3>Background</h3>
+<p>Storing weights as int8 instead of float32 cuts memory by 4×, and int8 matmuls are fast on modern hardware. Absmax quantization maps the largest magnitude to ±127 and rounds everything else to the nearest step. The catch is outliers: one large weight sets a large step for everything sharing its scale. Giving each output row its own scale (<strong>per-channel</strong>, the &quot;vector-wise&quot; quantization of LLM.int8()) contains that damage.</p>
+<h3>Formula</h3>
+<p>For a group of weights w that share one scale:</p>
+<pre><code class="language-text">scale = max(max|w|, 1e-8) / 127
+w_q   = clip(round(w / scale), -127, 127)      stored as int8
+w_hat = w_q · scale                            dequantized
 </code></pre>
-<p>Rounding is round-half-to-even (<code>np.round</code> / <code>torch.round</code>). The rounding error per weight is at most scale / 2.</p>
-<h3>Per-tensor vs per-channel</h3>
+<p>Rounding is round-half-to-even (<code>np.round</code> / <code>torch.round</code>), so the per-weight error is at most scale / 2.</p>
 <ul>
-<li><strong>Per-tensor</strong>: one scale for the whole matrix. One large outlier makes the scale large, and every small weight loses precision.</li>
-<li><strong>Per-channel</strong>: one scale per <strong>output row</strong> of W (shape (d_out, d_in)), so each row uses its own range. This is what LLM.int8() calls vector-wise quantization.</li>
+<li><strong>Per-tensor</strong>: one scale for the whole matrix.</li>
+<li><strong>Per-channel</strong>: one scale per <strong>row</strong> of W, which has shape (d_out, d_in).</li>
 </ul>
-<p>To avoid dividing by zero, use <code>scale = max(absmax, 1e-8) / 127</code>.</p>
-<h3>Int8 matmul</h3>
-<p>To compute y = x Wᵀ in int8, also quantize the activations <strong>per row</strong> of x (per token), accumulate the integer products in int32 and rescale with both scales:</p>
-<pre><code>x_q, s_x = absmax-quantize each row of x          (n, d_in), (n,)
-acc      = x_q @ W_qᵀ   (int32 accumulation)       (n, d_out)
-y        ≈ acc * s_x[:, None] * s_w[None, :]
-</code></pre>
-<h3>What to implement</h3>
+<p><strong>Int8 matmul</strong> for y = x · Wᵀ:</p>
+<ol>
+<li>Quantize the activations <strong>per row</strong> of x (one scale per token): x_q of shape (n, d_in) and s_x of shape (n,).</li>
+<li>Accumulate the integer products in int32: acc = x_q · W_qᵀ, shape (n, d_out).</li>
+<li>Rescale with both scales: y ≈ acc · s_x[:, None] · s_w[None, :].</li>
+</ol>
+<h3>Inputs</h3>
 <ul>
-<li><code>quantize_per_channel(W)</code> returns <code>(W_q, scales)</code>: W_q is an <strong>int8</strong> array (d_out, d_in), scales is (d_out,)</li>
-<li><code>quantize_per_tensor(W)</code> returns <code>(W_q, scale)</code>: int8 array and a Python float</li>
-<li><code>dequantize(W_q, scales)</code> returns floats; <code>scales</code> is either a (d_out,) array (one per row) or a scalar</li>
-<li><code>int8_matmul(x, W_q, w_scales)</code> returns the (n, d_out) float approximation of x Wᵀ</li>
+<li><code>W</code>: (d_out, d_in) float array</li>
+<li><code>x</code>: (n, d_in) float array</li>
+<li><code>W_q</code>: (d_out, d_in) int8 array; <code>w_scales</code> / <code>scales</code>: (d_out,) float array (or a Python float in <code>dequantize</code>)</li>
+</ul>
+<h3>Expected return format</h3>
+<ul>
+<li><code>quantize_per_channel(W)</code> returns a tuple <code>(W_q, scales)</code>: an <strong>int8</strong> array of shape (d_out, d_in) and a float array of shape (d_out,)</li>
+<li><code>quantize_per_tensor(W)</code> returns <code>(W_q, scale)</code>: an int8 array and a Python float</li>
+<li><code>dequantize(W_q, scales)</code> returns a float array of W_q&#x27;s shape; <code>scales</code> is a (d_out,) array (one per row) or a scalar</li>
+<li><code>int8_matmul(x, W_q, w_scales)</code> returns an (n, d_out) float array approximating x · Wᵀ</li>
 <li><code>quantization_report(W)</code> returns a dictionary:
 <ul>
-<li><code>&#x27;per_channel_error&#x27;</code>: max |W - dequantize(per-channel)| (Python float)</li>
-<li><code>&#x27;per_tensor_error&#x27;</code>: max |W - dequantize(per-tensor)| (Python float)</li>
+<li><code>&#x27;per_channel_error&#x27;</code>: max |W - dequantize(*quantize_per_channel(W))| as a Python float</li>
+<li><code>&#x27;per_tensor_error&#x27;</code>: max |W - dequantize(*quantize_per_tensor(W))| as a Python float</li>
 </ul>
 </li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: W = [[0.7, -1.2, 0.3], [2.0, 0.1, -0.5]]
-Output: W_q = [[74, -127, 32], [127, 6, -32]], scales = [1.2/127, 2.0/127] = [0.009449, 0.015748]</pre><p>Each row is scaled so that its largest magnitude maps to ±127</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>An all-zero row must not divide by zero: the 1e-8 floor on the absmax keeps it at 0.</li>
+<li>The symmetric range is [-127, 127]; -128 is never used.</li>
+<li>Exact halves round to even, e.g. 63.5 becomes 64 and 62.5 becomes 62.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorized. Cast to int32 before the integer matmul: int8 products overflow int8 immediately.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why do LLM activations need special care (outlier features), and how does LLM.int8() handle them with mixed precision?</li>
+<li>How do zero-point (asymmetric) quantization and 4-bit group-wise quantization (e.g. block size 64) change the error?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: quantize_per_channel(np.array([[0.7, -1.2, 0.3], [2.0, 0.1, -0.5]]))
+Output: (array([[74, -127, 32], [127, 6, -32]], dtype=int8), array([0.009449, 0.015748]))</pre><p>Each row&#x27;s largest magnitude maps to ±127: scales are 1.2/127 and 2.0/127, and 0.7/0.009449 = 74.08 rounds to 74</p></div><div><pre class="overflow-auto">Input: quantization_report(np.array([[0.01, -0.02, 0.013], [5.0, -3.0, 1.7]]))
+Output: {&#x27;per_channel_error&#x27;: 0.007874, &#x27;per_tensor_error&#x27;: 0.01937}</pre><p>With one scale (5/127 = 0.039) the small first row quantizes to [0, -1, 0] and is nearly erased; per-row scales keep it</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def quantize_per_channel(W):
-    &quot;&quot;&quot;Returns (W_q int8 (d_out, d_in), scales (d_out,)) with one scale per row.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Absmax-quantize each row of W with its own scale.
+
+    Args:
+        W: (d_out, d_in) float weights
+
+    Returns:
+        (W_q, scales): W_q int8 (d_out, d_in), scales float (d_out,)
+        with scales = max(row absmax, 1e-8) / 127
+    &quot;&quot;&quot;
     # Your code here
     pass
 
 
 def quantize_per_tensor(W):
-    &quot;&quot;&quot;Returns (W_q int8, scale float) with one scale for the whole matrix.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Absmax-quantize all of W with one scale.
+
+    Returns:
+        (W_q, scale): W_q int8 with W&#x27;s shape, scale a Python float
+    &quot;&quot;&quot;
     # Your code here
     pass
 
 
 def dequantize(W_q, scales):
-    &quot;&quot;&quot;W_q * scale; scales is (d_out,) (per row) or a scalar.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Map int8 values back to floats.
+
+    Args:
+        W_q: (d_out, d_in) int8 array
+        scales: (d_out,) per-row scales, or a single scalar
+
+    Returns:
+        (d_out, d_in) float array W_q * scale
+    &quot;&quot;&quot;
     # Your code here
     pass
 
@@ -168,10 +214,10 @@ def int8_matmul(x, W_q, w_scales):
 
 
 def quantization_report(W):
-    &quot;&quot;&quot;Returns {&#x27;per_channel_error&#x27;: float, &#x27;per_tensor_error&#x27;: float}.&quot;&quot;&quot;
+    &quot;&quot;&quot;Returns {&#x27;per_channel_error&#x27;: float, &#x27;per_tensor_error&#x27;: float} (max abs errors).&quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

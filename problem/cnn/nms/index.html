@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Non-Maximum Suppression (NMS) - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement Non-Maximum Suppression (NMS) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/nms" data-rh="true" />
@@ -100,45 +100,59 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Non-Maximum Suppression (NMS) - CNNs & Computer Vision","description":"Implement Non-Maximum Suppression (NMS) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/nms","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Non-Maximum Suppression (NMS) - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Non-Maximum Suppression (NMS) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Non-Maximum Suppression (NMS)</h2>
-<p>Implement Non-Maximum Suppression to filter redundant object detections.</p>
-<h3>Why NMS?</h3>
-<p>Object detectors often produce <strong>multiple overlapping boxes</strong> for the same object. NMS keeps only the best detection per object.</p>
+<h3>What you&#x27;ll build</h3>
+<p>Greedy Non-Maximum Suppression: from a set of scored boxes, keep the best box for each object and drop the overlapping duplicates.</p>
+<h3>Background</h3>
+<p>Detectors predict a box at every anchor or grid cell, so one object usually gets many near-identical boxes. NMS is the post-processing step (in Faster R-CNN, SSD, RetinaNet and YOLO up to v8) that keeps the highest-scoring box and removes boxes that overlap it too much.</p>
 <h3>Algorithm</h3>
 <ol>
-<li>Sort boxes by confidence score (descending)</li>
-<li>Pick the box with the highest score, add to results</li>
-<li>Remove all remaining boxes with IoU &gt; threshold against the picked box</li>
-<li>Repeat until no boxes remain</li>
+<li>Sort the box indices by score, highest first.</li>
+<li>Take the first remaining index <code>i</code> and append it to <code>keep</code>.</li>
+<li>Remove every remaining box whose IoU with box <code>i</code> is <strong>greater than</strong> <code>iou_threshold</code>.</li>
+<li>Repeat steps 2 and 3 until no boxes remain, then return <code>keep</code>.</li>
 </ol>
-<h3>Parameters</h3>
+<p>IoU uses the <code>xyxy</code> convention of the <strong>IoU</strong> problem: <code>intersection / (area_a + area_b - intersection)</code>, with the intersection width and height clamped at 0.</p>
+<h3>Inputs</h3>
 <ul>
-<li><strong>boxes</strong>: List of <code>[x1, y1, x2, y2]</code> bounding boxes</li>
-<li><strong>scores</strong>: Confidence score for each box</li>
-<li><strong>iou_threshold</strong>: Boxes with IoU above this are suppressed (default: 0.5)</li>
+<li><code>boxes</code>: array or list of shape <code>(N, 4)</code>, each row <code>[x1, y1, x2, y2]</code> (top-left, bottom-right).</li>
+<li><code>scores</code>: array or list of shape <code>(N,)</code>, one confidence per box.</li>
+<li><code>iou_threshold</code>: float in <code>[0, 1]</code>, default <code>0.5</code>.</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def nms(boxes, scores, iou_threshold=0.5):
-    # boxes: list of [x1, y1, x2, y2]
-    # scores: list of confidence scores
-    # Returns: list of kept indices (sorted by decreasing score)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: boxes=[[0,0,4,4],[1,1,4,4],[6,6,8,8]], scores=[0.9,0.75,0.8], threshold=0.5
-Output: [0, 2]</pre><p>Box 1 (score 0.75) suppressed by box 0 (score 0.9) due to IoU=0.56 &gt; 0.5. Box 2 has no overlap.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A Python <code>list</code> of <code>int</code> indices into the original <code>boxes</code>, in the order they were kept (decreasing score).</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>A box with IoU <strong>exactly equal</strong> to the threshold is <strong>kept</strong>; only <code>IoU &gt; iou_threshold</code> suppresses.</li>
+<li>Boxes are compared with the box just kept, not only with the overall top box.</li>
+<li>Empty input returns <code>[]</code>.</li>
+<li>Scores are distinct in the tests; with ties, a stable sort keeps the lower index first.</li>
+<li>This is class-agnostic NMS: all boxes compete with each other.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy or plain Python; no <code>torchvision.ops.nms</code>. Vectorising the IoU of the kept box against all remaining boxes is a nice touch.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>What is the worst-case time complexity, and how do you make NMS class-aware with one call (the coordinate-offset trick)?</li>
+<li>How does Soft-NMS differ (decay the scores instead of deleting boxes), and when does it help?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: boxes = [[0, 0, 4, 4], [1, 1, 4, 4], [6, 6, 8, 8]], scores = [0.9, 0.75, 0.8], iou_threshold = 0.5
+Output: [0, 2]</pre><p>Keep box 0 (0.9). Box 1 overlaps it with IoU 9/16 = 0.5625 &gt; 0.5, so it is removed; box 2 does not overlap and is kept.</p></div><div><pre class="overflow-auto">Input: boxes = [[0, 0, 1, 1], [3, 3, 4, 4], [6, 6, 7, 7]], scores = [0.5, 0.9, 0.7]
+Output: [1, 2, 0]</pre><p>Nothing overlaps, so every box is kept, in decreasing score order.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def nms(boxes, scores, iou_threshold=0.5):
     &quot;&quot;&quot;
-    Apply Non-Maximum Suppression.
+    Greedy Non-Maximum Suppression (class-agnostic).
 
     Args:
-        boxes: List of [x1, y1, x2, y2] bounding boxes
-        scores: List of confidence scores for each box
-        iou_threshold: IoU threshold for suppression (default: 0.5)
+        boxes: (N, 4) boxes in xyxy format [x1, y1, x2, y2]
+        scores: (N,) confidence score per box
+        iou_threshold: suppress boxes with IoU &gt; iou_threshold (default 0.5)
 
     Returns:
-        List of indices of kept boxes, sorted by decreasing score
+        List of kept indices (ints), in decreasing score order
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

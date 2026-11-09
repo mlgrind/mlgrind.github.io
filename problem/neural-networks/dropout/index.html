@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Dropout - Neural Networks | ML Grind</title>
 <meta name="description" content="Implement Dropout in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/dropout" data-rh="true" />
@@ -99,36 +99,64 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Dropout - Neural Networks","description":"Implement Dropout in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/dropout","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dropout - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dropout in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dropout Regularization</h2>
-<p>Implement dropout to prevent overfitting.</p>
-<h3>Training Mode</h3>
-<pre><code>1. Generate mask: mask = (rand &lt; keep_prob) / keep_prob
-2. Apply mask: out = x * mask
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dropout - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dropout in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dropout (inverted)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The forward pass of <strong>inverted dropout</strong>: in training, zero each activation independently with probability <code>1 - keep_prob</code> and scale the survivors by <code>1 / keep_prob</code>; at inference, return the input unchanged. Also return the mask, which the backward pass needs.</p>
+<h3>Background</h3>
+<p>Dropout (Srivastava et al., 2014) is a regulariser: randomly removing units prevents them from co-adapting, a bit like training an ensemble of thinned networks that share weights. The &quot;inverted&quot; variant scales during training so that the expected value of each activation is unchanged, which means inference needs no rescaling at all. This is what <code>nn.Dropout</code> does.</p>
+<h3>Algorithm</h3>
+<pre><code class="language-text">training:
+    mask = (rand(X.shape) &lt; keep_prob) / keep_prob     # entries are 0 or 1/keep_prob
+    out  = X * mask
+    return out, mask
+inference:
+    return X, None
 </code></pre>
-<h3>Key Points</h3>
+<p><code>E[out] = keep_prob * (X / keep_prob) + (1 - keep_prob) * 0 = X</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li>Randomly &quot;drop&quot; neurons with probability (1 - keep_prob)</li>
-<li>Scale by 1/keep_prob to maintain expected value</li>
-<li>Disabled during inference (return input unchanged)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[1, 2, 3, 4]], keep_prob=0.5
-Output: Some values zeroed, others scaled by 2</pre><p>Half neurons dropped, rest doubled</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>X</code>: array of any shape</li>
+<li><code>keep_prob</code>: probability of <strong>keeping</strong> a unit, in <code>(0, 1]</code> (note: <code>nn.Dropout(p)</code> takes the drop probability <code>p = 1 - keep_prob</code>)</li>
+<li><code>training</code>: <code>True</code> for training mode, <code>False</code> for inference</li>
+</ul>
+<h3>Expected return format</h3>
+<p>Return the tuple <code>(out, mask)</code>:</p>
+<ul>
+<li>training: <code>out</code> has the shape of <code>X</code> and equals <code>X * mask</code>; <code>mask</code> has the shape of <code>X</code> with entries <code>0</code> or <code>1 / keep_prob</code></li>
+<li>inference: <code>(X, None)</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Draw the mask with <code>np.random.rand</code> (uniform in <code>[0, 1)</code>) and keep where <code>rand &lt; keep_prob</code>. The tests seed NumPy, check the structure of the mask and statistics over many units, not one specific mask.</li>
+<li><code>keep_prob = 1.0</code> keeps everything: <code>out</code> equals <code>X</code>.</li>
+<li>Don&#x27;t modify <code>X</code> in place.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>The backward pass is <code>dX = dout * mask</code>. Why is storing the scaled mask convenient?</li>
+<li>Why is dropout rarely used together with BatchNorm in CNNs, and why do many LLMs train with dropout 0?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: dropout_forward(np.array([[1, 2, 3, 4]]), keep_prob=0.5, training=False)
+Output: (array([[1, 2, 3, 4]]), None)</pre><p>At inference dropout is the identity, and there is no mask.</p></div><div><pre class="overflow-auto">Input: dropout_forward(np.array([[1.0, 2.0, 3.0, 4.0]]), keep_prob=0.5, training=True)
+Output: e.g. (array([[2., 0., 6., 0.]]), array([[2., 0., 2., 0.]]))</pre><p>Each unit is kept with probability 0.5; kept units are scaled by 1/0.5 = 2. The exact mask depends on the random draw.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def dropout_forward(X, keep_prob=0.5, training=True):
     &quot;&quot;&quot;
-    Apply dropout to input.
+    Inverted dropout forward pass.
 
     Args:
-        X: Input array
-        keep_prob: Probability of keeping a neuron
-        training: Whether in training mode
+        X: Input array (any shape)
+        keep_prob: Probability of keeping each unit, in (0, 1]
+        training: True for training mode, False for inference
 
     Returns:
-        out: Output after dropout
-        mask: Dropout mask (for backward pass)
+        out: X * mask in training; X unchanged in inference
+        mask: Array like X with entries 0 or 1/keep_prob in training; None in inference
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,79 +78,86 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Unsupervised Learning | ML Grind</title>
-<meta name="description" content="Implement clustering and dimensionality reduction algorithms." data-rh="true" />
+<meta name="description" content="Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/unsupervised-learning" data-rh="true" />
 <meta property="og:title" content="Unsupervised Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement clustering and dimensionality reduction algorithms." data-rh="true" />
+<meta property="og:description" content="Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/unsupervised-learning" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Unsupervised Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement clustering and dimensionality reduction algorithms." data-rh="true" />
+<meta name="twitter:description" content="Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Unsupervised Learning","description":"Implement clustering and dimensionality reduction algorithms.","url":"https://mlgrind.github.io/section/unsupervised-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Unsupervised Learning","description":"Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.","url":"https://mlgrind.github.io/section/unsupervised-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement clustering and dimensionality reduction algorithms.</p><div class="prose dark:prose-invert max-w-none"><h2>Unsupervised Learning</h2>
-<p>Unsupervised learning finds patterns in unlabeled data.</p>
-<h2>Key Concepts</h2>
-<h3>K-Means Clustering</h3>
-<ul>
-<li><strong>Goal</strong>: Group data into K clusters</li>
-<li><strong>Algorithm</strong>:
-<ol>
-<li>Initialize K centroids randomly</li>
-<li>Assign points to nearest centroid</li>
-<li>Update centroids as cluster means</li>
-<li>Repeat until convergence</li>
-</ol>
-</li>
-</ul>
-<h3>Principal Component Analysis (PCA)</h3>
-<ul>
-<li><strong>Goal</strong>: Reduce dimensionality while preserving variance</li>
-<li><strong>Steps</strong>:
-<ol>
-<li>Center the data (subtract mean)</li>
-<li>Compute covariance matrix</li>
-<li>Find eigenvectors/eigenvalues</li>
-<li>Project onto top components</li>
-</ol>
-</li>
-</ul>
-<h3>Gaussian Mixtures &amp; EM</h3>
-<ul>
-<li><strong>Soft clustering</strong>: each point gets a responsibility for every component</li>
-<li><strong>EM</strong>: E-step computes responsibilities (in log space), M-step re-fits weights, means and variances</li>
-<li><strong>Guarantee</strong>: the log-likelihood never decreases</li>
-</ul>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.</p><div class="prose dark:prose-invert max-w-none"><h2>Unsupervised Learning</h2>
+<h2>Why it matters</h2>
+<p>Most data has no labels. Unsupervised methods find structure anyway: customer segments, compressed representations, anomalies, or the initial clusters a labelling team starts from. k-means and PCA are among the most frequently asked &quot;implement it from scratch&quot; interview questions, and the ideas behind them (alternating optimisation, EM, eigen-decompositions) come back in deep learning.</p>
+<h2>Core ideas</h2>
+<p>Data is a matrix <code>X</code> of shape <code>(n_samples, n_features)</code>; <code>k</code> (or <code>K</code>) is the number of clusters or components.</p>
+<h3>k-means (Lloyd&#x27;s algorithm)</h3>
+<p>Minimise the <strong>inertia</strong> (within-cluster sum of squares) by alternating two steps that each can only lower it:</p>
+<pre><code class="language-text">assign:  label_i = argmin_j ||x_i - c_j||^2
+update:  c_j     = mean of the points with label j
+inertia = sum_i ||x_i - c_{label_i}||^2
+</code></pre>
+<p>It converges to a local minimum, so initialisation matters: <strong>k-means++</strong> picks each new centroid with probability proportional to its squared distance from the centroids chosen so far. Distances for all pairs come from broadcasting <code>X[:, None, :] - C[None, :, :]</code>, shape <code>(n, k, d)</code>.</p>
+<h3>PCA</h3>
+<p>Find orthogonal directions of maximum variance. <strong>Centre</strong> the data first, then take the eigenvectors of the covariance matrix (or the SVD of the centred data):</p>
+<pre><code class="language-text">Xc  = X - X.mean(axis=0)               # (n, d)
+Cov = Xc.T @ Xc / (n - 1)              # (d, d)
+Cov = V diag(lambda) V^T               # eigenvalues sorted descending
+Z   = Xc @ V[:, :k]                    # (n, k) projection
+explained variance ratio = lambda_i / sum(lambda)
+</code></pre>
+<p>Without centring, the first &quot;component&quot; points at the mean of the data instead of the direction of greatest spread.</p>
+<h3>Gaussian mixtures and EM</h3>
+<p>A soft version of k-means: each point gets a <strong>responsibility</strong> for each component. The E-step computes responsibilities (in log space, with logsumexp); the M-step re-fits weights, means and variances from them. The log-likelihood never decreases.</p>
 <h3>DBSCAN</h3>
+<p>Density-based: a <strong>core point</strong> has at least <code>min_samples</code> points (itself included) within <code>eps</code>. Clusters grow from core points; points not reachable from any core point are <strong>noise</strong> (<code>-1</code>). No <code>k</code> to choose, and clusters can have any shape.</p>
+<table><thead><tr><th>Method</th><th>Cluster shape</th><th>Needs <code>k</code>?</th><th>Soft?</th><th>Handles noise?</th></tr></thead><tbody><tr><td>k-means</td><td>spherical, similar size</td><td>yes</td><td>no</td><td>no</td></tr><tr><td>GMM</td><td>ellipsoidal</td><td>yes</td><td>yes</td><td>partly (low likelihood)</td></tr><tr><td>DBSCAN</td><td>arbitrary</td><td>no (<code>eps</code>, <code>min_samples</code>)</td><td>no</td><td>yes</td></tr></tbody></table>
+<h2>Worked micro-example</h2>
+<p>k-means on 1-D points <code>[1, 2, 3, 10, 11, 12]</code> with initial centroids <code>[1, 2]</code>:</p>
+<pre><code class="language-text">iter 1  assign: 1 -&gt; c0;  2, 3, 10, 11, 12 -&gt; c1     update: c = [1.0, 7.6]
+iter 2  assign: 1, 2, 3 -&gt; c0;  10, 11, 12 -&gt; c1      update: c = [2.0, 11.0]
+iter 3  labels unchanged -&gt; stop.  inertia = (1 + 0 + 1) + (1 + 0 + 1) = 4
+</code></pre>
+<p>PCA on <code>X = [[1, 2], [2, 1], [3, 4], [4, 3]]</code>: the mean is <code>[2.5, 2.5]</code>, the covariance is <code>[[1.667, 1], [1, 1.667]]</code>, with eigenvalues <code>2.667</code> and <code>0.667</code>. The first component <code>[1, 1] / sqrt(2)</code> explains <code>2.667 / 3.333 = 80%</code> of the variance.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>Density-based</strong>: clusters are dense regions; sparse points are labelled noise</li>
-<li><strong>Core points</strong> have at least min_samples neighbours within eps; only they grow clusters</li>
-<li><strong>No K to choose</strong>, and clusters can have any shape</li>
+<li><strong>Unscaled features</strong>: every method here uses distances or variances, so a feature in large units dominates. Standardise first.</li>
+<li><strong>Forgetting to centre</strong> before PCA, or centring the test set with its own mean instead of the training mean.</li>
+<li><strong>Empty clusters</strong> in k-means: a centroid that wins no points has no mean; you need a rule (re-seed it on a far point).</li>
+<li><strong>Underflow in EM</strong>: products of Gaussian densities hit <code>0.0</code>; work with log-densities and logsumexp.</li>
+<li><strong>Ties</strong>: <code>argmin</code> returns the first minimum, so state the tie-breaking rule and keep it.</li>
+<li><strong>Memory</strong>: the <code>(n, k, d)</code> broadcast is fine for small data; for large <code>n</code> use <code>||x||^2 - 2 x.c + ||c||^2</code>.</li>
 </ul>
-<h3>Why These Matter</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>K-Means</strong>: Customer segmentation, image compression</li>
-<li><strong>PCA</strong>: Feature reduction, visualization, noise removal</li>
-<li><strong>GMM / DBSCAN</strong>: Density estimation, anomaly detection, non-spherical clusters</li>
+<li>Implement k-means in 15 minutes, vectorised; each iteration costs <code>O(n * k * d)</code>.</li>
+<li>&quot;How do you choose <code>k</code>?&quot; (elbow on inertia, silhouette score, BIC for GMMs) and &quot;Why can k-means fail?&quot; (non-spherical clusters, different densities, outliers, bad initialisation).</li>
+<li>PCA: eigen-decomposition vs SVD (SVD is more stable and avoids forming <code>X^T X</code>), the cost <code>O(n d^2 + d^3)</code>, and what &quot;explained variance&quot; means.</li>
+<li>k-means as a special case of EM with hard assignments and equal spherical variances.</li>
+<li>DBSCAN: how to choose <code>eps</code> (the k-distance plot) and why it struggles with clusters of different densities.</li>
 </ul>
-<h3>Interview Tips</h3>
-<ul>
-<li>Be ready to implement K-means from scratch</li>
-<li>Explain variance explained by components</li>
-<li>Discuss limitations (K-means assumes spherical clusters)</li>
-</ul>
-<p>Let&#x27;s implement these algorithms!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/unsupervised-learning/kmeans-clustering">K-Means: Assign to Nearest Centroid →</a></li><li><a href="/problem/unsupervised-learning/pca-implementation">PCA: Center Data →</a></li><li><a href="/problem/unsupervised-learning/gmm-em">Gaussian Mixture Model (EM) →</a></li><li><a href="/problem/unsupervised-learning/dbscan">DBSCAN Clustering →</a></li><li><a href="/problem/unsupervised-learning/kmeans-full">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>K-Means: Assign to Nearest Centroid</strong>: the vectorised assignment step.</li>
+<li><strong>PCA Step 1: Center the Data</strong>: subtract the column means, the first step of PCA.</li>
+<li><strong>Gaussian Mixture Model (EM)</strong>: a log-space E-step and the full EM loop for a 1-D mixture.</li>
+<li><strong>DBSCAN Clustering</strong>: core points, border points and noise, matching scikit-learn&#x27;s labels.</li>
+<li><strong>K-Means from Scratch</strong>: k-means++ seeding, Lloyd iterations, a convergence test and empty-cluster handling.</li>
+</ol>
+<p>Related: <strong>Data Preprocessing</strong> (scale features before clustering), and the k-NN classifier in <strong>Supervised Learning</strong>, which uses the same distance computations.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/unsupervised-learning/kmeans-clustering">K-Means: Assign to Nearest Centroid →</a></li><li><a href="/problem/unsupervised-learning/pca-implementation">PCA Step 1: Center the Data →</a></li><li><a href="/problem/unsupervised-learning/gmm-em">Gaussian Mixture Model (EM) →</a></li><li><a href="/problem/unsupervised-learning/dbscan">DBSCAN Clustering →</a></li><li><a href="/problem/unsupervised-learning/kmeans-full">K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

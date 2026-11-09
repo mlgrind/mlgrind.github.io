@@ -78,61 +78,78 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Tensor Creation (NumPy Style) - PyTorch Basics | ML Grind</title>
-<meta name="description" content="Implement Tensor Creation (NumPy Style) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Tensor Creation - PyTorch Basics | ML Grind</title>
+<meta name="description" content="Implement Tensor Creation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/tensor-creation" data-rh="true" />
-<meta property="og:title" content="Tensor Creation (NumPy Style) - PyTorch Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Tensor Creation (NumPy Style) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Tensor Creation - PyTorch Basics | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Tensor Creation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/pytorch-basics/tensor-creation" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Tensor Creation (NumPy Style) - PyTorch Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Tensor Creation (NumPy Style) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Tensor Creation - PyTorch Basics | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Tensor Creation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Tensor Creation (NumPy Style) - PyTorch Basics","description":"Implement Tensor Creation (NumPy Style) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/tensor-creation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Tensor Creation - PyTorch Basics","description":"Implement Tensor Creation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/tensor-creation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Tensor Creation (NumPy Style) - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Tensor Creation (NumPy Style) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Tensor Creation</h2>
-<p>Learn tensor creation patterns used in PyTorch, implemented with NumPy.</p>
-<h3>PyTorch Equivalents</h3>
-<table><thead><tr><th>PyTorch</th><th>NumPy</th></tr></thead><tbody><tr><td><code>torch.tensor([1,2,3])</code></td><td><code>np.array([1,2,3])</code></td></tr><tr><td><code>torch.zeros(3, 4)</code></td><td><code>np.zeros((3, 4))</code></td></tr><tr><td><code>torch.randn(2, 3)</code></td><td><code>np.random.randn(2, 3)</code></td></tr><tr><td><code>torch.arange(10)</code></td><td><code>np.arange(10)</code></td></tr><tr><td><code>torch.linspace(0, 1, 5)</code></td><td><code>np.linspace(0, 1, 5)</code></td></tr></tbody></table>
-<h3>Data Types</h3>
-<table><thead><tr><th>PyTorch</th><th>NumPy</th></tr></thead><tbody><tr><td><code>torch.float32</code></td><td><code>np.float32</code></td></tr><tr><td><code>torch.int64</code></td><td><code>np.int64</code></td></tr></tbody></table>
-<h3>Task</h3>
-<p>Create tensors matching PyTorch patterns.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Tensor Creation - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Tensor Creation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Tensor Creation</h2>
+<p><strong>What you&#x27;ll build:</strong> <code>create_tensors()</code>, which returns a dictionary of eight tensors made with the standard creation functions.</p>
+<h3>Background</h3>
+<p>Every model starts from tensors: weights from random normals, biases from zeros, position indices from <code>arange</code>, masks from <code>eye</code> or <code>full</code>. PyTorch&#x27;s creation API mirrors NumPy&#x27;s almost one to one, with two differences worth memorising:</p>
+<ul>
+<li><strong>Sizes</strong>: PyTorch takes them as separate arguments (<code>torch.zeros(3, 4)</code>), NumPy as a tuple (<code>np.zeros((3, 4))</code>). Both accept a tuple.</li>
+<li><strong>Default dtypes</strong>: PyTorch makes floats <code>float32</code> and integers <code>int64</code>; NumPy makes floats <code>float64</code>. Mixing the two is a classic source of dtype errors.</li>
+</ul>
+<h3>API Reference</h3>
+<table><thead><tr><th>Key</th><th>PyTorch</th><th>NumPy</th></tr></thead><tbody><tr><td><code>&#x27;from_list&#x27;</code></td><td><code>torch.tensor([1, 2, 3, 4], dtype=torch.float32)</code></td><td><code>np.array([1, 2, 3, 4], dtype=np.float32)</code></td></tr><tr><td><code>&#x27;zeros&#x27;</code></td><td><code>torch.zeros(3, 4)</code></td><td><code>np.zeros((3, 4))</code></td></tr><tr><td><code>&#x27;ones&#x27;</code></td><td><code>torch.ones(2, 3)</code></td><td><code>np.ones((2, 3))</code></td></tr><tr><td><code>&#x27;randn&#x27;</code></td><td><code>torch.randn(2, 3)</code></td><td><code>np.random.randn(2, 3)</code></td></tr><tr><td><code>&#x27;arange&#x27;</code></td><td><code>torch.arange(10)</code></td><td><code>np.arange(10)</code></td></tr><tr><td><code>&#x27;linspace&#x27;</code></td><td><code>torch.linspace(0, 1, 5)</code></td><td><code>np.linspace(0, 1, 5)</code></td></tr><tr><td><code>&#x27;eye&#x27;</code></td><td><code>torch.eye(4)</code></td><td><code>np.eye(4)</code></td></tr><tr><td><code>&#x27;full&#x27;</code></td><td><code>torch.full((2, 3), 7.0)</code></td><td><code>np.full((2, 3), 7.0)</code></td></tr></tbody></table>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;from_list&#x27;</code>: Array from [1,2,3,4] with float32 dtype</li>
-<li><code>&#x27;zeros&#x27;</code>: Zero array of shape (3, 4)</li>
-<li><code>&#x27;ones&#x27;</code>: Ones array of shape (2, 3)</li>
-<li><code>&#x27;randn&#x27;</code>: Random normal array of shape (2, 3)</li>
-<li><code>&#x27;arange&#x27;</code>: Array from 0 to 9</li>
-<li><code>&#x27;linspace&#x27;</code>: 5 evenly spaced values from 0 to 1</li>
-<li><code>&#x27;eye&#x27;</code>: 4x4 identity matrix</li>
-<li><code>&#x27;full&#x27;</code>: (2, 3) array filled with 7.0</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: create_tensors()
-Output: {&#x27;zeros&#x27;: shape (3,4), &#x27;ones&#x27;: shape (2,3), &#x27;randn&#x27;: shape (2,3), &#x27;arange&#x27;: [0..9], ...}</pre><p>Dictionary containing tensors created with various methods</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>&#x27;from_list&#x27;</code>: the values <code>[1, 2, 3, 4]</code> with dtype <strong>float32</strong>, shape <code>(4,)</code></li>
+<li><code>&#x27;zeros&#x27;</code>: zeros, shape <code>(3, 4)</code></li>
+<li><code>&#x27;ones&#x27;</code>: ones, shape <code>(2, 3)</code></li>
+<li><code>&#x27;randn&#x27;</code>: standard-normal samples, shape <code>(2, 3)</code></li>
+<li><code>&#x27;arange&#x27;</code>: the integers <code>0, 1, ..., 9</code>, shape <code>(10,)</code></li>
+<li><code>&#x27;linspace&#x27;</code>: 5 evenly spaced values from 0 to 1 inclusive: <code>[0.0, 0.25, 0.5, 0.75, 1.0]</code></li>
+<li><code>&#x27;eye&#x27;</code>: the 4x4 identity matrix</li>
+<li><code>&#x27;full&#x27;</code>: shape <code>(2, 3)</code>, every entry <code>7.0</code></li>
+</ul>
+<h3>Conventions</h3>
+<ul>
+<li>The starter code seeds the generator with 42 (<code>torch.manual_seed(42)</code> or <code>np.random.seed(42)</code>). Keep that line, so <code>&#x27;randn&#x27;</code> is reproducible: two calls to <code>create_tensors()</code> must return the same values.</li>
+<li>Only <code>&#x27;from_list&#x27;</code> needs an explicit dtype; the others use the library defaults.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use the creation functions in the table; no Python loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li><code>torch.tensor(arr)</code> copies its input, while <code>torch.from_numpy(arr)</code> shares memory with the NumPy array. When does that matter?</li>
+<li>Why does <code>torch.arange(0, 1, 0.1)</code> sometimes give a surprising number of elements, and why is <code>linspace</code> safer for float ranges?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: r = create_tensors(); r[&quot;linspace&quot;]
+Output: array([0.  , 0.25, 0.5 , 0.75, 1.  ])</pre><p>linspace includes both endpoints, so 5 points are spaced 0.25 apart.</p></div><div><pre class="overflow-auto">Input: r[&quot;from_list&quot;].dtype, r[&quot;zeros&quot;].shape, r[&quot;arange&quot;][-1]
+Output: (dtype(&#x27;float32&#x27;), (3, 4), 9)</pre><p>from_list asks for float32 explicitly; arange stops before 10.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def create_tensors() -&gt; dict:
     &quot;&quot;&quot;
-    Create tensors using various methods.
+    Create tensors with the standard creation functions.
 
     Returns:
-        Dictionary with named tensors
+        dict with keys &#x27;from_list&#x27; (float32 [1, 2, 3, 4]), &#x27;zeros&#x27; (3, 4),
+        &#x27;ones&#x27; (2, 3), &#x27;randn&#x27; (2, 3), &#x27;arange&#x27; (0..9), &#x27;linspace&#x27;
+        (5 values from 0 to 1), &#x27;eye&#x27; (4x4 identity) and &#x27;full&#x27; ((2, 3) of 7.0)
     &quot;&quot;&quot;
-    np.random.seed(42)
+    np.random.seed(42)  # keep: makes &#x27;randn&#x27; reproducible
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 2 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

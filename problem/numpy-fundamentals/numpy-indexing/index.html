@@ -78,63 +78,89 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Advanced Indexing - NumPy Fundamentals | ML Grind</title>
-<meta name="description" content="Implement Advanced Indexing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Indexing and Slicing - NumPy Fundamentals | ML Grind</title>
+<meta name="description" content="Implement Indexing and Slicing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing" data-rh="true" />
-<meta property="og:title" content="Advanced Indexing - NumPy Fundamentals | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Advanced Indexing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Indexing and Slicing - NumPy Fundamentals | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Indexing and Slicing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Advanced Indexing - NumPy Fundamentals | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Advanced Indexing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Indexing and Slicing - NumPy Fundamentals | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Indexing and Slicing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Advanced Indexing - NumPy Fundamentals","description":"Implement Advanced Indexing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Indexing and Slicing - NumPy Fundamentals","description":"Implement Indexing and Slicing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/numpy-fundamentals/numpy-indexing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Advanced Indexing - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Advanced Indexing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>NumPy Advanced Indexing</h2>
-<p>Implement various indexing operations on a 2D array.</p>
-<h3>Given</h3>
-<pre><code class="language-python">arr = np.arange(20).reshape(4, 5)
-# array([[ 0,  1,  2,  3,  4],
-#        [ 5,  6,  7,  8,  9],
-#        [10, 11, 12, 13, 14],
-#        [15, 16, 17, 18, 19]])
-</code></pre>
-<h3>Requirements</h3>
-<p>Return a dictionary with:</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Indexing and Slicing - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Indexing and Slicing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Indexing and Slicing</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>advanced_indexing(arr)</code> that pulls a row, a column, a sub-block, the diagonal and a row-reversed version out of a 2D array.</p>
+<h3>Background</h3>
+<p>Selecting the right slice is daily work in ML: one sample is a row of the design matrix <code>X[i]</code>, one feature is a column <code>X[:, j]</code>, a mini-batch is a block of rows <code>X[start:end]</code>, and a confusion matrix&#x27;s correct predictions sit on its diagonal. Getting an axis or an end point wrong usually doesn&#x27;t crash; it silently gives you the wrong data.</p>
+<h3>Rules</h3>
 <ul>
-<li><code>row_1</code>: Second row (index 1)</li>
-<li><code>col_2</code>: Third column (index 2)</li>
-<li><code>subarray</code>: Rows 1-2, columns 2-4</li>
-<li><code>diagonal</code>: Main diagonal</li>
-<li><code>reversed</code>: Array with rows reversed</li>
+<li><code>arr[i]</code> is row <code>i</code>; <code>arr[:, j]</code> is column <code>j</code>. Both come back 1D.</li>
+<li>Slices are <strong>half-open</strong>: <code>arr[r0:r1, c0:c1]</code> takes rows <code>r0 .. r1 - 1</code> and columns <code>c0 .. c1 - 1</code>.</li>
+<li>A negative step walks backwards: <code>arr[::-1]</code> reverses the order along axis 0.</li>
+<li><code>np.diag(arr)</code> returns <code>arr[i, i]</code> for <code>i = 0 .. min(n_rows, n_cols) - 1</code>, so it also works on non-square arrays.</li>
+<li>Basic slices return <strong>views</strong> that share memory with <code>arr</code>. Writing to a view changes <code>arr</code>; call <code>.copy()</code> when you need an independent array.</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def advanced_indexing(arr: np.ndarray) -&gt; dict:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: arr = np.arange(20).reshape(4, 5)
-Output: {&#x27;row_1&#x27;: [5,6,7,8,9], ...}</pre><p>Various slicing and indexing operations</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>For example, <code>arr = np.arange(20).reshape(4, 5)</code> is:</p>
+<pre><code class="language-text">[[ 0,  1,  2,  3,  4],
+ [ 5,  6,  7,  8,  9],
+ [10, 11, 12, 13, 14],
+ [15, 16, 17, 18, 19]]
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>arr</code>: 2D array of shape <code>(n_rows, n_cols)</code> with <code>n_rows &gt;= 3</code> and <code>n_cols &gt;= 3</code> (the tests use shapes like <code>(4, 5)</code>), any numeric dtype.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys:</p>
+<ul>
+<li><code>&#x27;row_1&#x27;</code>: the second row, <code>arr[1]</code>, shape <code>(n_cols,)</code></li>
+<li><code>&#x27;col_2&#x27;</code>: the third column, <code>arr[:, 2]</code>, shape <code>(n_rows,)</code></li>
+<li><code>&#x27;subarray&#x27;</code>: rows 1-2 and columns 2-4, i.e. <code>arr[1:3, 2:5]</code> (columns past the edge are simply dropped)</li>
+<li><code>&#x27;diagonal&#x27;</code>: the main diagonal, shape <code>(min(n_rows, n_cols),)</code></li>
+<li><code>&#x27;reversed&#x27;</code>: <code>arr</code> with its rows in reverse order (last row first), columns unchanged</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use indexing and slicing (plus <code>np.diag</code>); no Python loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>&quot;Advanced&quot; (fancy) indexing uses arrays as indices: <code>arr[[0, 2]]</code> picks rows 0 and 2, <code>arr[arr % 2 == 0]</code> picks the even entries. Unlike slices, both return copies. Why can&#x27;t they be views?</li>
+<li>How would you reverse the columns instead, or both axes at once?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: advanced_indexing(np.arange(20).reshape(4, 5))[&quot;subarray&quot;]
+Output: array([[ 7,  8,  9],
+       [12, 13, 14]])</pre><p>Rows 1 and 2 (the end index 3 is excluded) and columns 2, 3 and 4.</p></div><div><pre class="overflow-auto">Input: advanced_indexing(np.arange(20).reshape(4, 5))[&quot;diagonal&quot;]
+Output: array([ 0,  6, 12, 18])</pre><p>arr[0, 0], arr[1, 1], arr[2, 2], arr[3, 3]: a 4 x 5 array has 4 diagonal entries.</p></div><div><pre class="overflow-auto">Input: advanced_indexing(np.arange(20).reshape(4, 5))[&quot;reversed&quot;][0]
+Output: array([15, 16, 17, 18, 19])</pre><p>After reversing the rows, the last row comes first.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def advanced_indexing(arr: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Perform advanced indexing operations.
+    Select parts of a 2D array with indexing and slicing.
 
     Args:
-        arr: 2D input array
+        arr: 2D array of shape (n_rows, n_cols), n_rows &gt;= 3 and n_cols &gt;= 3
 
     Returns:
-        Dictionary with indexed results
+        dict with keys:
+            &#x27;row_1&#x27;:    second row, shape (n_cols,)
+            &#x27;col_2&#x27;:    third column, shape (n_rows,)
+            &#x27;subarray&#x27;: rows 1-2, columns 2-4 (arr[1:3, 2:5])
+            &#x27;diagonal&#x27;: main diagonal, shape (min(n_rows, n_cols),)
+            &#x27;reversed&#x27;: arr with its rows in reverse order
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>GRU Cell - Sequence Models | ML Grind</title>
 <meta name="description" content="Implement GRU Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/sequence-models/gru-cell" data-rh="true" />
@@ -99,10 +99,13 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"GRU Cell - Sequence Models","description":"Implement GRU Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/sequence-models/gru-cell","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GRU Cell - Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GRU Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GRU Cell (one time step)</h2>
-<p>The Gated Recurrent Unit merges the LSTM&#x27;s cell and hidden state into one vector and uses two gates instead of three. It has fewer parameters and often trains just as well.</p>
-<h3>Equations (PyTorch&#x27;s <code>nn.GRUCell</code>)</h3>
-<pre><code>gi = x @ W_ih.T + b_ih              # (N, 3H), split into  i_r, i_z, i_n
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GRU Cell - Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GRU Cell in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GRU Cell</h2>
+<h3>What you&#x27;ll build</h3>
+<p>One time step of a Gated Recurrent Unit, matching PyTorch&#x27;s <code>nn.GRUCell</code> exactly (weight layout, gate order and reset-gate placement).</p>
+<h3>Background</h3>
+<p>The GRU (Cho et al., 2014) merges the LSTM&#x27;s cell and hidden state into one vector and uses two gates instead of three. It has 3 weight blocks instead of 4 (25% fewer parameters) and usually trains about as well. Its update rule is a learned interpolation between the old state and a candidate.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">gi = x @ W_ih.T + b_ih              # (N, 3H), split into  i_r, i_z, i_n
 gh = h_prev @ W_hh.T + b_hh         # (N, 3H), split into  h_r, h_z, h_n
 
 r = sigmoid(i_r + h_r)              # reset gate
@@ -112,17 +115,27 @@ h = (1 - z) * n + z * h_prev
 </code></pre>
 <h3>Conventions to get right</h3>
 <ul>
-<li><strong>Gate order</strong> along the first axis of the weights: <strong>r, z, n</strong> (rows <code>0:H</code>, <code>H:2H</code>, <code>2H:3H</code>), as in <code>nn.GRUCell.weight_ih</code> / <code>weight_hh</code>.</li>
-<li><strong>Update gate <code>z</code> keeps the old state</strong>: <code>z = 1</code> copies <code>h_prev</code> and <code>z = 0</code> takes the candidate <code>n</code>. Some papers swap the roles of <code>z</code> and <code>1 - z</code>; PyTorch uses the form above.</li>
-<li><strong>Reset gate placement</strong>: <code>r</code> multiplies <code>h_n = h_prev @ W_hn.T + b_hn</code>, <strong>including the bias <code>b_hn</code></strong>, <em>after</em> the matrix product. The original paper (Cho et al., 2014) computes <code>(r * h_prev) @ W_hn.T</code> instead. That gives different numbers, so follow PyTorch here.</li>
+<li><strong>Gate order <code>r, z, n</code></strong> along the first axis of the weights (rows <code>0:H</code>, <code>H:2H</code>, <code>2H:3H</code>), as in <code>nn.GRUCell.weight_ih</code> / <code>weight_hh</code>. Weights are <code>(out, in)</code>, hence <code>.T</code>.</li>
+<li><strong>The update gate <code>z</code> keeps the old state</strong>: <code>z = 1</code> copies <code>h_prev</code>, <code>z = 0</code> takes the candidate <code>n</code>. Some papers swap the roles of <code>z</code> and <code>1 - z</code>; PyTorch uses the form above.</li>
+<li><strong>Reset gate placement</strong>: <code>r</code> multiplies <code>h_n = h_prev @ W_hn.T + b_hn</code>, <strong>including the bias <code>b_hn</code></strong>, <em>after</em> the matrix product. The original paper computes <code>(r * h_prev) @ W_hn.T</code> instead, which gives different numbers. Follow PyTorch. This is why the input and hidden projections must stay separate (you can&#x27;t add <code>gi + gh</code> before splitting).</li>
 </ul>
+<h3>Inputs</h3>
 <table><thead><tr><th>Tensor</th><th>Shape</th></tr></thead><tbody><tr><td><code>x</code></td><td><code>(N, D)</code></td></tr><tr><td><code>h_prev</code></td><td><code>(N, H)</code></td></tr><tr><td><code>W_ih</code></td><td><code>(3H, D)</code></td></tr><tr><td><code>W_hh</code></td><td><code>(3H, H)</code></td></tr><tr><td><code>b_ih</code>, <code>b_hh</code></td><td><code>(3H,)</code></td></tr></tbody></table>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
-</code></pre>
-<h3>Return Format</h3>
-<p>Return the new hidden state <code>h</code>, shape <code>(N, H)</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: All weights and biases zero, h_prev = [[1.0, -2.0]]
-Output: array([[0.5, -1.0]])</pre><p>r = z = 0.5 and n = tanh(0) = 0, so h = 0.5 * 0 + 0.5 * h_prev</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>The new hidden state <code>h</code>: a float array of shape <code>(N, H)</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>A <code>sigmoid</code> helper is provided. If <code>|h_prev| &lt; 1</code>, the new <code>h</code> stays in <code>(-1, 1)</code> (a convex mix of values in that range).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; vectorised over the batch (two matmuls total).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Count the parameters of <code>nn.GRUCell(D, H)</code> (<code>3(HD + H^2 + 2H)</code>) and compare with an LSTM.</li>
+<li>When would you pick a GRU over an LSTM, and vice versa?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x = [[0.3, -0.1]], h_prev = [[1.0, -2.0]], all weights and biases zero
+Output: array([[0.5, -1.0]])</pre><p>r = z = 0.5 and n = tanh(0) = 0, so h = 0.5 * 0 + 0.5 * h_prev.</p></div><div><pre class="overflow-auto">Input: D = H = 1, x = [[1.0]], h_prev = [[0.5]], W_ih = [[0], [1], [1]], W_hh = [[1], [0], [2]], biases 0
+Output: array([[0.614295]])</pre><p>r = sigmoid(0 + 0.5) = 0.6225, z = sigmoid(1 + 0) = 0.7311, n = tanh(1 + 0.6225 * 1.0) = 0.9250, h = 0.2689 * 0.9250 + 0.7311 * 0.5.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -135,8 +148,8 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
     Args:
         x: Input (N, D)
         h_prev: Previous hidden state (N, H)
-        W_ih: Input weights (3H, D)
-        W_hh: Hidden weights (3H, H)
+        W_ih: Input weights (3H, D), row blocks [r; z; n]
+        W_hh: Hidden weights (3H, H), row blocks [r; z; n]
         b_ih, b_hh: Biases (3H,)
 
     Returns:
@@ -144,7 +157,7 @@ def gru_cell(x, h_prev, W_ih, W_hh, b_ih, b_hh):
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/sequence-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/sequence-models">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

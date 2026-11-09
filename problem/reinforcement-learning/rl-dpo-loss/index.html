@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Direct Preference Optimization (DPO) - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss" data-rh="true" />
@@ -99,32 +99,39 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Direct Preference Optimization (DPO) - Reinforcement Learning","description":"Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-dpo-loss","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Direct Preference Optimization (DPO) - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Direct Preference Optimization (DPO) Loss</h2>
-<p>Implement the DPO loss function, a simpler alternative to RLHF that doesn&#x27;t require a separate reward model.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Direct Preference Optimization (DPO) - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Direct Preference Optimization (DPO) in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Direct Preference Optimization (DPO)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The DPO loss: train the policy directly on preference pairs, with no reward model and no RL loop.</p>
 <h3>Background</h3>
-<p>DPO directly optimizes the LLM policy using preference data, bypassing the reward modeling step.</p>
-<h3>DPO Loss</h3>
-<pre><code>L_DPO = -E[log σ(β * (log π_θ(y_w|x) - log π_ref(y_w|x)
-                    - log π_θ(y_l|x) + log π_ref(y_l|x)))]
+<p>RLHF maximizes reward with a KL penalty to a reference model. DPO (Rafailov et al., 2023) shows that the optimum of that problem satisfies r(x, y) = β·log(π_θ(y|x) / π_ref(y|x)) + const. Substituting this <strong>implicit reward</strong> into the Bradley–Terry loss (see <strong>RLHF Reward Model Loss</strong>) gives a plain classification loss on log-probabilities. It is simpler and more stable than PPO-RLHF, and widely used for open-weight chat models.</p>
+<h3>Formula</h3>
+<p>For each pair, with sequence log-probs (the sum of the response&#x27;s token log-probs):</p>
+<pre><code class="language-text">Δ_chosen   = log π_θ(y_w|x) - log π_ref(y_w|x)
+Δ_rejected = log π_θ(y_l|x) - log π_ref(y_l|x)
+L_DPO      = -mean[ log σ( β · (Δ_chosen - Δ_rejected) ) ]
 </code></pre>
-<p>Simplified:</p>
-<pre><code>L_DPO = -E[log σ(β * (Δ_w - Δ_l))]
-</code></pre>
-<p>Where Δ = log π_θ(y|x) - log π_ref(y|x) (log-ratio of policy to reference)</p>
-<h3>Parameters</h3>
 <ul>
-<li>β: Temperature parameter (typically 0.1 to 0.5)</li>
-<li>π_θ: Policy being trained</li>
-<li>π_ref: Reference policy (frozen)</li>
-<li>y_w: Preferred (winner) response</li>
-<li>y_l: Rejected (loser) response</li>
+<li>π_θ: policy being trained; π_ref: frozen reference (usually the SFT model)</li>
+<li>β: strength of the implicit KL constraint (typically 0.1 to 0.5); larger β keeps π_θ closer to π_ref</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
-             ref_logp_chosen: np.ndarray, ref_logp_rejected: np.ndarray,
-             beta: float) -&gt; float:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logp_chosen=[-1], logp_rejected=[-2], ref_logp_chosen=[-1.5], ref_logp_rejected=[-1.5], beta=0.1
-Output: 0.644</pre><p>Policy prefers chosen over reference</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<p>Four (N,) arrays of sequence log-probs (≤ 0): <code>logp_chosen</code>, <code>logp_rejected</code> under π_θ, and <code>ref_logp_chosen</code>, <code>ref_logp_rejected</code> under π_ref; and <code>beta</code> (float &gt; 0).</p>
+<h3>Expected return format</h3>
+<p>A Python float: the mean loss, <strong>rounded to 3 decimals</strong>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>At initialization π_θ = π_ref, so every Δ is 0 and the loss is log 2 ≈ 0.693.</li>
+<li>Use a stable log-sigmoid (<code>-np.logaddexp(0, -z)</code>); no eps inside the log.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>DPO can lower the likelihood of <strong>both</strong> responses as long as the rejected one drops faster. Why can that hurt, and what do variants such as IPO or adding an SFT term do?</li>
+<li>Which quantity would you log as &quot;reward accuracy&quot; during DPO training?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logp_chosen = [-1], logp_rejected = [-2], ref_logp_chosen = [-1.5], ref_logp_rejected = [-1.5], beta = 0.1
+Output: 0.644</pre><p>Δ_chosen = 0.5, Δ_rejected = -0.5, so -log σ(0.1·1.0) = 0.644, just below log 2</p></div><div><pre class="overflow-auto">Input: logp_chosen = [-3, -2], logp_rejected = [-1, -1], ref logps all -2, beta = 0.5
+Output: 1.144</pre><p>The policy prefers the rejected responses (z = -1 and -0.5), so the loss is above log 2</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -133,17 +140,18 @@ def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
              ref_logp_chosen: np.ndarray, ref_logp_rejected: np.ndarray,
              beta: float) -&gt; float:
     &quot;&quot;&quot;
-    Compute Direct Preference Optimization (DPO) loss.
+    Compute the Direct Preference Optimization (DPO) loss.
 
     Args:
-        logp_chosen: Log prob of chosen response under policy π_θ
-        logp_rejected: Log prob of rejected response under policy π_θ
-        ref_logp_chosen: Log prob of chosen under reference π_ref
-        ref_logp_rejected: Log prob of rejected under reference π_ref
-        beta: Temperature parameter
+        logp_chosen: (N,) log pi_theta(y_w|x), sequence log-probs
+        logp_rejected: (N,) log pi_theta(y_l|x)
+        ref_logp_chosen: (N,) log pi_ref(y_w|x)
+        ref_logp_rejected: (N,) log pi_ref(y_l|x)
+        beta: KL-strength / temperature parameter
 
     Returns:
-        DPO loss
+        mean of -log sigmoid(beta * (delta_chosen - delta_rejected)) as a float,
+        rounded to 3 decimals
     &quot;&quot;&quot;
     logp_chosen = np.array(logp_chosen, dtype=float)
     logp_rejected = np.array(logp_rejected, dtype=float)
@@ -152,7 +160,7 @@ def dpo_loss(logp_chosen: np.ndarray, logp_rejected: np.ndarray,
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

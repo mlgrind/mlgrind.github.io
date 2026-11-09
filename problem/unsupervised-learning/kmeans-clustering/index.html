@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>K-Means: Assign to Nearest Centroid - Unsupervised Learning | ML Grind</title>
 <meta name="description" content="Implement K-Means: Assign to Nearest Centroid in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/kmeans-clustering" data-rh="true" />
@@ -99,38 +99,54 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"K-Means: Assign to Nearest Centroid - Unsupervised Learning","description":"Implement K-Means: Assign to Nearest Centroid in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/kmeans-clustering","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Means: Assign to Nearest Centroid - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Means: Assign to Nearest Centroid in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Means: Assign Points to Nearest Centroid</h2>
-<p>Implement the assignment step of K-means clustering: given data points and centroids, assign each point to its nearest centroid.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def assign_clusters(X: np.ndarray, centroids: np.ndarray) -&gt; np.ndarray:
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Means: Assign to Nearest Centroid - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Means: Assign to Nearest Centroid in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Means: Assign to Nearest Centroid</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The <strong>assignment step</strong> of k-means: given data points and centroids, return the index of the nearest centroid for every point, without a Python loop over points.</p>
+<h3>Background</h3>
+<p>k-means alternates two steps: <em>assign</em> each point to its nearest centroid, then <em>update</em> each centroid to the mean of its points. The assignment step is where almost all of the compute goes, <code>O(n * k * d)</code> per iteration, so vectorising it is the main skill being tested. The same pairwise-distance pattern powers k-NN and vector search. (The full algorithm is <strong>K-Means from Scratch</strong> later in this section.)</p>
+<h3>Formula</h3>
+<pre><code class="language-text">d(i, j)  = sqrt( sum_f (X[i, f] - centroids[j, f])^2 )      # Euclidean distance
+label[i] = argmin_j d(i, j)
 </code></pre>
-<h3>Args</h3>
+<p>The square root doesn&#x27;t change which centroid is nearest, so comparing squared distances gives the same labels.</p>
+<h3>Inputs</h3>
 <ul>
-<li>X: Data points of shape (n_samples, n_features)</li>
-<li>centroids: Cluster centers of shape (k, n_features)</li>
+<li><code>X</code>: data points, shape <code>(n_samples, n_features)</code></li>
+<li><code>centroids</code>: cluster centres, shape <code>(k, n_features)</code></li>
 </ul>
-<h3>Returns</h3>
+<p>(Tests may pass nested Python lists; <code>np.asarray</code> them.)</p>
+<h3>Expected return format</h3>
+<p>An integer array of shape <code>(n_samples,)</code> with values in <code>0 .. k-1</code>.</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>Array of cluster assignments (integers 0 to k-1)</li>
+<li><strong>Ties</strong>: a point equally far from several centroids goes to the <strong>lowest centroid index</strong> (what <code>np.argmin</code> returns).</li>
 </ul>
-<h3>Distance</h3>
-<p>Use Euclidean distance: sqrt(sum((x - c)^2))</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[0, 0], [1, 1], [10, 10]], centroids = [[0, 0], [10, 10]]
-Output: [0, 0, 1]</pre><p>First two points closer to centroid 0, last point closer to centroid 1</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised with broadcasting: <code>X[:, None, :] - centroids[None, :, :]</code> has shape <code>(n, k, d)</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>For large <code>n</code> and <code>d</code>, avoid the <code>(n, k, d)</code> intermediate with <code>||x||^2 - 2 x.c + ||c||^2</code> (one matrix multiply). What numerical issue can that introduce?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: assign_clusters(np.array([[0, 0], [1, 1], [10, 10]]), np.array([[0, 0], [10, 10]]))
+Output: [0, 0, 1]</pre><p>(1, 1) is at distance 1.41 from centroid 0 and 12.7 from centroid 1.</p></div><div><pre class="overflow-auto">Input: assign_clusters(np.array([[5, 5]]), np.array([[0, 0], [10, 10]]))
+Output: [0]</pre><p>Equidistant from both centroids: the tie goes to the lower index.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def assign_clusters(X: np.ndarray, centroids: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Assign each point to its nearest centroid.
+    Assign each point to its nearest centroid (Euclidean distance).
 
     Args:
-        X: Data points of shape (n_samples, n_features)
-        centroids: Cluster centers of shape (k, n_features)
+        X: Data points, shape (n_samples, n_features)
+        centroids: Cluster centres, shape (k, n_features)
 
     Returns:
-        Array of cluster assignments (shape: n_samples)
+        Int array of shape (n_samples,) with values in 0..k-1
+        (ties go to the lowest centroid index)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/unsupervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/unsupervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>GELU Activation - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement GELU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/gelu-activation" data-rh="true" />
@@ -100,24 +100,34 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"GELU Activation - PyTorch Basics","description":"Implement GELU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/gelu-activation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GELU Activation - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GELU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GELU Activation</h2>
-<p>The <strong>Gaussian Error Linear Unit (GELU)</strong> is the activation function used in modern transformers like BERT and GPT.</p>
-<h3>Formula (Approximation)</h3>
-<pre><code>GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
+<p><strong>What you&#x27;ll build:</strong> <code>gelu(x)</code>, the Gaussian Error Linear Unit with the tanh approximation, applied element-wise.</p>
+<h3>Background</h3>
+<p>GELU is the activation in the feed-forward blocks of BERT, GPT-2 and most transformers since. Where ReLU gates its input with a hard step (<code>x * [x &gt; 0]</code>), GELU gates it softly with the probability that a standard normal variable is below <code>x</code>: <code>GELU(x) = x * Φ(x)</code>. Small negative inputs leak through slightly, and the function is smooth everywhere, which tends to help optimisation in deep networks.</p>
+<h3>Formula</h3>
+<p>The exact form uses the normal CDF <code>Φ</code>. GPT-2 and the original BERT code use this tanh approximation, which is what you implement:</p>
+<pre><code class="language-text">GELU(x) ≈ 0.5 * x * (1 + tanh( sqrt(2/π) * (x + 0.044715 * x³) ))
 </code></pre>
+<p>with <code>sqrt(2/π) ≈ 0.79788</code>.</p>
 <h3>Key Properties</h3>
+<table><thead><tr><th>Property</th><th>ReLU</th><th>GELU</th></tr></thead><tbody><tr><td>Value at 0</td><td>0</td><td>0</td></tr><tr><td>Negative inputs</td><td>exactly 0</td><td>small negative outputs (minimum ≈ -0.17 near x = -0.75)</td></tr><tr><td>Large positive x</td><td>x</td><td>approaches x</td></tr><tr><td>Large negative x</td><td>0</td><td>approaches 0 from below</td></tr><tr><td>Smooth at 0</td><td>no</td><td>yes</td></tr></tbody></table>
+<h3>Inputs</h3>
 <ul>
-<li>Smooth, non-monotonic function</li>
-<li>Unlike ReLU, GELU allows small negative values (not hard zero)</li>
-<li>GELU(0) = 0</li>
-<li>Approaches x for large positive x</li>
-<li>Approaches 0 for large negative x</li>
+<li><code>x</code>: float array of any shape.</li>
 </ul>
-<h3>Comparison with ReLU</h3>
-<table><thead><tr><th>Property</th><th>ReLU</th><th>GELU</th></tr></thead><tbody><tr><td>Smoothness</td><td>Not smooth at 0</td><td>Smooth everywhere</td></tr><tr><td>Negative values</td><td>Hard zero</td><td>Small negative values allowed</td></tr><tr><td>Gradient at 0</td><td>Undefined</td><td>Well-defined</td></tr></tbody></table>
-<h3>Task</h3>
-<p>Implement the GELU activation function using the tanh approximation.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gelu(np.array([0.0]))
-Output: [0.0]</pre><p>GELU(0) = 0</p></div><div><pre class="overflow-auto">Input: gelu(np.array([1.0]))
-Output: [≈0.8412]</pre><p>GELU(1) ≈ 0.8412</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>An array of the same shape as <code>x</code>, with GELU applied element-wise.</p>
+<h3>Constraints</h3>
+<ul>
+<li>Use the tanh approximation above (the tests expect its values to 4 decimals).</li>
+<li><strong>PyTorch track:</strong> build it from tensor ops (<code>torch.tanh</code>); don&#x27;t call <code>F.gelu</code> or <code>nn.GELU</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>What is <code>F.gelu(x)</code> without <code>approximate=&#x27;tanh&#x27;</code>, and how far apart are the two versions?</li>
+<li>How does SiLU / Swish (<code>x * sigmoid(x)</code>, next problem) compare?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gelu(np.array([-1.0, 0.0, 1.0]))
+Output: array([-0.1588,  0.    ,  0.8412])</pre><p>GELU(0) = 0; GELU(1) ≈ 0.8412 is a bit below 1; GELU(-1) is slightly negative, unlike ReLU.</p></div><div><pre class="overflow-auto">Input: gelu(np.array([-3.0, 3.0]))
+Output: array([-0.0036,  2.9964])</pre><p>Far from 0, GELU behaves like ReLU: about 0 for large negatives and about x for large positives.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def gelu(x: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
@@ -127,7 +137,7 @@ def gelu(x: np.ndarray) -&gt; np.ndarray:
         x: Input array of any shape
 
     Returns:
-        GELU activation applied element-wise, same shape as input
+        GELU applied element-wise, same shape as input
     &quot;&quot;&quot;
     # Your code here
     pass

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Label Smoothing - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/label-smoothing" data-rh="true" />
@@ -100,29 +100,59 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Label Smoothing - PyTorch Basics","description":"Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/label-smoothing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Label Smoothing - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Label Smoothing</h2>
-<p>Cross-entropy with softened targets to prevent overconfidence.</p>
+<p><strong>What you&#x27;ll build:</strong> <code>label_smoothing_loss(logits, targets, num_classes, smoothing)</code>, cross-entropy against softened targets, averaged over the batch.</p>
+<h3>Background</h3>
+<p>With one-hot targets, cross-entropy keeps rewarding the model for pushing the correct logit further above the others, which leads to over-confident, poorly calibrated predictions. Label smoothing (Szegedy et al., 2016) moves a fraction <code>eps</code> of the target mass onto all classes uniformly, so the optimum is a finite logit gap. It is standard in image classification and machine translation, and built into PyTorch as <code>F.cross_entropy(..., label_smoothing=eps)</code>.</p>
 <h3>Formula</h3>
-<pre><code>smooth = (1 - eps) * one_hot + eps / num_classes
-loss = -mean(sum(smooth * log(softmax(logits))))
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: logits [[2, 1, 0.1]], targets [0], smoothing 0.1
-Output: Loss slightly higher than standard CE</pre><p>Smoothed labels prevent overconfident predictions</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>For <code>K = num_classes</code> and smoothing <code>eps</code>:</p>
+<pre><code class="language-text">smooth = (1 - eps) * one_hot(target) + eps / K           # shape (batch, K), each row sums to 1
+loss_i = -sum_k smooth[i, k] * log_softmax(logits_i)[k]
+loss   = mean over the batch of loss_i
+</code></pre>
+<p>The correct class gets <code>1 - eps + eps / K</code>, every other class <code>eps / K</code> (this matches PyTorch&#x27;s definition). With <code>eps = 0</code> it is ordinary cross-entropy.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>logits</code>: float array <code>(batch, K)</code> of raw scores.</li>
+<li><code>targets</code>: integer array <code>(batch,)</code> with values in <code>[0, K)</code>.</li>
+<li><code>num_classes</code>: <code>K</code>.</li>
+<li><code>smoothing</code>: <code>eps</code> in <code>[0, 1)</code> (default 0.1).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A Python <code>float</code>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Compute <code>log_softmax</code> stably (subtract the row max) instead of taking <code>log</code> of a softmax.</li>
+<li>Smoothing <strong>raises</strong> the loss of a confident correct prediction, because the target now also wants some mass on the wrong classes.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>Vectorised over the batch.</li>
+<li><strong>PyTorch track:</strong> <code>F.log_softmax</code> and <code>F.one_hot</code> are fine; don&#x27;t use the <code>label_smoothing</code> argument of <code>F.cross_entropy</code> or <code>nn.CrossEntropyLoss</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Show that the loss can be rewritten as <code>(1 - eps) * CE + eps * mean_k(-log p_k)</code>. What is the second term?</li>
+<li>Why can label smoothing hurt knowledge distillation from the smoothed model?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: label_smoothing_loss(np.array([[2.0, 1.0, 0.1]]), np.array([0]), 3, 0.1)
+Output: 0.5137</pre><p>Targets become [0.9333, 0.0333, 0.0333]; the extra weight on the low-probability classes raises the loss from 0.4170.</p></div><div><pre class="overflow-auto">Input: label_smoothing_loss(np.array([[2.0, 1.0, 0.1]]), np.array([0]), 3, 0.0)
+Output: 0.4170</pre><p>With smoothing = 0 it is plain cross-entropy, -log(0.659).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def label_smoothing_loss(logits, targets, num_classes, smoothing=0.1):
     &quot;&quot;&quot;
-    Cross-entropy loss with label smoothing.
+    Cross-entropy loss with label smoothing, averaged over the batch.
 
     Args:
         logits: Raw scores (batch, num_classes)
         targets: Integer labels (batch,)
-        num_classes: Total classes
-        smoothing: Epsilon
+        num_classes: Total number of classes K
+        smoothing: Epsilon, the target mass spread uniformly over the K classes
 
     Returns:
         Scalar loss (float)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

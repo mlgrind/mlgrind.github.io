@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Reshape and Transpose - NumPy Fundamentals | ML Grind</title>
 <meta name="description" content="Implement Reshape and Transpose in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/numpy-fundamentals/numpy-reshape-transpose" data-rh="true" />
@@ -99,47 +99,69 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Reshape and Transpose - NumPy Fundamentals","description":"Implement Reshape and Transpose in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/numpy-fundamentals/numpy-reshape-transpose","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Reshape and Transpose - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Reshape and Transpose in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Reshape and Transpose Operations</h2>
-<p>Master array shape manipulation - essential for ML data pipelines.</p>
-<h3>Task</h3>
-<p>Given a 1D array of 24 elements:</p>
-<ol>
-<li>Reshape to (4, 6)</li>
-<li>Reshape to (2, 3, 4)</li>
-<li>Transpose the 2D version</li>
-<li>Reverse the axes of the 3D version (transpose(2, 1, 0))</li>
-<li>Flatten back to 1D</li>
-</ol>
-<h3>Important Concepts</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Reshape and Transpose - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Reshape and Transpose in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Reshape and Transpose</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>reshape_transpose(arr)</code> that reshapes a 24-element vector into 2D and 3D arrays, transposes them, and flattens back.</p>
+<h3>Background</h3>
+<p>Shape changes glue ML pipelines together: flattening images before a linear layer, splitting <code>d_model</code> into attention heads, moving channels between <code>(N, H, W, C)</code> and <code>(N, C, H, W)</code>. Mixing up <strong>reshape</strong> (same order, new grouping) and <strong>transpose</strong> (same data, axes reordered) is one of the most common silent bugs.</p>
+<h3>Key ideas</h3>
 <ul>
-<li><code>reshape</code> changes shape without changing data order</li>
-<li><code>transpose</code> swaps axes</li>
-<li><code>-1</code> in reshape means &quot;infer this dimension&quot;</li>
+<li>NumPy stores arrays in row-major (C) order: the <strong>last</strong> axis changes fastest.</li>
+<li><code>reshape</code> keeps that order and regroups it. In a <code>(4, 6)</code> array, entry <code>[i, j]</code> is element <code>6*i + j</code> of the vector; in a <code>(2, 3, 4)</code> array, entry <code>[i, j, k]</code> is element <code>12*i + 4*j + k</code>. One dimension may be <code>-1</code> (&quot;infer it&quot;).</li>
+<li><code>transpose</code> reorders axes: <code>out = a.transpose(2, 1, 0)</code> means <code>out[k, j, i] = a[i, j, k]</code>. For 2D, <code>a.T[j, i] = a[i, j]</code>. No data moves; only the strides change.</li>
+<li><code>flatten()</code> reads an array back out in row-major order (always a copy); <code>ravel()</code> does the same but returns a view when it can.</li>
+</ul>
+<h3>Inputs</h3>
+<ul>
+<li><code>arr</code>: 1D array of exactly 24 elements (the tests mostly use <code>np.arange(24)</code>).</li>
 </ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;arr_2d&#x27;</code>: Reshaped to (4, 6)</li>
-<li><code>&#x27;arr_3d&#x27;</code>: Reshaped to (2, 3, 4)</li>
-<li><code>&#x27;arr_2d_transposed&#x27;</code>: Transpose of arr_2d, shape (6, 4)</li>
-<li><code>&#x27;arr_3d_swapped&#x27;</code>: arr_3d with axes swapped (2,1,0), shape (4, 3, 2)</li>
-<li><code>&#x27;arr_flat&#x27;</code>: Flattened back to 1D, shape (24,)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.arange(24)
-Output: {&#x27;arr_2d&#x27;: shape (4,6), &#x27;arr_3d&#x27;: shape (2,3,4), &#x27;arr_2d_transposed&#x27;: shape (6,4), ...}</pre><p>Various reshape and transpose operations</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>&#x27;arr_2d&#x27;</code>: <code>arr</code> reshaped to <code>(4, 6)</code></li>
+<li><code>&#x27;arr_3d&#x27;</code>: <code>arr</code> reshaped to <code>(2, 3, 4)</code></li>
+<li><code>&#x27;arr_2d_transposed&#x27;</code>: transpose of <code>arr_2d</code>, shape <code>(6, 4)</code></li>
+<li><code>&#x27;arr_3d_swapped&#x27;</code>: <code>arr_3d</code> with its axes reversed, <code>transpose(2, 1, 0)</code>, shape <code>(4, 3, 2)</code></li>
+<li><code>&#x27;arr_flat&#x27;</code>: <code>arr_2d</code> flattened back to 1D in row-major order, shape <code>(24,)</code> (equal to the input)</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>arr_2d.reshape(6, 4)</code> has the right shape but is <strong>not</strong> the transpose: its first row is <code>[0, 1, 2, 3]</code>, while the transpose&#x27;s first row is <code>[0, 6, 12, 18]</code>.</li>
+<li>Flattening the transposed array gives a different order (<code>[0, 6, 12, 18, 1, ...]</code>), which is why <code>&#x27;arr_flat&#x27;</code> flattens <code>arr_2d</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use <code>reshape</code>, <code>transpose</code>/<code>.T</code> and <code>flatten</code>/<code>ravel</code>; no loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Convert a batch of images from <code>(N, H, W, C)</code> to <code>(N, C, H, W)</code>. Which axis order do you pass to <code>transpose</code>?</li>
+<li>Why does <code>.view(...)</code> on a transposed tensor fail in PyTorch, while <code>.reshape(...)</code> works?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: reshape_transpose(np.arange(24))[&quot;arr_2d_transposed&quot;][:2]
+Output: array([[ 0,  6, 12, 18],
+       [ 1,  7, 13, 19]])</pre><p>Row j of the transpose is column j of arr_2d.</p></div><div><pre class="overflow-auto">Input: reshape_transpose(np.arange(24))[&quot;arr_3d_swapped&quot;][:, 0, :]
+Output: array([[ 0, 12],
+       [ 1, 13],
+       [ 2, 14],
+       [ 3, 15]])</pre><p>out[k, 0, i] = arr_3d[i, 0, k] = 12*i + k.</p></div><div><pre class="overflow-auto">Input: reshape_transpose(np.arange(24))[&quot;arr_3d&quot;].shape
+Output: (2, 3, 4)</pre><p>The same 24 values, grouped as 2 blocks of 3 rows of 4.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def reshape_transpose(arr: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Perform reshape and transpose operations.
+    Reshape, transpose and flatten a 24-element array.
 
     Args:
         arr: 1D array of 24 elements
 
     Returns:
-        Dictionary with reshaped arrays
+        dict with keys:
+            &#x27;arr_2d&#x27;:            arr reshaped to (4, 6)
+            &#x27;arr_3d&#x27;:            arr reshaped to (2, 3, 4)
+            &#x27;arr_2d_transposed&#x27;: arr_2d transposed, shape (6, 4)
+            &#x27;arr_3d_swapped&#x27;:    arr_3d with axes reversed (2, 1, 0), shape (4, 3, 2)
+            &#x27;arr_flat&#x27;:          arr_2d flattened back to shape (24,)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

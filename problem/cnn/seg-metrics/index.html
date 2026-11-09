@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Segmentation Metrics - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement Segmentation Metrics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/seg-metrics" data-rh="true" />
@@ -100,49 +100,60 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Segmentation Metrics - CNNs & Computer Vision","description":"Implement Segmentation Metrics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/seg-metrics","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Segmentation Metrics - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Segmentation Metrics in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Segmentation Metrics</h2>
-<p>Implement three key metrics for evaluating binary image segmentation: <strong>IoU</strong>, <strong>Pixel Accuracy</strong>, and <strong>Dice Coefficient</strong>.</p>
-<h3>Metrics</h3>
-<h4>1. IoU (Intersection over Union / Jaccard Index)</h4>
-<pre><code>IoU = |Prediction ∩ Target| / |Prediction ∪ Target|
+<h3>What you&#x27;ll build</h3>
+<p>Three standard scores for a binary segmentation mask: <strong>IoU</strong> (Jaccard index), <strong>pixel accuracy</strong> and the <strong>Dice coefficient</strong>.</p>
+<h3>Background</h3>
+<p>Segmentation models (U-Net, DeepLab, Mask R-CNN&#x27;s mask head) predict a label for every pixel. Pixel accuracy is easy to read but misleading when the object is small: predicting &quot;background everywhere&quot; on an image that is 95% background scores 0.95. IoU and Dice only look at the foreground, so they are the metrics reported in papers and medical-imaging challenges. Dice also exists as a training loss (<code>1 - soft Dice</code>).</p>
+<h3>Formula</h3>
+<p>Treat each mask as the set of pixels equal to 1. With <code>TP = |P ∩ T|</code> (both 1), <code>|P|</code> = number of predicted foreground pixels, <code>|T|</code> = number of target foreground pixels:</p>
+<pre><code class="language-text">IoU            = |P ∩ T| / |P ∪ T|          = TP / (|P| + |T| - TP)
+Dice           = 2 |P ∩ T| / (|P| + |T|)     = 2 TP / (2 TP + FP + FN)
+Pixel accuracy = (number of pixels where prediction == target) / (total pixels)
 </code></pre>
-<h4>2. Pixel Accuracy</h4>
-<pre><code>Pixel Accuracy = Number of correct pixels / Total pixels
-</code></pre>
-<h4>3. Dice Coefficient (F1 Score for pixels)</h4>
-<pre><code>Dice = 2 * |Prediction ∩ Target| / (|Prediction| + |Target|)
-</code></pre>
-<h3>Relationship Between IoU and Dice</h3>
-<pre><code>Dice = 2 * IoU / (1 + IoU)
-</code></pre>
-<h3>Expected Return Format</h3>
-<p>Return a dictionary with these keys:</p>
+<p>Dice is the F1 score over pixels, and the two overlap scores are linked by <code>Dice = 2 IoU / (1 + IoU)</code>, so Dice &gt;= IoU.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;iou&#x27;</code>: Intersection over Union (float, rounded to 4 dp)</li>
-<li><code>&#x27;pixel_accuracy&#x27;</code>: Pixel accuracy (float, rounded to 4 dp)</li>
-<li><code>&#x27;dice&#x27;</code>: Dice coefficient (float, rounded to 4 dp)</li>
+<li><code>prediction</code>, <code>target</code>: 2D arrays of the same shape <code>(H, W)</code> containing only <code>0</code> and <code>1</code> (any integer or float dtype).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def segmentation_metrics(prediction, target):
-    # prediction: binary mask (2D array of 0s and 1s)
-    # target: binary ground truth mask (2D array of 0s and 1s)
-    # Returns: dict with &#x27;iou&#x27;, &#x27;pixel_accuracy&#x27;, &#x27;dice&#x27;
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: prediction=[[1,1],[0,0]], target=[[1,0],[0,1]]
-Output: {&quot;iou&quot;: 0.3333, &quot;pixel_accuracy&quot;: 0.5, &quot;dice&quot;: 0.5}</pre><p>Intersection=1, Union=3, IoU=1/3; 2 correct out of 4 pixels; Dice=2*1/(2+2)=0.5</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A dictionary with exactly these keys, each a Python <code>float</code> rounded to 4 decimal places:</p>
+<ul>
+<li><code>&#x27;iou&#x27;</code>: foreground intersection over union</li>
+<li><code>&#x27;pixel_accuracy&#x27;</code>: fraction of pixels that agree (foreground and background)</li>
+<li><code>&#x27;dice&#x27;</code>: Dice coefficient</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>If both masks are empty (no foreground at all), the IoU and Dice denominators are 0: return <code>0.0</code> for <code>&#x27;iou&#x27;</code> and <code>&#x27;dice&#x27;</code> here. Pixel accuracy is then <code>1.0</code>. (Some libraries return 1.0 for an empty-vs-empty match; be explicit about which you use.)</li>
+<li>Disjoint masks give IoU and Dice of <code>0.0</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorised (no loops over pixels).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>How do you extend these to <code>K</code> classes (per-class IoU, then mean IoU)?</li>
+<li>Write a differentiable soft Dice loss on predicted probabilities.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: prediction = [[1, 1], [0, 0]], target = [[1, 0], [0, 1]]
+Output: {&#x27;iou&#x27;: 0.3333, &#x27;pixel_accuracy&#x27;: 0.5, &#x27;dice&#x27;: 0.5}</pre><p>TP = 1, |P| = |T| = 2: IoU = 1 / (2 + 2 - 1) = 1/3; 2 of 4 pixels agree; Dice = 2 * 1 / 4 = 0.5.</p></div><div><pre class="overflow-auto">Input: prediction = [[1, 1, 0], [1, 1, 0], [0, 0, 0]], target = [[1, 1, 1], [1, 0, 0], [0, 0, 0]]
+Output: {&#x27;iou&#x27;: 0.6, &#x27;pixel_accuracy&#x27;: 0.7778, &#x27;dice&#x27;: 0.75}</pre><p>TP = 3, |P| = |T| = 4: IoU = 3/5, Dice = 6/8, and 7 of 9 pixels agree.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def segmentation_metrics(prediction, target):
     &quot;&quot;&quot;
-    Compute segmentation evaluation metrics.
+    Binary segmentation metrics.
 
     Args:
-        prediction: Binary predicted mask (2D array of 0s and 1s)
-        target: Binary ground truth mask (2D array of 0s and 1s)
+        prediction: Predicted mask, shape (H, W), values 0 or 1
+        target: Ground-truth mask, shape (H, W), values 0 or 1
 
     Returns:
-        Dictionary with &#x27;iou&#x27;, &#x27;pixel_accuracy&#x27;, &#x27;dice&#x27; (all rounded to 4 dp)
+        dict with Python floats rounded to 4 decimals:
+            &#x27;iou&#x27;: foreground IoU (0.0 if both masks are empty)
+            &#x27;pixel_accuracy&#x27;: fraction of matching pixels
+            &#x27;dice&#x27;: Dice coefficient (0.0 if both masks are empty)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

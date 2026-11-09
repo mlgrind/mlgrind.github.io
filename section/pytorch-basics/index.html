@@ -78,68 +78,95 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>PyTorch Basics | ML Grind</title>
-<meta name="description" content="Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy." data-rh="true" />
+<meta name="description" content="Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/pytorch-basics" data-rh="true" />
 <meta property="og:title" content="PyTorch Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy." data-rh="true" />
+<meta property="og:description" content="Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/pytorch-basics" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="PyTorch Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy." data-rh="true" />
+<meta name="twitter:description" content="Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PyTorch Basics","description":"Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.","url":"https://mlgrind.github.io/section/pytorch-basics","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PyTorch Basics","description":"Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy.","url":"https://mlgrind.github.io/section/pytorch-basics","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.</p><div class="prose dark:prose-invert max-w-none"><h2>PyTorch Basics</h2>
-<p>Learn PyTorch patterns and concepts. Problems in this section open in the <strong>PyTorch</strong> track, which runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build). Switch to <strong>NumPy</strong> with the toggle to implement the same ideas from scratch.</p>
-<h2>Tensor Operations</h2>
-<h3>Creation</h3>
-<pre><code class="language-python"># PyTorch           # NumPy equivalent
-torch.tensor()      np.array()
-torch.zeros()       np.zeros()
-torch.randn()       np.random.randn()
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy.</p><div class="prose dark:prose-invert max-w-none"><h2>PyTorch Basics</h2>
+<p>Problems in this section open in the <strong>PyTorch</strong> track, which runs on an in-browser, NumPy-backed subset of the torch API (real PyTorch has no WebAssembly build). Switch to <strong>NumPy</strong> with the toggle to build the same ideas from scratch: same function names, same tests.</p>
+<h2>Why It Matters</h2>
+<p>PyTorch is the default framework for research and most production deep learning, and &quot;implement X in PyTorch&quot; is a standard ML interview format. Interviewers expect you to move fluently between tensor shapes, autograd and <code>nn.Module</code>, and to know what the built-ins (<code>F.cross_entropy</code>, <code>torch.optim.Adam</code>, <code>nn.LayerNorm</code>) compute under the hood, because that is where silent bugs live.</p>
+<h2>Core Ideas</h2>
+<h3>Tensors</h3>
+<p>A tensor is an n-dimensional array with a <code>dtype</code>, a <code>shape</code> and (optionally) a gradient. The API mirrors NumPy almost one to one:</p>
+<table><thead><tr><th>Task</th><th>PyTorch</th><th>NumPy</th></tr></thead><tbody><tr><td>Create</td><td><code>torch.tensor(data)</code>, <code>torch.zeros(3, 4)</code>, <code>torch.randn(2, 3)</code></td><td><code>np.array(data)</code>, <code>np.zeros((3, 4))</code>, <code>np.random.randn(2, 3)</code></td></tr><tr><td>Reduce</td><td><code>x.sum(dim=1, keepdim=True)</code></td><td><code>x.sum(axis=1, keepdims=True)</code></td></tr><tr><td>Reshape</td><td><code>x.view(2, -1)</code>, <code>x.permute(0, 2, 1)</code>, <code>x.unsqueeze(0)</code></td><td><code>x.reshape(2, -1)</code>, <code>x.transpose(0, 2, 1)</code>, <code>x[None]</code></td></tr><tr><td>Default float</td><td><code>float32</code></td><td><code>float64</code></td></tr><tr><td><code>x.std()</code></td><td>unbiased (divides by n - 1)</td><td>population (divides by n)</td></tr></tbody></table>
+<p>Shapes in this section follow the usual conventions: <code>(batch, features)</code> for MLPs, <code>(N, C, H, W)</code> for images, <code>(seq_len, d_model)</code> for token sequences.</p>
+<h3>Autograd</h3>
+<p>Every operation on a tensor with <code>requires_grad=True</code> is recorded in a graph. <code>loss.backward()</code> walks it in reverse with the chain rule and <strong>adds</strong> each gradient into <code>.grad</code>:</p>
+<pre><code class="language-python">x = torch.tensor(2.0, requires_grad=True)
+y = x ** 2 + 3 * x + 1
+y.backward()
+x.grad  # tensor(7.) = 2x + 3
 </code></pre>
-<h3>Operations</h3>
-<pre><code class="language-python"># PyTorch           # NumPy equivalent
-x + y               x + y
-x @ y               x @ y
-x.sum(dim=1)        x.sum(axis=1)
-x.view(2, -1)       x.reshape(2, -1)
+<p>For a linear layer <code>Y = X @ W + b</code> with upstream gradient <code>G = dL/dY</code>: <code>dL/dW = X.T @ G</code>, <code>dL/db = G.sum(0)</code>, <code>dL/dX = G @ W.T</code>. Every gradient has the shape of its tensor.</p>
+<h3>Modules, Losses and Optimizers</h3>
+<p>An <code>nn.Module</code> owns <code>nn.Parameter</code>s and sub-modules and defines <code>forward</code>; <code>model.parameters()</code> collects every trainable tensor for the optimizer. Losses expect specific inputs (<code>F.cross_entropy</code> wants raw logits and integer classes). Optimizers (<code>SGD</code> with momentum, <code>Adam</code>) turn gradients into updates, and schedulers change the learning rate over time.</p>
+<h3>The Training Loop</h3>
+<pre><code class="language-python">for xb, yb in loader:              # minibatches from a DataLoader
+    optimizer.zero_grad()          # 1. clear old gradients
+    loss = loss_fn(model(xb), yb)  # 2-3. forward pass and loss
+    loss.backward()                # 4. gradients into p.grad
+    optimizer.step()               # 5. update the parameters
 </code></pre>
-<h2>Autograd Concepts</h2>
-<p>PyTorch tracks operations for automatic differentiation:</p>
-<pre><code class="language-python">x = torch.tensor([2.0], requires_grad=True)
-y = x ** 2
-y.backward()  # dy/dx = 2x = 4
-</code></pre>
-<p>In the NumPy track you implement this by hand to understand the math.</p>
-<h2>Module Pattern</h2>
-<pre><code class="language-python">class Linear(nn.Module):
-    def __init__(self, in_features, out_features):
-        self.weight = Parameter(...)
-        self.bias = Parameter(...)
-
-    def forward(self, x):
-        return x @ self.weight + self.bias
-</code></pre>
-<h2>Loss Functions</h2>
+<h2>Worked Micro-Example</h2>
+<p>Fit <code>y_hat = w * x + b</code> to <code>X = [[1], [2], [3]]</code>, <code>y = [2, 4, 6.5]</code>, starting from <code>w = b = 0</code> with <code>lr = 0.05</code>:</p>
+<table><thead><tr><th>Quantity</th><th>Value</th></tr></thead><tbody><tr><td>loss = mean((Xw + b - y)²)</td><td>(4 + 16 + 42.25) / 3 = 20.75</td></tr><tr><td>dL/dw = (2/3) * X.T @ residual</td><td>(2/3) * (-2 - 8 - 19.5) = -19.667</td></tr><tr><td>dL/db = (2/3) * sum(residual)</td><td>(2/3) * (-12.5) = -8.333</td></tr><tr><td>after one step</td><td>w = 0.9833, b = 0.4167</td></tr><tr><td>new loss</td><td>4.2638</td></tr></tbody></table>
+<p><code>loss.backward()</code> and <code>optimizer.step()</code> compute exactly this for <code>nn.Linear(1, 1)</code>; <strong>The Training Loop</strong> tests these numbers.</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li>CrossEntropyLoss: Classification</li>
-<li>MSELoss: Regression</li>
-<li>BCELoss: Binary classification</li>
+<li><strong>Forgetting <code>optimizer.zero_grad()</code></strong>: gradients accumulate across steps.</li>
+<li><strong>Shape broadcasting surprises</strong>: <code>nn.Linear</code> returns <code>(N, 1)</code>; comparing it to targets of shape <code>(N,)</code> broadcasts the loss to <code>(N, N)</code>.</li>
+<li><strong>Unstable softmax</strong>: always subtract the row max, or use <code>log_softmax</code> / <code>F.cross_entropy</code> instead of <code>log(softmax(x))</code>.</li>
+<li><strong>Wrong variance</strong>: normalisation layers use the population variance (<code>unbiased=False</code>).</li>
+<li><strong>dtype mismatches</strong>: <code>torch.tensor([1, 2])</code> is <code>int64</code>; NumPy arrays come in as <code>float64</code>.</li>
+<li><strong>Non-reproducible shuffles</strong>: seed a <code>torch.Generator</code> for the <code>DataLoader</code>.</li>
 </ul>
-<h2>The Training Loop &amp; Minibatches</h2>
-<p>Everything comes together in the loop: zero the gradients, forward pass, loss, backward pass, optimizer step, repeated over minibatches. A <code>DataLoader</code> shuffles the sample indices once per epoch (from a seeded generator, so runs are reproducible) and cuts them into batches. Forgetting <code>zero_grad()</code> makes gradients accumulate across steps, and it is the most common bug in hand-written loops.</p>
-<p>Learn these patterns to understand PyTorch!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/pytorch-basics/tensor-creation">Tensor Creation (NumPy Style) →</a></li><li><a href="/problem/pytorch-basics/tensor-operations">Tensor Operations →</a></li><li><a href="/problem/pytorch-basics/autograd-concepts">Autograd Concepts (Manual) →</a></li><li><a href="/problem/pytorch-basics/nn-modules">Neural Network Modules →</a></li><li><a href="/problem/pytorch-basics/loss-functions">Loss Functions →</a></li><li><a href="/problem/pytorch-basics/gelu-activation">GELU Activation →</a></li><li><a href="/problem/pytorch-basics/leaky-relu-swish">LeakyReLU &amp; Swish →</a></li><li><a href="/problem/pytorch-basics/softmax-temperature">Softmax with Temperature →</a></li><li><a href="/problem/pytorch-basics/rmsnorm">RMS Normalization →</a></li><li><a href="/problem/pytorch-basics/group-norm">Group Normalization →</a></li><li><a href="/problem/pytorch-basics/adam-optimizer">Adam Optimizer →</a></li><li><a href="/problem/pytorch-basics/sgd-momentum">SGD with Momentum →</a></li><li><a href="/problem/pytorch-basics/lr-scheduling">Learning Rate Scheduling →</a></li><li><a href="/problem/pytorch-basics/gradient-accumulation">Gradient Accumulation →</a></li><li><a href="/problem/pytorch-basics/instance-norm">Instance Normalization →</a></li><li><a href="/problem/pytorch-basics/vit-patch-embeddings">ViT Patch Embeddings →</a></li><li><a href="/problem/pytorch-basics/cross-attention">Cross-Attention →</a></li><li><a href="/problem/pytorch-basics/depthwise-separable-conv">Depthwise Separable Convolution →</a></li><li><a href="/problem/pytorch-basics/label-smoothing">Label Smoothing →</a></li><li><a href="/problem/pytorch-basics/lora-adapter">LoRA Adapter →</a></li><li><a href="/problem/pytorch-basics/gradient-checkpointing">Gradient Checkpointing →</a></li><li><a href="/problem/pytorch-basics/training-loop">The Training Loop →</a></li><li><a href="/problem/pytorch-basics/dataloader-batching">Minibatches: Dataset &amp; DataLoader →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview Angle</h2>
+<p>Expect to write a layer, loss or optimizer step from scratch and then compare it with the built-in. Typical follow-ups: why <code>F.cross_entropy</code> takes logits; what Adam&#x27;s bias correction does at step 1; BatchNorm vs LayerNorm vs GroupNorm vs RMSNorm (which axes each reduces over); how gradient accumulation and checkpointing trade compute for memory; how many parameters LoRA trains. Know the costs: a linear layer is <code>O(batch * in * out)</code>, attention is <code>O(seq_q * seq_kv * d)</code> in time and <code>O(seq_q * seq_kv)</code> in memory.</p>
+<h2>Problems in This Section</h2>
+<ol>
+<li><strong>Tensor Creation</strong>: build tensors with <code>tensor</code>, <code>zeros</code>, <code>randn</code>, <code>arange</code>, <code>linspace</code>, <code>eye</code> and <code>full</code>.</li>
+<li><strong>Tensor Operations</strong>: arithmetic, reductions over a dimension and reshapes.</li>
+<li><strong>Autograd Basics</strong>: gradients of a polynomial and of a linear layer.</li>
+<li><strong>Neural Network Modules</strong>: <code>Linear</code>, <code>ReLU</code>, <code>Sequential</code> and a 2-layer MLP.</li>
+<li><strong>Loss Functions</strong>: softmax, cross-entropy, MSE and binary cross-entropy.</li>
+<li><strong>GELU Activation</strong>: the transformer activation, tanh approximation.</li>
+<li><strong>LeakyReLU &amp; Swish</strong>: activations that avoid dead units.</li>
+<li><strong>Softmax with Temperature</strong>: sharpen or flatten a distribution, stably.</li>
+<li><strong>RMS Normalization</strong>: the LLaMA-style norm without mean subtraction.</li>
+<li><strong>Group Normalization</strong>: batch-size-independent normalisation over channel groups.</li>
+<li><strong>Adam Optimizer</strong>: one Adam step with bias correction.</li>
+<li><strong>SGD with Momentum</strong>: PyTorch&#x27;s momentum update.</li>
+<li><strong>Learning Rate Scheduling</strong>: linear warmup plus cosine decay.</li>
+<li><strong>Gradient Accumulation</strong>: large effective batches from micro-batches.</li>
+<li><strong>Instance Normalization</strong>: per-image, per-channel normalisation.</li>
+<li><strong>ViT Patch Embeddings</strong>: turn an image into a token sequence.</li>
+<li><strong>Cross-Attention</strong>: queries from one sequence, keys and values from another.</li>
+<li><strong>Depthwise Separable Convolution</strong>: MobileNet&#x27;s cheap convolution.</li>
+<li><strong>Label Smoothing</strong>: cross-entropy with softened targets.</li>
+<li><strong>LoRA Adapter</strong>: low-rank fine-tuning of a frozen layer.</li>
+<li><strong>Gradient Checkpointing</strong>: save some activations, recompute the rest.</li>
+<li><strong>The Training Loop</strong>: the five-step loop on a linear model.</li>
+<li><strong>Minibatches: Dataset &amp; DataLoader</strong>: shuffled, seeded minibatches.</li>
+</ol>
+<p>Related sections: <strong>Neural Networks</strong> (backprop, batch norm), <strong>Optimization &amp; Training</strong>, <strong>Transformer Architecture</strong> (multi-head attention) and <strong>End-to-End Implementations</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/pytorch-basics/tensor-creation">Tensor Creation →</a></li><li><a href="/problem/pytorch-basics/tensor-operations">Tensor Operations →</a></li><li><a href="/problem/pytorch-basics/autograd-concepts">Autograd Basics →</a></li><li><a href="/problem/pytorch-basics/nn-modules">Neural Network Modules →</a></li><li><a href="/problem/pytorch-basics/loss-functions">Loss Functions →</a></li><li><a href="/problem/pytorch-basics/gelu-activation">GELU Activation →</a></li><li><a href="/problem/pytorch-basics/leaky-relu-swish">LeakyReLU &amp; Swish →</a></li><li><a href="/problem/pytorch-basics/softmax-temperature">Softmax with Temperature →</a></li><li><a href="/problem/pytorch-basics/rmsnorm">RMS Normalization →</a></li><li><a href="/problem/pytorch-basics/group-norm">Group Normalization →</a></li><li><a href="/problem/pytorch-basics/adam-optimizer">Adam Optimizer →</a></li><li><a href="/problem/pytorch-basics/sgd-momentum">SGD with Momentum →</a></li><li><a href="/problem/pytorch-basics/lr-scheduling">Learning Rate Scheduling →</a></li><li><a href="/problem/pytorch-basics/gradient-accumulation">Gradient Accumulation →</a></li><li><a href="/problem/pytorch-basics/instance-norm">Instance Normalization →</a></li><li><a href="/problem/pytorch-basics/vit-patch-embeddings">ViT Patch Embeddings →</a></li><li><a href="/problem/pytorch-basics/cross-attention">Cross-Attention →</a></li><li><a href="/problem/pytorch-basics/depthwise-separable-conv">Depthwise Separable Convolution →</a></li><li><a href="/problem/pytorch-basics/label-smoothing">Label Smoothing →</a></li><li><a href="/problem/pytorch-basics/lora-adapter">LoRA Adapter →</a></li><li><a href="/problem/pytorch-basics/gradient-checkpointing">Gradient Checkpointing →</a></li><li><a href="/problem/pytorch-basics/training-loop">The Training Loop →</a></li><li><a href="/problem/pytorch-basics/dataloader-batching">Minibatches: Dataset &amp; DataLoader →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

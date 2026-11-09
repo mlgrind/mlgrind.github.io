@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>IoU (Intersection over Union) - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement IoU (Intersection over Union) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/iou-bounding-box" data-rh="true" />
@@ -100,53 +100,57 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"IoU (Intersection over Union) - CNNs & Computer Vision","description":"Implement IoU (Intersection over Union) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/iou-bounding-box","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">IoU (Intersection over Union) - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement IoU (Intersection over Union) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>IoU (Intersection over Union)</h2>
-<p>Implement Intersection over Union (IoU) for two axis-aligned bounding boxes.</p>
-<h3>What is IoU?</h3>
-<p>IoU measures the overlap between two bounding boxes. It is the <strong>most fundamental metric</strong> in object detection, used for:</p>
-<ul>
-<li>Evaluating detection quality (mAP calculation)</li>
-<li>Matching predictions to ground truth</li>
-<li>Non-Maximum Suppression (NMS)</li>
-</ul>
+<h3>What you&#x27;ll build</h3>
+<p>The Intersection over Union of two axis-aligned bounding boxes.</p>
+<h3>Background</h3>
+<p>IoU is the basic overlap measure of object detection. It decides whether a prediction counts as a true positive (IoU &gt;= 0.5 for PASCAL VOC, 0.5 to 0.95 for COCO mAP), which anchors are matched to ground truth during training, and which boxes NMS suppresses. It is scale invariant: two boxes overlapping by the same fraction score the same whatever their size.</p>
+<h3>Box format: <code>xyxy</code></h3>
+<p>Each box is <strong><code>[x1, y1, x2, y2]</code></strong>: <code>(x1, y1)</code> is the top-left corner and <code>(x2, y2)</code> the bottom-right corner, with <code>x2 &gt;= x1</code> and <code>y2 &gt;= y1</code> (image coordinates, <code>y</code> grows downward). Coordinates are continuous, so a box&#x27;s area is <code>(x2 - x1) * (y2 - y1)</code>. Other formats exist: COCO stores <code>xywh</code> = <code>[x, y, width, height]</code> and YOLO stores <code>cxcywh</code> = <code>[center_x, center_y, width, height]</code>. Convert them to <code>xyxy</code> first.</p>
 <h3>Formula</h3>
-<pre><code>IoU = Area of Intersection / Area of Union
-    = Intersection / (Area_A + Area_B - Intersection)
+<pre><code class="language-text">ix1 = max(a_x1, b_x1)     iy1 = max(a_y1, b_y1)      # intersection top-left
+ix2 = min(a_x2, b_x2)     iy2 = min(a_y2, b_y2)      # intersection bottom-right
+intersection = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+union        = area_a + area_b - intersection
+IoU          = intersection / union                   # in [0, 1]
 </code></pre>
-<h3>Bounding Box Format</h3>
-<p>Each box is <code>[x1, y1, x2, y2]</code> where:</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>(x1, y1)</code> = top-left corner</li>
-<li><code>(x2, y2)</code> = bottom-right corner</li>
+<li><code>box_a</code>, <code>box_b</code>: length-4 arrays or lists <code>[x1, y1, x2, y2]</code> of ints or floats.</li>
 </ul>
-<h3>Computing Intersection</h3>
-<pre><code>inter_x1 = max(box_a_x1, box_b_x1)
-inter_y1 = max(box_a_y1, box_b_y1)
-inter_x2 = min(box_a_x2, box_b_x2)
-inter_y2 = min(box_a_y2, box_b_y2)
-</code></pre>
-<p>If <code>inter_x1 &gt;= inter_x2</code> or <code>inter_y1 &gt;= inter_y2</code>, there is no overlap (IoU = 0).</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def iou(box_a, box_b):
-    # box_a, box_b: [x1, y1, x2, y2]
-    # Returns: float (IoU score, rounded to 4 decimal places)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: box_a=[0, 0, 2, 2], box_b=[1, 1, 3, 3]
-Output: 0.1429</pre><p>Intersection=1, Union=4+4-1=7, IoU=1/7≈0.1429</p></div><div><pre class="overflow-auto">Input: box_a=[0, 0, 1, 1], box_b=[2, 2, 3, 3]
-Output: 0.0</pre><p>No overlap, IoU=0</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A Python <code>float</code> rounded to 4 decimal places.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Disjoint boxes, or boxes that only touch along an edge, have IoU <code>0.0</code>. Clamp the intersection width and height at 0 separately; a negative width times a negative height would otherwise look like a positive overlap.</li>
+<li>If the union is 0 (two zero-area boxes), return <code>0.0</code>.</li>
+<li>No <code>+1</code> pixel convention: areas use <code>x2 - x1</code>, not <code>x2 - x1 + 1</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Plain Python or NumPy.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Vectorise it: compute an <code>(N, M)</code> IoU matrix between two sets of boxes with broadcasting.</li>
+<li>What do GIoU, DIoU and CIoU add, and why are they better regression losses than <code>1 - IoU</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: box_a = [0, 0, 2, 2], box_b = [1, 1, 3, 3]
+Output: 0.1429</pre><p>Intersection is the 1x1 square [1, 1, 2, 2]; union = 4 + 4 - 1 = 7; IoU = 1/7.</p></div><div><pre class="overflow-auto">Input: box_a = [0, 0, 4, 4], box_b = [2, 0, 6, 4]
+Output: 0.3333</pre><p>Intersection is 2 x 4 = 8; union = 16 + 16 - 8 = 24.</p></div><div><pre class="overflow-auto">Input: box_a = [0, 0, 1, 1], box_b = [2, 2, 3, 3]
+Output: 0.0</pre><p>No overlap: the clamped intersection width and height are 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def iou(box_a, box_b):
     &quot;&quot;&quot;
-    Calculate Intersection over Union of two bounding boxes.
+    Intersection over Union of two boxes in xyxy format.
 
     Args:
-        box_a: [x1, y1, x2, y2] first bounding box
-        box_b: [x1, y1, x2, y2] second bounding box
+        box_a: [x1, y1, x2, y2], top-left (x1, y1) and bottom-right (x2, y2)
+        box_b: [x1, y1, x2, y2]
 
     Returns:
-        IoU score as float, rounded to 4 decimal places
+        IoU as a Python float in [0, 1], rounded to 4 decimal places
+        (0.0 when the union is 0)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

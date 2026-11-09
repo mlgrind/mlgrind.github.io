@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Flatten Layer - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement Flatten Layer in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/flatten-layer" data-rh="true" />
@@ -100,30 +100,50 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Flatten Layer - CNNs & Computer Vision","description":"Implement Flatten Layer in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/flatten-layer","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Flatten Layer - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Flatten Layer in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Flatten Layer</h2>
-<p>Implement the flatten operation that converts a 3D feature map to a 1D vector for the fully connected layer.</p>
-<h3>Operation</h3>
-<pre><code>(batch, height, width, channels) → (batch, height * width * channels)
+<h3>What you&#x27;ll build</h3>
+<p>The layer that turns a batch of feature maps into a batch of vectors so it can feed a fully connected (linear) layer.</p>
+<h3>Background</h3>
+<p>A CNN ends with feature maps of shape <code>(batch, height, width, channels)</code>, but a linear classifier expects <code>(batch, features)</code>. Flattening keeps the batch axis and concatenates everything else. It has no parameters; it only changes the view of the data.</p>
+<h3>Layout used here: NHWC</h3>
+<p>The input is <strong><code>(N, H, W, C)</code> = <code>(batch, height, width, channels)</code></strong>, the channels-last layout of TensorFlow/Keras. PyTorch&#x27;s <code>nn.Flatten</code> usually sees NCHW <code>(N, C, H, W)</code> instead. Both flatten in row-major (C) order, so the element order of the output differs between layouts: weights trained on one layout don&#x27;t transfer to the other without a permute.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">out[n, (h * W + w) * C + c] = X[n, h, w, c]        out shape: (N, H * W * C)
 </code></pre>
-<h3>Usage</h3>
+<p>That is exactly NumPy&#x27;s default row-major reshape.</p>
+<h3>Inputs</h3>
 <ul>
-<li>Connects convolutional layers to fully connected layers</li>
-<li>Preserves batch dimension</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: shape (2, 4, 4, 3)
-Output: shape (2, 48)</pre><p>4 * 4 * 3 = 48 features per sample</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>X</code>: NumPy array of shape <code>(N, H, W, C)</code>, any dtype. It may be non-contiguous (for example a transposed view).</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A NumPy array of shape <code>(N, H * W * C)</code> with the same values in row-major order and the same dtype.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>N = 1</code> must still return a 2D array <code>(1, H*W*C)</code>, not a 1D vector. Never flatten the batch axis.</li>
+<li>Use <code>-1</code> to let NumPy infer the feature size.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, no loops needed.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why do modern CNNs replace flatten + a huge linear layer with global average pooling?</li>
+<li>In PyTorch, why can <code>x.view(N, -1)</code> fail on a permuted tensor while <code>x.reshape(N, -1)</code> works?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X.shape = (2, 4, 4, 3)
+Output: shape (2, 48)</pre><p>4 * 4 * 3 = 48 features per sample; the batch axis is kept.</p></div><div><pre class="overflow-auto">Input: X = np.arange(12).reshape(2, 3, 2, 1)
+Output: [[0, 1, 2, 3, 4, 5], [6, 7, 8, 9, 10, 11]]</pre><p>Row-major order: each sample becomes one row of 3 * 2 * 1 = 6 values.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def flatten(X):
     &quot;&quot;&quot;
-    Flatten feature maps to vectors.
+    Flatten NHWC feature maps to vectors.
 
     Args:
-        X: Input tensor (batch, height, width, channels)
+        X: Input array, shape (batch, height, width, channels)
 
     Returns:
-        output: Flattened tensor (batch, height*width*channels)
+        output: Array of shape (batch, height * width * channels), row-major order
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

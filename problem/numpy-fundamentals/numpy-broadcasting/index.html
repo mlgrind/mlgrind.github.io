@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Broadcasting Operations - NumPy Fundamentals | ML Grind</title>
 <meta name="description" content="Implement Broadcasting Operations in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/numpy-fundamentals/numpy-broadcasting" data-rh="true" />
@@ -99,41 +99,72 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Broadcasting Operations - NumPy Fundamentals","description":"Implement Broadcasting Operations in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/numpy-fundamentals/numpy-broadcasting","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Broadcasting Operations - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Broadcasting Operations in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>NumPy Broadcasting</h2>
-<p>Implement operations that leverage NumPy&#x27;s broadcasting rules.</p>
-<h3>Task</h3>
-<p>Given a 2D array of shape (3, 4):</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Broadcasting Operations - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Broadcasting Operations in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Broadcasting Operations</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>broadcasting_ops(arr, bias, scale)</code> that performs four <strong>independent</strong> operations on the same matrix, each using broadcasting instead of loops.</p>
+<h3>Background</h3>
+<p>Broadcasting is how a bias vector gets added to every row of a layer&#x27;s output, how features are standardised with per-column statistics, and how per-sample weights scale a batch. It lets NumPy combine arrays of different shapes without copying data.</p>
+<h3>Broadcasting rules</h3>
 <ol>
-<li>Subtract the row means from each row (center rows)</li>
-<li>Subtract the column means from each column (center columns)</li>
-<li>Add a 1D bias vector of shape (4,) to each row</li>
-<li>Multiply by a column vector of shape (3, 1)</li>
+<li>Line the two shapes up from the <strong>right</strong> (trailing dimensions first).</li>
+<li>Each pair of dimensions must be equal, or one of them must be 1. A missing leading dimension counts as 1.</li>
+<li>Dimensions of size 1 are stretched to match the other array.</li>
 </ol>
-<h3>Broadcasting Rules</h3>
+<table><thead><tr><th>Operation</th><th>Shapes</th><th>Result</th></tr></thead><tbody><tr><td><code>arr - arr.mean(axis=1, keepdims=True)</code></td><td><code>(m, n)</code> and <code>(m, 1)</code></td><td><code>(m, n)</code></td></tr><tr><td><code>arr - arr.mean(axis=0)</code></td><td><code>(m, n)</code> and <code>(n,)</code></td><td><code>(m, n)</code></td></tr><tr><td><code>arr + bias</code></td><td><code>(m, n)</code> and <code>(n,)</code></td><td><code>(m, n)</code></td></tr><tr><td><code>arr * scale</code></td><td><code>(m, n)</code> and <code>(m, 1)</code></td><td><code>(m, n)</code></td></tr></tbody></table>
+<h3>Inputs</h3>
 <ul>
-<li>Arrays are compatible when dimensions are equal or one of them is 1</li>
-<li>Operations proceed element-wise on matching dimensions</li>
+<li><code>arr</code>: 2D numeric array of shape <code>(m, n)</code>, e.g. <code>(3, 4)</code></li>
+<li><code>bias</code>: 1D array of shape <code>(n,)</code></li>
+<li><code>scale</code>: 2D array of shape <code>(m, 1)</code> (a column vector)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def broadcasting_ops(arr: np.ndarray, bias: np.ndarray, scale: np.ndarray) -&gt; dict:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: arr (3,4), bias (4,), scale (3,1)
-Output: {&#x27;row_centered&#x27;: ..., &#x27;col_centered&#x27;: ..., &#x27;biased&#x27;: ..., &#x27;scaled&#x27;: ...}</pre><p>Various broadcasting operations</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with these keys. Each value is computed from the <strong>original</strong> <code>arr</code> (the operations are not chained) and has shape <code>(m, n)</code>:</p>
+<ul>
+<li><code>&#x27;row_centered&#x27;</code>: <code>arr</code> minus each row&#x27;s mean, so every row of the result has mean 0</li>
+<li><code>&#x27;col_centered&#x27;</code>: <code>arr</code> minus each column&#x27;s mean, so every column of the result has mean 0</li>
+<li><code>&#x27;biased&#x27;</code>: <code>arr + bias</code>, i.e. <code>bias[j]</code> added to column <code>j</code> of every row</li>
+<li><code>&#x27;scaled&#x27;</code>: <code>arr * scale</code>, i.e. row <code>i</code> multiplied by <code>scale[i, 0]</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Means are floats, so the centred outputs are float even for integer input.</li>
+<li><code>arr.mean(axis=1)</code> has shape <code>(m,)</code>. Subtracting it from an <code>(m, n)</code> array either fails (when <code>m != n</code>) or, for a square matrix, silently subtracts along the <strong>wrong axis</strong>. Keep the reduced axis with <code>keepdims=True</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use broadcasting; no Python loops, <code>np.tile</code> or <code>np.repeat</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Standardise each column to mean 0 and standard deviation 1. What goes wrong for a constant column?</li>
+<li>What shape does <code>np.ones((3, 1)) + np.ones((1, 4))</code> have, and why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: arr = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+broadcasting_ops(arr, np.zeros(4), np.ones((3, 1)))[&quot;row_centered&quot;][0]
+Output: array([-1.5, -0.5,  0.5,  1.5])</pre><p>Row 0 has mean 2.5, which is subtracted from each of its entries.</p></div><div><pre class="overflow-auto">Input: broadcasting_ops(arr, np.zeros(4), np.ones((3, 1)))[&quot;col_centered&quot;]
+Output: array([[-4., -4., -4., -4.],
+       [ 0.,  0.,  0.,  0.],
+       [ 4.,  4.,  4.,  4.]])</pre><p>The column means are [5, 6, 7, 8]; each row sits 4 below, at, or 4 above them.</p></div><div><pre class="overflow-auto">Input: broadcasting_ops(arr, np.array([10, 20, 30, 40]), np.array([[1], [2], [3]]))[&quot;scaled&quot;]
+Output: array([[ 1,  2,  3,  4],
+       [10, 12, 14, 16],
+       [27, 30, 33, 36]])</pre><p>The (3, 1) column scales row i by scale[i, 0].</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def broadcasting_ops(arr: np.ndarray, bias: np.ndarray, scale: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Perform broadcasting operations.
+    Four independent broadcasting operations on arr.
 
     Args:
-        arr: 2D array of shape (3, 4)
-        bias: 1D array of shape (4,)
-        scale: 2D array of shape (3, 1)
+        arr:   2D array of shape (m, n), e.g. (3, 4)
+        bias:  1D array of shape (n,)
+        scale: 2D array of shape (m, 1)
 
     Returns:
-        Dictionary with results of broadcasting operations
+        dict with keys (each computed from the original arr, shape (m, n)):
+            &#x27;row_centered&#x27;: arr minus each row&#x27;s mean
+            &#x27;col_centered&#x27;: arr minus each column&#x27;s mean
+            &#x27;biased&#x27;:       arr + bias (bias added to every row)
+            &#x27;scaled&#x27;:       arr * scale (row i multiplied by scale[i, 0])
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 9 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

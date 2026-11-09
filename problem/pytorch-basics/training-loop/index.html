@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>The Training Loop - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/training-loop" data-rh="true" />
@@ -100,6 +100,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"The Training Loop - PyTorch Basics","description":"Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/training-loop","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">The Training Loop - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement The Training Loop in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>The Training Loop</h2>
+<p><strong>What you&#x27;ll build:</strong> <code>train_linear_model(X, y, lr, epochs)</code>, which fits a linear model with full-batch gradient descent and records the loss at every epoch.</p>
+<h3>Background</h3>
 <p>Every PyTorch model, from linear regression to an LLM, is trained by the same five-line loop:</p>
 <pre><code class="language-python">for epoch in range(epochs):
     optimizer.zero_grad()          # 1. clear the gradients from the last step
@@ -109,30 +111,43 @@
     optimizer.step()               # 5. update the parameters
 </code></pre>
 <p>Forgetting <code>zero_grad()</code> is the classic bug: <code>.grad</code> <strong>accumulates</strong>, so every step would use the sum of all past gradients.</p>
-<h3>Task</h3>
-<p>Fit a linear model <code>y_hat = X @ w + b</code> with <strong>full-batch gradient descent</strong> on the mean squared error, and record the loss at every epoch.</p>
-<pre><code>L     = mean((X @ w + b - y) ** 2)
+<h3>Formula</h3>
+<p>Fit <code>y_hat = X @ w + b</code> with <strong>full-batch gradient descent</strong> on the mean squared error, with <code>N</code> samples:</p>
+<pre><code class="language-text">L     = mean((X @ w + b - y) ** 2)
 dL/dw = (2 / N) * X.T @ (X @ w + b - y)
 dL/db = (2 / N) * sum(X @ w + b - y)
 w     = w - lr * dL/dw
 b     = b - lr * dL/db
 </code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: float array <code>(N, d)</code>; <code>y</code>: float array <code>(N,)</code>.</li>
+<li><code>lr</code>: learning rate (default 0.1); <code>epochs</code>: number of gradient steps (default 100).</li>
+</ul>
+<h3>Edge Cases and Conventions</h3>
 <ul>
 <li>Start from <strong>zeros</strong>: <code>w = 0</code> (shape <code>(d,)</code>), <code>b = 0</code>.</li>
 <li>Each epoch, compute the loss with the <strong>current</strong> parameters, append it to the history, then take one step. So <code>losses[0]</code> is the loss of the all-zero model, <code>mean(y ** 2)</code>.</li>
-<li>In the NumPy track you write the gradients by hand (what <code>loss.backward()</code> does for you in PyTorch).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def train_linear_model(X, y, lr=0.1, epochs=100) -&gt; dict:
-</code></pre>
+<h3>Constraints</h3>
+<ul>
+<li><strong>NumPy track:</strong> write the gradients by hand (what <code>loss.backward()</code> does for you in PyTorch).</li>
+<li><strong>PyTorch track:</strong> use <code>nn.Linear</code>, <code>nn.MSELoss</code> and <code>torch.optim.SGD</code>, and let <code>loss.backward()</code> compute the gradients.</li>
+</ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
 <li><code>&#x27;losses&#x27;</code>: list of <code>epochs</code> Python floats, the loss <strong>before</strong> each update</li>
 <li><code>&#x27;w&#x27;</code>: learned weights, shape <code>(d,)</code></li>
 <li><code>&#x27;b&#x27;</code>: learned bias, a Python float</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.random.seed(0); X = np.random.randn(64, 2); y = X @ [2, -3] + 0.5; lr=0.1, epochs=200
-Output: {&#x27;losses&#x27;: [14.942, 8.856, ..., ~0.0], &#x27;w&#x27;: array([2., -3.]), &#x27;b&#x27;: 0.5}</pre><p>The loss decreases every epoch and the parameters converge to the true ones</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Switch to minibatches (next problem). Why does the loss curve become noisy, and why is that often fine?</li>
+<li>Where would <code>model.train()</code> / <code>model.eval()</code> and <code>torch.no_grad()</code> go in a loop with a validation set?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: train_linear_model(np.array([[1.0], [2.0], [3.0]]), np.array([2.0, 4.0, 6.5]), lr=0.05, epochs=4)
+Output: {&#x27;losses&#x27;: [20.75, 4.2638, 0.9907, 0.3383], &#x27;w&#x27;: array([1.716]), &#x27;b&#x27;: 0.6924}</pre><p>losses[0] = mean(y ** 2) = 20.75 is the loss of the all-zero model; each step lowers it.</p></div><div><pre class="overflow-auto">Input: X = np.random.randn(64, 2); y = X @ [2, -3] + 0.5; train_linear_model(X, y, lr=0.1, epochs=200)
+Output: {&#x27;losses&#x27;: [..., ~0.0], &#x27;w&#x27;: array([ 2., -3.]), &#x27;b&#x27;: 0.5}</pre><p>On noise-free data the parameters converge to the true ones (rounded to 3 decimals).</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def train_linear_model(X, y, lr=0.1, epochs=100) -&gt; dict:
     &quot;&quot;&quot;

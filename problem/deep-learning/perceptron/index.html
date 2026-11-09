@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>ReLU Activation - Deep Learning Basics | ML Grind</title>
 <meta name="description" content="Implement ReLU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/deep-learning/perceptron" data-rh="true" />
@@ -99,35 +99,49 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"ReLU Activation - Deep Learning Basics","description":"Implement ReLU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/deep-learning/perceptron","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ReLU Activation - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ReLU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ReLU Activation Function</h2>
-<p>Implement the Rectified Linear Unit (ReLU) activation function, one of the most popular activation functions in deep learning.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ReLU Activation - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ReLU Activation in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ReLU Activation</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The Rectified Linear Unit, <code>relu(x)</code>, applied element-wise to an array of any shape. It is the default non-linearity in the hidden layers of MLPs, CNNs and transformer feed-forward blocks.</p>
+<h3>Background</h3>
+<p>Without a non-linearity, a stack of linear layers collapses into a single linear map, so depth buys nothing. ReLU is the simplest non-linearity that works well: it is cheap, it does not saturate for positive inputs (its gradient there is exactly 1, which helps against vanishing gradients), and it makes activations sparse.</p>
 <h3>Formula</h3>
-<pre><code>ReLU(x) = max(0, x)
+<pre><code class="language-text">relu(x)  = max(0, x)           element-wise
+relu&#x27;(x) = 1 if x &gt; 0 else 0   (the value at x = 0 is a convention; frameworks use 0)
 </code></pre>
-<h3>Properties</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Output is x if x &gt; 0, else 0</li>
-<li>Helps with vanishing gradient problem</li>
-<li>Computationally efficient</li>
+<li><code>x</code>: NumPy array of any shape (ints or floats).</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def relu(x: np.ndarray) -&gt; np.ndarray:
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([-2, -1, 0, 1, 2])
-Output: [0, 0, 0, 1, 2]</pre><p>Negative values become 0, positive values unchanged</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>An array with the <strong>same shape</strong> as <code>x</code>: negative entries become 0, the rest are unchanged. Keep the input&#x27;s dtype (an int array stays int).</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>relu(0) = 0</code>.</li>
+<li>Tiny negatives such as <code>-1e-10</code> become exactly 0.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Vectorise: no Python loops over elements.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>What is the &quot;dying ReLU&quot; problem, and how do Leaky ReLU and GELU address it? (You implement both in PyTorch Basics.)</li>
+<li>Why does ReLU pair with He initialization rather than Xavier? (See Xavier/He Weight Initialization in Neural Networks.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: relu(np.array([-2, -1, 0, 1, 2]))
+Output: [0, 0, 0, 1, 2]</pre><p>Negative values become 0; zero and positive values pass through unchanged.</p></div><div><pre class="overflow-auto">Input: relu(np.array([[-1.5, 2.0], [3.0, -4.0]]))
+Output: [[0.0, 2.0], [3.0, 0.0]]</pre><p>Works element-wise on any shape and keeps that shape.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def relu(x: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Apply ReLU activation function.
+    Apply the ReLU activation element-wise.
 
     Args:
         x: Input array of any shape
 
     Returns:
-        Array with ReLU applied element-wise
+        Array of the same shape and dtype with max(0, x) applied element-wise
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

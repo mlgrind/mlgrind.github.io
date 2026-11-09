@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>REINFORCE Policy Gradient - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement REINFORCE Policy Gradient in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-policy-gradient" data-rh="true" />
@@ -99,37 +99,49 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"REINFORCE Policy Gradient - Reinforcement Learning","description":"Implement REINFORCE Policy Gradient in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-policy-gradient","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">REINFORCE Policy Gradient - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement REINFORCE Policy Gradient in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>REINFORCE (Monte Carlo Policy Gradient)</h2>
-<p>Implement the REINFORCE algorithm for computing policy gradient updates.</p>
-<h3>Policy Gradient Theorem</h3>
-<pre><code>∇J(θ) = E[Σ_t ∇log π(a_t|s_t; θ) * G_t]
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">REINFORCE Policy Gradient - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement REINFORCE Policy Gradient in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>REINFORCE Policy Gradient</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The REINFORCE (Monte Carlo policy gradient) estimate ∇_θ J for a tabular softmax policy, from one recorded episode.</p>
+<h3>Background</h3>
+<p>Value-based methods learn Q and act greedily; policy-gradient methods adjust the policy&#x27;s parameters directly in the direction that makes high-return actions more likely. REINFORCE (Williams, 1992) is the simplest such method and the ancestor of actor-critic, PPO and the RL used to fine-tune LLMs.</p>
+<h3>Formula</h3>
+<p>Policy gradient theorem, estimated from one episode:</p>
+<pre><code class="language-text">∇_θ J ≈ Σ_t G_t · ∇_θ log π(a_t | s_t)
+G_t   = r_t + γ·r_{t+1} + γ²·r_{t+2} + ...      (return from step t to the end)
 </code></pre>
-<h3>REINFORCE Algorithm</h3>
+<p>Tabular softmax policy, with θ of shape (n_states, n_actions):</p>
+<pre><code class="language-text">π(·|s) = softmax(θ[s])
+∇_{θ[s]} log π(a|s) = one_hot(a) - π(·|s)       (zero for every other row)
+</code></pre>
+<h3>Algorithm</h3>
 <ol>
-<li>Collect episode: (s_0, a_0, r_1, s_1, a_1, r_2, ...)</li>
-<li>For each timestep t:
-<ul>
-<li>Compute return G_t (discounted sum of future rewards)</li>
-<li>Compute gradient: ∇log π(a_t|s_t) * G_t</li>
-</ul>
-</li>
-<li>Update policy parameters</li>
+<li>Compute G_t for every step with one backward pass: G = r_t + γ·G.</li>
+<li>For each step t with state s_t and action a_t: add G_t · (one_hot(a_t) - softmax(θ[s_t])) to row s_t of the gradient.</li>
+<li>Return the accumulated gradient.</li>
 </ol>
-<h3>Softmax Policy</h3>
-<pre><code>π(a|s) = exp(θ[s,a]) / Σ_a&#x27; exp(θ[s,a&#x27;])
-</code></pre>
-<h3>Gradient of Log-Softmax</h3>
-<pre><code>∇_θ log π(a|s) = one_hot(a) - π(·|s)
-</code></pre>
-<p>(1 for action taken, minus probability of each action)</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def reinforce_gradient(theta: np.ndarray, episode: list,
-                       gamma: float) -&gt; np.ndarray:
-</code></pre>
-<p>Episode is list of (state, action, reward) tuples.</p>
-<h3>Expected Return Format</h3>
-<p>Returns gradient array of same shape as theta (n_states, n_actions).</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: theta (3x2), episode=[(0,1,1), (1,0,2)], gamma=0.9
-Output: Gradient array (3x2)</pre><p>Gradient computed from policy gradient theorem</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>theta</code>: (n_states, n_actions) float array of logits</li>
+<li><code>episode</code>: list of <code>(state, action, reward)</code> tuples, where reward is the reward received after taking that action</li>
+<li><code>gamma</code>: discount factor</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A NumPy array with the same shape as <code>theta</code>, <strong>rounded to 2 decimals</strong>. It is the <strong>ascent</strong> direction (gradient of J, not of a loss): θ ← θ + lr · gradient improves the policy.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>An empty episode gives an all-zero gradient.</li>
+<li>A state visited several times accumulates one contribution per visit; unvisited rows stay 0.</li>
+<li>Use the softmax with the max subtracted (the provided helper) for stability.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Compute probabilities from <code>theta</code> as given; don&#x27;t update theta during the episode.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Subtracting a baseline b(s) from G_t keeps the estimate unbiased and lowers variance. Why is the bias still zero?</li>
+<li>Why does this estimator have high variance, and how do GAE and PPO address it?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: theta = zeros((2, 2)), episode = [(0, 1, 1.0), (1, 0, 1.0)], gamma = 0.9
+Output: [[-0.95, 0.95], [0.5, -0.5]]</pre><p>G = [1.9, 1.0] and π = [0.5, 0.5]: row 0 gets 1.9·([0, 1] - 0.5), row 1 gets 1.0·([1, 0] - 0.5)</p></div><div><pre class="overflow-auto">Input: theta = zeros((2, 2)), episode = [(0, 0, 5.0)], gamma = 0.9
+Output: [[2.5, -2.5], [0.0, 0.0]]</pre><p>One step with G = 5: 5·([1, 0] - [0.5, 0.5]); state 1 was never visited</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def softmax(x):
     &quot;&quot;&quot;Compute softmax probabilities.&quot;&quot;&quot;
@@ -139,26 +151,24 @@ def softmax(x):
 def reinforce_gradient(theta: np.ndarray, episode: list,
                        gamma: float) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Compute REINFORCE policy gradient.
+    Compute the REINFORCE policy gradient for a tabular softmax policy.
 
     Args:
-        theta: Policy parameters (n_states, n_actions)
-        episode: List of (state, action, reward) tuples
-        gamma: Discount factor
+        theta: (n_states, n_actions) policy logits
+        episode: list of (state, action, reward) tuples
+        gamma: discount factor
 
     Returns:
-        Gradient of same shape as theta
+        (n_states, n_actions) gradient of sum_t G_t * log pi(a_t|s_t),
+        rounded to 2 decimals
     &quot;&quot;&quot;
     theta = np.array(theta, dtype=float)
     n_states, n_actions = theta.shape
     gradient = np.zeros_like(theta)
 
     # Your code here
-    # 1. Compute returns G_t for each timestep
-    # 2. For each (s, a, r), compute gradient contribution
-    # 3. Gradient = (one_hot(a) - softmax(theta[s])) * G_t
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Tensor Operations - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Tensor Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/tensor-operations" data-rh="true" />
@@ -99,35 +99,55 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Tensor Operations - PyTorch Basics","description":"Implement Tensor Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/tensor-operations","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Tensor Operations - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Tensor Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Basic Tensor Operations</h2>
-<p>Common tensor operations used in neural networks.</p>
-<h3>Arithmetic Operations</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Tensor Operations - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Tensor Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Tensor Operations</h2>
+<p><strong>What you&#x27;ll build:</strong> <code>tensor_ops(x, y)</code>, which applies the everyday arithmetic, reduction and shape operations to two <code>(2, 3)</code> tensors and returns the results in a dictionary.</p>
+<h3>Background</h3>
+<p>Most model code is a handful of operations: element-wise arithmetic, reductions over a dimension (<code>sum</code>, <code>mean</code>, <code>max</code>) and reshapes. PyTorch and NumPy share almost all of it; the differences that bite are the keyword names and defaults:</p>
+<table><thead><tr><th>Concept</th><th>PyTorch</th><th>NumPy</th></tr></thead><tbody><tr><td>Reduce over a dimension</td><td><code>x.sum(dim=0)</code></td><td><code>x.sum(axis=0)</code></td></tr><tr><td>Keep the reduced dimension</td><td><code>keepdim=True</code></td><td><code>keepdims=True</code></td></tr><tr><td>Standard deviation</td><td><code>x.std()</code> is <strong>unbiased</strong> (divides by n-1)</td><td><code>x.std()</code> divides by n</td></tr><tr><td>Add a size-1 dimension</td><td><code>x.unsqueeze(0)</code></td><td><code>np.expand_dims(x, 0)</code> or <code>x[None]</code></td></tr><tr><td>Reshape</td><td><code>x.view(3, 2)</code> / <code>x.reshape(3, 2)</code></td><td><code>x.reshape(3, 2)</code></td></tr></tbody></table>
+<h3>Inputs</h3>
 <ul>
-<li>Element-wise: +, -, *, /</li>
-<li>Matrix multiplication: @ or np.matmul</li>
-<li>Power: ** or np.power</li>
+<li><code>x</code>, <code>y</code>: tensors of shape <code>(2, 3)</code>. <code>y</code> has no zeros.</li>
 </ul>
-<h3>Reduction Operations</h3>
-<ul>
-<li>sum, mean, std, var</li>
-<li>min, max, argmin, argmax</li>
-</ul>
-<h3>Shape Operations</h3>
-<ul>
-<li>reshape, view (reshape in NumPy)</li>
-<li>squeeze, unsqueeze (np.squeeze, np.expand_dims)</li>
-<li>permute, transpose</li>
-</ul>
-<h3>Task</h3>
-<p>Implement common tensor operations.</p>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><strong>Arithmetic</strong>: <code>&#x27;add&#x27;</code>, <code>&#x27;sub&#x27;</code>, <code>&#x27;mul&#x27;</code>, <code>&#x27;div&#x27;</code>, <code>&#x27;pow&#x27;</code></li>
-<li><strong>Reductions</strong>: <code>&#x27;sum_all&#x27;</code>, <code>&#x27;sum_axis0&#x27;</code>, <code>&#x27;sum_axis1&#x27;</code>, <code>&#x27;mean&#x27;</code>, <code>&#x27;std&#x27;</code>, <code>&#x27;max&#x27;</code>, <code>&#x27;argmax&#x27;</code></li>
-<li><strong>Shape ops</strong>: <code>&#x27;reshape&#x27;</code> (to 3,2), <code>&#x27;flatten&#x27;</code>, <code>&#x27;unsqueeze&#x27;</code> (add dim 0), <code>&#x27;squeeze&#x27;</code>, <code>&#x27;transpose&#x27;</code></li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x=[[1,2,3],[4,5,6]], y=[[1,1,1],[2,2,2]]
-Output: {&#x27;add&#x27;: [[2,3,4],[6,7,8]], &#x27;mean&#x27;: 3.5, &#x27;reshape&#x27;: [[1,2],[3,4],[5,6]], ...}</pre><p>Arithmetic, reduction, and shape operations on tensors</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><strong>Arithmetic</strong> (shape <code>(2, 3)</code>): <code>&#x27;add&#x27;</code> = x + y, <code>&#x27;sub&#x27;</code> = x - y, <code>&#x27;mul&#x27;</code> = x * y (element-wise), <code>&#x27;div&#x27;</code> = x / (y + 1e-8), <code>&#x27;pow&#x27;</code> = x ** 2</li>
+<li><strong>Reductions</strong>:
+<ul>
+<li><code>&#x27;sum_all&#x27;</code>: sum of every element (scalar)</li>
+<li><code>&#x27;sum_axis0&#x27;</code>: sum over dim 0 (down the rows), shape <code>(3,)</code></li>
+<li><code>&#x27;sum_axis1&#x27;</code>: sum over dim 1 (along each row), shape <code>(2,)</code></li>
+<li><code>&#x27;mean&#x27;</code>: mean of every element (scalar)</li>
+<li><code>&#x27;std&#x27;</code>: <strong>population</strong> standard deviation of every element (divide by n, not n - 1)</li>
+<li><code>&#x27;max&#x27;</code>: largest element (scalar)</li>
+<li><code>&#x27;argmax&#x27;</code>: index of the largest element in the <strong>flattened</strong> tensor (an integer from 0 to 5)</li>
+</ul>
+</li>
+<li><strong>Shape ops</strong>:
+<ul>
+<li><code>&#x27;reshape&#x27;</code>: x as shape <code>(3, 2)</code>, keeping row-major order</li>
+<li><code>&#x27;flatten&#x27;</code>: x as shape <code>(6,)</code></li>
+<li><code>&#x27;unsqueeze&#x27;</code>: x with a new leading dimension, shape <code>(1, 2, 3)</code></li>
+<li><code>&#x27;squeeze&#x27;</code>: the unsqueezed tensor with that dimension removed again, shape <code>(2, 3)</code></li>
+<li><code>&#x27;transpose&#x27;</code>: x transposed, shape <code>(3, 2)</code></li>
+</ul>
+</li>
+</ul>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>The <code>1e-8</code> in <code>&#x27;div&#x27;</code> guards against division by zero; with the tests&#x27; inputs it changes nothing visible.</li>
+<li><code>&#x27;std&#x27;</code> must use the population formula: <code>sqrt(mean((x - mean(x)) ** 2))</code>. In PyTorch pass <code>unbiased=False</code> (or <code>correction=0</code>).</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use built-in tensor operations; no Python loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li><code>view</code> fails on a non-contiguous tensor (for example after <code>.T</code>) while <code>reshape</code> copies when it must. Why?</li>
+<li>What does <code>x.sum(dim=0, keepdim=True)</code> return, and why is it handy for broadcasting?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: r = tensor_ops(np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), np.array([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]]))
+r[&quot;add&quot;], r[&quot;sum_axis0&quot;], r[&quot;sum_axis1&quot;]
+Output: (array([[2., 3., 4.], [6., 7., 8.]]), array([5., 7., 9.]), array([ 6., 15.]))</pre><p>Dim 0 sums down the columns (3 values); dim 1 sums along each row (2 values).</p></div><div><pre class="overflow-auto">Input: round(float(r[&quot;std&quot;]), 4), int(r[&quot;argmax&quot;]), r[&quot;reshape&quot;].tolist()
+Output: (1.7078, 5, [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])</pre><p>Population std of 1..6 is sqrt(35/12); the max (6.0) sits at flat index 5; reshape keeps row-major order.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def tensor_ops(x: np.ndarray, y: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
@@ -135,14 +155,18 @@ def tensor_ops(x: np.ndarray, y: np.ndarray) -&gt; dict:
 
     Args:
         x: First tensor (2, 3)
-        y: Second tensor (2, 3)
+        y: Second tensor (2, 3), no zeros
 
     Returns:
-        Dictionary with operation results
+        dict with arithmetic keys &#x27;add&#x27;, &#x27;sub&#x27;, &#x27;mul&#x27;, &#x27;div&#x27;, &#x27;pow&#x27;;
+        reductions &#x27;sum_all&#x27;, &#x27;sum_axis0&#x27;, &#x27;sum_axis1&#x27;, &#x27;mean&#x27;, &#x27;std&#x27;
+        (population), &#x27;max&#x27;, &#x27;argmax&#x27; (flat index); and shape ops
+        &#x27;reshape&#x27; (3, 2), &#x27;flatten&#x27; (6,), &#x27;unsqueeze&#x27; (1, 2, 3),
+        &#x27;squeeze&#x27; (2, 3), &#x27;transpose&#x27; (3, 2)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 2 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Group Normalization - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Group Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/group-norm" data-rh="true" />
@@ -100,28 +100,54 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Group Normalization - PyTorch Basics","description":"Implement Group Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/group-norm","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Group Normalization - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Group Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Group Normalization</h2>
-<p><strong>Group Normalization</strong> divides channels into groups and normalizes within each group. It&#x27;s independent of batch size, making it useful for small batches.</p>
+<p><strong>What you&#x27;ll build:</strong> <code>group_norm(x, num_groups, gamma, beta, eps)</code> for 2D input <code>(N, C)</code>: split the channels into groups, normalise within each group of each sample, then scale and shift per channel.</p>
+<h3>Background</h3>
+<p>BatchNorm&#x27;s statistics come from the batch, so it degrades when batches are small (detection, segmentation, large models on few GPUs). Group Normalization (Wu &amp; He, 2018) computes its statistics <strong>per sample</strong> over groups of channels, so it behaves identically for any batch size and in train and eval mode. It is the default in diffusion U-Nets.</p>
 <h3>Algorithm</h3>
+<p>With <code>G = num_groups</code> dividing <code>C</code>, and <code>C // G</code> channels per group:</p>
 <ol>
-<li>Reshape input from (N, C) to (N, G, C//G) where G is num_groups</li>
-<li>Compute mean and variance within each group (axis=2)</li>
-<li>Normalize: (x - mean) / sqrt(var + eps)</li>
-<li>Reshape back to (N, C)</li>
-<li>Apply learnable scale (γ) and shift (β)</li>
+<li>Reshape <code>x</code> from <code>(N, C)</code> to <code>(N, G, C // G)</code>, so each group of consecutive channels sits on its own row.</li>
+<li>Compute the mean and the <strong>population</strong> variance (divide by the group size) over the last axis.</li>
+<li>Normalise: <code>x_hat = (x - mean) / sqrt(var + eps)</code>.</li>
+<li>Reshape back to <code>(N, C)</code>.</li>
+<li>Scale and shift per channel: <code>out = gamma * x_hat + beta</code>.</li>
 </ol>
 <h3>Special Cases</h3>
-<table><thead><tr><th>Setting</th><th>Equivalent To</th></tr></thead><tbody><tr><td>G = C</td><td>Instance Normalization</td></tr><tr><td>G = 1</td><td>Layer Normalization</td></tr></tbody></table>
-<h3>Task</h3>
-<p>Implement Group Normalization for 2D input (N, C).</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: group_norm(x, num_groups=2, gamma, beta) where x is (2, 4)
-Output: Normalized output of shape (2, 4)</pre><p>Channels divided into 2 groups of 2, normalized within each group</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<table><thead><tr><th>Setting</th><th>Equivalent to</th></tr></thead><tbody><tr><td><code>G = 1</code></td><td>LayerNorm over the channels</td></tr><tr><td><code>G = C</code></td><td>InstanceNorm (with a single value per channel, every output is 0, then <code>beta</code>)</td></tr></tbody></table>
+<h3>Inputs</h3>
+<ul>
+<li><code>x</code>: float array <code>(N, C)</code>.</li>
+<li><code>num_groups</code>: integer that divides <code>C</code>.</li>
+<li><code>gamma</code>, <code>beta</code>: float arrays <code>(C,)</code>.</li>
+<li><code>eps</code>: small positive float (default <code>1e-5</code>).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>An array of shape <code>(N, C)</code>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Groups are <strong>consecutive</strong> channels: with <code>C = 4, G = 2</code> the groups are channels <code>{0, 1}</code> and <code>{2, 3}</code>.</li>
+<li>The real layer works on <code>(N, C, *spatial)</code> and also pools over the spatial positions; here the input is <code>(N, C)</code> to keep the reshape simple.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>Vectorised with a reshape; no loops over groups.</li>
+<li><strong>PyTorch track:</strong> don&#x27;t call <code>F.group_norm</code> or <code>nn.GroupNorm</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Extend it to <code>(N, C, H, W)</code>. Which axes do you reduce over?</li>
+<li>Why is GroupNorm usually paired with weight standardisation in small-batch detection models?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: group_norm(np.array([[1.0, 2.0, 3.0, 5.0]]), 2, np.ones(4), np.zeros(4))
+Output: array([[-1.,  1., -1.,  1.]])</pre><p>Group {1, 2}: mean 1.5, std 0.5. Group {3, 5}: mean 4, std 1. Each normalises to [-1, 1].</p></div><div><pre class="overflow-auto">Input: group_norm(np.array([[1.0, 2.0, 3.0, 5.0]]), 2, np.full(4, 2.0), np.ones(4))
+Output: array([[-1.,  3., -1.,  3.]])</pre><p>gamma = 2 and beta = 1 map -1 to -1 and 1 to 3.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def group_norm(x: np.ndarray, num_groups: int, gamma: np.ndarray, beta: np.ndarray, eps: float = 1e-5) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Apply Group Normalization.
+    Apply Group Normalization to (N, C) input.
 
     Args:
         x: Input array of shape (N, C)
-        num_groups: Number of groups to divide channels into
+        num_groups: Number of groups of consecutive channels (divides C)
         gamma: Scale parameter of shape (C,)
         beta: Shift parameter of shape (C,)
         eps: Small constant for numerical stability
@@ -131,7 +157,7 @@ def group_norm(x: np.ndarray, num_groups: int, gamma: np.ndarray, beta: np.ndarr
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

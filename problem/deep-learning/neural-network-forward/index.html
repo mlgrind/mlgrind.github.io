@@ -78,59 +78,79 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Dense Layer Forward Pass - Deep Learning Basics | ML Grind</title>
-<meta name="description" content="Implement Dense Layer Forward Pass in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Dense Layer Forward Pass (ReLU) - Deep Learning Basics | ML Grind</title>
+<meta name="description" content="Implement Dense Layer Forward Pass (ReLU) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/deep-learning/neural-network-forward" data-rh="true" />
-<meta property="og:title" content="Dense Layer Forward Pass - Deep Learning Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Dense Layer Forward Pass in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Dense Layer Forward Pass (ReLU) - Deep Learning Basics | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Dense Layer Forward Pass (ReLU) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/deep-learning/neural-network-forward" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Dense Layer Forward Pass - Deep Learning Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Dense Layer Forward Pass in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Dense Layer Forward Pass (ReLU) - Deep Learning Basics | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Dense Layer Forward Pass (ReLU) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Dense Layer Forward Pass - Deep Learning Basics","description":"Implement Dense Layer Forward Pass in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/deep-learning/neural-network-forward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Dense Layer Forward Pass (ReLU) - Deep Learning Basics","description":"Implement Dense Layer Forward Pass (ReLU) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/deep-learning/neural-network-forward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dense Layer Forward Pass - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dense Layer Forward Pass in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dense Layer Forward Pass</h2>
-<p>Implement the forward pass of a fully-connected (dense) neural network layer.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dense Layer Forward Pass (ReLU) - Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dense Layer Forward Pass (ReLU) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dense Layer Forward Pass (ReLU)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The forward pass of one fully-connected (dense) layer with a ReLU activation, for a whole batch at once: <code>dense_forward(X, W, b) = relu(X @ W + b)</code>.</p>
+<h3>Background</h3>
+<p>A dense layer is the basic unit of an MLP and of the feed-forward block inside every transformer. Each output unit computes a weighted sum of all inputs plus a bias, then a non-linearity. Processing a batch as one matrix product, instead of looping over examples, is what makes it fast on modern hardware.</p>
 <h3>Formula</h3>
-<pre><code>output = activation(X @ W + b)
+<pre><code class="language-text">Z   = X @ W + b        # (batch, in_dim) @ (in_dim, out_dim) -&gt; (batch, out_dim); b broadcasts over rows
+out = max(0, Z)        # ReLU, element-wise
 </code></pre>
-<p>Where:</p>
 <ul>
-<li>X: Input of shape (batch_size, input_dim)</li>
-<li>W: Weights of shape (input_dim, output_dim)</li>
-<li>b: Bias of shape (output_dim,)</li>
+<li><code>X</code>: inputs, one example per row</li>
+<li><code>W</code>: weights; column <code>j</code> holds the weights of output unit <code>j</code></li>
+<li><code>b</code>: one bias per output unit, added to every row</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def dense_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray) -&gt; np.ndarray:
-</code></pre>
-<p>Use ReLU as the activation function.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[1, 2]], W = [[1, 0], [0, 1]], b = [1, 1]
-Output: [[2, 3]]</pre><p>X @ W = [[1, 2]], + b = [[2, 3]], ReLU keeps positive</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: array of shape <code>(batch, in_dim)</code></li>
+<li><code>W</code>: array of shape <code>(in_dim, out_dim)</code></li>
+<li><code>b</code>: array of shape <code>(out_dim,)</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p>An array of shape <code>(batch, out_dim)</code> holding <code>relu(X @ W + b)</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>This uses the <code>X @ W</code> layout (weights stored as <code>(in_dim, out_dim)</code>). PyTorch&#x27;s <code>nn.Linear</code> stores <code>weight</code> as <code>(out_dim, in_dim)</code> and computes <code>X @ weight.T + bias</code>.</li>
+<li>Pre-activations that are exactly 0 or negative give 0.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use one matrix product for the whole batch (no loops over rows); NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>How many parameters does this layer have (<code>in_dim * out_dim + out_dim</code>), and what does the forward pass cost (<code>batch * in_dim * out_dim</code> multiply-adds)?</li>
+<li>Write the backward pass: given <code>dOut</code>, what are <code>dW</code>, <code>db</code> and <code>dX</code>? (Done in MLP Forward &amp; Backward Pass.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: dense_forward(np.array([[1, 2]]), np.array([[1, 0], [0, 1]]), np.array([1, 1]))
+Output: [[2, 3]]</pre><p>X @ W = [[1, 2]] (identity weights), + b = [[2, 3]], and ReLU keeps positive values.</p></div><div><pre class="overflow-auto">Input: dense_forward(np.array([[1.0, -1.0], [0.5, 2.0]]), np.array([[1.0, -2.0, 0.5], [0.5, 1.0, -1.0]]), np.array([0.0, 0.5, -0.5]))
+Output: [[0.5, 0.0, 1.0], [1.5, 1.5, 0.0]]</pre><p>Z = [[0.5, -2.5, 1.0], [1.5, 1.5, -2.25]]; ReLU zeroes the two negative pre-activations.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def dense_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Compute forward pass of a dense layer with ReLU activation.
+    Forward pass of a dense layer with ReLU activation: relu(X @ W + b).
 
     Args:
-        X: Input of shape (batch_size, input_dim)
-        W: Weights of shape (input_dim, output_dim)
-        b: Bias of shape (output_dim,)
+        X: Inputs, shape (batch, in_dim)
+        W: Weights, shape (in_dim, out_dim)
+        b: Bias, shape (out_dim,)
 
     Returns:
-        Output of shape (batch_size, output_dim)
+        Activations, shape (batch, out_dim)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/deep-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

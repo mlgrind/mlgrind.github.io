@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Precision and Recall - Model Evaluation | ML Grind</title>
 <meta name="description" content="Implement Precision and Recall in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/precision-recall-f1" data-rh="true" />
@@ -100,37 +100,59 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Precision and Recall - Model Evaluation","description":"Implement Precision and Recall in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/precision-recall-f1","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Precision and Recall - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Precision and Recall in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Precision and Recall</h2>
-<p>Calculate precision and recall from true labels and predictions.</p>
-<h3>Formulas</h3>
-<pre><code>Precision = TP / (TP + FP)
-Recall = TP / (TP + FN)
+<h3>What you&#x27;ll build</h3>
+<p>A function that compares binary predictions with the true labels and returns <code>(precision, recall)</code>, the two quantities that F1 and the precision-recall curve are built from.</p>
+<h3>Background</h3>
+<p>Accuracy hides what kind of mistakes a model makes. <strong>Precision</strong> asks &quot;when the model says positive, how often is it right?&quot; and <strong>recall</strong> asks &quot;of all the real positives, how many did it find?&quot;. Raising the threshold usually trades recall for precision. These are <code>sklearn.metrics.precision_score</code> and <code>recall_score</code> with <code>pos_label=1</code>.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">TP = #{y_pred = 1 and y_true = 1}      (true positives)
+FP = #{y_pred = 1 and y_true = 0}      (false positives)
+FN = #{y_pred = 0 and y_true = 1}      (false negatives)
+
+precision = TP / (TP + FP)
+recall    = TP / (TP + FN)
 </code></pre>
-<p>Where:</p>
+<h3>Inputs</h3>
 <ul>
-<li>TP = True Positives (predicted 1, actual 1)</li>
-<li>FP = False Positives (predicted 1, actual 0)</li>
-<li>FN = False Negatives (predicted 0, actual 1)</li>
+<li><code>y_true</code>: binary labels (0 or 1), shape <code>(n,)</code></li>
+<li><code>y_pred</code>: binary predictions (0 or 1), shape <code>(n,)</code></li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def precision_recall(y_true: np.ndarray, y_pred: np.ndarray) -&gt; tuple:
-</code></pre>
-<p>Returns (precision, recall) rounded to 4 decimal places.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y_true = [1, 1, 0, 1, 0], y_pred = [1, 0, 0, 1, 1]
-Output: (0.6667, 0.6667)</pre><p>TP=2, FP=1, FN=1. Precision=2/3, Recall=2/3</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>(Tests may pass Python lists; convert with <code>np.asarray</code>.)</p>
+<h3>Expected return format</h3>
+<p>A tuple <code>(precision, recall)</code> of Python floats, each rounded to 4 decimals with <code>round(x, 4)</code>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><strong>Zero division</strong>: if nothing is predicted positive (<code>TP + FP = 0</code>), precision is <code>0.0</code>; if there are no actual positives (<code>TP + FN = 0</code>), recall is <code>0.0</code>. This matches scikit-learn&#x27;s default <code>zero_division</code> behaviour (0, with a warning).</li>
+<li>The positive class is <code>1</code>; true negatives don&#x27;t enter either formula.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only (no sklearn); count with boolean masks, no Python loops.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Compute F1 = <code>2 * P * R / (P + R)</code> from your result. Why is it the <em>harmonic</em> mean rather than the arithmetic mean?</li>
+<li>How would you extend this to multi-class (macro vs micro averaging)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: precision_recall(np.array([1, 1, 0, 1, 0]), np.array([1, 0, 0, 1, 1]))
+Output: (0.6667, 0.6667)</pre><p>TP = 2, FP = 1 (index 4), FN = 1 (index 1): precision = 2/3 and recall = 2/3.</p></div><div><pre class="overflow-auto">Input: precision_recall(np.array([1, 1, 1, 1, 0]), np.array([1, 0, 0, 0, 0]))
+Output: (1.0, 0.25)</pre><p>A cautious model: its one positive prediction is right, but it finds only 1 of the 4 positives.</p></div><div><pre class="overflow-auto">Input: precision_recall(np.array([1, 1, 0]), np.array([0, 0, 0]))
+Output: (0.0, 0.0)</pre><p>No positive predictions: TP + FP = 0, so precision falls back to 0.0; recall is 0 / 2 = 0.0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def precision_recall(y_true: np.ndarray, y_pred: np.ndarray) -&gt; tuple:
     &quot;&quot;&quot;
-    Calculate precision and recall for binary classification.
+    Precision and recall for binary classification (positive class = 1).
 
     Args:
-        y_true: True labels (0 or 1)
-        y_pred: Predicted labels (0 or 1)
+        y_true: True labels (0 or 1), shape (n,)
+        y_pred: Predicted labels (0 or 1), shape (n,)
 
     Returns:
-        Tuple of (precision, recall) rounded to 4 decimal places
+        Tuple (precision, recall) of floats rounded to 4 decimals;
+        a metric whose denominator is 0 is returned as 0.0
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

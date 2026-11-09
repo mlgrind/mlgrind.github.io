@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Depthwise Separable Convolution - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Depthwise Separable Convolution in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/depthwise-separable-conv" data-rh="true" />
@@ -100,21 +100,48 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Depthwise Separable Convolution - PyTorch Basics","description":"Implement Depthwise Separable Convolution in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/depthwise-separable-conv","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Depthwise Separable Convolution - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Depthwise Separable Convolution in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Depthwise Separable Convolution</h2>
-<p>Used in MobileNet. Two steps:</p>
-<ol>
-<li><strong>Depthwise</strong>: Each channel convolved independently</li>
-<li><strong>Pointwise</strong>: 1x1 convolution to mix channels</li>
-</ol>
-<p>Parameter savings: C_in<em>K</em>K + C_in<em>C_out vs C_in</em>C_out<em>K</em>K</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x (3, 8, 8), dw_kernel (3, 3, 3)
-Output: depthwise: (3, 6, 6)</pre><p>Each channel convolved with its own 3x3 filter</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p><strong>What you&#x27;ll build:</strong> the two halves of a depthwise separable convolution: <code>depthwise_conv</code> (each channel filtered by its own kernel) and <code>pointwise_conv</code> (a 1x1 convolution that mixes channels).</p>
+<h3>Background</h3>
+<p>A standard convolution filters space and mixes channels in one step. MobileNet and Xception factor it into two cheaper steps: a <strong>depthwise</strong> convolution that filters each channel spatially on its own, then a <strong>pointwise</strong> 1x1 convolution that mixes the channels at each pixel. For a <code>K x K</code> kernel the parameter count drops from <code>C_in * C_out * K²</code> to <code>C_in * K² + C_in * C_out</code>: for <code>C_in = C_out = 256, K = 3</code>, from 589,824 to 67,840, about 8.7 times fewer.</p>
+<h3>Formulas</h3>
+<p>&quot;Valid&quot; convolution (no padding), stride 1, computed as a cross-correlation (the kernel is <strong>not</strong> flipped, as in every deep learning library):</p>
+<pre><code class="language-text">depthwise:  out[c, i, j] = sum_{u, v} x[c, i + u, j + v] * kernel[c, u, v]
+            output shape (C, H - kH + 1, W - kW + 1)
+
+pointwise:  out[o, i, j] = sum_c kernel[o, c, 0, 0] * x[c, i, j]
+            output shape (C_out, H, W)
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>depthwise_conv(x, kernel)</code>: <code>x</code> <code>(C, H, W)</code>, <code>kernel</code> <code>(C, kH, kW)</code> (one filter per channel).</li>
+<li><code>pointwise_conv(x, kernel)</code>: <code>x</code> <code>(C_in, H, W)</code>, <code>kernel</code> <code>(C_out, C_in, 1, 1)</code> (the layout of a PyTorch <code>Conv2d</code> weight).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>depthwise_conv</code> returns <code>(C, H - kH + 1, W - kW + 1)</code>.</li>
+<li><code>pointwise_conv</code> returns <code>(C_out, H, W)</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>No batch dimension, no padding, no bias, stride 1.</li>
+<li>Loops over output positions are acceptable; a vectorised version uses <code>np.lib.stride_tricks.sliding_window_view</code> and <code>np.einsum</code>.</li>
+<li><strong>PyTorch track:</strong> don&#x27;t use <code>F.conv2d</code> or <code>nn.Conv2d</code> (in PyTorch, depthwise is <code>Conv2d(C, C, k, groups=C)</code>).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Compute the multiply-adds of both versions for a 56x56x128 input and a 3x3 kernel with 128 output channels.</li>
+<li>Why do MobileNetV2 blocks put the depthwise convolution between two pointwise ones (an inverted residual)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: depthwise_conv(np.ones((1, 3, 3)), np.ones((1, 2, 2)))
+Output: array([[[4., 4.], [4., 4.]]])</pre><p>Each 2x2 window of ones sums to 4; a 3x3 input gives a (3 - 2 + 1) = 2x2 output.</p></div><div><pre class="overflow-auto">Input: pointwise_conv(np.array([[[1.0]], [[2.0]]]), np.array([[[[1.0]], [[1.0]]], [[[2.0]], [[-1.0]]]]))
+Output: array([[[3.]], [[0.]]])</pre><p>At the single pixel, output channel 0 is 1*1 + 1*2 = 3 and output channel 1 is 2*1 - 1*2 = 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def depthwise_conv(x, kernel):
     &quot;&quot;&quot;
-    Depthwise convolution.
+    Depthwise convolution (valid, stride 1, no kernel flip).
 
     Args:
         x: Input (C, H, W)
-        kernel: Filters (C, kH, kW)
+        kernel: One filter per channel (C, kH, kW)
 
     Returns:
         Output (C, H-kH+1, W-kW+1)
@@ -135,7 +162,7 @@ def pointwise_conv(x, kernel):
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

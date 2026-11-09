@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Stratified Train/Val/Test Split - Data Preprocessing | ML Grind</title>
 <meta name="description" content="Implement Stratified Train/Val/Test Split in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/data-preprocessing/stratified-split" data-rh="true" />
@@ -99,31 +99,31 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Stratified Train/Val/Test Split - Data Preprocessing","description":"Implement Stratified Train/Val/Test Split in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/data-preprocessing/stratified-split","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Stratified Train/Val/Test Split - Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Stratified Train/Val/Test Split in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Stratified Train / Validation / Test Split</h2>
-<p>A plain random split can leave a rare class badly under-represented (or missing) in the validation or test set. A <strong>stratified</strong> split splits <em>each class separately</em>, so every split keeps roughly the class proportions of the full dataset.</p>
-<p>Implement <code>stratified_split(y, val_frac, test_frac, seed)</code> that returns <strong>index arrays</strong> into <code>y</code>.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Stratified Train/Val/Test Split - Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Stratified Train/Val/Test Split in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Stratified Train/Val/Test Split</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>stratified_split(y, val_frac, test_frac, seed)</code>, which splits the sample indices <code>0 .. n-1</code> into train, validation and test sets <strong>class by class</strong>, so every split keeps the class proportions of the full dataset.</p>
+<h3>Background</h3>
+<p>A plain random split can leave a rare class badly under-represented, or missing entirely, from the validation or test set, which makes the metrics on those splits noisy or meaningless. Stratifying fixes the count of each class in each split. scikit-learn does this with <code>train_test_split(..., stratify=y)</code> (called twice for three splits); here the rounding rule is explicit so results are reproducible.</p>
 <h3>Algorithm</h3>
 <ol>
-<li>Create a generator once: <code>rng = np.random.default_rng(seed)</code>.</li>
+<li>Create <strong>one</strong> generator before the loop: <code>rng = np.random.default_rng(seed)</code>.</li>
 <li>For each class <code>c</code> in <strong>ascending</strong> order (<code>np.unique(y)</code>):
-<ul>
-<li><code>idx_c = np.where(y == c)[0]</code> and <code>perm = rng.permutation(idx_c)</code></li>
-<li><code>n_c = len(idx_c)</code></li>
-<li><code>n_test = round_half_up(n_c * test_frac)</code>, <code>n_val = round_half_up(n_c * val_frac)</code></li>
-<li>If <code>n_test + n_val &gt; n_c</code>, shrink <code>n_val</code> so that <code>n_test + n_val = n_c</code> (and <code>n_test</code> to <code>n_c</code> if needed)</li>
-<li>The first <code>n_test</code> entries of <code>perm</code> go to <strong>test</strong>, the next <code>n_val</code> to <strong>val</strong>, the rest to <strong>train</strong></li>
-</ul>
+<ol>
+<li><code>idx_c = np.where(y == c)[0]</code> and <code>perm = rng.permutation(idx_c)</code>; let <code>n_c = len(idx_c)</code>.</li>
+<li><code>n_test = min(round_half_up(n_c * test_frac), n_c)</code></li>
+<li><code>n_val = min(round_half_up(n_c * val_frac), n_c - n_test)</code> (validation gives way when the class is too small)</li>
+<li>The first <code>n_test</code> entries of <code>perm</code> go to <strong>test</strong>, the next <code>n_val</code> to <strong>val</strong>, and the rest to <strong>train</strong>.</li>
+</ol>
 </li>
 <li>Concatenate the per-class pieces and <strong>sort</strong> each split&#x27;s indices in ascending order.</li>
 </ol>
 <h3>Rounding rule</h3>
-<p>Counts are rounded <strong>half up</strong> per class: <code>round_half_up(v) = int(np.floor(v + 0.5))</code>, so <code>2.5 → 3</code> and <code>0.5 → 1</code>.
-(Python&#x27;s built-in <code>round</code> uses banker&#x27;s rounding, <code>round(2.5) == 2</code>, so don&#x27;t use it here.)</p>
-<h3>Guarantees</h3>
+<p>Counts are rounded <strong>half up</strong>, per class: <code>round_half_up(v) = int(np.floor(v + 0.5))</code>, so <code>2.5 -&gt; 3</code> and <code>0.5 -&gt; 1</code>. Python&#x27;s built-in <code>round</code> uses banker&#x27;s rounding (<code>round(2.5) == 2</code>), so don&#x27;t use it here.</p>
+<h3>Inputs</h3>
 <ul>
-<li>The three index arrays are <strong>disjoint</strong> and together <strong>cover</strong> <code>0 .. n-1</code> exactly once.</li>
-<li>For every class, its count in each split is fixed by the rule above (so proportions are preserved up to rounding).</li>
-<li>The same <code>seed</code> always gives the same split.</li>
+<li><code>y</code>: integer class labels, shape <code>(n,)</code></li>
+<li><code>val_frac</code>, <code>test_frac</code>: fractions in <code>[0, 1]</code> of <strong>each class</strong> to put in validation and test</li>
+<li><code>seed</code>: int seed for <code>np.random.default_rng</code></li>
 </ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
@@ -132,9 +132,23 @@
 <li><code>&#x27;val&#x27;</code>: sorted int array of validation indices</li>
 <li><code>&#x27;test&#x27;</code>: sorted int array of test indices</li>
 </ul>
-<p>This mirrors calling scikit-learn&#x27;s <code>train_test_split(..., stratify=y)</code> twice, but with an explicit, reproducible rounding rule.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y = np.array([0]*10 + [1]*5), val_frac=0.2, test_frac=0.2, seed=0
-Output: {&#x27;train&#x27;: 9 indices, &#x27;val&#x27;: 3 indices, &#x27;test&#x27;: 3 indices}</pre><p>Class 0: n_test = n_val = round_half_up(2.0) = 2, train 6. Class 1: round_half_up(1.0) = 1 each, train 3. Each split keeps the 2:1 ratio.</p></div><div><pre class="overflow-auto">Input: y = np.array([0, 0, 0, 0, 0, 1, 1]), val_frac=0.1, test_frac=0.3, seed=0
-Output: counts per class: test {0: 2, 1: 1}, val {0: 1, 1: 0}</pre><p>Class 0: 5*0.3 = 1.5 rounds up to 2; 5*0.1 = 0.5 rounds up to 1. Class 1: 2*0.3 = 0.6 -&gt; 1; 2*0.1 = 0.2 -&gt; 0.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Guarantees and conventions</h3>
+<ul>
+<li>The three arrays are <strong>disjoint</strong> and together contain every index <code>0 .. n-1</code> exactly once.</li>
+<li>Each class&#x27;s count in each split is fixed by the rule above; only <em>which</em> samples go where depends on the seed.</li>
+<li>The same <code>seed</code> always gives the same split. The exact indices depend on drawing the permutations in ascending class order from a single generator.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only; no sklearn.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>How would you stratify a regression target? (Bin it into quantiles first.)</li>
+<li>How do you split when several rows belong to the same user? (Group-aware splits, e.g. <code>GroupKFold</code>, so a user never appears in both train and test.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: stratified_split(np.array([0]*10 + [1]*5), val_frac=0.2, test_frac=0.2, seed=0)
+Output: {&#x27;train&#x27;: [0, 1, 3, 5, 8, 9, 11, 13, 14], &#x27;val&#x27;: [2, 7, 12], &#x27;test&#x27;: [4, 6, 10]}</pre><p>Class 0 (10 samples): 2 test, 2 val, 6 train. Class 1 (5 samples): 1 test, 1 val, 3 train. Each split keeps the 2:1 ratio (arrays shown as lists).</p></div><div><pre class="overflow-auto">Input: stratified_split(np.array([0, 0, 0, 0, 0, 1, 1]), val_frac=0.1, test_frac=0.3, seed=0)
+Output: {&#x27;train&#x27;: [0, 1, 6], &#x27;val&#x27;: [3], &#x27;test&#x27;: [2, 4, 5]}</pre><p>Class 0: 5 * 0.3 = 1.5 rounds up to 2 test, 5 * 0.1 = 0.5 rounds up to 1 val. Class 1: 2 * 0.3 = 0.6 gives 1 test, 2 * 0.1 = 0.2 gives 0 val.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def stratified_split(y, val_frac=0.15, test_frac=0.15, seed=0):
     &quot;&quot;&quot;

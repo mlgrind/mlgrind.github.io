@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>2D Convolution - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/conv2d-forward" data-rh="true" />
@@ -99,38 +99,56 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"2D Convolution - CNNs & Computer Vision","description":"Implement 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/conv2d-forward","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">2D Convolution - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>2D Convolution Operation</h2>
-<p>Implement the forward pass of a 2D convolution (no padding, stride=1).</p>
-<h3>Operation</h3>
-<p>For each position (i, j) in the output:</p>
-<pre><code>out[i, j] = sum(input[i:i+kH, j:j+kW] * kernel)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">2D Convolution - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement 2D Convolution in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>2D Convolution</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The forward pass of a single-channel 2D convolution with <strong>no padding</strong> and <strong>stride 1</strong>: slide a small kernel over an image and take a weighted sum at every position.</p>
+<h3>Background</h3>
+<p>This is the core operation of every CNN. A conv layer applies the same small kernel at every position, so it detects a pattern (an edge, a corner) wherever it appears. Deep learning frameworks actually compute <strong>cross-correlation</strong>: the kernel is <strong>not flipped</strong>. That is what <code>nn.Conv2d</code> / <code>F.conv2d</code> do, and what is asked here.</p>
+<h3>Formula</h3>
+<p>For every output position <code>(i, j)</code>:</p>
+<pre><code class="language-text">out[i, j] = sum over a in [0, kH), b in [0, kW) of  image[i + a, j + b] * kernel[a, b]
+          = sum(image[i:i+kH, j:j+kW] * kernel)
+
+H_out = H - kH + 1
+W_out = W - kW + 1
 </code></pre>
-<h3>Output Size</h3>
-<pre><code>out_height = input_height - kernel_height + 1
-out_width = input_width - kernel_width + 1
-</code></pre>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def conv2d(image, kernel):
-    # image: (H, W)
-    # kernel: (kH, kW)
-    # output: (H-kH+1, W-kW+1)
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: image 4x4, kernel 3x3
-Output: output 2x2</pre><p>4-3+1 = 2 in each dimension</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Inputs</h3>
+<ul>
+<li><code>image</code>: 2D array of shape <code>(H, W)</code> (one channel, no batch axis; a nested list is also fine, convert with <code>np.asarray</code>). Values can be ints or floats.</li>
+<li><code>kernel</code>: 2D array of shape <code>(kH, kW)</code> with <code>kH &lt;= H</code> and <code>kW &lt;= W</code>. Kernels can be non-square.</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A NumPy float array of shape <code>(H - kH + 1, W - kW + 1)</code>. Keep the exact values: don&#x27;t round or cast to int.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>No padding: the output is smaller than the input (&quot;valid&quot; convolution).</li>
+<li>Don&#x27;t flip the kernel. For an asymmetric kernel, flipping changes the answer.</li>
+<li>A kernel the same size as the image gives a <code>1 x 1</code> output.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; don&#x27;t call <code>scipy.signal.correlate2d</code> or similar. Two nested loops over output positions are fine; looping over the <code>kH * kW</code> kernel taps instead is faster.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>How would you add padding and stride? (See <strong>Advanced 2D Convolution</strong>.)</li>
+<li>How does <strong>im2col</strong> turn this into a single matrix multiply, and what does it cost in memory?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: image = [[1, 2, 3], [4, 5, 6], [7, 8, 9]], kernel = [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
+Output: [[5.]]</pre><p>A 3x3 kernel on a 3x3 image gives one output; this &quot;identity&quot; kernel picks the centre pixel.</p></div><div><pre class="overflow-auto">Input: image = [[0.5, 1.5, -1.0], [2.0, 0.25, 1.0], [-0.5, 3.0, 2.0]], kernel = [[1.0, -0.5], [0.5, 2.0]]
+Output: [[1.25, 4.125], [7.625, 5.25]]</pre><p>out[0, 0] = 0.5*1 + 1.5*(-0.5) + 2.0*0.5 + 0.25*2 = 1.25; values stay floats.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def conv2d(image, kernel):
     &quot;&quot;&quot;
-    Apply 2D convolution to an image.
+    Apply a 2D convolution (cross-correlation, no padding, stride 1).
 
     Args:
-        image: Input image (H, W)
-        kernel: Convolution kernel (kH, kW)
+        image: Input image, shape (H, W)
+        kernel: Convolution kernel, shape (kH, kW)
 
     Returns:
-        output: Convolved image (H-kH+1, W-kW+1)
+        output: Float array of shape (H - kH + 1, W - kW + 1)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

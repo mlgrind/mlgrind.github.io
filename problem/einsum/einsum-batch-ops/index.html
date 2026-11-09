@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Batch Operations with Einsum - Einstein Summation (Einsum) | ML Grind</title>
 <meta name="description" content="Implement Batch Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/einsum/einsum-batch-ops" data-rh="true" />
@@ -100,44 +100,81 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Batch Operations with Einsum - Einstein Summation (Einsum)","description":"Implement Batch Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/einsum/einsum-batch-ops","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Batch Operations with Einsum - Einstein Summation (Einsum)</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Batch Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Batch Operations with Einsum</h2>
-<p>Einsum shines for batch operations - multiple matrices at once.</p>
-<h3>Batch Matrix Operations</h3>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>einsum_batch_ops(Q, K, V)</code> that computes batched scaled dot-product attention with two einsums: raw scores, softmax weights and the weighted sum of values.</p>
+<h3>Background</h3>
+<p>Batched operations add a letter (here <code>b</code>) that appears in every operand <strong>and</strong> in the output, so it is carried through untouched: every batch element gets its own independent product. Attention is the canonical example. Each query is compared with every key, the scores are turned into weights with a softmax, and the output is the weighted average of the values.</p>
+<h3>Formula</h3>
+<p>With <code>d</code> the feature dimension of <code>Q</code> and <code>K</code> (<code>d = Q.shape[-1]</code>):</p>
+<ol>
+<li>Scores (unscaled):
+<pre><code class="language-text">scores[b, q, k] = sum_d Q[b, q, d] * K[b, k, d]          einsum &#x27;bqd,bkd-&gt;bqk&#x27;
+</code></pre>
+</li>
+<li>Weights: softmax over the <strong>keys</strong> (last axis) of the scaled scores:
+<pre><code class="language-text">weights[b, q, :] = softmax(scores[b, q, :] / sqrt(d))
+softmax(x)_k = exp(x_k - max(x)) / sum_j exp(x_j - max(x))
+</code></pre>
+</li>
+<li>Output:
+<pre><code class="language-text">output[b, q, v] = sum_k weights[b, q, k] * V[b, k, v]    einsum &#x27;bqk,bkv-&gt;bqv&#x27;
+</code></pre>
+</li>
+</ol>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;bij,bjk-&gt;bik&#x27;</code>: Batch matrix multiplication</li>
-<li><code>&#x27;bij,bj-&gt;bi&#x27;</code>: Batch matrix-vector multiplication</li>
-<li><code>&#x27;bij-&gt;bji&#x27;</code>: Batch transpose</li>
+<li><code>Q</code>: queries, float array of shape <code>(batch, seq_q, d)</code></li>
+<li><code>K</code>: keys, float array of shape <code>(batch, seq_k, d)</code></li>
+<li><code>V</code>: values, float array of shape <code>(batch, seq_k, d_v)</code></li>
 </ul>
-<h3>Attention-style Operations</h3>
-<ul>
-<li><code>&#x27;bqd,bkd-&gt;bqk&#x27;</code>: Query-Key dot products (attention scores)</li>
-<li><code>&#x27;bqk,bkv-&gt;bqv&#x27;</code>: Weighted sum of values</li>
-</ul>
-<h3>Task</h3>
-<p>Implement batch operations common in deep learning.</p>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;scores&#x27;</code>: Raw attention scores Q @ K.T per batch, shape (batch, seq_q, seq_k)</li>
-<li><code>&#x27;attention_weights&#x27;</code>: Softmax of scaled scores, shape (batch, seq_q, seq_k)</li>
-<li><code>&#x27;output&#x27;</code>: Weighted sum of values, shape (batch, seq_q, dim_v)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q (2,4,8), K (2,6,8), V (2,6,16)
-Output: {&#x27;scores&#x27;: shape (2,4,6), &#x27;attention_weights&#x27;: shape (2,4,6), &#x27;output&#x27;: shape (2,4,16)}</pre><p>Batch attention: scores from Q@K.T, then weighted sum of V</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>&#x27;scores&#x27;</code>: raw (unscaled) scores <code>Q @ K^T</code> per batch, shape <code>(batch, seq_q, seq_k)</code></li>
+<li><code>&#x27;attention_weights&#x27;</code>: <code>softmax(scores / sqrt(d))</code> over the last axis, shape <code>(batch, seq_q, seq_k)</code>; each row sums to 1</li>
+<li><code>&#x27;output&#x27;</code>: weighted sum of values, shape <code>(batch, seq_q, d_v)</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Subtract the row maximum before <code>exp</code> so large scores don&#x27;t overflow; this doesn&#x27;t change the softmax.</li>
+<li><code>&#x27;scores&#x27;</code> is <strong>before</strong> scaling; only the weights use <code>/ sqrt(d)</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use <code>np.einsum</code> for both products (no explicit transposes or <code>@</code>) and NumPy for the softmax.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>What is the time and memory cost in terms of <code>batch</code>, <code>seq_q</code>, <code>seq_k</code>, <code>d</code>? Which term dominates for long sequences?</li>
+<li>Why divide by <code>sqrt(d)</code> at all?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q = np.array([[[1., 0.], [0., 1.]]])            # (1, 2, 2)
+K = np.array([[[1., 1.], [2., 0.], [0., 3.]]])  # (1, 3, 2)
+V = np.array([[[1., 0.], [0., 1.], [1., 1.]]])  # (1, 3, 2)
+r = einsum_batch_ops(Q, K, V)
+r[&quot;scores&quot;]
+Output: array([[[1., 2., 0.],
+        [1., 0., 3.]]])</pre><p>Query 0 = [1, 0] picks feature 0 of each key; query 1 = [0, 1] picks feature 1.</p></div><div><pre class="overflow-auto">Input: np.round(r[&quot;attention_weights&quot;], 4)
+Output: array([[[0.284 , 0.576 , 0.14  ],
+        [0.1784, 0.0879, 0.7337]]])</pre><p>Softmax of each score row divided by sqrt(2); each row sums to 1.</p></div><div><pre class="overflow-auto">Input: np.round(r[&quot;output&quot;], 4)
+Output: array([[[0.424 , 0.716 ],
+        [0.9121, 0.8216]]])</pre><p>Query 0: 0.284*[1, 0] + 0.576*[0, 1] + 0.140*[1, 1] = [0.424, 0.716].</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def einsum_batch_ops(Q: np.ndarray, K: np.ndarray, V: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Perform batch operations using einsum.
+    Batched scaled dot-product attention with np.einsum.
 
     Args:
-        Q: Queries of shape (batch, seq_q, dim)
-        K: Keys of shape (batch, seq_k, dim)
-        V: Values of shape (batch, seq_k, dim_v)
+        Q: Queries of shape (batch, seq_q, d)
+        K: Keys of shape (batch, seq_k, d)
+        V: Values of shape (batch, seq_k, d_v)
 
     Returns:
-        Dictionary with batch operation results
+        dict with keys:
+            &#x27;scores&#x27;:            Q @ K^T per batch (unscaled), shape (batch, seq_q, seq_k)
+            &#x27;attention_weights&#x27;: softmax(scores / sqrt(d)) over keys, shape (batch, seq_q, seq_k)
+            &#x27;output&#x27;:            weights @ V per batch, shape (batch, seq_q, d_v)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Aggregation Functions - NumPy Fundamentals | ML Grind</title>
 <meta name="description" content="Implement Aggregation Functions in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/numpy-fundamentals/numpy-aggregations" data-rh="true" />
@@ -99,39 +99,66 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Aggregation Functions - NumPy Fundamentals","description":"Implement Aggregation Functions in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/numpy-fundamentals/numpy-aggregations","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Aggregation Functions - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Aggregation Functions in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>NumPy Aggregations</h2>
-<p>Implement common aggregation operations along different axes.</p>
-<h3>Task</h3>
-<p>Given a 2D array, compute:</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Aggregation Functions - NumPy Fundamentals</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Aggregation Functions in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Aggregation Functions</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>compute_aggregations(arr)</code> that summarises a 2D array globally, per row and per column, and locates its largest and smallest entries.</p>
+<h3>Background</h3>
+<p>Reductions are everywhere in ML: a loss is the mean over a batch, feature standardisation needs per-column means and standard deviations, and a classifier&#x27;s prediction is the <code>argmax</code> over class scores in each row. The <code>axis</code> argument decides which dimension disappears.</p>
+<h3>Axis convention</h3>
+<p>For an array of shape <code>(n_rows, n_cols)</code>:</p>
 <ul>
-<li>Global statistics (mean, std, min, max, sum)</li>
-<li>Row-wise statistics (along axis=1)</li>
-<li>Column-wise statistics (along axis=0)</li>
-<li>Argmax and argmin (indices of max/min values)</li>
+<li>no <code>axis</code>: reduce everything to one number</li>
+<li><code>axis=1</code>: reduce <strong>across the columns</strong>, giving one value per row, shape <code>(n_rows,)</code></li>
+<li><code>axis=0</code>: reduce <strong>down the rows</strong>, giving one value per column, shape <code>(n_cols,)</code></li>
+</ul>
+<p>The standard deviation is the population version (NumPy&#x27;s default, <code>ddof=0</code>):</p>
+<pre><code class="language-text">std = sqrt( sum((x - mean)^2) / N )      N = total number of entries
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>arr</code>: 2D numeric array of shape <code>(n_rows, n_cols)</code> with at least one entry.</li>
 </ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><strong>Global</strong>: <code>&#x27;global_mean&#x27;</code>, <code>&#x27;global_std&#x27;</code>, <code>&#x27;global_min&#x27;</code>, <code>&#x27;global_max&#x27;</code>, <code>&#x27;global_sum&#x27;</code></li>
-<li><strong>Row-wise</strong>: <code>&#x27;row_mean&#x27;</code>, <code>&#x27;row_sum&#x27;</code></li>
-<li><strong>Column-wise</strong>: <code>&#x27;col_mean&#x27;</code>, <code>&#x27;col_sum&#x27;</code></li>
-<li><strong>Indices</strong>: <code>&#x27;argmax&#x27;</code> (2D index tuple), <code>&#x27;argmin&#x27;</code> (2D index tuple)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([[1, 2, 3], [4, 5, 6]])
-Output: {&#x27;global_mean&#x27;: 3.5, &#x27;global_sum&#x27;: 21, &#x27;row_sum&#x27;: [6, 15], &#x27;col_mean&#x27;: [2.5, 3.5, 4.5], &#x27;argmax&#x27;: (1, 2), ...}</pre><p>Global, row-wise, and column-wise aggregations</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><strong>Global</strong> (scalars): <code>&#x27;global_mean&#x27;</code>, <code>&#x27;global_std&#x27;</code> (population, <code>ddof=0</code>), <code>&#x27;global_min&#x27;</code>, <code>&#x27;global_max&#x27;</code>, <code>&#x27;global_sum&#x27;</code></li>
+<li><strong>Row-wise</strong> (shape <code>(n_rows,)</code>): <code>&#x27;row_mean&#x27;</code>, <code>&#x27;row_sum&#x27;</code></li>
+<li><strong>Column-wise</strong> (shape <code>(n_cols,)</code>): <code>&#x27;col_mean&#x27;</code>, <code>&#x27;col_sum&#x27;</code></li>
+<li><strong>Indices</strong>: <code>&#x27;argmax&#x27;</code> and <code>&#x27;argmin&#x27;</code>, each a <code>(row, col)</code> tuple of integers</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Ties: <code>argmax</code>/<code>argmin</code> return the <strong>first</strong> occurrence in row-major order (row by row, left to right).</li>
+<li><code>arr.argmax()</code> returns a flat index into the flattened array; convert it to <code>(row, col)</code> with <code>np.unravel_index</code> (or <code>divmod(idx, n_cols)</code>).</li>
+</ul>
+<h3>Constraints</h3>
+<p>Use NumPy reductions; no Python loops.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>When would you want <code>ddof=1</code>, and what happens with it for an array of one element?</li>
+<li>How do you get the argmax of each row, as used for classifier predictions?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: compute_aggregations(np.array([[1, 2, 3], [4, 5, 6]]))
+Output: {&#x27;global_mean&#x27;: 3.5, &#x27;global_std&#x27;: 1.707825127659933, &#x27;global_min&#x27;: 1, &#x27;global_max&#x27;: 6, &#x27;global_sum&#x27;: 21, &#x27;row_mean&#x27;: array([2., 5.]), &#x27;row_sum&#x27;: array([ 6, 15]), &#x27;col_mean&#x27;: array([2.5, 3.5, 4.5]), &#x27;col_sum&#x27;: array([5, 7, 9]), &#x27;argmax&#x27;: (1, 2), &#x27;argmin&#x27;: (0, 0)}</pre><p>The max (6) sits at row 1, column 2; std = sqrt(17.5 / 6) = 1.7078.</p></div><div><pre class="overflow-auto">Input: compute_aggregations(np.array([[5, 1], [5, 0]]))[&quot;argmax&quot;]
+Output: (0, 0)</pre><p>Both 5s tie; the first one in row-major order wins.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def compute_aggregations(arr: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Compute aggregation statistics.
+    Global, row-wise and column-wise statistics of a 2D array.
 
     Args:
-        arr: 2D input array
+        arr: 2D numeric array of shape (n_rows, n_cols)
 
     Returns:
-        Dictionary with aggregation results
+        dict with keys:
+            &#x27;global_mean&#x27;, &#x27;global_std&#x27; (ddof=0), &#x27;global_min&#x27;,
+            &#x27;global_max&#x27;, &#x27;global_sum&#x27;:   scalars
+            &#x27;row_mean&#x27;, &#x27;row_sum&#x27;:        shape (n_rows,)
+            &#x27;col_mean&#x27;, &#x27;col_sum&#x27;:        shape (n_cols,)
+            &#x27;argmax&#x27;, &#x27;argmin&#x27;:           (row, col) tuples, first occurrence
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/numpy-fundamentals">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

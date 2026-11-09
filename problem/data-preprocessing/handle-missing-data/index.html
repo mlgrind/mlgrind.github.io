@@ -78,53 +78,75 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Handle Missing Data - Data Preprocessing | ML Grind</title>
-<meta name="description" content="Implement Handle Missing Data in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Handle Missing Data (Mean Imputation) - Data Preprocessing | ML Grind</title>
+<meta name="description" content="Implement Handle Missing Data (Mean Imputation) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data" data-rh="true" />
-<meta property="og:title" content="Handle Missing Data - Data Preprocessing | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Handle Missing Data in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Handle Missing Data (Mean Imputation) - Data Preprocessing | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Handle Missing Data (Mean Imputation) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Handle Missing Data - Data Preprocessing | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Handle Missing Data in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Handle Missing Data (Mean Imputation) - Data Preprocessing | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Handle Missing Data (Mean Imputation) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Handle Missing Data - Data Preprocessing","description":"Implement Handle Missing Data in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Handle Missing Data (Mean Imputation) - Data Preprocessing","description":"Implement Handle Missing Data (Mean Imputation) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/data-preprocessing/handle-missing-data","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Handle Missing Data - Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Handle Missing Data in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Handle Missing Data</h2>
-<p>Replace NaN (missing) values in an array with the mean of non-NaN values.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def fill_missing_with_mean(arr: np.ndarray) -&gt; np.ndarray:
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Handle Missing Data (Mean Imputation) - Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Handle Missing Data (Mean Imputation) in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Handle Missing Data (Mean Imputation)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function that replaces every missing value (<code>NaN</code>) in a 1-D array with the mean of the values that are present.</p>
+<h3>Background</h3>
+<p>Most models can&#x27;t consume <code>NaN</code>. The simplest fix is <strong>imputation</strong>: fill each gap with a statistic of the observed values. Mean imputation keeps the column mean unchanged; it is <code>SimpleImputer(strategy=&#x27;mean&#x27;)</code> in scikit-learn. (In a real pipeline the mean must come from the training split only: see <strong>Leakage-Safe Imputation and Scaling</strong>.)</p>
+<h3>Formula</h3>
+<pre><code class="language-text">observed = { x[i] : x[i] is not NaN }
+fill     = sum(observed) / |observed|
+out[i]   = fill if x[i] is NaN else x[i]
 </code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>arr</code>: 1-D float array of shape <code>(n,)</code> with at least one non-NaN value; missing entries are <code>np.nan</code> (tests may pass a Python list)</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A <strong>new</strong> float array of shape <code>(n,)</code> with no NaNs. Values that were present are unchanged.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>An array with no NaNs is returned unchanged (as a copy).</li>
+<li><strong>Don&#x27;t modify the input</strong>: <code>arr[mask] = v</code> on the caller&#x27;s array would change their data. Work on a copy.</li>
+<li><code>np.mean</code> of an array containing NaN is NaN, so you must exclude the missing values when computing the fill.</li>
+</ul>
 <h3>Constraints</h3>
 <ul>
-<li>Input is a 1D array</li>
-<li>Array contains at least one non-NaN value</li>
-<li>NaN values are represented as np.nan</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: np.array([1.0, np.nan, 3.0, np.nan, 5.0])
-Output: [1.0, 3.0, 3.0, 3.0, 5.0]</pre><p>Mean of [1, 3, 5] is 3, which replaces NaN values</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>Use NumPy; vectorise (no Python loop over elements).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>When is the median a better fill than the mean?</li>
+<li>Why can adding a binary &quot;was missing&quot; feature help a model?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: fill_missing_with_mean(np.array([1.0, np.nan, 3.0, np.nan, 5.0]))
+Output: [1.0, 3.0, 3.0, 3.0, 5.0]</pre><p>The observed values 1, 3, 5 have mean 3, which fills both gaps.</p></div><div><pre class="overflow-auto">Input: fill_missing_with_mean(np.array([np.nan, 10.0, 20.0]))
+Output: [15.0, 10.0, 20.0]</pre><p>A NaN at the start is filled the same way: mean(10, 20) = 15.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def fill_missing_with_mean(arr: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Replace NaN values with the mean of non-NaN values.
+    Replace NaN values with the mean of the non-NaN values.
 
     Args:
-        arr: Input array that may contain NaN values
+        arr: 1-D float array of shape (n,), at least one value not NaN
 
     Returns:
-        Array with NaN values replaced by the mean
+        New float array of shape (n,) with every NaN replaced by the mean
+        (the input array is left unchanged)
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/data-preprocessing">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/data-preprocessing">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

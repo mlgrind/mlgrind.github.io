@@ -78,44 +78,69 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Post-training &amp; Efficiency | ML Grind</title>
-<meta name="description" content="GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one." data-rh="true" />
+<meta name="description" content="GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/post-training" data-rh="true" />
 <meta property="og:title" content="Post-training &amp; Efficiency | ML Grind" data-rh="true" />
-<meta property="og:description" content="GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one." data-rh="true" />
+<meta property="og:description" content="GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/post-training" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Post-training &amp; Efficiency | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one." data-rh="true" />
+<meta name="twitter:description" content="GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Post-training & Efficiency","description":"GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.","url":"https://mlgrind.github.io/section/post-training","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Post-training & Efficiency","description":"GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve.","url":"https://mlgrind.github.io/section/post-training","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.</p><div class="prose dark:prose-invert max-w-none"><h2>Post-training &amp; Efficiency</h2>
-<p>A pretrained language model predicts text. Post-training turns it into an assistant that follows instructions and reflects human preferences, and efficiency techniques make it affordable to train and serve.</p>
-<h2>Preference learning</h2>
-<table><thead><tr><th>Method</th><th>Idea</th><th>Loss</th></tr></thead><tbody><tr><td>Reward model</td><td>Learn a scalar score from pairwise human preferences (Bradley–Terry)</td><td><code>-log σ(r_chosen - r_rejected)</code></td></tr><tr><td>PPO-RLHF</td><td>Maximize reward with a KL penalty that keeps the policy near the reference model</td><td>clipped surrogate with <code>A = r - β·KL</code></td></tr><tr><td>DPO</td><td>Skip the reward model: optimize preferences directly through log-probability ratios</td><td><code>-log σ(β·(Δ_chosen - Δ_rejected))</code></td></tr><tr><td>GRPO</td><td>Drop PPO&#x27;s value network: sample a group of responses per prompt and use each reward relative to the group as the advantage</td><td>clipped surrogate with <code>A = (r - mean) / std</code> and a k3 KL term</td></tr></tbody></table>
-<h2>Why the KL penalty?</h2>
-<p>Without it, the policy drifts toward outputs that fool the reward model (&quot;reward hacking&quot;) and forgets how to write fluent text. The KL term measures how far the policy has moved from the frozen reference model.</p>
-<h2>GRPO and verifiable rewards</h2>
-<p>GRPO (DeepSeekMath) is popular for reasoning models trained on <strong>verifiable</strong> rewards: a math answer checker or unit tests give 1 for correct and 0 for wrong. With G samples per prompt, the group mean is the baseline, so no critic has to be trained, and a prompt where every sample gets the same reward contributes no gradient.</p>
-<h2>Efficiency</h2>
-<p>Fine-tuning and serving large models is dominated by memory. Low-rank adapters (LoRA) train a tiny fraction of the weights, and quantization stores weights in fewer bits.</p>
-<table><thead><tr><th>Technique</th><th>Idea</th><th>Saves</th></tr></thead><tbody><tr><td>Int8 absmax quantization</td><td><code>scale = max(abs(w)) / 127</code>, store <code>round(w / scale)</code> as int8; one scale per output channel limits the damage from outliers</td><td>4× weight memory vs float32, faster int8 matmuls</td></tr></tbody></table>
-<h2>Problems in This Section</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve.</p><div class="prose dark:prose-invert max-w-none"><h2>Post-training &amp; Efficiency</h2>
+<h2>Why it matters</h2>
+<p>A pretrained language model predicts text. <strong>Post-training</strong> turns it into an assistant that follows instructions, reasons and reflects human preferences, and <strong>efficiency</strong> techniques make it affordable to fine-tune and serve. Labs ask about both: how GRPO and DPO differ from PPO-RLHF, and how quantization trades accuracy for memory.</p>
+<h2>Core ideas: preference and reward optimization</h2>
+<table><thead><tr><th>Method</th><th>Idea</th><th>Objective (maximize) or loss (minimize)</th><th>Practiced in</th></tr></thead><tbody><tr><td>Reward model</td><td>Score responses, trained on human preference pairs (Bradley–Terry)</td><td>loss <code>-log σ(r_chosen - r_rejected)</code></td><td>Reinforcement Learning</td></tr><tr><td>PPO-RLHF</td><td>Maximize reward with PPO; a KL term keeps π_θ near the reference model</td><td>clipped surrogate with <code>A = r - β·KL</code></td><td>Reinforcement Learning</td></tr><tr><td>DPO</td><td>No reward model and no sampling: optimize preferences through log-ratios</td><td>loss <code>-log σ(β·(Δ_chosen - Δ_rejected))</code></td><td>Reinforcement Learning</td></tr><tr><td>GRPO</td><td>PPO without a value network: the group of samples for a prompt is the baseline</td><td>clipped surrogate with <code>A = (r - mean) / std</code>, minus <code>β·KL_k3</code></td><td>this section</td></tr></tbody></table>
+<p><strong>Why a KL term?</strong> Without it the policy drifts toward outputs that fool the reward model (&quot;reward hacking&quot;) and forgets how to write fluent text. The KL is estimated from the sampled tokens&#x27; log-probs, with <code>kl_t = log π_θ(y_t) - log π_ref(y_t)</code>:</p>
+<table><thead><tr><th>Estimator</th><th>Per token</th><th>Unbiased</th><th>Always ≥ 0</th><th>Used by</th></tr></thead><tbody><tr><td>k1</td><td><code>kl_t</code></td><td>yes</td><td>no</td><td>InstructGPT-style KL-shaped reward</td></tr><tr><td>k3</td><td><code>exp(-kl_t) + kl_t - 1</code></td><td>yes</td><td>yes</td><td>GRPO</td></tr></tbody></table>
+<p><strong>GRPO and verifiable rewards.</strong> GRPO (DeepSeekMath, 2024) is popular for reasoning models trained on <strong>verifiable</strong> rewards: an answer checker or unit tests give 1 for correct and 0 for wrong. For each prompt, sample G responses. The group mean replaces the critic, and dividing by the group std puts the advantages on a common scale. A prompt where every sample gets the same reward has zero advantage everywhere, so it contributes no gradient.</p>
+<h2>Core ideas: efficiency</h2>
+<p>Training and serving large models is dominated by memory. LoRA trains a small low-rank update instead of the full weights, and quantization stores weights in fewer bits.</p>
+<table><thead><tr><th>Technique</th><th>Idea</th><th>Saves</th></tr></thead><tbody><tr><td>LoRA</td><td><code>W + (α/r)·A·B</code> with rank r ≪ d; only A and B are trained</td><td>optimizer state and gradients for the frozen W</td></tr><tr><td>Int8 absmax quantization</td><td><code>scale = max abs(w) / 127</code>, store <code>round(w / scale)</code> as int8, one scale per output row</td><td>4× weight memory vs float32, fast int8 matmuls</td></tr></tbody></table>
+<p>One scale per output channel (row) limits the damage from outliers. A single huge weight only coarsens its own row.</p>
+<h2>Worked micro-example</h2>
+<p><strong>GRPO advantages.</strong> Four samples for one prompt, verifier rewards <code>[1, 0, 0, 1]</code>: mean 0.5, population std 0.5, so the advantages are <code>[+1, -1, -1, +1]</code>. With rewards <code>[1, 0, 0, 0]</code> (std 0.433), the one correct answer gets <code>+1.732</code> and each wrong one <code>-0.577</code>. A rare success earns a larger push.</p>
+<p><strong>Int8 absmax.</strong> Row <code>[0.7, -1.2, 0.3]</code>:</p>
+<pre><code class="language-text">scale = 1.2 / 127 = 0.009449
+w_q   = round([0.7, -1.2, 0.3] / scale) = [74, -127, 32]
+w_hat = w_q · scale = [0.6992, -1.2, 0.3024]      max error 0.0024 ≤ scale / 2
+</code></pre>
+<p>Quantize <code>[[0.01, -0.02, 0.013], [5.0, -3.0, 1.7]]</code> with a <strong>single</strong> scale (5 / 127) and the first row becomes <code>[0, -1, 0]</code>: it is almost erased. Per-row scales keep it.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>GRPO: Group-Relative Advantages &amp; Objective</strong></li>
-<li><strong>Int8 Weight Quantization (absmax)</strong></li>
+<li><strong>GRPO std:</strong> use the population std (<code>ddof=0</code>, PyTorch <code>unbiased=False</code>) and add eps, so identical rewards give 0 instead of NaN.</li>
+<li><strong>Masking:</strong> average token terms over real tokens only. Padding must not dilute a response&#x27;s mean.</li>
+<li><strong>KL counted twice:</strong> in PPO-RLHF the KL goes either into the reward or into the loss, never both.</li>
+<li><strong>Sign conventions:</strong> objectives J are maximized; report and minimize <code>loss = -J</code>.</li>
+<li><strong>Quantization:</strong> clip to [-127, 127] and guard all-zero rows (<code>max(absmax, 1e-8)</code>). Accumulate int8 products in int32, or they overflow.</li>
 </ul>
-<p>The reward-model loss, KL penalty, PPO-RLHF objective and DPO are practiced in <strong>Reinforcement Learning</strong>, and the LoRA adapter in <strong>PyTorch Basics</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/post-training/grpo-advantages">GRPO: Group-Relative Advantages &amp; Objective →</a></li><li><a href="/problem/post-training/int8-quantization">Int8 Weight Quantization (absmax) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview angle</h2>
+<ul>
+<li>Why does GRPO not need a critic, and what does it cost? (G samples per prompt; variance from small groups.)</li>
+<li>What does the per-response 1/|o_i| normalization do to long vs short answers? (Dr. GRPO argues it biases length.)</li>
+<li>Compare DPO, which is offline, with PPO and GRPO, which are online and sample from the current policy.</li>
+<li>When does per-channel quantization beat per-tensor, and why do activation outliers (LLM.int8()) need special handling?</li>
+<li>Complexity: an int8 matmul costs the same O(n·d_in·d_out) as float, but moves 4× fewer weight bytes. On memory-bound decoding, that is where the speedup comes from.</li>
+</ul>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>GRPO: Group-Relative Advantages &amp; Objective</strong>: group-normalized advantages, then the clipped, masked, k3-penalized GRPO objective.</li>
+<li><strong>Int8 Weight Quantization (absmax)</strong>: per-channel and per-tensor quantization, dequantization and an int8 matmul with int32 accumulation.</li>
+</ol>
+<p>The reward-model loss, the KL penalty, the PPO-RLHF objective and DPO are practiced in <strong>Reinforcement Learning</strong> (start with <strong>PPO Clipped Objective</strong> and <strong>KL Divergence Penalty (RLHF)</strong>, which GRPO builds on). The LoRA adapter is in <strong>PyTorch Basics</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/post-training/grpo-advantages">GRPO: Group-Relative Advantages &amp; Objective →</a></li><li><a href="/problem/post-training/int8-quantization">Int8 Weight Quantization (absmax) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

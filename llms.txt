@@ -25,26 +25,26 @@
 
 The platform covers 21 learning sections with 149 problems:
 
-- **01 NumPy Fundamentals** (`/section/numpy-fundamentals`) — Master NumPy array operations essential for ML development. _(5 problems)_
-- **02 Python Basics for ML** (`/section/python-basics`) — Master NumPy arrays and essential Python operations for machine learning. _(3 problems)_
-- **03 Einstein Summation (Einsum)** (`/section/einsum`) — Master einsum for elegant tensor operations. _(5 problems)_
-- **04 PyTorch Basics** (`/section/pytorch-basics`) — Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy. _(23 problems)_
-- **05 Data Preprocessing** (`/section/data-preprocessing`) — Learn essential data cleaning and transformation techniques. _(5 problems)_
+- **01 NumPy Fundamentals** (`/section/numpy-fundamentals`) — Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on. _(5 problems)_
+- **02 Python Basics for ML** (`/section/python-basics`) — Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows. _(3 problems)_
+- **03 Einstein Summation (Einsum)** (`/section/einsum`) — Write sums, matrix products and batched multi-head attention as einsum index strings. _(5 problems)_
+- **04 PyTorch Basics** (`/section/pytorch-basics`) — Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy. _(23 problems)_
+- **05 Data Preprocessing** (`/section/data-preprocessing`) — Scale, impute, encode and split data without leaking the test set into training. _(5 problems)_
 - **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(12 problems)_
-- **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Implement clustering and dimensionality reduction algorithms. _(5 problems)_
-- **08 Model Evaluation** (`/section/model-evaluation`) — Learn metrics and techniques to evaluate ML models properly. _(6 problems)_
-- **09 Deep Learning Basics** (`/section/deep-learning`) — Activation functions and fundamental building blocks. _(3 problems)_
-- **10 Neural Networks** (`/section/neural-networks`) — Build neural networks from scratch with forward and backward passes. _(6 problems)_
-- **11 Optimization & Training** (`/section/optimization`) — Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable. _(2 problems)_
-- **12 CNNs & Computer Vision** (`/section/cnn`) — Implement convolutions, pooling, object detection, and segmentation. _(11 problems)_
-- **13 Sequence Models** (`/section/sequence-models`) — RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention. _(3 problems)_
+- **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch. _(5 problems)_
+- **08 Model Evaluation** (`/section/model-evaluation`) — Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right. _(6 problems)_
+- **09 Deep Learning Basics** (`/section/deep-learning`) — ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from. _(3 problems)_
+- **10 Neural Networks** (`/section/neural-networks`) — Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss. _(6 problems)_
+- **11 Optimization & Training** (`/section/optimization`) — Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable. _(2 problems)_
+- **12 CNNs & Computer Vision** (`/section/cnn`) — Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics. _(11 problems)_
+- **13 Sequence Models** (`/section/sequence-models`) — Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells. _(3 problems)_
 - **14 Transformer Architecture** (`/section/transformers`) — Master attention, positional encoding, and modern LLM architecture. _(11 problems)_
 - **15 LLM Generation & Decoding** (`/section/llm-generation`) — Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding. _(7 problems)_
 - **16 LLM Internals** (`/section/llm-internals`) — SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured. _(4 problems)_
 - **17 Representation Learning & Retrieval** (`/section/representation-learning`) — Contrastive learning, embedding search and retrieval for RAG. _(3 problems)_
 - **18 Generative Models** (`/section/generative-models`) — Learn VAEs, diffusion models, and generative AI fundamentals. _(9 problems)_
-- **19 Reinforcement Learning** (`/section/reinforcement-learning`) — Master RL fundamentals from Q-learning to policy gradients. _(15 problems)_
-- **20 Post-training & Efficiency** (`/section/post-training`) — GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one. _(2 problems)_
+- **19 Reinforcement Learning** (`/section/reinforcement-learning`) — From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs. _(15 problems)_
+- **20 Post-training & Efficiency** (`/section/post-training`) — GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve. _(2 problems)_
 - **21 End-to-End Implementations** (`/section/e2e-implementations`) — Build complete ML models from scratch. _(9 problems)_
 
 ## Learning Paths

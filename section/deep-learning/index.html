@@ -78,51 +78,79 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Deep Learning Basics | ML Grind</title>
-<meta name="description" content="Activation functions and fundamental building blocks." data-rh="true" />
+<meta name="description" content="ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/deep-learning" data-rh="true" />
 <meta property="og:title" content="Deep Learning Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Activation functions and fundamental building blocks." data-rh="true" />
+<meta property="og:description" content="ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/deep-learning" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Deep Learning Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Activation functions and fundamental building blocks." data-rh="true" />
+<meta name="twitter:description" content="ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Deep Learning Basics","description":"Activation functions and fundamental building blocks.","url":"https://mlgrind.github.io/section/deep-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Deep Learning Basics","description":"ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.","url":"https://mlgrind.github.io/section/deep-learning","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Activation functions and fundamental building blocks.</p><div class="prose dark:prose-invert max-w-none"><h2>Deep Learning Basics</h2>
-<p>Core building blocks that appear in every neural network.</p>
-<h2>Key Concepts</h2>
-<h3>Activation Functions</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Deep Learning Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.</p><div class="prose dark:prose-invert max-w-none"><h2>Deep Learning Basics</h2>
+<p>A neural network is a stack of simple pieces: an <strong>affine map</strong> (<code>x @ W + b</code>), a <strong>non-linearity</strong> (ReLU), and at the end a <strong>softmax</strong> that turns scores into probabilities. This section builds those three pieces. Every later section (MLPs, CNNs, transformers) reuses them, and interviewers expect you to write them correctly from memory, including the numerically stable softmax.</p>
+<h2>Core Ideas</h2>
+<h3>1. The dense (fully-connected) layer</h3>
+<p>Each output unit takes a weighted sum of all inputs plus a bias. For a batch, it is one matrix product:</p>
+<pre><code class="language-text">Z = X @ W + b        X: (batch, in_dim)   W: (in_dim, out_dim)   b: (out_dim,)   Z: (batch, out_dim)
+</code></pre>
+<p>The bias broadcasts over the batch. The layer has <code>in_dim * out_dim + out_dim</code> parameters and costs <code>batch * in_dim * out_dim</code> multiply-adds. (PyTorch&#x27;s <code>nn.Linear</code> stores the transpose, <code>weight: (out_dim, in_dim)</code>, and computes <code>X @ weight.T + bias</code>.)</p>
+<h3>2. Non-linearities</h3>
+<p>Two linear layers in a row are still one linear map (<code>(X @ W1) @ W2 = X @ (W1 @ W2)</code>), so depth needs a non-linearity between them.</p>
+<table><thead><tr><th>Activation</th><th>Formula</th><th>Range</th><th>Typical use</th></tr></thead><tbody><tr><td>ReLU</td><td><code>max(0, x)</code></td><td><code>[0, inf)</code></td><td>Hidden layers (default)</td></tr><tr><td>Sigmoid</td><td><code>1 / (1 + exp(-x))</code></td><td><code>(0, 1)</code></td><td>Binary output, gates in LSTMs</td></tr><tr><td>Tanh</td><td><code>(e^x - e^-x) / (e^x + e^-x)</code></td><td><code>(-1, 1)</code></td><td>RNN hidden states</td></tr><tr><td>Softmax</td><td><code>exp(x_i) / sum_j exp(x_j)</code></td><td>probabilities summing to 1</td><td>Multi-class output</td></tr></tbody></table>
+<p>ReLU&#x27;s gradient is exactly 1 for positive inputs, so it does not shrink gradients the way sigmoid (max slope 0.25) and tanh do when they saturate.</p>
+<h3>3. Softmax and its stable form</h3>
+<p>Softmax is invariant to adding a constant to every score: <code>softmax(x - c) = softmax(x)</code>. Taking <code>c = max(x)</code> makes the largest exponent <code>exp(0) = 1</code>, so nothing overflows:</p>
+<pre><code class="language-python">def softmax(x):
+    e = np.exp(x - np.max(x))
+    return e / e.sum()
+</code></pre>
+<h2>Worked Micro-Example</h2>
+<p>One input <code>x = [1, 2]</code>, a hidden layer with 3 ReLU units, and 2 output classes:</p>
+<pre><code class="language-text">W1 = [[1, -1, 0.5],      b1 = [0, -1, 0.5]
+      [1, 0.5, -1]]
+z  = x @ W1 + b1 = [3, -1, -1]
+h  = relu(z)     = [3, 0, 0]          # two units are inactive for this input
+
+W2 = [[1, -1], [0, 2], [0.5, 0.5]],  b2 = [0, 0]
+logits = h @ W2 + b2 = [3, -3]
+p = softmax(logits)  = [0.9975, 0.0025]
+</code></pre>
+<p>If the true class is 0, the cross-entropy loss is <code>-log(0.9975) = 0.0025</code>.</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li><strong>ReLU</strong>: max(0, x) - Most common, avoids vanishing gradient</li>
-<li><strong>Sigmoid</strong>: 1/(1+e^-x) - Output in [0,1], used for binary classification</li>
-<li><strong>Softmax</strong>: Converts logits to probabilities that sum to 1</li>
-<li><strong>Tanh</strong>: Output in [-1, 1], zero-centered</li>
+<li><strong>Overflow in softmax</strong>: <code>np.exp(1000)</code> is <code>inf</code> and <code>inf / inf</code> is <code>nan</code>. Always subtract the max first.</li>
+<li><strong>Wrong reduction</strong>: <code>np.max(x)</code> reduces an array to a scalar; <code>np.maximum(0, x)</code> compares element-wise. Mixing them up is a classic ReLU and softmax bug.</li>
+<li><strong>Shape and layout</strong>: <code>X @ W</code> needs <code>W</code> as <code>(in_dim, out_dim)</code>; <code>nn.Linear</code> uses the transpose. A bias of shape <code>(out_dim,)</code> broadcasts over rows; one of shape <code>(batch,)</code> does not.</li>
+<li><strong>Batched softmax</strong>: for a <code>(batch, classes)</code> array, reduce with <code>axis=-1, keepdims=True</code>, otherwise you normalise across the whole batch.</li>
+<li><strong>In-place edits</strong>: <code>x[x &lt; 0] = 0</code> changes the caller&#x27;s array (and breaks autograd in PyTorch).</li>
 </ul>
-<h3>When to Use Each</h3>
+<h2>Interview Angle</h2>
 <ul>
-<li><strong>Hidden layers</strong>: ReLU (or variants like LeakyReLU)</li>
-<li><strong>Binary output</strong>: Sigmoid</li>
-<li><strong>Multi-class output</strong>: Softmax</li>
-<li><strong>RNNs</strong>: Tanh (historically)</li>
+<li>&quot;Why do we need non-linear activations?&quot; Without them the network is one linear map.</li>
+<li>&quot;Implement softmax.&quot; The follow-up is always &quot;what if the inputs are large?&quot; (the max-shift), then &quot;what is its Jacobian?&quot; (<code>diag(p) - p pᵀ</code>) and &quot;what is the gradient of softmax + cross-entropy?&quot; (<code>p - y</code>).</li>
+<li>&quot;ReLU vs sigmoid vs tanh?&quot; Saturation and vanishing gradients, dying ReLUs, zero-centred outputs.</li>
+<li>Count the parameters and FLOPs of a dense layer.</li>
 </ul>
-<h3>Dense Layers</h3>
-<ul>
-<li><strong>Forward pass</strong>: output = activation(W @ x + b)</li>
-<li><strong>Parameters</strong>: Weights W and biases b</li>
-<li><strong>Computation</strong>: Matrix multiplication + bias + activation</li>
-</ul>
-<p>Let&#x27;s implement these fundamentals!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/deep-learning/perceptron">ReLU Activation →</a></li><li><a href="/problem/deep-learning/neural-network-forward">Dense Layer Forward Pass →</a></li><li><a href="/problem/deep-learning/backpropagation">Softmax Function →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in This Section</h2>
+<ol>
+<li><strong>ReLU Activation</strong>: element-wise <code>max(0, x)</code> for arrays of any shape.</li>
+<li><strong>Dense Layer Forward Pass (ReLU)</strong>: <code>relu(X @ W + b)</code> for a whole batch.</li>
+<li><strong>Numerically Stable Softmax</strong>: probabilities from logits without overflow.</li>
+</ol>
+<p>Next, <strong>Neural Networks</strong> chains these into a full MLP with a hand-written backward pass, cross-entropy, initialization, batch norm and dropout. Leaky ReLU, GELU and temperature softmax are in <strong>PyTorch Basics</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/deep-learning/perceptron">ReLU Activation →</a></li><li><a href="/problem/deep-learning/neural-network-forward">Dense Layer Forward Pass (ReLU) →</a></li><li><a href="/problem/deep-learning/backpropagation">Numerically Stable Softmax →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

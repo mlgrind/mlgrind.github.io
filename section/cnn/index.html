@@ -78,75 +78,94 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>CNNs &amp; Computer Vision | ML Grind</title>
-<meta name="description" content="Implement convolutions, pooling, object detection, and segmentation." data-rh="true" />
+<meta name="description" content="Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/cnn" data-rh="true" />
 <meta property="og:title" content="CNNs &amp; Computer Vision | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement convolutions, pooling, object detection, and segmentation." data-rh="true" />
+<meta property="og:description" content="Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/cnn" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="CNNs &amp; Computer Vision | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement convolutions, pooling, object detection, and segmentation." data-rh="true" />
+<meta name="twitter:description" content="Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"CNNs & Computer Vision","description":"Implement convolutions, pooling, object detection, and segmentation.","url":"https://mlgrind.github.io/section/cnn","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"CNNs & Computer Vision","description":"Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.","url":"https://mlgrind.github.io/section/cnn","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement convolutions, pooling, object detection, and segmentation.</p><div class="prose dark:prose-invert max-w-none"><h2>Convolutional Neural Networks (CNNs)</h2>
-<p>CNNs are the backbone of computer vision. They learn hierarchical features from images.</p>
-<h2>Key Concepts</h2>
-<h3>Convolution Operation</h3>
-<ul>
-<li><strong>Kernel/Filter</strong>: Small matrix that slides over input</li>
-<li><strong>Feature maps</strong>: Output of applying filters</li>
-<li><strong>Parameters</strong>: Stride, padding, kernel size</li>
-</ul>
-<h3>Pooling Layers</h3>
-<ul>
-<li><strong>Max pooling</strong>: Take maximum in each region</li>
-<li><strong>Average pooling</strong>: Take average in each region</li>
-<li><strong>Purpose</strong>: Reduce spatial dimensions, add translation invariance</li>
-</ul>
-<h3>CNN Architecture Components</h3>
-<ol>
-<li><strong>Convolutional layers</strong>: Extract features</li>
-<li><strong>Pooling layers</strong>: Reduce dimensions</li>
-<li><strong>Flatten</strong>: Convert 2D to 1D</li>
-<li><strong>Fully connected</strong>: Classification</li>
-</ol>
-<h3>Output Size Formula</h3>
-<pre><code>output = (input - kernel + 2*padding) / stride + 1
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.</p><div class="prose dark:prose-invert max-w-none"><h2>Convolutional Neural Networks (CNNs)</h2>
+<h2>Why It Matters</h2>
+<p>Convolutions are how neural networks see. Image classifiers, object detectors (Faster R-CNN, RetinaNet, YOLO), segmentation models (U-Net, Mask R-CNN) and the image encoders of diffusion models and vision-language models are built from the same few pieces. Interviews test them directly: compute an output shape in your head, write a convolution with loops, implement IoU and NMS without bugs, explain why ResNet trains.</p>
+<h2>Core Ideas</h2>
+<h3>Convolution = a small dense layer slid over the image</h3>
+<p>A conv layer applies the <strong>same</strong> small weight tensor (the kernel) at every spatial position. That gives two inductive biases: <strong>locality</strong> (each output looks at a <code>k x k</code> patch) and <strong>weight sharing</strong> (a cat ear detector works anywhere in the image). Deep learning &quot;convolution&quot; is really <strong>cross-correlation</strong>: the kernel is not flipped.</p>
+<pre><code class="language-text">out[n, o, i, j] = b[o] + sum over c, a, b&#x27; of  x[n, c, i*s + a, j*s + b&#x27;] * w[o, c, a, b&#x27;]
 </code></pre>
-<h3>Classic Architectures</h3>
+<h3>Shape conventions (get these right first)</h3>
+<table><thead><tr><th>Name</th><th>Layout</th><th>Used by</th></tr></thead><tbody><tr><td><strong>NCHW</strong></td><td><code>(batch, channels, height, width)</code></td><td>PyTorch (<code>nn.Conv2d</code>), and the conv problems here</td></tr><tr><td><strong>NHWC</strong></td><td><code>(batch, height, width, channels)</code></td><td>TensorFlow/Keras, image files; used in <strong>Flatten Layer</strong></td></tr><tr><td>Conv weight</td><td><code>(C_out, C_in // groups, kH, kW)</code></td><td>PyTorch and <strong>Advanced 2D Convolution</strong></td></tr><tr><td>Single image</td><td><code>(H, W)</code></td><td><strong>2D Convolution</strong> and <strong>Max Pooling</strong> (one channel, no batch)</td></tr></tbody></table>
+<p>Box formats in detection differ too: the problems here use <strong><code>xyxy</code></strong> = <code>[x1, y1, x2, y2]</code> (top-left and bottom-right corners, <code>x2 &gt; x1</code>, <code>y2 &gt; y1</code>). COCO stores <strong><code>xywh</code></strong> = <code>[x, y, width, height]</code> and YOLO uses <strong><code>cxcywh</code></strong> (centre plus size), so convert before computing IoU.</p>
+<h3>Output size, parameters and compute</h3>
+<pre><code class="language-text">H_out = floor((H + 2*padding - kH) / stride) + 1
+params = C_out * (C_in // groups) * kH * kW  (+ C_out biases)
+MACs   = params_without_bias * H_out * W_out  (per image)
+</code></pre>
+<table><thead><tr><th>Building block</th><th>What it does</th></tr></thead><tbody><tr><td>Padding <code>p = (k-1)/2</code>, stride 1</td><td>&quot;same&quot; convolution: keeps <code>H, W</code></td></tr><tr><td>Stride 2 conv or 2x2 max pool</td><td>halves the resolution</td></tr><tr><td>Grouped conv (<code>groups = G</code>)</td><td><code>G</code> independent convs on channel slices, <code>1/G</code> of the params</td></tr><tr><td>Depthwise conv (<code>groups = C_in = C_out</code>) + 1x1 conv</td><td>MobileNet&#x27;s depthwise separable conv</td></tr><tr><td>Flatten + linear</td><td>turn the final feature map into class logits</td></tr><tr><td>Residual block</td><td><code>out = ReLU(F(x) + shortcut(x))</code>, makes 100+ layers trainable</td></tr></tbody></table>
+<h3>Detection and segmentation</h3>
+<p>A detector outputs many scored boxes: <strong>IoU</strong> measures overlap, <strong>NMS</strong> removes duplicates, <strong>focal loss</strong> stops easy background anchors from swamping the classifier, and <strong>smooth L1</strong> regresses box offsets robustly. Segmentation predicts a class per pixel, scored with mask <strong>IoU</strong> and <strong>Dice</strong>.</p>
+<h2>Worked Micro-Example</h2>
+<p>Cross-correlate a <code>3 x 3</code> image with a <code>2 x 2</code> kernel (no padding, stride 1, so the output is <code>(3 - 2) + 1 = 2</code> per side):</p>
+<pre><code class="language-text">image = [[1, 2, 0],      kernel = [[1,  0],
+         [0, 1, 3],                [0, -1]]
+         [2, 1, 0]]
+
+out[0, 0] = 1*1 + 2*0 + 0*0 + 1*(-1) =  0
+out[0, 1] = 2*1 + 0*0 + 1*0 + 3*(-1) = -1
+out[1, 0] = 0*1 + 1*0 + 2*0 + 1*(-1) = -1
+out[1, 1] = 1*1 + 3*0 + 1*0 + 0*(-1) =  1
+</code></pre>
+<p>Shapes through the ResNet stem: a <code>224 x 224</code> image, conv 7x7 stride 2 padding 3 gives <code>(224 + 6 - 7) // 2 + 1 = 112</code>, then max pool 3x3 stride 2 padding 1 gives <code>(112 + 2 - 3) // 2 + 1 = 56</code>. A 3x3 conv from 64 to 128 channels at <code>56 x 56</code> has <code>3*3*64*128 = 73,728</code> weights and costs about <code>73,728 * 56 * 56 ≈ 231M</code> multiply-adds per image.</p>
+<p>IoU of <code>xyxy</code> boxes <code>[0, 0, 4, 4]</code> and <code>[2, 0, 6, 4]</code>: the intersection is <code>2 x 4 = 8</code>, the union is <code>16 + 16 - 8 = 24</code>, so IoU <code>= 1/3</code>.</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li><strong>LeNet</strong>: First successful CNN</li>
-<li><strong>AlexNet</strong>: Deep CNNs for ImageNet</li>
-<li><strong>VGG</strong>: Very deep, small kernels</li>
-<li><strong>ResNet</strong>: Skip connections</li>
+<li><strong>Layout mix-ups</strong>: NCHW vs NHWC, <code>(H, W)</code> vs <code>(W, H)</code>, <code>xyxy</code> vs <code>xywh</code>. Write the shape next to every line.</li>
+<li><strong>Flipping the kernel</strong>: frameworks compute cross-correlation; flipping gives a different answer for asymmetric kernels.</li>
+<li><strong>Truncating floats</strong>: <code>astype(int)</code> on a convolution output silently corrupts non-integer results.</li>
+<li><strong>Output size</strong>: use floor division; forgetting the <code>+ 1</code> or the <code>2 * padding</code> is the classic off-by-one.</li>
+<li><strong>IoU</strong>: clamp the intersection width and height at 0, or disjoint boxes get a positive &quot;overlap&quot;. Guard a zero-area union.</li>
+<li><strong>NMS</strong>: suppress with <code>IoU &gt; threshold</code> against the box you just kept, not against the original top box only.</li>
+<li><strong>Losses</strong>: clip probabilities before <code>log</code>; in focal loss, <code>alpha</code> weights the <strong>positive</strong> class.</li>
+<li><strong>Residual blocks</strong>: the final ReLU comes <strong>after</strong> the addition; the shortcut needs a projection whenever the shape changes.</li>
 </ul>
-<h3>Residual Blocks</h3>
-<p>A ResNet basic block computes <code>ReLU(F(x) + shortcut(x))</code> with <code>F = conv-BN-ReLU-conv-BN</code>. The shortcut is the identity, or a strided 1x1 conv + BN when the channels or resolution change. If the identity is optimal, the block only has to drive <code>F</code> to zero, which is what makes 100+ layer networks trainable.</p>
-<h3>Object Detection</h3>
+<h2>Interview Angle</h2>
 <ul>
-<li><strong>IoU (Intersection over Union)</strong>: Measures overlap between predicted and ground truth boxes</li>
-<li><strong>Non-Maximum Suppression (NMS)</strong>: Filters redundant detections by keeping only the highest-scoring box per object</li>
-<li><strong>Focal Loss</strong>: Addresses class imbalance by down-weighting easy examples (RetinaNet)</li>
-<li><strong>Smooth L1 Loss</strong>: Bounding box regression loss — less sensitive to outliers than L2</li>
+<li>&quot;What is the output shape and parameter count of this layer?&quot; Answer in seconds with the formulas above.</li>
+<li>&quot;Write conv2d with loops, then vectorise it&quot; (loop over kernel taps, or im2col + one matmul).</li>
+<li>&quot;Why do two 3x3 convs beat one 5x5?&quot; (same 5x5 receptive field, <code>18 C^2</code> vs <code>25 C^2</code> weights, an extra non-linearity.) &quot;What does a 1x1 conv do?&quot;</li>
+<li>&quot;Implement IoU and NMS.&quot; Follow-ups: batched IoU as an <code>(N, M)</code> matrix, soft-NMS, class-aware NMS, <code>O(N^2)</code> cost.</li>
+<li>&quot;Why focal loss, and what do <code>alpha</code> and <code>gamma</code> do?&quot; &quot;Why smooth L1 rather than L2 for boxes?&quot;</li>
+<li>&quot;Why does ResNet work?&quot; Identity paths keep gradients flowing; a block can fall back to the identity by pushing <code>F</code> to 0.</li>
 </ul>
-<h3>Image Segmentation</h3>
-<ul>
-<li><strong>Pixel-level classification</strong>: Assign a label to every pixel</li>
-<li><strong>Evaluation metrics</strong>: IoU (Jaccard), Dice Coefficient, Pixel Accuracy</li>
-<li><strong>Key architectures</strong>: U-Net, FCN, Mask R-CNN</li>
-</ul>
-<p>Let&#x27;s implement CNN operations and detection/segmentation fundamentals!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/cnn/conv-output-size">Convolution Output Size →</a></li><li><a href="/problem/cnn/conv2d-forward">2D Convolution →</a></li><li><a href="/problem/cnn/max-pool">Max Pooling →</a></li><li><a href="/problem/cnn/flatten-layer">Flatten Layer →</a></li><li><a href="/problem/cnn/conv2d-advanced">Advanced 2D Convolution →</a></li><li><a href="/problem/cnn/iou-bounding-box">IoU (Intersection over Union) →</a></li><li><a href="/problem/cnn/nms">Non-Maximum Suppression (NMS) →</a></li><li><a href="/problem/cnn/focal-loss">Focal Loss →</a></li><li><a href="/problem/cnn/smooth-l1-loss">Smooth L1 Loss →</a></li><li><a href="/problem/cnn/seg-metrics">Segmentation Metrics →</a></li><li><a href="/problem/cnn/resnet-block">ResNet Basic Block →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in This Section</h2>
+<ol>
+<li><strong>Convolution Output Size</strong>: the <code>floor((H + 2p - k) / s) + 1</code> formula.</li>
+<li><strong>2D Convolution</strong>: a single-channel <code>(H, W)</code> cross-correlation, no padding, stride 1.</li>
+<li><strong>Max Pooling</strong>: non-overlapping <code>k x k</code> max pooling on an <code>(H, W)</code> map.</li>
+<li><strong>Flatten Layer</strong>: <code>(N, H, W, C)</code> (NHWC) feature maps to <code>(N, H*W*C)</code> vectors.</li>
+<li><strong>Advanced 2D Convolution</strong>: NCHW batches with padding, stride and groups (depthwise conv).</li>
+<li><strong>IoU (Intersection over Union)</strong>: overlap of two <code>xyxy</code> boxes.</li>
+<li><strong>Non-Maximum Suppression (NMS)</strong>: greedy duplicate removal for detections.</li>
+<li><strong>Focal Loss</strong>: RetinaNet&#x27;s loss for extreme class imbalance.</li>
+<li><strong>Smooth L1 Loss</strong>: the box regression loss of Fast/Faster R-CNN.</li>
+<li><strong>Segmentation Metrics</strong>: IoU, pixel accuracy and Dice for binary masks.</li>
+<li><strong>ResNet Basic Block</strong>: conv-BN-ReLU-conv-BN plus an identity or projection shortcut.</li>
+</ol>
+<p>Related: <strong>Batch Normalization</strong> (Neural Networks), <strong>Precision and Recall</strong> (Model Evaluation, the basis of detection mAP) and <strong>E2E: Convolutional Neural Network</strong> (End-to-End Implementations).</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/cnn/conv-output-size">Convolution Output Size →</a></li><li><a href="/problem/cnn/conv2d-forward">2D Convolution →</a></li><li><a href="/problem/cnn/max-pool">Max Pooling →</a></li><li><a href="/problem/cnn/flatten-layer">Flatten Layer →</a></li><li><a href="/problem/cnn/conv2d-advanced">Advanced 2D Convolution →</a></li><li><a href="/problem/cnn/iou-bounding-box">IoU (Intersection over Union) →</a></li><li><a href="/problem/cnn/nms">Non-Maximum Suppression (NMS) →</a></li><li><a href="/problem/cnn/focal-loss">Focal Loss →</a></li><li><a href="/problem/cnn/smooth-l1-loss">Smooth L1 Loss →</a></li><li><a href="/problem/cnn/seg-metrics">Segmentation Metrics →</a></li><li><a href="/problem/cnn/resnet-block">ResNet Basic Block →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

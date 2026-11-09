@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Instance Normalization - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Instance Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/instance-norm" data-rh="true" />
@@ -100,12 +100,37 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Instance Normalization - PyTorch Basics","description":"Implement Instance Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/instance-norm","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Instance Normalization - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Instance Normalization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Instance Normalization</h2>
-<p>Normalize per-sample per-channel over spatial dims (H, W). Used in style transfer and GANs.</p>
+<p><strong>What you&#x27;ll build:</strong> <code>instance_norm(x, gamma, beta, eps)</code> for images <code>(N, C, H, W)</code>: normalise every channel of every sample over its spatial positions, then scale and shift per channel.</p>
+<h3>Background</h3>
+<p>Instance Normalization (Ulyanov et al., 2016) was introduced for style transfer: the mean and variance of a feature map carry much of an image&#x27;s &quot;style&quot; (contrast, colour cast), so removing them per image and per channel makes the network&#x27;s output independent of the input&#x27;s contrast. It is GroupNorm with one channel per group and is common in GANs and image-to-image models.</p>
 <h3>Formula</h3>
-<pre><code>x_norm[n, c] = (x[n, c] - mean) / sqrt(var + eps)
-out[n, c] = gamma[c] * x_norm[n, c] + beta[c]
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: x shape (2, 3, 4, 4), gamma (3,), beta (3,)
-Output: Normalized output shape (2, 3, 4, 4)</pre><p>Each sample-channel pair normalized independently</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>For each sample <code>n</code> and channel <code>c</code>, over the <code>H * W</code> positions:</p>
+<pre><code class="language-text">mean[n, c] = mean over (h, w) of x[n, c, h, w]
+var[n, c]  = mean over (h, w) of (x[n, c, h, w] - mean[n, c])²       (population variance)
+out[n, c, h, w] = gamma[c] * (x[n, c, h, w] - mean[n, c]) / sqrt(var[n, c] + eps) + beta[c]
+</code></pre>
+<h3>Which Axes Does Each Norm Reduce Over?</h3>
+<table><thead><tr><th>Norm</th><th>Statistics over</th><th>One mean per</th></tr></thead><tbody><tr><td>BatchNorm</td><td><code>(N, H, W)</code></td><td>channel</td></tr><tr><td>LayerNorm</td><td><code>(C, H, W)</code></td><td>sample</td></tr><tr><td>InstanceNorm</td><td><code>(H, W)</code></td><td>(sample, channel)</td></tr><tr><td>GroupNorm</td><td><code>(C/G, H, W)</code></td><td>(sample, group)</td></tr></tbody></table>
+<h3>Inputs</h3>
+<ul>
+<li><code>x</code>: float array <code>(N, C, H, W)</code>.</li>
+<li><code>gamma</code>, <code>beta</code>: float arrays <code>(C,)</code>.</li>
+<li><code>eps</code>: small positive float (default <code>1e-5</code>).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>An array of shape <code>(N, C, H, W)</code>. With <code>gamma = 1, beta = 0</code>, every <code>out[n, c]</code> has mean 0 and variance close to 1.</p>
+<h3>Constraints</h3>
+<ul>
+<li>Vectorised; no loops over samples or channels.</li>
+<li><strong>PyTorch track:</strong> don&#x27;t call <code>F.instance_norm</code> or <code>nn.InstanceNorm2d</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does InstanceNorm hurt classification even though it helps style transfer?</li>
+<li>PyTorch&#x27;s <code>nn.InstanceNorm2d</code> has <code>affine=False</code> by default. What does that change?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: instance_norm(np.array([[[[1.0, 2.0], [3.0, 4.0]]]]), np.ones(1), np.zeros(1))
+Output: array([[[[-1.3416, -0.4472], [ 0.4472,  1.3416]]]])</pre><p>One 2x2 map: mean 2.5, population variance 1.25, so (x - 2.5) / sqrt(1.25).</p></div><div><pre class="overflow-auto">Input: instance_norm(np.random.randn(2, 3, 4, 4), np.ones(3), np.array([1.0, 2.0, 3.0])).mean(axis=(2, 3))
+Output: array([[1., 2., 3.], [1., 2., 3.]])</pre><p>Each (sample, channel) map is centred exactly, so its mean becomes beta[c].</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def instance_norm(x, gamma, beta, eps=1e-5):
     &quot;&quot;&quot;
@@ -122,7 +147,7 @@ def instance_norm(x, gamma, beta, eps=1e-5):
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>DBSCAN Clustering - Unsupervised Learning | ML Grind</title>
 <meta name="description" content="Implement DBSCAN Clustering in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/dbscan" data-rh="true" />
@@ -99,51 +99,72 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"DBSCAN Clustering - Unsupervised Learning","description":"Implement DBSCAN Clustering in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/dbscan","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">DBSCAN Clustering - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement DBSCAN Clustering in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>DBSCAN (Density-Based Spatial Clustering of Applications with Noise)</h2>
-<p>DBSCAN finds clusters of any shape as regions of high point density, and marks points in sparse regions as <strong>noise</strong>. Unlike k-means, you don&#x27;t choose the number of clusters.</p>
-<p>Implement <code>dbscan(X, eps, min_samples)</code> with the same semantics as scikit-learn&#x27;s <code>DBSCAN(eps, min_samples)</code> (Euclidean metric).</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">DBSCAN Clustering - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement DBSCAN Clustering in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>DBSCAN Clustering</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>dbscan(X, eps, min_samples)</code>: density-based clustering that returns a cluster id for every point, or <code>-1</code> for noise, with the same labels as scikit-learn&#x27;s <code>DBSCAN(eps=eps, min_samples=min_samples)</code> (Euclidean metric).</p>
+<h3>Background</h3>
+<p>DBSCAN (Density-Based Spatial Clustering of Applications with Noise) finds clusters of any shape as regions where points are packed densely, and labels points in sparse regions as noise. Unlike k-means you don&#x27;t choose the number of clusters, and outliers don&#x27;t drag centroids around. It is a common choice for anomaly detection and geospatial data.</p>
 <h3>Definitions</h3>
 <ul>
 <li>The <strong>eps-neighbourhood</strong> of point <code>p</code>: all points <code>q</code> with <code>||p - q|| &lt;= eps</code>, <strong>including <code>p</code> itself</strong>.</li>
-<li><code>p</code> is a <strong>core point</strong> if its neighbourhood has <strong>at least <code>min_samples</code></strong> points (counting <code>p</code>).</li>
+<li><code>p</code> is a <strong>core point</strong> if its neighbourhood has <strong>at least <code>min_samples</code></strong> points (counting <code>p</code>), as in scikit-learn.</li>
 <li>A <strong>border point</strong> is not core but lies in the neighbourhood of some core point.</li>
 <li>Everything else is <strong>noise</strong> (label <code>-1</code>).</li>
 </ul>
-<h3>Algorithm (cluster ids in order of discovery)</h3>
-<pre><code>labels = [-1] * n;  cluster = 0
-for p in 0 .. n-1:                       # scan in index order
+<h3>Algorithm</h3>
+<pre><code class="language-text">labels = [-1] * n;  cluster = 0
+for p in 0 .. n-1:                        # scan in index order
     if labels[p] != -1 or p is not core:  continue
     labels[p] = cluster;  queue = [p]
     while queue:
-        q = queue.pop(0)
-        for each neighbour r of q (only expand from CORE points q):
+        q = queue.pop(0)                  # q is always a core point
+        for each neighbour r of q:
             if labels[r] == -1:
                 labels[r] = cluster
                 if r is core: queue.append(r)
     cluster += 1
 </code></pre>
-<ul>
+<ol>
 <li>Only <strong>core</strong> points expand a cluster; border points join a cluster but don&#x27;t spread it.</li>
-<li>A border point within reach of two clusters keeps the label of the <strong>first cluster that reached it</strong> (the one discovered earlier in the index-order scan). It is never reassigned.</li>
-<li>So cluster <code>0</code> contains the lowest-indexed core point, cluster <code>1</code> the lowest-indexed core point not in cluster <code>0</code>, and so on.</li>
+<li>Clusters are numbered in order of discovery: cluster <code>0</code> contains the lowest-indexed core point, cluster <code>1</code> the lowest-indexed core point not in cluster <code>0</code>, and so on.</li>
+</ol>
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: data, shape <code>(n, d)</code></li>
+<li><code>eps</code>: neighbourhood radius (<code>&gt; 0</code>); a distance exactly equal to <code>eps</code> counts</li>
+<li><code>min_samples</code>: minimum neighbourhood size (point included) for a core point, <code>&gt;= 1</code></li>
 </ul>
 <h3>Expected Return Format</h3>
+<p>An int array of shape <code>(n,)</code>: <code>-1</code> for noise, otherwise the cluster id <code>0, 1, 2, ...</code>.</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>An int array of shape <code>(n,)</code>: <code>-1</code> for noise, otherwise the cluster id <code>0, 1, 2, ...</code>.</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[0], [0.3], [0.6], [1.4], [2.2], [2.5], [2.8], [10]], eps=0.9, min_samples=4
-Output: [0, 0, 0, 0, 1, 1, 1, -1]</pre><p>Core points are 0.6 and 2.2 (4 neighbours each, counting themselves). 1.4 is a border point of both; cluster 0 reaches it first. 10 is noise.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>A <strong>border point within reach of two clusters</strong> keeps the label of the first cluster that reached it (the one discovered earlier) and is never reassigned. This is also what scikit-learn does; it is the one order-dependent part of DBSCAN.</li>
+<li><code>min_samples = 1</code>: every point is core, so isolated points become singleton clusters and nothing is noise.</li>
+<li>If no point is core, every label is <code>-1</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only (no sklearn). Vectorise the distance matrix; the cluster expansion is a plain loop.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>How would you pick <code>eps</code>? (Plot each point&#x27;s distance to its <code>min_samples</code>-th neighbour, sorted, and look for the knee.)</li>
+<li>The distance matrix is <code>O(n^2)</code> memory. How do spatial indexes (k-d trees, ball trees) help?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: dbscan(np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [10.0, 10.0], [10.0, 11.0], [11.0, 10.0], [50.0, 50.0]]), 1.5, 3)
+Output: [0, 0, 0, 1, 1, 1, -1]</pre><p>Each corner triangle has 3 points within 1.5 of each other, so all are core; (50, 50) has only itself and is noise.</p></div><div><pre class="overflow-auto">Input: dbscan(np.array([[0.0], [0.3], [0.6], [1.4], [2.2], [2.5], [2.8], [10.0]]), 0.9, 4)
+Output: [0, 0, 0, 0, 1, 1, 1, -1]</pre><p>Only 0.6 and 2.2 are core (4 neighbours each, counting themselves). 1.4 is a border point of both and stays in cluster 0, which reaches it first.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def dbscan(X, eps, min_samples):
     &quot;&quot;&quot;
-    DBSCAN clustering (Euclidean distance, same semantics as sklearn).
+    DBSCAN clustering (Euclidean distance, same labels as sklearn).
 
     Args:
         X: Data, shape (n, d)
-        eps: Neighbourhood radius (distance &lt;= eps counts, point itself included)
+        eps: Neighbourhood radius (distance &lt;= eps counts, the point itself included)
         min_samples: Minimum neighbourhood size for a core point
 
     Returns:
-        Int labels of shape (n,): -1 for noise, clusters numbered 0, 1, ...
+        Int array of shape (n,): -1 for noise, clusters numbered 0, 1, ...
         in order of discovery when scanning points by index
     &quot;&quot;&quot;
     # Your code here

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Minibatches: Dataset &amp; DataLoader - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Minibatches: Dataset &amp; DataLoader in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/dataloader-batching" data-rh="true" />
@@ -99,15 +99,17 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Minibatches: Dataset & DataLoader - PyTorch Basics","description":"Implement Minibatches: Dataset & DataLoader in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/dataloader-batching","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Minibatches: Dataset &amp; DataLoader - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Minibatches: Dataset &amp; DataLoader in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Minibatching with Shuffling</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Minibatches: Dataset &amp; DataLoader - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Minibatches: Dataset &amp; DataLoader in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Minibatches: Dataset &amp; DataLoader</h2>
+<p><strong>What you&#x27;ll build:</strong> <code>make_batches(X, y, batch_size, shuffle, drop_last, seed)</code>, which returns every minibatch of one epoch, like iterating a PyTorch <code>DataLoader</code>.</p>
+<h3>Background</h3>
 <p>Training on the whole dataset at every step is slow, and training on it in a fixed order biases each epoch. A <strong>data loader</strong> shuffles the sample indices once per epoch and cuts them into minibatches. In PyTorch this is</p>
 <pre><code class="language-python">loader = DataLoader(TensorDataset(X, y), batch_size=32, shuffle=True, drop_last=False,
                     generator=torch.Generator().manual_seed(0))
 for xb, yb in loader:
     ...
 </code></pre>
-<h3>Task</h3>
-<p>Implement the iterator yourself and return all minibatches of one epoch as a list:</p>
+<h3>Algorithm</h3>
+<p>Return all minibatches of one epoch as a list:</p>
 <ol>
 <li>Build an index order: <code>np.arange(N)</code> if <code>shuffle=False</code>, otherwise <strong>exactly</strong> <code>np.random.default_rng(seed).permutation(N)</code>.</li>
 <li>Cut the order into consecutive chunks of <code>batch_size</code>. The last chunk can be smaller.</li>
@@ -116,11 +118,23 @@ for xb, yb in loader:
 </ol>
 <p>Shuffling with a seeded generator keeps the run reproducible: the same seed gives the same batches.</p>
 <table><thead><tr><th>N</th><th>batch_size</th><th>drop_last</th><th>number of batches</th><th>last batch size</th></tr></thead><tbody><tr><td>10</td><td>4</td><td>False</td><td>3</td><td>2</td></tr><tr><td>10</td><td>4</td><td>True</td><td>2</td><td>4</td></tr><tr><td>12</td><td>4</td><td>either</td><td>3</td><td>4</td></tr></tbody></table>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def make_batches(X, y, batch_size, shuffle=True, drop_last=False, seed=0) -&gt; list:
-</code></pre>
-<h3>Return Format</h3>
-<p>A <strong>list</strong> of tuples <code>(X_batch, y_batch)</code> with shapes <code>(B, ...)</code> and <code>(B,)</code>, where <code>B = batch_size</code> except possibly for the last batch.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = np.arange(20).reshape(10, 2), y = np.arange(10), batch_size=4, shuffle=False
+<h3>Inputs</h3>
+<ul>
+<li><code>X</code>: array <code>(N, ...)</code>; <code>y</code>: array <code>(N,)</code>.</li>
+<li><code>batch_size</code>: positive integer; <code>shuffle</code>, <code>drop_last</code>: booleans; <code>seed</code>: integer.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A <strong>list</strong> of tuples <code>(X_batch, y_batch)</code> with shapes <code>(B, ...)</code> and <code>(B,)</code>, where <code>B = batch_size</code> except possibly for the last batch.</p>
+<h3>Constraints</h3>
+<ul>
+<li><strong>NumPy track:</strong> the shuffled order must be exactly <code>np.random.default_rng(seed).permutation(N)</code> (a hidden test checks it).</li>
+<li><strong>PyTorch track:</strong> use <code>TensorDataset</code> and <code>DataLoader</code> with <code>generator=torch.Generator().manual_seed(seed)</code>. The order then comes from torch&#x27;s RNG, so the tests check coverage, pairing and determinism instead of an exact order.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why shuffle every epoch instead of once? What goes wrong if the data is sorted by label and you never shuffle?</li>
+<li>What do <code>num_workers</code> and <code>pin_memory</code> do in a real <code>DataLoader</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = np.arange(20).reshape(10, 2), y = np.arange(10), batch_size=4, shuffle=False
 Output: [(X[0:4], [0, 1, 2, 3]), (X[4:8], [4, 5, 6, 7]), (X[8:10], [8, 9])]</pre><p>Three batches; the last one holds the 2 leftover samples</p></div><div><pre class="overflow-auto">Input: same, drop_last=True
 Output: [(X[0:4], [0, 1, 2, 3]), (X[4:8], [4, 5, 6, 7])]</pre><p>The incomplete last batch is dropped</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 

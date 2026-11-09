@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>PPO-RLHF Objective - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement PPO-RLHF Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-llm-objective" data-rh="true" />
@@ -99,54 +99,67 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PPO-RLHF Objective - Reinforcement Learning","description":"Implement PPO-RLHF Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-ppo-llm-objective","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PPO-RLHF Objective - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement PPO-RLHF Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>PPO Objective for LLM Fine-tuning (RLHF)</h2>
-<p>Implement the full PPO-RLHF objective that combines the clipped surrogate, reward, and KL penalty.</p>
-<p>The KL penalty is applied through the reward (InstructGPT-style): <code>advantage = reward - beta * KL</code>, where <code>KL = new_logp - ref_logp</code>. The <code>&#x27;objective&#x27;</code> is the clipped surrogate computed with that advantage; <code>&#x27;kl_penalty&#x27;</code> reports <code>beta * mean(KL)</code> for monitoring.</p>
-<h3>RLHF PPO Objective</h3>
-<pre><code>L = E[min(r_t * Â_t, clip(r_t, 1-ε, 1+ε) * Â_t) - β * KL]
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PPO-RLHF Objective - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement PPO-RLHF Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>PPO-RLHF Objective</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The PPO objective as used for RLHF: the clipped surrogate from <strong>PPO Clipped Objective</strong>, with the KL penalty from <strong>KL Divergence Penalty</strong> folded into the advantage.</p>
+<h3>Background</h3>
+<p>Classic RLHF (InstructGPT) fine-tunes the policy with PPO to maximize the reward model&#x27;s score while staying close to the reference model. There are two common ways to add the KL term:</p>
+<ol>
+<li><strong>KL in the reward</strong> (InstructGPT, this problem): shape the reward as r - β·KL, then run the ordinary clipped surrogate on it.</li>
+<li><strong>KL as a separate loss term</strong>: L = clipped surrogate - β·KL. GRPO does this with the k3 estimator (see <strong>GRPO</strong> in Post-training &amp; Efficiency).</li>
+</ol>
+<p>Pick one, not both: subtracting β·KL again after it is already in the advantage would count the penalty twice.</p>
+<h3>Formula</h3>
+<p>Element-wise over N tokens (or responses), with log-probs as inputs:</p>
+<pre><code class="language-text">ratio_i = exp(new_logp_i - old_logp_i)              π_θ / π_old
+kl_i    = new_logp_i - ref_logp_i                   sampled KL to the reference (k1)
+A_i     = rewards_i - β · kl_i                      KL-shaped reward, used as the advantage
+J       = mean_i [ min( ratio_i · A_i, clip(ratio_i, 1-ε, 1+ε) · A_i ) ]
 </code></pre>
-<p>Where:</p>
+<p>Simplifications for this exercise: the shaped reward is used directly as the advantage (no value baseline or GAE), and kl uses the current policy&#x27;s log-probs. Real implementations compute the shaped reward once at rollout time, from the sampling policy, and treat it as a constant.</p>
+<h3>Inputs</h3>
+<p>Four (N,) float arrays: <code>old_logp</code> (policy that sampled the data), <code>new_logp</code> (current policy π_θ), <code>ref_logp</code> (frozen reference model) and <code>rewards</code> (reward-model scores); plus floats <code>epsilon</code> (clip range) and <code>beta</code> (KL coefficient).</p>
+<h3>Expected return format</h3>
+<p>A dictionary of Python floats, each <strong>rounded to 2 decimals</strong>:</p>
 <ul>
-<li>r_t = π_θ(a|s) / π_old(a|s) is the probability ratio</li>
-<li>Â_t is the advantage (reward - baseline, typically from reward model)</li>
-<li>ε is the PPO clipping parameter (0.2)</li>
-<li>β is the KL penalty coefficient</li>
-<li>KL = log π_θ - log π_ref</li>
+<li><code>&#x27;objective&#x27;</code>: J, to <strong>maximize</strong> (the training loss is -J)</li>
+<li><code>&#x27;policy_loss&#x27;</code>: the clipped-surrogate term. It equals <code>&#x27;objective&#x27;</code> here, because the KL is already inside the advantage. The name is kept for compatibility; in the separate-term variant it would be J before subtracting the penalty.</li>
+<li><code>&#x27;kl_penalty&#x27;</code>: β · mean(kl_i), reported for monitoring only. It is <strong>not</strong> subtracted from J.</li>
 </ul>
-<h3>RLHF Advantage</h3>
-<p>In RLHF, the advantage is often simplified to:</p>
-<pre><code>Â = R(x, y) - β * KL(π_θ || π_ref)
-</code></pre>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def ppo_rlhf_objective(old_logp: np.ndarray, new_logp: np.ndarray,
-                       ref_logp: np.ndarray, rewards: np.ndarray,
-                       epsilon: float, beta: float) -&gt; dict:
-</code></pre>
-<h3>Expected Return Format</h3>
-<p>Return a dictionary with:</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li><code>&#x27;objective&#x27;</code>: The PPO-RLHF objective value</li>
-<li><code>&#x27;policy_loss&#x27;</code>: Clipped policy loss component</li>
-<li><code>&#x27;kl_penalty&#x27;</code>: KL penalty component</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: old_logp=[-2], new_logp=[-1.8], ref_logp=[-2], rewards=[1.0], ε=0.2, β=0.1
-Output: {&#x27;objective&#x27;: ..., &#x27;policy_loss&#x27;: ..., &#x27;kl_penalty&#x27;: ...}</pre><p>Combined objective with reward and KL penalty</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li>If new = old = ref, ratio = 1 and kl = 0, so J = mean(rewards) and the penalty is 0.</li>
+<li>The ratio uses exp of a log-prob difference (no eps needed).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, vectorized.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does the KL-shaped reward let the critic and GAE handle the penalty, while the separate-term version cannot?</li>
+<li>Which statistics would you watch to catch reward hacking? (Mean KL, reward, response length.)</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: old_logp = [-2.0], new_logp = [-1.8], ref_logp = [-2.0], rewards = [1.0], epsilon = 0.2, beta = 0.1
+Output: {&#x27;objective&#x27;: 1.18, &#x27;policy_loss&#x27;: 1.18, &#x27;kl_penalty&#x27;: 0.02}</pre><p>ratio = e^0.2 = 1.221 (clipped to 1.2), kl = 0.2, A = 1 - 0.02 = 0.98, J = 1.2 · 0.98 = 1.176</p></div><div><pre class="overflow-auto">Input: old_logp = new_logp = ref_logp = [-1.0], rewards = [1.0], epsilon = 0.2, beta = 0.1
+Output: {&#x27;objective&#x27;: 1.0, &#x27;policy_loss&#x27;: 1.0, &#x27;kl_penalty&#x27;: 0.0}</pre><p>No policy change and no drift: J is just the mean reward</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def ppo_rlhf_objective(old_logp: np.ndarray, new_logp: np.ndarray,
                        ref_logp: np.ndarray, rewards: np.ndarray,
                        epsilon: float, beta: float) -&gt; dict:
     &quot;&quot;&quot;
-    Compute PPO-RLHF objective for LLM fine-tuning.
+    Compute the PPO-RLHF objective with the KL penalty folded into the advantage.
 
     Args:
-        old_logp: Log probs from old policy (before update)
-        new_logp: Log probs from current policy
-        ref_logp: Log probs from reference (pretrained) model
-        rewards: Rewards from reward model
+        old_logp: (N,) log-probs under the policy that sampled the data
+        new_logp: (N,) log-probs under the current policy
+        ref_logp: (N,) log-probs under the frozen reference model
+        rewards: (N,) reward-model scores
         epsilon: PPO clipping parameter
         beta: KL penalty coefficient
 
     Returns:
-        Dictionary with &#x27;objective&#x27;, &#x27;policy_loss&#x27;, &#x27;kl_penalty&#x27;
+        dict of floats rounded to 2 decimals:
+            &#x27;objective&#x27;:   clipped surrogate with A = rewards - beta * (new_logp - ref_logp)
+            &#x27;policy_loss&#x27;: the same clipped-surrogate value
+            &#x27;kl_penalty&#x27;:  beta * mean(new_logp - ref_logp), for monitoring
     &quot;&quot;&quot;
     old_logp = np.array(old_logp, dtype=float)
     new_logp = np.array(new_logp, dtype=float)
@@ -155,7 +168,7 @@ def ppo_rlhf_objective(old_logp: np.ndarray, new_logp: np.ndarray,
 
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

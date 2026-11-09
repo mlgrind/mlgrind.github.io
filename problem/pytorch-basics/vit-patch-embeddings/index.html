@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>ViT Patch Embeddings - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement ViT Patch Embeddings in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/vit-patch-embeddings" data-rh="true" />
@@ -99,11 +99,41 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"ViT Patch Embeddings - PyTorch Basics","description":"Implement ViT Patch Embeddings in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/vit-patch-embeddings","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ViT Patch Embeddings - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ViT Patch Embeddings in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Vision Transformer (ViT) Patch Embeddings</h2>
-<p>Convert an image into patch embeddings: split into patches, flatten, project, prepend CLS token, add positional embeddings.</p>
-<h3>Output Shape</h3>
-<p>(num_patches + 1, embed_dim) where num_patches = (H/P) * (W/P)</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: image (3, 8, 8), patch_size=4, embed_dim=16
-Output: Shape: (5, 16) -- 4 patches + 1 CLS token</pre><p>8/4 = 2 per side, 2*2=4 patches + CLS</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">ViT Patch Embeddings - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement ViT Patch Embeddings in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>ViT Patch Embeddings</h2>
+<p><strong>What you&#x27;ll build:</strong> <code>patch_embed(...)</code>, the input layer of a Vision Transformer: cut an image into square patches, flatten and project each one to a token, prepend a learnable CLS token and add positional embeddings.</p>
+<h3>Background</h3>
+<p>A transformer consumes a sequence of vectors. ViT (Dosovitskiy et al., 2020) turns an image into one by treating each <code>P x P</code> patch as a &quot;word&quot;: a 224x224 image with <code>P = 16</code> becomes 196 tokens. The extra CLS token gathers information from all patches through attention, and its final state feeds the classifier. Positional embeddings tell the model where each patch came from, since attention itself ignores order.</p>
+<h3>Algorithm</h3>
+<p>For an image <code>(C, H, W)</code> with <code>H</code> and <code>W</code> divisible by <code>P</code>:</p>
+<ol>
+<li>Split it into <code>num_patches = (H / P) * (W / P)</code> patches of shape <code>(C, P, P)</code>, ordered <strong>row-major</strong>: left to right along the top row of patches, then the next row.</li>
+<li>Flatten each patch in <code>(C, P, P)</code> order (channel first, then row, then column) to a vector of length <code>C * P * P</code>.</li>
+<li>Project: <code>tokens = patches @ W_proj</code>, shape <code>(num_patches, embed_dim)</code>.</li>
+<li>Prepend the CLS token: <code>[cls_token; tokens]</code>, shape <code>(num_patches + 1, embed_dim)</code>.</li>
+<li>Add the positional embeddings: <code>+ pos_embed</code>.</li>
+</ol>
+<p>Steps 1 to 3 are exactly a <code>Conv2d(C, embed_dim, kernel_size=P, stride=P)</code>, which is how real ViT code implements them.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>image</code>: float array <code>(C, H, W)</code>.</li>
+<li><code>patch_size</code>: <code>P</code>, which divides <code>H</code> and <code>W</code>.</li>
+<li><code>embed_dim</code>: <code>D</code>, the token size (equal to <code>W_proj.shape[1]</code>).</li>
+<li><code>W_proj</code>: <code>(C * P * P, D)</code>; <code>cls_token</code>: <code>(D,)</code>; <code>pos_embed</code>: <code>(num_patches + 1, D)</code>.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>An array of shape <code>(num_patches + 1, D)</code>. Row 0 is <code>cls_token + pos_embed[0]</code>; row <code>1 + i * (W / P) + j</code> comes from the patch in patch-row <code>i</code>, patch-column <code>j</code>.</p>
+<h3>Constraints</h3>
+<ul>
+<li>Vectorise the patch extraction with <code>reshape</code> and <code>transpose</code> (loops over patches are acceptable in NumPy, but slow).</li>
+<li><strong>PyTorch track:</strong> use <code>reshape</code>/<code>permute</code> (or <code>Tensor.unfold</code>); don&#x27;t use <code>nn.Conv2d</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>How many tokens does a 224x224 image give with <code>P = 14</code>, and how does attention cost scale with <code>P</code>?</li>
+<li>How do you use a model trained at 224x224 on 384x384 images, given <code>pos_embed</code> has a fixed length?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: image (3, 8, 8), patch_size=4, embed_dim=16, W_proj (48, 16), cls_token (16,), pos_embed (5, 16)
+Output: shape (5, 16)</pre><p>8 / 4 = 2 patches per side, 2 * 2 = 4 patches, plus the CLS token.</p></div><div><pre class="overflow-auto">Input: patch_embed(np.zeros((1, 4, 4)), 2, 3, np.ones((4, 3)), np.array([1.0, 2.0, 3.0]), np.full((5, 3), 0.5))
+Output: array([[1.5, 2.5, 3.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]])</pre><p>A blank image projects to zero tokens, so only the CLS token (row 0) and the positions remain.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def patch_embed(image, patch_size, embed_dim, W_proj, cls_token, pos_embed):
     &quot;&quot;&quot;
@@ -111,18 +141,18 @@ def patch_embed(image, patch_size, embed_dim, W_proj, cls_token, pos_embed):
 
     Args:
         image: Input image (C, H, W)
-        patch_size: Size of each square patch
-        embed_dim: Dimension of embeddings
-        W_proj: Projection matrix (C*patch_size*patch_size, embed_dim)
-        cls_token: CLS token embedding (embed_dim,)
-        pos_embed: Positional embeddings (num_patches+1, embed_dim)
+        patch_size: Size P of each square patch (divides H and W)
+        embed_dim: Dimension D of the embeddings
+        W_proj: Projection matrix (C*P*P, D)
+        cls_token: CLS token embedding (D,)
+        pos_embed: Positional embeddings (num_patches+1, D)
 
     Returns:
-        Embeddings (num_patches + 1, embed_dim)
+        Embeddings (num_patches + 1, D): CLS first, then patches in row-major order
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

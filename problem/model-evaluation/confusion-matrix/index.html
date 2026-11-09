@@ -78,53 +78,75 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>Accuracy Score - Model Evaluation | ML Grind</title>
-<meta name="description" content="Implement Accuracy Score in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>Accuracy from the Confusion Matrix - Model Evaluation | ML Grind</title>
+<meta name="description" content="Implement Accuracy from the Confusion Matrix in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/confusion-matrix" data-rh="true" />
-<meta property="og:title" content="Accuracy Score - Model Evaluation | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Accuracy Score in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="Accuracy from the Confusion Matrix - Model Evaluation | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement Accuracy from the Confusion Matrix in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/model-evaluation/confusion-matrix" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Accuracy Score - Model Evaluation | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Accuracy Score in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="Accuracy from the Confusion Matrix - Model Evaluation | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement Accuracy from the Confusion Matrix in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Accuracy Score - Model Evaluation","description":"Implement Accuracy Score in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/confusion-matrix","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Accuracy from the Confusion Matrix - Model Evaluation","description":"Implement Accuracy from the Confusion Matrix in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/confusion-matrix","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Accuracy Score - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Accuracy Score in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Accuracy Score</h2>
-<p>Calculate the accuracy of predictions - the proportion of correct predictions.</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Accuracy from the Confusion Matrix - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Accuracy from the Confusion Matrix in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Accuracy from the Confusion Matrix</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>accuracy(y_true, y_pred)</code>: the fraction of predictions that match the true labels, for binary or multi-class labels.</p>
+<h3>Background</h3>
+<p>The <strong>confusion matrix</strong> <code>M</code> of a <code>C</code>-class problem has <code>M[a, p]</code> = the number of samples with true class <code>a</code> that were predicted as class <code>p</code>. Correct predictions sit on its diagonal, so accuracy is the diagonal sum over the total. It is the first metric everyone reports and the most misleading one on imbalanced data: a model that always predicts &quot;not fraud&quot; on a 1%-fraud dataset scores 0.99. This is <code>sklearn.metrics.accuracy_score</code>.</p>
 <h3>Formula</h3>
-<pre><code>Accuracy = (Number of correct predictions) / (Total predictions)
+<pre><code class="language-text">accuracy = (1/n) * sum_i [y_pred[i] == y_true[i]]  =  trace(M) / n
 </code></pre>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -&gt; float:
-</code></pre>
-<h3>Note</h3>
-<p>While simple, accuracy can be misleading for imbalanced datasets.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: y_true = [0, 1, 1, 0, 1], y_pred = [0, 1, 0, 0, 1]
-Output: 0.8</pre><p>4 correct out of 5 predictions</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>For binary labels this is <code>(TP + TN) / (TP + TN + FP + FN)</code>.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>y_true</code>: true integer labels, shape <code>(n,)</code>, <code>n &gt;= 1</code></li>
+<li><code>y_pred</code>: predicted integer labels, shape <code>(n,)</code></li>
+</ul>
+<p>(Tests may pass Python lists; convert with <code>np.asarray</code>.)</p>
+<h3>Expected return format</h3>
+<p>A float in <code>[0, 1]</code> (not rounded).</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Works unchanged for any number of classes: only equality matters.</li>
+<li>All correct gives <code>1.0</code>; all wrong gives <code>0.0</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, vectorised (no loop over samples).</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Build the full <code>(C, C)</code> confusion matrix with <code>np.add.at</code> or <code>np.bincount(C * y_true + y_pred, minlength=C * C)</code>.</li>
+<li>What is balanced accuracy, and when would you report it instead?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: accuracy(np.array([0, 1, 1, 0, 1]), np.array([0, 1, 0, 0, 1]))
+Output: 0.8</pre><p>4 of the 5 predictions match (index 2 is wrong). The confusion matrix is [[2, 0], [1, 2]] with trace 4.</p></div><div><pre class="overflow-auto">Input: accuracy(np.array([0, 1, 2, 0, 1, 2]), np.array([0, 1, 2, 2, 1, 0]))
+Output: 0.6666666666666666</pre><p>Multi-class works the same way: 4 of 6 labels match.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -&gt; float:
     &quot;&quot;&quot;
-    Calculate accuracy of predictions.
+    Fraction of predictions equal to the true labels.
 
     Args:
-        y_true: True labels
-        y_pred: Predicted labels
+        y_true: True integer labels, shape (n,)
+        y_pred: Predicted integer labels, shape (n,)
 
     Returns:
-        Accuracy score between 0 and 1
+        Accuracy, a float in [0, 1]
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

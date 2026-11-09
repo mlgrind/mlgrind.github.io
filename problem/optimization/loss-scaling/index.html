@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training | ML Grind</title>
 <meta name="description" content="Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/optimization/loss-scaling" data-rh="true" />
@@ -100,35 +100,53 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Dynamic Loss Scaling (Mixed Precision) - Optimization & Training","description":"Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/optimization/loss-scaling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Dynamic Loss Scaling (Mixed Precision) - Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Dynamic Loss Scaling (Mixed Precision) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Dynamic Loss Scaling for Mixed Precision</h2>
-<p>In fp16, the smallest normal number is about <code>6e-5</code>, and anything below about <code>6e-8</code> rounds to 0. Many gradients are smaller than that and would <strong>underflow</strong> to zero. The fix is to multiply the loss by a large <strong>scale</strong> <code>S</code> before <code>backward()</code>. Every gradient is then <code>S</code> times larger and fits in fp16. Before the optimizer step the gradients are divided by <code>S</code> again.</p>
-<p>If <code>S</code> is too large, some gradient overflows to <code>inf</code>/<code>nan</code>. <strong>Dynamic</strong> loss scaling (<code>torch.amp.GradScaler</code>) adapts <code>S</code> as training goes:</p>
-<pre><code>for each step:
-    use the current scale S for this step&#x27;s loss
-    if the gradients overflowed:
-        skip the optimizer step
-        S = S * backoff_factor          # e.g. halve
+<h3>What you&#x27;ll build</h3>
+<p><code>dynamic_loss_scale(overflows, ...)</code>: simulate how <code>torch.amp.GradScaler</code> adapts its loss scale over a training run, given which steps produced inf/NaN gradients.</p>
+<h3>Background</h3>
+<p>In fp16 the smallest normal number is about <code>6e-5</code> and anything below about <code>6e-8</code> rounds to 0, so many small gradients <strong>underflow</strong> to zero. The fix is to multiply the loss by a large <strong>scale</strong> <code>S</code> before <code>backward()</code>: every gradient is then <code>S</code> times larger and fits in fp16, and the gradients are divided by <code>S</code> again before the optimizer step. If <code>S</code> is too large, some gradient overflows to inf/NaN instead. <strong>Dynamic</strong> loss scaling keeps <code>S</code> as large as possible without overflowing: it backs off right after an overflow and grows again after a run of clean steps. (bf16 has fp32&#x27;s exponent range, which is why bf16 training usually needs no loss scaling.)</p>
+<h3>Algorithm</h3>
+<pre><code class="language-text">S = init_scale; good_steps = 0
+for i, overflow in enumerate(overflows):
+    record S as the scale used at step i
+    if overflow:                         # some gradient was inf/NaN
+        skip the optimizer step (record i)
+        S = S * backoff_factor           # e.g. halve
         good_steps = 0
-    else:
-        apply the optimizer step
+    else:                                # optimizer step applied
         good_steps += 1
         if good_steps == growth_interval:
-            S = S * growth_factor       # e.g. double
+            S = S * growth_factor        # e.g. double
             good_steps = 0
 </code></pre>
-<p>So the scale stays as high as possible without overflowing: it drops right after an overflow and creeps back up after <code>growth_interval</code> clean steps in a row. PyTorch&#x27;s defaults are <code>init_scale=65536</code>, <code>growth_factor=2</code>, <code>backoff_factor=0.5</code> and <code>growth_interval=2000</code>.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def dynamic_loss_scale(overflows, init_scale=65536.0, growth_factor=2.0,
-                       backoff_factor=0.5, growth_interval=2000) -&gt; dict:
-</code></pre>
-<p><code>overflows</code> is a list of booleans: <code>overflows[i]</code> is <code>True</code> if step <code>i</code>&#x27;s gradients contained inf/nan.</p>
+<p>PyTorch&#x27;s defaults are <code>init_scale=65536</code>, <code>growth_factor=2</code>, <code>backoff_factor=0.5</code> and <code>growth_interval=2000</code>.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>overflows</code>: list of bools; <code>overflows[i]</code> is <code>True</code> if step <code>i</code>&#x27;s gradients contained inf/NaN (may be empty)</li>
+<li><code>init_scale</code>, <code>growth_factor</code>, <code>backoff_factor</code>: floats</li>
+<li><code>growth_interval</code>: positive int, the number of consecutive good steps before growing</li>
+</ul>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
 <li><code>&#x27;scales&#x27;</code>: list of floats, the scale <strong>used</strong> at each step (before that step&#x27;s update), same length as <code>overflows</code></li>
-<li><code>&#x27;skipped&#x27;</code>: list of the indices of the steps whose optimizer update was skipped</li>
-<li><code>&#x27;final_scale&#x27;</code>: float, the scale after the last step</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: overflows=[False, True, False, False, False], init_scale=8.0, growth_interval=2
-Output: {&#x27;scales&#x27;: [8.0, 8.0, 4.0, 4.0, 8.0], &#x27;skipped&#x27;: [1], &#x27;final_scale&#x27;: 8.0}</pre><p>Step 1 overflows (8 -&gt; 4, counter reset); steps 2 and 3 are two good steps in a row (4 -&gt; 8)</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def dynamic_loss_scale(overflows, init_scale=65536.0, growth_factor=2.0,
+<li><code>&#x27;skipped&#x27;</code>: list of the indices of the steps whose optimizer update was skipped, in increasing order</li>
+<li><code>&#x27;final_scale&#x27;</code>: float, the scale after the last step (<code>init_scale</code> for an empty run)</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>An overflow resets the good-step counter, so growth needs <code>growth_interval</code> clean steps <strong>in a row</strong>.</li>
+<li>After growing, the counter restarts from 0.</li>
+<li>Return floats for the scales even when <code>init_scale</code> is passed as an int.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Plain Python; one pass over <code>overflows</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why is skipping the step (rather than clipping the inf gradients) the right response to an overflow?</li>
+<li>If the scale keeps shrinking towards 0 during training, what does that tell you about the model?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: dynamic_loss_scale([False, True, False, False, False], init_scale=8.0, growth_interval=2)
+Output: {&#x27;scales&#x27;: [8.0, 8.0, 4.0, 4.0, 8.0], &#x27;skipped&#x27;: [1], &#x27;final_scale&#x27;: 8.0}</pre><p>Step 1 overflows (8 -&gt; 4, counter reset); steps 2 and 3 are two good steps in a row (4 -&gt; 8 after step 3).</p></div><div><pre class="overflow-auto">Input: dynamic_loss_scale([True, True, True], init_scale=1024.0)
+Output: {&#x27;scales&#x27;: [1024.0, 512.0, 256.0], &#x27;skipped&#x27;: [0, 1, 2], &#x27;final_scale&#x27;: 128.0}</pre><p>Every step overflows, so every update is skipped and the scale halves each time.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">def dynamic_loss_scale(overflows, init_scale=65536.0, growth_factor=2.0,
                        backoff_factor=0.5, growth_interval=2000) -&gt; dict:
     &quot;&quot;&quot;
     Simulate GradScaler&#x27;s dynamic loss scale over a sequence of steps.
@@ -146,7 +164,7 @@ Output: {&#x27;scales&#x27;: [8.0, 8.0, 4.0, 4.0, 8.0], &#x27;skipped&#x27;: [1]
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/optimization">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/optimization">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

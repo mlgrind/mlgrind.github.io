@@ -78,55 +78,78 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>K-Fold Split Indices - Model Evaluation | ML Grind</title>
-<meta name="description" content="Implement K-Fold Split Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>K-Fold Cross-Validation Indices - Model Evaluation | ML Grind</title>
+<meta name="description" content="Implement K-Fold Cross-Validation Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/model-evaluation/cross-validation" data-rh="true" />
-<meta property="og:title" content="K-Fold Split Indices - Model Evaluation | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement K-Fold Split Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="K-Fold Cross-Validation Indices - Model Evaluation | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement K-Fold Cross-Validation Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/model-evaluation/cross-validation" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="K-Fold Split Indices - Model Evaluation | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement K-Fold Split Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="K-Fold Cross-Validation Indices - Model Evaluation | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement K-Fold Cross-Validation Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"K-Fold Split Indices - Model Evaluation","description":"Implement K-Fold Split Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/cross-validation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"K-Fold Cross-Validation Indices - Model Evaluation","description":"Implement K-Fold Cross-Validation Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/model-evaluation/cross-validation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Fold Split Indices - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Fold Split Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Fold Cross-Validation Indices</h2>
-<p>Generate train and validation indices for K-fold cross-validation.</p>
-<h3>Concept</h3>
-<p>Split data into K equal parts. For each fold:</p>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">K-Fold Cross-Validation Indices - Model Evaluation</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement K-Fold Cross-Validation Indices in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>K-Fold Cross-Validation Indices</h2>
+<h3>What you&#x27;ll build</h3>
+<p><code>kfold_indices(n_samples, k)</code>: the train and validation index lists for each of the <code>k</code> folds of k-fold cross-validation, without shuffling.</p>
+<h3>Background</h3>
+<p>A single train/validation split gives a noisy estimate of model quality. K-fold cross-validation splits the indices into <code>k</code> contiguous folds; fold <code>i</code> is the validation set once while the other <code>k - 1</code> folds train the model, and the <code>k</code> scores are averaged. Every sample is validated exactly once. This is scikit-learn&#x27;s <code>KFold(n_splits=k, shuffle=False)</code>.</p>
+<h3>Algorithm</h3>
+<ol>
+<li>Fold sizes: every fold gets <code>n_samples // k</code> samples, and the <strong>first</strong> <code>n_samples % k</code> folds get one extra.</li>
+<li>Walk through <code>0 .. n_samples-1</code> in order: fold <code>i</code> takes the next <code>size_i</code> consecutive indices as its validation set.</li>
+<li>The training set of fold <code>i</code> is every other index, in increasing order.</li>
+</ol>
+<h3>Inputs</h3>
 <ul>
-<li>Use 1 part for validation</li>
-<li>Use remaining K-1 parts for training</li>
+<li><code>n_samples</code>: int, <code>n_samples &gt;= k</code></li>
+<li><code>k</code>: int number of folds, <code>k &gt;= 2</code></li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def kfold_indices(n_samples: int, k: int) -&gt; list:
-</code></pre>
-<p>Returns list of (train_indices, val_indices) tuples for each fold.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: n_samples = 6, k = 3
-Output: [([2,3,4,5], [0,1]), ([0,1,4,5], [2,3]), ([0,1,2,3], [4,5])]</pre><p>Split [0,1,2,3,4,5] into 3 folds of size 2</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A list of <code>k</code> tuples <code>(train_indices, val_indices)</code>, in fold order. Both are Python lists of ints in increasing order.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><strong>Uneven folds</strong>: with <code>n_samples = 7, k = 3</code> the sizes are <code>3, 2, 2</code> (the extra samples go to the first folds).</li>
+<li><code>k = n_samples</code> is leave-one-out cross-validation.</li>
+<li>No shuffling: the folds are contiguous blocks. (Shuffle the data first, or use a seeded permutation, if its order carries information such as time or class.)</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>Plain Python or NumPy; no sklearn.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why is shuffled k-fold wrong for time series, and what do you use instead? (Forward-chaining splits such as <code>TimeSeriesSplit</code>.)</li>
+<li>How would you make the folds stratified by class?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: kfold_indices(6, 3)
+Output: [([2, 3, 4, 5], [0, 1]), ([0, 1, 4, 5], [2, 3]), ([0, 1, 2, 3], [4, 5])]</pre><p>6 samples split into 3 folds of 2; each fold validates on its block and trains on the rest.</p></div><div><pre class="overflow-auto">Input: kfold_indices(7, 3)
+Output: [([3, 4, 5, 6], [0, 1, 2]), ([0, 1, 2, 5, 6], [3, 4]), ([0, 1, 2, 3, 4], [5, 6])]</pre><p>7 // 3 = 2 with remainder 1, so the first fold gets one extra sample: sizes 3, 2, 2.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def kfold_indices(n_samples: int, k: int) -&gt; list:
     &quot;&quot;&quot;
-    Generate train/validation indices for K-fold cross-validation.
+    Train/validation indices for k-fold cross-validation (no shuffling).
 
     Args:
-        n_samples: Total number of samples
+        n_samples: Total number of samples (&gt;= k)
         k: Number of folds
 
     Returns:
-        List of (train_indices, val_indices) tuples
+        List of k tuples (train_indices, val_indices), each a sorted list of ints;
+        the first n_samples % k folds have one extra validation sample
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/model-evaluation">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

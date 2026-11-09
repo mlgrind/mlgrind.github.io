@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Einsum vs Traditional Operations - Einstein Summation (Einsum) | ML Grind</title>
 <meta name="description" content="Implement Einsum vs Traditional Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/einsum/einsum-vs-matmul" data-rh="true" />
@@ -100,18 +100,41 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Einsum vs Traditional Operations - Einstein Summation (Einsum)","description":"Implement Einsum vs Traditional Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/einsum/einsum-vs-matmul","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Einsum vs Traditional Operations - Einstein Summation (Einsum)</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Einsum vs Traditional Operations in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Einsum vs Traditional Operations</h2>
-<p>Compare einsum with equivalent NumPy operations.</p>
-<h3>Equivalences</h3>
-<table><thead><tr><th>Einsum</th><th>NumPy</th></tr></thead><tbody><tr><td><code>&#x27;ij-&gt;&#x27;</code></td><td><code>np.sum(A)</code></td></tr><tr><td><code>&#x27;ij-&gt;i&#x27;</code></td><td><code>np.sum(A, axis=1)</code></td></tr><tr><td><code>&#x27;ik,kj-&gt;ij&#x27;</code></td><td><code>A @ B</code></td></tr><tr><td><code>&#x27;ij,ij-&gt;&#x27;</code></td><td><code>np.sum(A * B)</code></td></tr><tr><td><code>&#x27;ij-&gt;ji&#x27;</code></td><td><code>A.T</code></td></tr></tbody></table>
-<h3>Task</h3>
-<p>Verify einsum produces same results as traditional operations.</p>
-<h3>Expected Return Format</h3>
-<p>Return a dictionary with:</p>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>einsum_equivalence(A, B)</code> that computes five operations twice, once with <code>np.einsum</code> and once with the usual NumPy call, and reports whether every pair matches.</p>
+<h3>Background</h3>
+<p>In code reviews and interviews you&#x27;ll need to translate fluently in both directions: read <code>&#x27;ik,kj-&gt;ij&#x27;</code> as <code>A @ B</code>, and write <code>A.sum(axis=1)</code> as <code>&#x27;ij-&gt;i&#x27;</code>. Checking the two against each other is also how you debug an einsum you&#x27;re unsure of.</p>
+<h3>The five operations</h3>
+<table><thead><tr><th>Key</th><th>Einsum</th><th>NumPy equivalent</th></tr></thead><tbody><tr><td><code>&#x27;sum&#x27;</code></td><td><code>np.einsum(&#x27;ij-&gt;&#x27;, A)</code></td><td><code>np.sum(A)</code></td></tr><tr><td><code>&#x27;row_sum&#x27;</code></td><td><code>np.einsum(&#x27;ij-&gt;i&#x27;, A)</code></td><td><code>np.sum(A, axis=1)</code></td></tr><tr><td><code>&#x27;matmul&#x27;</code></td><td><code>np.einsum(&#x27;ik,kj-&gt;ij&#x27;, A, B)</code></td><td><code>A @ B</code></td></tr><tr><td><code>&#x27;transpose&#x27;</code></td><td><code>np.einsum(&#x27;ij-&gt;ji&#x27;, A)</code></td><td><code>A.T</code></td></tr><tr><td><code>&#x27;hadamard_sum&#x27;</code></td><td><code>np.einsum(&#x27;ij,ij-&gt;&#x27;, A, A)</code></td><td><code>np.sum(A * A)</code></td></tr></tbody></table>
+<p>Note that <code>&#x27;hadamard_sum&#x27;</code> multiplies <code>A</code> with <strong>itself</strong> (the squared Frobenius norm of <code>A</code>); <code>B</code> is only used for <code>&#x27;matmul&#x27;</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;results&#x27;</code>: Dict mapping operation names to {&#x27;einsum&#x27;: ..., &#x27;numpy&#x27;: ...}</li>
-<li><code>&#x27;all_match&#x27;</code>: Boolean indicating if all einsum results match numpy equivalents</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: A=[[1,2,3],[4,5,6]], B=[[1,2],[3,4],[5,6]]
-Output: {&#x27;results&#x27;: {&#x27;sum&#x27;: {...}, &#x27;matmul&#x27;: {...}, ...}, &#x27;all_match&#x27;: True}</pre><p>All einsum operations produce identical results to NumPy equivalents</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>A</code>: float matrix of shape <code>(m, k)</code></li>
+<li><code>B</code>: float matrix of shape <code>(k, n)</code></li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>Return a dictionary with two keys:</p>
+<ul>
+<li><code>&#x27;results&#x27;</code>: a dict with exactly the five keys <code>&#x27;sum&#x27;</code>, <code>&#x27;row_sum&#x27;</code>, <code>&#x27;matmul&#x27;</code>, <code>&#x27;transpose&#x27;</code>, <code>&#x27;hadamard_sum&#x27;</code>. Each value is a dict <code>{&#x27;einsum&#x27;: &lt;einsum result&gt;, &#x27;numpy&#x27;: &lt;NumPy result&gt;}</code>.</li>
+<li><code>&#x27;all_match&#x27;</code>: a Python <code>bool</code>, <code>True</code> if every einsum result is close to its NumPy counterpart (<code>np.allclose</code>).</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Compare with <code>np.allclose</code>, not <code>==</code>: floating-point sums can differ in the last bits depending on summation order.</li>
+<li><code>all(...)</code> over the comparisons returns a Python <code>bool</code>; <code>np.all</code> would return <code>np.bool_</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Which of these einsums is a view and which creates a new array?</li>
+<li>For <code>&#x27;ik,kj-&gt;ij&#x27;</code> on large matrices, which is faster in practice, einsum or <code>@</code>, and why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: r = einsum_equivalence(np.array([[1., 2., 3.], [4., 5., 6.]]), np.array([[1., 2.], [3., 4.], [5., 6.]]))
+r[&quot;all_match&quot;]
+Output: True</pre><p>Every einsum result matches its NumPy equivalent.</p></div><div><pre class="overflow-auto">Input: r[&quot;results&quot;][&quot;matmul&quot;][&quot;einsum&quot;]
+Output: array([[22., 28.],
+       [49., 64.]])</pre><p>(2, 3) @ (3, 2): for example 22 = 1*1 + 2*3 + 3*5.</p></div><div><pre class="overflow-auto">Input: r[&quot;results&quot;][&quot;hadamard_sum&quot;]
+Output: {&#x27;einsum&#x27;: 91.0, &#x27;numpy&#x27;: 91.0}</pre><p>1 + 4 + 9 + 16 + 25 + 36 = 91: A times itself, summed.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def einsum_equivalence(A: np.ndarray, B: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
@@ -122,11 +145,14 @@ def einsum_equivalence(A: np.ndarray, B: np.ndarray) -&gt; dict:
         B: Second matrix (k, n)
 
     Returns:
-        Dictionary with &#x27;einsum&#x27; and &#x27;numpy&#x27; results for comparison
+        dict with keys:
+            &#x27;results&#x27;:   {&#x27;sum&#x27;, &#x27;row_sum&#x27;, &#x27;matmul&#x27;, &#x27;transpose&#x27;, &#x27;hadamard_sum&#x27;},
+                         each mapping to {&#x27;einsum&#x27;: ..., &#x27;numpy&#x27;: ...}
+            &#x27;all_match&#x27;: Python bool, True if every pair is np.allclose
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

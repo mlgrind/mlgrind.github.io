@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>RLHF Reward Model Loss - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement RLHF Reward Model Loss in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-reward-modeling" data-rh="true" />
@@ -100,47 +100,61 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"RLHF Reward Model Loss - Reinforcement Learning","description":"Implement RLHF Reward Model Loss in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-reward-modeling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">RLHF Reward Model Loss - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement RLHF Reward Model Loss in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>RLHF Reward Model Loss</h2>
-<p>Implement the Bradley-Terry preference model loss used to train reward models in RLHF.</p>
+<h3>What you&#x27;ll build</h3>
+<p>The Bradley–Terry pairwise loss used to train the reward model in RLHF.</p>
 <h3>Background</h3>
-<p>In RLHF (Reinforcement Learning from Human Feedback), we first train a reward model
-on human preference data, then use it to fine-tune an LLM.</p>
-<h3>Bradley-Terry Model</h3>
-<p>Given a pair of responses (y_w, y_l) where y_w is preferred (winner):</p>
-<pre><code>P(y_w &gt; y_l) = σ(r(y_w) - r(y_l))
+<p>Humans find it much easier to say which of two responses is better than to give an absolute score. RLHF (InstructGPT, 2022) therefore collects pairs (y_chosen, y_rejected) for a prompt x and trains a reward model r(x, y), usually an LLM with a scalar head, so that chosen responses score higher. That reward model then supplies the reward for PPO (see <strong>PPO-RLHF Objective</strong>) or best-of-n sampling.</p>
+<h3>Formula</h3>
+<p>Bradley–Terry model of a preference:</p>
+<pre><code class="language-text">P(chosen ≻ rejected) = σ(r_chosen - r_rejected)
 </code></pre>
-<p>Where σ is the sigmoid function and r(y) is the reward model output.</p>
-<h3>Loss Function</h3>
-<pre><code>L = -E[log σ(r(y_w) - r(y_l))]
+<p>Negative log-likelihood over N pairs:</p>
+<pre><code class="language-text">L = -(1/N) · Σ_i log σ(r_chosen_i - r_rejected_i)
 </code></pre>
-<p>We want to maximize the probability that the reward model correctly ranks preferences.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def reward_model_loss(r_chosen: np.ndarray, r_rejected: np.ndarray) -&gt; float:
-</code></pre>
-<p>Where r_chosen and r_rejected are reward scores for preferred and rejected responses.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: r_chosen = [2.0, 1.5], r_rejected = [1.0, 0.5]
-Output: 0.313</pre><p>Low loss when chosen has higher reward than rejected</p></div><div><pre class="overflow-auto">Input: r_chosen = [0.0], r_rejected = [0.0]
-Output: 0.693</pre><p>Equal rewards = 50% probability = -log(0.5) = 0.693</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>Numerically stable form: log σ(x) = -log(1 + e^(-x)) = <code>-np.logaddexp(0, -x)</code>.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>r_chosen</code>: (N,) reward-model scores of the preferred responses</li>
+<li><code>r_rejected</code>: (N,) scores of the rejected responses (same order)</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A Python float: the mean loss, <strong>rounded to 3 decimals</strong>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Equal scores give log 2 ≈ 0.693 per pair (a coin flip).</li>
+<li>Only the <strong>difference</strong> of scores matters: adding a constant to both leaves the loss unchanged.</li>
+<li>Must stay exact for large margins: for r_chosen - r_rejected = -100 the loss is 100.0. Don&#x27;t add an eps inside the log (<code>log(p + 1e-10)</code> caps the loss near 23).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. Don&#x27;t call a library BCE.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>This is binary cross-entropy with logits on the score difference and label 1. Why is the reward model only identified up to a constant shift?</li>
+<li>How would you use a margin, or more than two ranked responses (Plackett–Luce)?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: r_chosen = [2.0, 1.5], r_rejected = [1.0, 0.5]
+Output: 0.313</pre><p>Both margins are 1: -log σ(1) = 0.313</p></div><div><pre class="overflow-auto">Input: r_chosen = [0.0], r_rejected = [0.0]
+Output: 0.693</pre><p>Equal rewards: -log 0.5 = log 2</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 def reward_model_loss(r_chosen: np.ndarray, r_rejected: np.ndarray) -&gt; float:
     &quot;&quot;&quot;
-    Compute RLHF reward model loss (Bradley-Terry).
+    Compute the Bradley-Terry reward model loss.
 
     Args:
-        r_chosen: Reward scores for preferred/chosen responses
-        r_rejected: Reward scores for rejected responses
+        r_chosen: (N,) scores of the preferred responses
+        r_rejected: (N,) scores of the rejected responses
 
     Returns:
-        Average negative log-likelihood loss
+        mean of -log sigmoid(r_chosen - r_rejected) as a float, rounded to 3 decimals
     &quot;&quot;&quot;
     r_chosen = np.array(r_chosen, dtype=float)
     r_rejected = np.array(r_rejected, dtype=float)
 
     # Your code here
-    # Loss = -E[log σ(r_chosen - r_rejected)]
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

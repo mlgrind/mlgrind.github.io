@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Max Pooling - CNNs &amp; Computer Vision | ML Grind</title>
 <meta name="description" content="Implement Max Pooling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/cnn/max-pool" data-rh="true" />
@@ -100,35 +100,53 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Max Pooling - CNNs & Computer Vision","description":"Implement Max Pooling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/cnn/max-pool","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Max Pooling - CNNs &amp; Computer Vision</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Max Pooling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Max Pooling</h2>
-<p>Implement 2x2 max pooling with stride 2.</p>
-<h3>Operation</h3>
-<p>Divide input into non-overlapping 2x2 regions and take maximum of each.</p>
-<h3>Output Size</h3>
-<pre><code>out_height = input_height // 2
-out_width = input_width // 2
+<h3>What you&#x27;ll build</h3>
+<p>Non-overlapping 2D max pooling on a single-channel <code>(H, W)</code> feature map: split it into <code>pool_size x pool_size</code> windows (stride = window size) and keep the maximum of each.</p>
+<h3>Background</h3>
+<p>Pooling shrinks feature maps, which cuts compute in later layers, grows the receptive field, and makes the network a little tolerant to small shifts (a feature that moves by one pixel inside a window gives the same max). Classic CNNs (LeNet, VGG, the ResNet stem) use 2x2 or 3x3 max pooling; many modern networks use strided convolutions instead.</p>
+<h3>Formula</h3>
+<p>With <code>p = pool_size</code> (window size and stride):</p>
+<pre><code class="language-text">out[i, j] = max(image[i*p:(i+1)*p, j*p:(j+1)*p])
+
+H_out = H // p
+W_out = W // p
 </code></pre>
-<h3>Purpose</h3>
+<h3>Inputs</h3>
 <ul>
-<li>Reduces spatial dimensions</li>
-<li>Provides translation invariance</li>
-<li>Reduces computation</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: [[1,2,3,4], [5,6,7,8], [9,10,11,12], [13,14,15,16]]
-Output: [[6, 8], [14, 16]]</pre><p>Max of each 2x2 region</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>image</code>: 2D array of shape <code>(H, W)</code> (ints or floats; a nested list is fine).</li>
+<li><code>pool_size</code>: positive int <code>p</code>, default <code>2</code>.</li>
+</ul>
+<h3>Expected return format</h3>
+<p>A NumPy array of shape <code>(H // p, W // p)</code> holding the window maxima (same dtype as the input; float inputs stay floats).</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>If <code>H</code> or <code>W</code> is not a multiple of <code>p</code>, the leftover rows/columns at the bottom/right are <strong>dropped</strong> (floor), like <code>F.max_pool2d</code> with no padding and <code>ceil_mode=False</code>.</li>
+<li>Negative values: the max of <code>[-1, -2]</code> is <code>-1</code>; don&#x27;t initialise the output with zeros and compare.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. A double loop over windows is fine; the reshape trick is fully vectorised.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>In the backward pass, which input receives the gradient of each output?</li>
+<li>How do average pooling and global average pooling differ, and why did global average pooling replace big fully connected heads?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]
+Output: [[6, 8], [14, 16]]</pre><p>The four 2x2 windows have maxima 6, 8, 14 and 16.</p></div><div><pre class="overflow-auto">Input: image = np.arange(30).reshape(5, 6) * 0.5, pool_size = 3
+Output: [[7.0, 8.5]]</pre><p>5 // 3 = 1 row and 6 // 3 = 2 columns of windows; the last two rows are dropped.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def max_pool2d(image, pool_size=2):
     &quot;&quot;&quot;
-    Apply 2D max pooling.
+    Apply 2D max pooling with window = stride = pool_size.
 
     Args:
-        image: Input image (H, W)
-        pool_size: Size of pooling window
+        image: Input feature map, shape (H, W)
+        pool_size: Window size and stride p (default 2)
 
     Returns:
-        output: Pooled image (H//pool_size, W//pool_size)
+        output: Array of shape (H // p, W // p); leftover rows/columns are dropped
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/cnn">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

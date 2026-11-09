@@ -78,61 +78,78 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Neural Networks | ML Grind</title>
-<meta name="description" content="Build neural networks from scratch with forward and backward passes." data-rh="true" />
+<meta name="description" content="Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/neural-networks" data-rh="true" />
 <meta property="og:title" content="Neural Networks | ML Grind" data-rh="true" />
-<meta property="og:description" content="Build neural networks from scratch with forward and backward passes." data-rh="true" />
+<meta property="og:description" content="Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/neural-networks" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Neural Networks | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Build neural networks from scratch with forward and backward passes." data-rh="true" />
+<meta name="twitter:description" content="Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Neural Networks","description":"Build neural networks from scratch with forward and backward passes.","url":"https://mlgrind.github.io/section/neural-networks","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Neural Networks","description":"Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.","url":"https://mlgrind.github.io/section/neural-networks","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Build neural networks from scratch with forward and backward passes.</p><div class="prose dark:prose-invert max-w-none"><h2>Neural Networks</h2>
-<p>Neural networks are the foundation of deep learning. Understanding the math behind them is essential for ML interviews.</p>
-<h2>Key Concepts</h2>
-<h3>Multi-Layer Perceptron (MLP)</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.</p><div class="prose dark:prose-invert max-w-none"><h2>Neural Networks</h2>
+<p>This section turns the building blocks from Deep Learning Basics into a network you can <strong>train</strong>: a loss to minimise, a hand-written backward pass, and the three techniques that make deep networks train reliably (initialization, batch normalization, dropout). &quot;Implement the forward and backward pass of an MLP in NumPy&quot; is one of the most common ML coding interview questions, and every framework bug you will debug later is easier once you have written backprop yourself.</p>
+<h2>Core Ideas</h2>
+<h3>The training loop in one picture</h3>
+<pre><code class="language-text">forward:   X -&gt; Z1 = X @ W1 + b1 -&gt; A1 = relu(Z1) -&gt; Z2 = A1 @ W2 + b2 -&gt; p = softmax(Z2) -&gt; L
+backward:  dW1, db1 &lt;- dZ1 = dA1 * (Z1 &gt; 0) &lt;- dA1 = dZ2 @ W2.T &lt;- dZ2 = (p - Y) / m &lt;- L
+update:    W -= lr * dW        (for every parameter)
+</code></pre>
+<p>Shapes: <code>X (m, n_features)</code>, <code>W1 (n_features, n_hidden)</code>, <code>W2 (n_hidden, n_classes)</code>, <code>Y</code> one-hot <code>(m, n_classes)</code>. Every gradient has the same shape as its parameter.</p>
+<h3>Cross-entropy and the <code>p - y</code> gradient</h3>
+<p>For one-hot labels, cross-entropy is the negative log-probability of the correct class, averaged over the batch: <code>L = -(1/m) * sum(Y * log(p))</code>. Combined with softmax, the gradient with respect to the logits collapses to <code>(p - Y) / m</code>, which is why frameworks fuse them (<code>nn.CrossEntropyLoss</code> takes logits). For token-level LM losses you also mask padding and often smooth the labels: <code>q = (1 - eps) * onehot + eps / V</code>.</p>
+<h3>Backprop is the chain rule with matrix shapes</h3>
+<p>For <code>Z = A @ W + b</code>: <code>dW = A.T @ dZ</code>, <code>db = dZ.sum(axis=0)</code>, <code>dA = dZ @ W.T</code>. For an element-wise activation: <code>dZ = dA * f&#x27;(Z)</code>, with <code>relu&#x27;(Z) = (Z &gt; 0)</code>. That is all an MLP needs.</p>
+<h3>Making deep networks trainable</h3>
+<table><thead><tr><th>Technique</th><th>Formula</th><th>What it fixes</th></tr></thead><tbody><tr><td>Xavier init</td><td><code>W ~ N(0, 2 / (n_in + n_out))</code></td><td>Keeps activation variance stable with tanh/sigmoid</td></tr><tr><td>He init</td><td><code>W ~ N(0, 2 / n_in)</code></td><td>Same for ReLU, which zeroes half its inputs</td></tr><tr><td>BatchNorm</td><td><code>gamma * (x - mu_B) / sqrt(var_B + eps) + beta</code></td><td>Unstable activation scales; allows larger learning rates</td></tr><tr><td>Dropout</td><td><code>x * mask / keep_prob</code>, <code>mask ~ Bernoulli(keep_prob)</code></td><td>Overfitting (co-adapted units)</td></tr></tbody></table>
+<h2>Worked Micro-Example</h2>
+<p>Logits <code>z = [2.0, 1.0, 0.1]</code> for one example whose true class is 0:</p>
+<pre><code class="language-text">p    = softmax(z)       = [0.659, 0.2424, 0.0986]
+L    = -log(p[0])       = 0.417
+dL/dz = p - y           = [-0.341, 0.2424, 0.0986]    # push the true logit up, the others down
+with label smoothing eps = 0.1:
+L    = 0.9 * 0.417 + 0.1 * mean(-log p) = 0.5137
+</code></pre>
+<p>The gradient entries sum to 0: raising every logit by the same amount changes nothing (softmax is shift-invariant).</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li><strong>Architecture</strong>: Input → Hidden layers → Output</li>
-<li><strong>Forward pass</strong>: Compute activations layer by layer</li>
-<li><strong>Activation functions</strong>: ReLU, Sigmoid, Tanh, Softmax</li>
+<li><strong>Unstable losses</strong>: <code>log(softmax(z))</code> can give <code>-inf</code>; work from logits with <code>logsumexp</code>, or add a small eps when the input really is probabilities.</li>
+<li><strong>Forgetting <code>1/m</code></strong>: gradients of a mean loss are divided by the batch size; mixing sum and mean silently changes the effective learning rate.</li>
+<li><strong>Transposes</strong>: <code>dA1 = dZ2 @ W2.T</code>, not <code>dZ2 @ W2</code>. Check every gradient shape against its parameter.</li>
+<li><strong>BatchNorm</strong>: use the biased variance in training, put <code>eps</code> inside the square root, reduce over the batch axis (<code>axis=0</code>), and remember train vs eval mode (batch statistics vs running averages).</li>
+<li><strong>Dropout</strong>: <code>keep_prob</code> is not the drop probability <code>p</code> that <code>nn.Dropout(p)</code> takes; inverted dropout scales at train time so inference is the identity.</li>
+<li><strong>Padding in sequence losses</strong>: average over real tokens only, and never index with <code>ignore_index = -100</code>.</li>
 </ul>
-<h3>Backpropagation</h3>
+<h2>Interview Angle</h2>
 <ul>
-<li><strong>Chain rule</strong>: Compute gradients layer by layer</li>
-<li><strong>Weight updates</strong>: Gradient descent on all parameters</li>
-<li><strong>Key insight</strong>: Errors propagate backwards through the network</li>
+<li>Derive <code>dL/dz = p - y</code> for softmax + cross-entropy, then write the full MLP backward pass. Follow-up: verify it with a finite-difference gradient check.</li>
+<li>&quot;Why not initialise all weights to zero?&quot; Every unit in a layer gets the same gradient, so symmetry is never broken. &quot;Why He for ReLU?&quot;</li>
+<li>BatchNorm: what changes at inference, why it interacts badly with small batches, and how LayerNorm differs.</li>
+<li>Dropout: why scale by <code>1/keep_prob</code>, and what the backward pass is (<code>dX = dout * mask</code>).</li>
+<li>Complexity: a forward or backward pass of a dense layer costs <code>O(m * n_in * n_out)</code>; backprop costs about twice the forward pass.</li>
 </ul>
-<h3>Training Techniques</h3>
-<ul>
-<li><strong>Weight Initialization</strong>: Xavier, He initialization</li>
-<li><strong>Batch Normalization</strong>: Normalize activations for stable training</li>
-<li><strong>Dropout</strong>: Randomly drop neurons to prevent overfitting</li>
-</ul>
-<h3>Loss Functions</h3>
-<ul>
-<li><strong>Cross-entropy</strong>: For classification</li>
-<li><strong>MSE</strong>: For regression</li>
-</ul>
-<h3>Common Interview Topics</h3>
-<ul>
-<li>Implement forward/backward pass from scratch</li>
-<li>Explain vanishing/exploding gradients</li>
-<li>Discuss initialization strategies</li>
-<li>Implement regularization techniques</li>
-</ul>
-<p>Let&#x27;s build neural networks from scratch!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/neural-networks/cross-entropy-loss">Cross-Entropy Loss →</a></li><li><a href="/problem/neural-networks/mlp-forward-backward">MLP Forward &amp; Backward Pass →</a></li><li><a href="/problem/neural-networks/weight-init">Xavier/He Weight Initialization →</a></li><li><a href="/problem/neural-networks/batch-norm">Batch Normalization →</a></li><li><a href="/problem/neural-networks/dropout">Dropout →</a></li><li><a href="/problem/neural-networks/masked-label-smoothing-ce">Masked Cross-Entropy with Label Smoothing →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in This Section</h2>
+<ol>
+<li><strong>Cross-Entropy Loss</strong>: the mean classification loss from probabilities and one-hot labels.</li>
+<li><strong>MLP Forward &amp; Backward Pass</strong>: a 2-layer ReLU/softmax network with hand-derived gradients.</li>
+<li><strong>Xavier/He Weight Initialization</strong>: sample weights at the right scale and measure their std.</li>
+<li><strong>Batch Normalization</strong>: the training-mode forward pass with its cache.</li>
+<li><strong>Dropout</strong>: inverted dropout with its mask, plus inference mode.</li>
+<li><strong>Masked Cross-Entropy with Label Smoothing</strong>: the token-level LM loss, matching <code>F.cross_entropy</code>.</li>
+</ol>
+<p>Related: Layer Norm and RMSNorm are in <strong>Transformers</strong> and <strong>PyTorch Basics</strong>; optimizers, gradient clipping and loss scaling are in <strong>Optimization &amp; Training</strong>; the full train-from-scratch MLP is in <strong>E2E Implementations</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/neural-networks/cross-entropy-loss">Cross-Entropy Loss →</a></li><li><a href="/problem/neural-networks/mlp-forward-backward">MLP Forward &amp; Backward Pass →</a></li><li><a href="/problem/neural-networks/weight-init">Xavier/He Weight Initialization →</a></li><li><a href="/problem/neural-networks/batch-norm">Batch Normalization →</a></li><li><a href="/problem/neural-networks/dropout">Dropout →</a></li><li><a href="/problem/neural-networks/masked-label-smoothing-ce">Masked Cross-Entropy with Label Smoothing →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

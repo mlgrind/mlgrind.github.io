@@ -28,11 +28,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 01: NumPy Fundamentals
 
 **URL**: /section/numpy-fundamentals
-**Summary**: Master NumPy array operations essential for ML development.
+**Summary**: Create, index, broadcast, reduce and reshape NumPy arrays: the operations every ML codebase is built on.
 **Problems** (5):
 
 1. **Array Creation Methods** (`/problem/numpy-fundamentals/numpy-array-creation`) — easy
-2. **Advanced Indexing** (`/problem/numpy-fundamentals/numpy-indexing`) — medium
+2. **Indexing and Slicing** (`/problem/numpy-fundamentals/numpy-indexing`) — medium
 3. **Broadcasting Operations** (`/problem/numpy-fundamentals/numpy-broadcasting`) — medium
 4. **Aggregation Functions** (`/problem/numpy-fundamentals/numpy-aggregations`) — easy
 5. **Reshape and Transpose** (`/problem/numpy-fundamentals/numpy-reshape-transpose`) — medium
@@ -42,7 +42,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 02: Python Basics for ML
 
 **URL**: /section/python-basics
-**Summary**: Master NumPy arrays and essential Python operations for machine learning.
+**Summary**: Warm up with vectorised NumPy: sum an array, multiply matrices and broadcast a vector across rows.
 **Problems** (3):
 
 1. **Array Sum** (`/problem/python-basics/numpy-array-sum`) — easy
@@ -54,13 +54,13 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 03: Einstein Summation (Einsum)
 
 **URL**: /section/einsum
-**Summary**: Master einsum for elegant tensor operations.
+**Summary**: Write sums, matrix products and batched multi-head attention as einsum index strings.
 **Problems** (5):
 
 1. **Einsum Fundamentals** (`/problem/einsum/einsum-basics`) — easy
 2. **Matrix Operations with Einsum** (`/problem/einsum/einsum-matrix-ops`) — medium
 3. **Batch Operations with Einsum** (`/problem/einsum/einsum-batch-ops`) — medium
-4. **Advanced Einsum Patterns** (`/problem/einsum/einsum-advanced`) — hard
+4. **Multi-Head Attention with Einsum** (`/problem/einsum/einsum-advanced`) — hard
 5. **Einsum vs Traditional Operations** (`/problem/einsum/einsum-vs-matmul`) — easy
 
 ---
@@ -68,12 +68,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 04: PyTorch Basics
 
 **URL**: /section/pytorch-basics
-**Summary**: Learn PyTorch patterns in PyTorch, or implement them from scratch in NumPy.
+**Summary**: Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy.
 **Problems** (23):
 
-1. **Tensor Creation (NumPy Style)** (`/problem/pytorch-basics/tensor-creation`) — easy
+1. **Tensor Creation** (`/problem/pytorch-basics/tensor-creation`) — easy
 2. **Tensor Operations** (`/problem/pytorch-basics/tensor-operations`) — easy
-3. **Autograd Concepts (Manual)** (`/problem/pytorch-basics/autograd-concepts`) — medium
+3. **Autograd Basics** (`/problem/pytorch-basics/autograd-concepts`) — medium
 4. **Neural Network Modules** (`/problem/pytorch-basics/nn-modules`) — medium
 5. **Loss Functions** (`/problem/pytorch-basics/loss-functions`) — medium
 6. **GELU Activation** (`/problem/pytorch-basics/gelu-activation`) — easy
@@ -100,11 +100,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 05: Data Preprocessing
 
 **URL**: /section/data-preprocessing
-**Summary**: Learn essential data cleaning and transformation techniques.
+**Summary**: Scale, impute, encode and split data without leaking the test set into training.
 **Problems** (5):
 
-1. **Normalize Features** (`/problem/data-preprocessing/normalize-features`) — easy
-2. **Handle Missing Data** (`/problem/data-preprocessing/handle-missing-data`) — medium
+1. **Normalize Features (Min-Max Scaling)** (`/problem/data-preprocessing/normalize-features`) — easy
+2. **Handle Missing Data (Mean Imputation)** (`/problem/data-preprocessing/handle-missing-data`) — medium
 3. **One-Hot Encoding** (`/problem/data-preprocessing/one-hot-encode`) — medium
 4. **Stratified Train/Val/Test Split** (`/problem/data-preprocessing/stratified-split`) — medium
 5. **Leakage-Safe Imputation and Scaling** (`/problem/data-preprocessing/leakage-safe-imputation`) — medium
@@ -135,11 +135,11 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 07: Unsupervised Learning
 
 **URL**: /section/unsupervised-learning
-**Summary**: Implement clustering and dimensionality reduction algorithms.
+**Summary**: Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch.
 **Problems** (5):
 
 1. **K-Means: Assign to Nearest Centroid** (`/problem/unsupervised-learning/kmeans-clustering`) — medium
-2. **PCA: Center Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
+2. **PCA Step 1: Center the Data** (`/problem/unsupervised-learning/pca-implementation`) — easy
 3. **Gaussian Mixture Model (EM)** (`/problem/unsupervised-learning/gmm-em`) — hard
 4. **DBSCAN Clustering** (`/problem/unsupervised-learning/dbscan`) — medium
 5. **K-Means from Scratch (k-means++ Init, Convergence, Empty Clusters)** (`/problem/unsupervised-learning/kmeans-full`) — hard
@@ -149,12 +149,12 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 08: Model Evaluation
 
 **URL**: /section/model-evaluation
-**Summary**: Learn metrics and techniques to evaluate ML models properly.
+**Summary**: Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right.
 **Problems** (6):
 
 1. **Precision and Recall** (`/problem/model-evaluation/precision-recall-f1`) — medium
-2. **K-Fold Split Indices** (`/problem/model-evaluation/cross-validation`) — medium
-3. **Accuracy Score** (`/problem/model-evaluation/confusion-matrix`) — easy
+2. **K-Fold Cross-Validation Indices** (`/problem/model-evaluation/cross-validation`) — medium
+3. **Accuracy from the Confusion Matrix** (`/problem/model-evaluation/confusion-matrix`) — easy
 4. **ROC Curve & AUC (with Ties)** (`/problem/model-evaluation/roc-auc`) — medium
 5. **Expected Calibration Error** (`/problem/model-evaluation/calibration-ece`) — medium
 6. **Precision-Recall Curve and Best-F1 Threshold** (`/problem/model-evaluation/pr-curve-thresholds`) — medium
@@ -164,19 +164,19 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 09: Deep Learning Basics
 
 **URL**: /section/deep-learning
-**Summary**: Activation functions and fundamental building blocks.
+**Summary**: ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from.
 **Problems** (3):
 
 1. **ReLU Activation** (`/problem/deep-learning/perceptron`) — easy
-2. **Dense Layer Forward Pass** (`/problem/deep-learning/neural-network-forward`) — medium
-3. **Softmax Function** (`/problem/deep-learning/backpropagation`) — medium
+2. **Dense Layer Forward Pass (ReLU)** (`/problem/deep-learning/neural-network-forward`) — medium
+3. **Numerically Stable Softmax** (`/problem/deep-learning/backpropagation`) — medium
 
 ---
 
 ### Section 10: Neural Networks
 
 **URL**: /section/neural-networks
-**Summary**: Build neural networks from scratch with forward and backward passes.
+**Summary**: Train an MLP from scratch: cross-entropy, a hand-written backward pass, Xavier/He init, batch norm, dropout and a masked, label-smoothed LM loss.
 **Problems** (6):
 
 1. **Cross-Entropy Loss** (`/problem/neural-networks/cross-entropy-loss`) — easy
@@ -191,7 +191,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 11: Optimization & Training
 
 **URL**: /section/optimization
-**Summary**: Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.
+**Summary**: Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.
 **Problems** (2):
 
 1. **Gradient Clipping by Global Norm** (`/problem/optimization/gradient-clipping`) — easy
@@ -202,7 +202,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 12: CNNs & Computer Vision
 
 **URL**: /section/cnn
-**Summary**: Implement convolutions, pooling, object detection, and segmentation.
+**Summary**: Build CNN layers (convolution, pooling, flatten, a ResNet block) and the detection toolkit: IoU, NMS, focal and smooth L1 losses, and segmentation metrics.
 **Problems** (11):
 
 1. **Convolution Output Size** (`/problem/cnn/conv-output-size`) — easy
@@ -222,7 +222,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 13: Sequence Models
 
 **URL**: /section/sequence-models
-**Summary**: RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.
+**Summary**: Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.
 **Problems** (3):
 
 1. **Vanilla RNN: Forward & BPTT** (`/problem/sequence-models/rnn-forward`) — hard
@@ -313,7 +313,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 19: Reinforcement Learning
 
 **URL**: /section/reinforcement-learning
-**Summary**: Master RL fundamentals from Q-learning to policy gradients.
+**Summary**: From returns and Bellman backups through Q-learning, policy gradients, GAE and PPO to the reward-model, KL and DPO losses used to align LLMs.
 **Problems** (15):
 
 1. **Discounted Return** (`/problem/reinforcement-learning/rl-discounted-return`) — easy
@@ -337,7 +337,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 20: Post-training & Efficiency
 
 **URL**: /section/post-training
-**Summary**: GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one.
+**Summary**: GRPO with group-relative advantages and a k3 KL penalty, plus int8 absmax quantization: making a base model useful and cheap to serve.
 **Problems** (2):
 
 1. **GRPO: Group-Relative Advantages & Objective** (`/problem/post-training/grpo-advantages`) — hard

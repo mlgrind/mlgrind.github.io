@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Bellman Expectation (State Value) - Reinforcement Learning | ML Grind</title>
 <meta name="description" content="Implement Bellman Expectation (State Value) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/reinforcement-learning/rl-bellman-value" data-rh="true" />
@@ -99,44 +99,58 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Bellman Expectation (State Value) - Reinforcement Learning","description":"Implement Bellman Expectation (State Value) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/reinforcement-learning/rl-bellman-value","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Bellman Expectation (State Value) - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Bellman Expectation (State Value) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Bellman Expectation Equation for State Value</h2>
-<p>Compute the value of a state given transition probabilities, rewards, and next-state values.</p>
-<h3>Bellman Expectation Equation</h3>
-<pre><code>V(s) = Σ_a π(a|s) * Σ_{s&#x27;} P(s&#x27;|s,a) * [R(s,a,s&#x27;) + γ * V(s&#x27;)]
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Bellman Expectation (State Value) - Reinforcement Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Bellman Expectation (State Value) in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Bellman Expectation (State Value)</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A one-state backup: compute V(s) from the possible transitions out of s and the current estimates of the next-state values.</p>
+<h3>Background</h3>
+<p>The Bellman expectation equation says a state&#x27;s value is the expected immediate reward plus the discounted value of where you land. It is the consistency condition behind policy evaluation, TD learning and every critic in actor-critic methods.</p>
+<h3>Formula</h3>
+<p>For a policy π, the general form is</p>
+<pre><code class="language-text">V(s) = Σ_a π(a|s) · Σ_{s&#x27;} P(s&#x27;|s,a) · [R(s,a,s&#x27;) + γ·V(s&#x27;)]
 </code></pre>
-<p>For a fixed policy, this simplifies to:</p>
-<pre><code>V(s) = Σ_{s&#x27;} P(s&#x27;|s) * [R(s,s&#x27;) + γ * V(s&#x27;)]
+<p>Here the policy is already folded in, so you get a flat list of outcomes, each with its total probability p = π(a|s)·P(s&#x27;|s,a):</p>
+<pre><code class="language-text">V(s) = Σ_i p_i · (r_i + γ · V[s&#x27;_i])
 </code></pre>
-<h3>What It Means</h3>
-<p>The value of state s equals the expected:</p>
+<h3>Inputs</h3>
 <ul>
-<li>Immediate reward R</li>
-<li>Plus discounted value of next state V(s&#x27;)</li>
+<li><code>transitions</code>: list of <code>(probability, reward, next_state_index)</code> tuples; probabilities sum to 1. The same next state may appear more than once (different rewards).</li>
+<li><code>gamma</code>: discount factor in [0, 1]</li>
+<li><code>next_values</code>: 1-D array, <code>next_values[j]</code> is the current estimate V(s_j)</li>
 </ul>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def bellman_value(transitions: list, gamma: float,
-                  next_values: np.ndarray) -&gt; float:
-</code></pre>
-<p>Where each transition is <code>(probability, reward, next_state_index)</code>.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: transitions=[(0.5, 1, 0), (0.5, 2, 1)], gamma=0.9, V=[5, 10]
-Output: 8.25</pre><p>0.5*(1 + 0.9*5) + 0.5*(2 + 0.9*10) = 0.5*5.5 + 0.5*11 = 8.25</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected return format</h3>
+<p>A Python float: V(s) <strong>rounded to 2 decimals</strong>.</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>gamma = 0</code> gives the expected immediate reward.</li>
+<li>Only the states that appear in <code>transitions</code> matter; other entries of <code>next_values</code> are ignored.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only. A loop over transitions is fine; a vectorized version gathers <code>next_values[next_states]</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Applying this backup to every state repeatedly is iterative policy evaluation. Why does it converge for γ &lt; 1? (It is a γ-contraction.)</li>
+<li>Write the same equation in matrix form, V = R + γPV, and solve it in closed form.</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: transitions = [(0.5, 1, 0), (0.5, 2, 1)], gamma = 0.9, next_values = [5, 10]
+Output: 8.25</pre><p>0.5·(1 + 0.9·5) + 0.5·(2 + 0.9·10) = 2.75 + 5.5 = 8.25</p></div><div><pre class="overflow-auto">Input: transitions = [(1.0, 5, 0)], gamma = 0.9, next_values = [10]
+Output: 14.0</pre><p>Deterministic: 5 + 0.9·10 = 14</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def bellman_value(transitions: list, gamma: float,
                   next_values: np.ndarray) -&gt; float:
     &quot;&quot;&quot;
-    Compute state value using Bellman expectation equation.
+    Compute V(s) with the Bellman expectation equation.
 
     Args:
-        transitions: List of (probability, reward, next_state_index) tuples
-        gamma: Discount factor
-        next_values: Array of values V(s&#x27;) for each state
+        transitions: list of (probability, reward, next_state_index) tuples
+        gamma: discount factor
+        next_values: (n_states,) current estimates V(s&#x27;)
 
     Returns:
-        Value V(s) for the current state
+        V(s) = sum_i p_i * (r_i + gamma * V[s&#x27;_i]), rounded to 2 decimals
     &quot;&quot;&quot;
     next_values = np.array(next_values)
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/reinforcement-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Softmax with Temperature - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Softmax with Temperature in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/softmax-temperature" data-rh="true" />
@@ -100,35 +100,53 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Softmax with Temperature - PyTorch Basics","description":"Implement Softmax with Temperature in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/softmax-temperature","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Softmax with Temperature - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Softmax with Temperature in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Softmax with Temperature</h2>
-<p>Temperature scaling controls the &quot;sharpness&quot; of the softmax distribution. It&#x27;s widely used in language model sampling and knowledge distillation.</p>
+<p><strong>What you&#x27;ll build:</strong> <code>softmax_temperature(logits, temperature)</code>, a numerically stable softmax over the last dimension with temperature scaling.</p>
+<h3>Background</h3>
+<p>Dividing the logits by a temperature <code>T</code> before the softmax controls how peaked the distribution is. Language models sample with <code>T &lt; 1</code> for focused text and <code>T &gt; 1</code> for more diverse text; knowledge distillation softens a teacher&#x27;s predictions with <code>T &gt; 1</code> so the student also learns from the wrong-but-plausible classes.</p>
 <h3>Formula</h3>
-<pre><code>softmax(x / T)
+<p>For logits <code>z</code> (softmax over the last dimension):</p>
+<pre><code class="language-text">s = z / T
+softmax(s)[k] = exp(s[k] - max(s)) / sum_j exp(s[j] - max(s))
 </code></pre>
-<p>where T is the temperature parameter.</p>
+<p>Subtracting <code>max(s)</code> changes nothing mathematically (it cancels in the ratio) but keeps <code>exp</code> from overflowing: <code>exp(1000)</code> is <code>inf</code> in float64.</p>
 <h3>Temperature Effects</h3>
-<table><thead><tr><th>Temperature</th><th>Effect</th></tr></thead><tbody><tr><td>T = 1.0</td><td>Standard softmax</td></tr><tr><td>T → 0</td><td>Approaches argmax (one-hot)</td></tr><tr><td>T → ∞</td><td>Approaches uniform distribution</td></tr><tr><td>T &lt; 1.0</td><td>Sharper/more confident</td></tr><tr><td>T &gt; 1.0</td><td>Softer/more uniform</td></tr></tbody></table>
-<h3>Numerical Stability</h3>
-<p>Subtract the max before exponentiating:</p>
-<pre><code class="language-python">exp(x - max(x)) / sum(exp(x - max(x)))
-</code></pre>
-<h3>Task</h3>
-<p>Implement softmax with temperature scaling and numerical stability.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: softmax_temperature(np.array([2.0, 1.0, 0.1]), temperature=1.0)
-Output: [0.659, 0.242, 0.099]</pre><p>Standard softmax at T=1.0</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<table><thead><tr><th>Temperature</th><th>Effect</th></tr></thead><tbody><tr><td><code>T = 1</code></td><td>standard softmax</td></tr><tr><td><code>T &lt; 1</code></td><td>sharper, more confident</td></tr><tr><td><code>T → 0</code></td><td>approaches one-hot at the argmax</td></tr><tr><td><code>T &gt; 1</code></td><td>softer, closer to uniform</td></tr><tr><td><code>T → ∞</code></td><td>approaches uniform</td></tr></tbody></table>
+<p>The <strong>ranking</strong> of the classes never changes, only how much mass the top classes get.</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>logits</code>: float array of any shape; normalise over the last axis.</li>
+<li><code>temperature</code>: positive float (default 1.0).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>An array of the same shape as <code>logits</code>, with non-negative entries that sum to 1 along the last axis.</p>
+<h3>Constraints</h3>
+<ul>
+<li>Must stay finite for large logits (e.g. <code>[1000, 1001, 1002]</code>).</li>
+<li><strong>PyTorch track:</strong> build it from tensor ops (<code>max</code>, <code>torch.exp</code>, <code>sum</code>); don&#x27;t call <code>F.softmax</code> or <code>torch.softmax</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Top-k and nucleus (top-p) sampling are applied after temperature. Sketch how.</li>
+<li>In distillation the soft-target loss is multiplied by <code>T²</code>. Why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: softmax_temperature(np.array([2.0, 1.0, 0.1]), temperature=1.0)
+Output: array([0.659 , 0.2424, 0.0986])</pre><p>Standard softmax.</p></div><div><pre class="overflow-auto">Input: softmax_temperature(np.array([2.0, 1.0, 0.1]), temperature=0.5)
+Output: array([0.8638, 0.1169, 0.0193])</pre><p>Halving T doubles the gaps between logits, so the top class takes more of the mass.</p></div><div><pre class="overflow-auto">Input: softmax_temperature(np.array([2.0, 1.0, 0.1]), temperature=2.0)
+Output: array([0.5017, 0.3043, 0.194 ])</pre><p>A higher temperature flattens the distribution, keeping the same order.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def softmax_temperature(logits: np.ndarray, temperature: float = 1.0) -&gt; np.ndarray:
     &quot;&quot;&quot;
     Compute softmax with temperature scaling.
 
     Args:
-        logits: Input logits array (any shape, softmax along last axis)
-        temperature: Temperature parameter (default 1.0)
+        logits: Input logits (any shape, softmax along the last axis)
+        temperature: Positive temperature (default 1.0)
 
     Returns:
-        Probability distribution (sums to 1 along last axis)
+        Probabilities with the shape of logits, summing to 1 along the last axis
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 8 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

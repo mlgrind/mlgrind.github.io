@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Loss Functions - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Loss Functions in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/loss-functions" data-rh="true" />
@@ -99,53 +99,91 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Loss Functions - PyTorch Basics","description":"Implement Loss Functions in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/loss-functions","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Loss Functions - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Loss Functions in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Common Loss Functions</h2>
-<p>Implement loss functions used in deep learning.</p>
-<h3>Cross-Entropy Loss</h3>
-<pre><code>L = -sum(y * log(softmax(logits)))
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Loss Functions - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Loss Functions in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Loss Functions</h2>
+<p><strong>What you&#x27;ll build:</strong> a numerically stable <code>softmax</code> and the three losses you will use most: cross-entropy (multi-class classification), mean squared error (regression) and binary cross-entropy (binary classification).</p>
+<h3>Background</h3>
+<p>The loss turns predictions into the single number that <code>backward()</code> differentiates. Picking the right one, and feeding it the right input (logits or probabilities, class indices or one-hot), is a constant source of silent bugs and a common interview topic.</p>
+<h3>Formulas</h3>
+<p>For logits <code>z</code> of shape <code>(batch, num_classes)</code>:</p>
+<p><strong>Softmax</strong> (over the last dimension, shifted by the row max for stability):</p>
+<pre><code class="language-text">softmax(z)[k] = exp(z[k] - max(z)) / sum_j exp(z[j] - max(z))
 </code></pre>
-<h3>MSE Loss</h3>
-<pre><code>L = mean((y_pred - y_true)²)
+<p><strong>Cross-entropy</strong> with integer class labels <code>t</code> of shape <code>(batch,)</code>, averaged over the batch:</p>
+<pre><code class="language-text">CE = -(1 / batch) * sum_i log softmax(z_i)[t_i]
+log softmax(z)[k] = z[k] - max(z) - log(sum_j exp(z[j] - max(z)))
 </code></pre>
-<h3>Binary Cross-Entropy</h3>
-<pre><code>L = -mean(y * log(p) + (1-y) * log(1-p))
+<p><strong>Mean squared error</strong> for predictions and targets of the same shape:</p>
+<pre><code class="language-text">MSE = mean((y_pred - y_true) ** 2)
 </code></pre>
-<h3>Task</h3>
-<p>Implement these loss functions with numerical stability.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: cross_entropy(logits, targets)
-Output: Scalar loss value</pre><p>Cross-entropy for classification</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p><strong>Binary cross-entropy</strong> for probabilities <code>p</code> in (0, 1) and labels <code>y</code> in {0, 1}:</p>
+<pre><code class="language-text">BCE = -mean(y * log(p) + (1 - y) * log(1 - p))
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>softmax(x)</code>: array of any shape; normalise over the last axis.</li>
+<li><code>cross_entropy_loss(logits, targets)</code>: <code>logits</code> <code>(batch, num_classes)</code> raw scores, <code>targets</code> <code>(batch,)</code> integers in <code>[0, num_classes)</code>.</li>
+<li><code>mse_loss(y_pred, y_true)</code>: same-shaped float arrays.</li>
+<li><code>binary_cross_entropy(y_pred, y_true)</code>: <code>y_pred</code> probabilities, <code>y_true</code> 0/1 labels, same shape.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<ul>
+<li><code>softmax</code> returns an array of the input&#x27;s shape whose last axis sums to 1.</li>
+<li>The three losses return a Python <code>float</code> (mean over all elements or samples).</li>
+</ul>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Compute the cross-entropy through <strong>log-softmax</strong>, not <code>log(softmax(...))</code>: it stays exact even when one logit dominates (logits <code>[[1000, 0]]</code> with target 1 give a loss of exactly 1000).</li>
+<li>In the NumPy BCE, clip <code>p</code> to <code>[1e-15, 1 - 1e-15]</code> before taking logs so a prediction of exactly 0 or 1 doesn&#x27;t produce <code>inf</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li><strong>PyTorch track:</strong> use the built-ins <code>F.softmax</code>, <code>F.cross_entropy</code>, <code>F.mse_loss</code> and <code>F.binary_cross_entropy</code>, and learn what each expects.</li>
+<li><strong>NumPy track:</strong> implement each formula from scratch, vectorised.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Why does PyTorch&#x27;s <code>F.cross_entropy</code> take raw logits instead of probabilities?</li>
+<li>Why is <code>BCEWithLogitsLoss</code> preferred over <code>sigmoid</code> followed by <code>BCELoss</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: cross_entropy_loss(np.array([[2.0, 1.0, 0.1]]), np.array([0]))
+Output: 0.4170</pre><p>softmax gives p = [0.659, 0.2424, 0.0986]; -log(0.659) = 0.4170.</p></div><div><pre class="overflow-auto">Input: mse_loss(np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 4.0]))
+Output: 0.3333</pre><p>Only the last prediction is off, by 1: (0 + 0 + 1) / 3.</p></div><div><pre class="overflow-auto">Input: binary_cross_entropy(np.array([0.9, 0.1, 0.8]), np.array([1.0, 0.0, 1.0]))
+Output: 0.1446</pre><p>-(log 0.9 + log 0.9 + log 0.8) / 3: confident, correct predictions give a small loss.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def softmax(x: np.ndarray) -&gt; np.ndarray:
-    &quot;&quot;&quot;Numerically stable softmax.&quot;&quot;&quot;
+    &quot;&quot;&quot;Numerically stable softmax over the last axis (same shape as x).&quot;&quot;&quot;
     # Your code here
     pass
 
 
 def cross_entropy_loss(logits: np.ndarray, targets: np.ndarray) -&gt; float:
     &quot;&quot;&quot;
-    Cross-entropy loss for classification.
+    Cross-entropy loss for classification, averaged over the batch.
 
     Args:
         logits: Raw scores (batch, num_classes)
         targets: Integer class labels (batch,)
 
     Returns:
-        Scalar loss
+        Scalar loss (float)
     &quot;&quot;&quot;
     # Your code here
     pass
 
 
 def mse_loss(y_pred: np.ndarray, y_true: np.ndarray) -&gt; float:
-    &quot;&quot;&quot;Mean squared error loss.&quot;&quot;&quot;
+    &quot;&quot;&quot;Mean squared error (float).&quot;&quot;&quot;
     # Your code here
     pass
 
 
 def binary_cross_entropy(y_pred: np.ndarray, y_true: np.ndarray) -&gt; float:
-    &quot;&quot;&quot;Binary cross-entropy with numerical stability.&quot;&quot;&quot;
+    &quot;&quot;&quot;
+    Binary cross-entropy on probabilities (float).
+    Clip y_pred to [1e-15, 1 - 1e-15] before taking logs.
+    &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 2 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Xavier/He Weight Initialization - Neural Networks | ML Grind</title>
 <meta name="description" content="Implement Xavier/He Weight Initialization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/neural-networks/weight-init" data-rh="true" />
@@ -99,38 +99,59 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Xavier/He Weight Initialization - Neural Networks","description":"Implement Xavier/He Weight Initialization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/neural-networks/weight-init","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Xavier/He Weight Initialization - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Xavier/He Weight Initialization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Weight Initialization</h2>
-<p>Implement Xavier and He weight initialization to prevent vanishing/exploding gradients.</p>
-<h3>Xavier Initialization (for tanh/sigmoid)</h3>
-<pre><code>W = randn(n_in, n_out) * sqrt(2 / (n_in + n_out))
-</code></pre>
-<h3>He Initialization (for ReLU)</h3>
-<pre><code>W = randn(n_in, n_out) * sqrt(2 / n_in)
-</code></pre>
-<h3>Why It Matters</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Xavier/He Weight Initialization - Neural Networks</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Xavier/He Weight Initialization in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Xavier/He Weight Initialization</h2>
+<h3>What you&#x27;ll build</h3>
+<p>A function that draws a weight matrix with Xavier (Glorot) normal or He (Kaiming) normal initialization and returns the <strong>empirical standard deviation</strong> of the sampled weights, so you can check it lands on the theoretical value.</p>
+<h3>Background</h3>
+<p>If weights are too small, activations shrink layer after layer and gradients vanish; too large, and they explode. Good initialization picks the variance so that the signal keeps roughly the same scale through the network:</p>
 <ul>
-<li>Keeps variance of activations stable across layers</li>
-<li>Prevents gradients from vanishing or exploding</li>
-<li>Enables training of deep networks</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: n_in=784, n_out=256, method=&quot;he&quot;
-Output: Weights with std ≈ 0.0505</pre><p>sqrt(2/784) ≈ 0.0505</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><strong>Xavier</strong> (Glorot &amp; Bengio, 2010) balances the forward and backward pass for symmetric activations like tanh: <code>Var(W) = 2 / (n_in + n_out)</code>.</li>
+<li><strong>He</strong> (He et al., 2015) accounts for ReLU zeroing half of its inputs, which halves the variance, by doubling it: <code>Var(W) = 2 / n_in</code>.</li>
+</ul>
+<h3>Formula</h3>
+<pre><code class="language-text">Xavier normal:  W = randn(n_in, n_out) * sqrt(2 / (n_in + n_out))
+He normal:      W = randn(n_in, n_out) * sqrt(2 / n_in)
+return round(std(W), 4)
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>n_in</code>: number of input units (fan-in), positive int</li>
+<li><code>n_out</code>: number of output units (fan-out), positive int</li>
+<li><code>method</code>: <code>&#x27;xavier&#x27;</code> or <code>&#x27;he&#x27;</code></li>
+</ul>
+<h3>Expected return format</h3>
+<p>A float: <code>np.std(W)</code> of the sampled <code>(n_in, n_out)</code> matrix, <strong>rounded to 4 decimals</strong>. It is close to, but not exactly, the theoretical std (sampling noise).</p>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Call <code>np.random.seed(42)</code> at the start of the function (the starter code does this), then draw exactly one <code>np.random.randn(n_in, n_out)</code> and scale it. The expected values depend on this exact sequence.</li>
+<li>Any other <code>method</code> may raise a <code>ValueError</code> (not tested).</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>The uniform variants draw from <code>U(-a, a)</code> with <code>a = sqrt(3) * std</code>. Why <code>sqrt(3)</code>? (The variance of <code>U(-a, a)</code> is <code>a² / 3</code>.)</li>
+<li>PyTorch&#x27;s <code>nn.Linear</code> default is Kaiming-uniform with <code>a = sqrt(5)</code>, which gives <code>U(-1/sqrt(n_in), 1/sqrt(n_in))</code>. Why do transformers often use a small fixed std like 0.02 instead?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: initialize_weights(784, 256, &quot;he&quot;)
+Output: 0.0505</pre><p>The theoretical std is sqrt(2/784) = 0.0505; with 200k samples the empirical std matches to 4 decimals.</p></div><div><pre class="overflow-auto">Input: initialize_weights(100, 50, &quot;xavier&quot;)
+Output: 0.1151</pre><p>Theoretical sqrt(2/150) = 0.1155; with only 5,000 samples the empirical std is slightly off.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def initialize_weights(n_in, n_out, method=&#x27;xavier&#x27;):
     &quot;&quot;&quot;
-    Initialize weights using Xavier or He initialization.
+    Sample an (n_in, n_out) weight matrix with Xavier or He normal initialization.
 
     Args:
-        n_in: Number of input units
-        n_out: Number of output units
-        method: &#x27;xavier&#x27; or &#x27;he&#x27;
+        n_in: Number of input units (fan-in)
+        n_out: Number of output units (fan-out)
+        method: &#x27;xavier&#x27; (std = sqrt(2 / (n_in + n_out))) or &#x27;he&#x27; (std = sqrt(2 / n_in))
 
     Returns:
-        std: Standard deviation of initialized weights (rounded to 4 decimals)
+        std: Empirical standard deviation of the sampled weights, rounded to 4 decimals
     &quot;&quot;&quot;
-    np.random.seed(42)  # For reproducibility
+    np.random.seed(42)  # For reproducibility: draw one np.random.randn(n_in, n_out) after this
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/neural-networks">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

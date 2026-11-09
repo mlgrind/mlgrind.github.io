@@ -78,51 +78,83 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Sequence Models | ML Grind</title>
-<meta name="description" content="RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention." data-rh="true" />
+<meta name="description" content="Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/sequence-models" data-rh="true" />
 <meta property="og:title" content="Sequence Models | ML Grind" data-rh="true" />
-<meta property="og:description" content="RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention." data-rh="true" />
+<meta property="og:description" content="Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/sequence-models" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Sequence Models | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention." data-rh="true" />
+<meta name="twitter:description" content="Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Sequence Models","description":"RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.","url":"https://mlgrind.github.io/section/sequence-models","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Sequence Models","description":"Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.","url":"https://mlgrind.github.io/section/sequence-models","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">RNNs, LSTMs and GRUs: modelling sequences before (and alongside) attention.</p><div class="prose dark:prose-invert max-w-none"><h2>Sequence Models</h2>
-<p>Text, audio, time series and user sessions are all <strong>sequences</strong>: the order matters, and the length varies. Before transformers, recurrent networks were the standard way to model them. They still show up in streaming and on-device models, and modern state-space models (Mamba, RWKV) bring back the same recurrent idea.</p>
-<h2>The Recurrent Idea</h2>
-<p>An RNN reads one element at a time and updates a fixed-size <strong>hidden state</strong> that summarizes the past, reusing the same weights at every step:</p>
-<pre><code>h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)
-</code></pre>
-<p>Training unrolls the loop over time and backpropagates through every step: <strong>backpropagation through time (BPTT)</strong>. The gradient reaching step 1 from step T is a product of T Jacobians:</p>
-<pre><code>dh_T/dh_1 = prod_t  diag(1 - h_t^2) @ W_hh.T
-</code></pre>
-<p>If the largest singular value of <code>W_hh</code> is below 1, this product <strong>vanishes</strong>; above 1, it can <strong>explode</strong>. Plain RNNs therefore struggle to learn dependencies longer than a few dozen steps (clipping helps with exploding gradients, but not with vanishing ones).</p>
-<h2>Gated Cells</h2>
-<p>Gates are sigmoids in <code>[0, 1]</code> that decide, per dimension, how much information flows.</p>
-<table><thead><tr><th>Cell</th><th>State</th><th>Gates</th><th>Key equation</th></tr></thead><tbody><tr><td><strong>RNN</strong></td><td><code>h</code></td><td>none</td><td><code>h = tanh(W x + U h)</code></td></tr><tr><td><strong>LSTM</strong></td><td><code>h</code>, <code>c</code></td><td>input <code>i</code>, forget <code>f</code>, output <code>o</code> (+ candidate <code>g</code>)</td><td><code>c = f*c + i*g</code>, <code>h = o*tanh(c)</code></td></tr><tr><td><strong>GRU</strong></td><td><code>h</code></td><td>reset <code>r</code>, update <code>z</code></td><td><code>h = (1-z)*n + z*h_prev</code></td></tr></tbody></table>
-<p>The LSTM&#x27;s cell state is updated <strong>additively</strong>: when <code>f ≈ 1</code>, <code>dc_t/dc_{t-1} ≈ 1</code> and gradients can travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.</p>
-<h2>PyTorch Conventions (worth memorizing)</h2>
-<table><thead><tr><th></th><th>LSTM (<code>nn.LSTMCell</code>)</th><th>GRU (<code>nn.GRUCell</code>)</th></tr></thead><tbody><tr><td>Gate order in <code>weight_ih</code> / <code>weight_hh</code></td><td><code>i, f, g, o</code></td><td><code>r, z, n</code></td></tr><tr><td>Weight shapes</td><td><code>(4H, D)</code>, <code>(4H, H)</code></td><td><code>(3H, D)</code>, <code>(3H, H)</code></td></tr><tr><td>Parameters (with both biases)</td><td><code>4(HD + H² + 2H)</code></td><td><code>3(HD + H² + 2H)</code></td></tr></tbody></table>
-<h2>RNNs vs Transformers</h2>
-<table><thead><tr><th></th><th>RNN / LSTM</th><th>Transformer</th></tr></thead><tbody><tr><td>Training</td><td>Sequential over time (slow)</td><td>Parallel over positions</td></tr><tr><td>Inference per token</td><td>O(1) memory and compute</td><td>O(T) with a KV cache</td></tr><tr><td>Long-range dependencies</td><td>Hard (bounded state)</td><td>Direct attention to any position</td></tr></tbody></table>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Sequence Models</h1><p class="text-lg text-gray-600 dark:text-dark-200">Unroll a vanilla RNN with hand-written BPTT, then build single steps of PyTorch-compatible LSTM and GRU cells.</p><div class="prose dark:prose-invert max-w-none"><h2>Sequence Models</h2>
 <h2>Why It Matters</h2>
+<p>Text, audio, time series and user sessions are all <strong>sequences</strong>: order matters and length varies. Before transformers, recurrent networks (RNN, LSTM, GRU) were the standard way to model them, and they still power streaming speech recognition, on-device keyboards and many forecasting systems. State-space models (Mamba, RWKV) bring the same recurrent idea back to LLMs, and interviewers still ask you to write an LSTM step or explain vanishing gradients.</p>
+<h2>Core Ideas</h2>
+<h3>The recurrence</h3>
+<p>An RNN reads one element at a time and updates a fixed-size <strong>hidden state</strong> that summarizes the past, reusing the <strong>same weights at every step</strong>:</p>
+<pre><code class="language-text">h_t = tanh(x_t @ W_xh + h_{t-1} @ W_hh + b)        x_t: (N, D),  h_t: (N, H)
+</code></pre>
+<p>All problems here are <strong>batch first</strong>: a batch of sequences is <code>X</code> of shape <code>(N, T, D)</code> = <code>(batch, seq_len, features)</code> and the stacked hidden states are <code>(N, T, H)</code>.</p>
+<h3>Backpropagation through time (BPTT)</h3>
+<p>Training unrolls the loop and backpropagates through every step. The gradient reaching <code>h_1</code> from <code>h_T</code> is a product of <code>T - 1</code> Jacobians:</p>
+<pre><code class="language-text">dh_T/dh_1 = prod over t = T..2 of  diag(1 - h_t^2) @ W_hh.T
+</code></pre>
+<p>If the largest singular value of <code>W_hh</code> (times the tanh slope, at most 1) is below 1 the product <strong>vanishes</strong>; above 1 it can <strong>explode</strong>. Gradient clipping fixes explosions but not vanishing, so plain RNNs struggle beyond a few dozen steps.</p>
+<h3>Gated cells</h3>
+<p>Gates are sigmoids in <code>[0, 1]</code> that decide, per dimension, how much information flows.</p>
+<table><thead><tr><th>Cell</th><th>State</th><th>Gates</th><th>Update</th></tr></thead><tbody><tr><td><strong>RNN</strong></td><td><code>h</code></td><td>none</td><td><code>h = tanh(x W_xh + h W_hh + b)</code></td></tr><tr><td><strong>LSTM</strong></td><td><code>h</code>, <code>c</code></td><td>input <code>i</code>, forget <code>f</code>, output <code>o</code> (+ candidate <code>g</code>)</td><td><code>c = f*c_prev + i*g</code>, <code>h = o*tanh(c)</code></td></tr><tr><td><strong>GRU</strong></td><td><code>h</code></td><td>reset <code>r</code>, update <code>z</code> (+ candidate <code>n</code>)</td><td><code>h = (1-z)*n + z*h_prev</code></td></tr></tbody></table>
+<p>The LSTM&#x27;s cell state is updated <strong>additively</strong>: when <code>f ≈ 1</code>, <code>dc_t/dc_{t-1} ≈ 1</code> and gradients travel hundreds of steps. That is why the forget-gate bias is often initialized to 1.</p>
+<h3>Conventions used in this section (memorize them)</h3>
+<table><thead><tr><th></th><th>Vanilla RNN problem</th><th>LSTM (<code>nn.LSTMCell</code>)</th><th>GRU (<code>nn.GRUCell</code>)</th></tr></thead><tbody><tr><td>Weight layout</td><td><code>x @ W_xh</code>, <code>W_xh: (D, H)</code>, <code>W_hh: (H, H)</code></td><td><code>x @ W_ih.T</code>, <code>W_ih: (4H, D)</code>, <code>W_hh: (4H, H)</code></td><td><code>x @ W_ih.T</code>, <code>W_ih: (3H, D)</code>, <code>W_hh: (3H, H)</code></td></tr><tr><td>Biases</td><td>one <code>b: (H,)</code></td><td><code>b_ih</code>, <code>b_hh: (4H,)</code></td><td><code>b_ih</code>, <code>b_hh: (3H,)</code></td></tr><tr><td>Gate order (row blocks of <code>H</code>)</td><td>none</td><td><strong><code>i, f, g, o</code></strong></td><td><strong><code>r, z, n</code></strong></td></tr><tr><td>Parameters</td><td><code>DH + H^2 + H</code></td><td><code>4(HD + H^2 + 2H)</code></td><td><code>3(HD + H^2 + 2H)</code></td></tr></tbody></table>
+<p>Note the layout switch: the RNN problem uses <code>(in, out)</code> weights, the LSTM and GRU problems use PyTorch&#x27;s <code>(out, in)</code> weights, hence the <code>.T</code>. TensorFlow/Keras orders LSTM gates <code>i, f, c, o</code> too, but stores kernels as <code>(D, 4H)</code>.</p>
+<h2>Worked Micro-Example</h2>
+<p><strong>RNN</strong>, scalar (<code>D = H = 1</code>), <code>W_xh = 0.5</code>, <code>W_hh = 1</code>, <code>b = 0</code>, <code>h_0 = 0</code>, input <code>x_t = 1</code> for 3 steps:</p>
+<pre><code class="language-text">h_1 = tanh(0.5)            = 0.4621
+h_2 = tanh(0.5 + 0.4621)   = 0.7452
+h_3 = tanh(0.5 + 0.7452)   = 0.8469
+</code></pre>
+<p><strong>LSTM</strong>, one step with <code>H = 1</code>, <code>c_prev = 1</code> and gate pre-activations <code>(i, f, g, o) = (0, 2, 1, 0)</code>:</p>
+<pre><code class="language-text">i = sigmoid(0) = 0.5,  f = sigmoid(2) = 0.8808,  g = tanh(1) = 0.7616,  o = 0.5
+c = 0.8808 * 1 + 0.5 * 0.7616 = 1.2616
+h = 0.5 * tanh(1.2616)       = 0.4258
+</code></pre>
+<p><strong>Vanishing in numbers</strong>: a per-step gradient factor of 0.5 over 20 steps leaves <code>0.5^20 ≈ 9.5e-7</code> of the signal; a factor of 1.1 over 50 steps blows it up to about 117.</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li><strong>Interviews</strong> ask you to write an LSTM step, explain vanishing gradients and how gating fixes them, or count the parameters of a GRU.</li>
-<li><strong>In practice</strong>, understanding recurrence makes state-space models, streaming ASR and RNN-style inference tricks easy to follow.</li>
+<li><strong>Gate order</strong>: splitting an LSTM&#x27;s <code>4H</code> block as <code>i, f, o, g</code> (or a GRU&#x27;s as <code>z, r, n</code>) runs without errors and gives wrong numbers. PyTorch is <code>i, f, g, o</code> and <code>r, z, n</code>.</li>
+<li><strong>Weight orientation</strong>: <code>x @ W</code> vs <code>x @ W.T</code>. Check the shape table before multiplying.</li>
+<li><strong>GRU reset gate</strong>: PyTorch applies <code>r</code> <em>after</em> the hidden matmul, to <code>h_prev @ W_hn.T + b_hn</code>; the original paper applies it to <code>h_prev</code> first. The numbers differ.</li>
+<li><strong>GRU update gate</strong>: in PyTorch <code>z = 1</code> <strong>keeps</strong> <code>h_prev</code>; some papers swap <code>z</code> and <code>1 - z</code>.</li>
+<li><strong>BPTT</strong>: weights are shared, so their gradients <strong>accumulate</strong> over time; the gradient into <code>h_t</code> has a direct part and a part from <code>h_{t+1}</code>.</li>
+<li><strong>Batch vs time axis</strong>: <code>nn.RNN</code> defaults to <code>(T, N, D)</code> unless <code>batch_first=True</code>. These problems are batch first.</li>
 </ul>
-<p>Let&#x27;s build these cells from scratch!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/sequence-models/rnn-forward">Vanilla RNN: Forward &amp; BPTT →</a></li><li><a href="/problem/sequence-models/lstm-cell">LSTM Cell →</a></li><li><a href="/problem/sequence-models/gru-cell">GRU Cell →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Interview Angle</h2>
+<ul>
+<li>&quot;Write an LSTM cell from scratch.&quot; Then: &quot;count its parameters&quot;, &quot;why does the cell state help gradients?&quot;, &quot;why initialize the forget bias to 1?&quot;</li>
+<li>&quot;Explain vanishing and exploding gradients in RNNs and the fixes&quot;: gating, clipping, orthogonal init, shorter truncated BPTT windows.</li>
+<li>&quot;LSTM vs GRU?&quot; GRU has 3 weight blocks instead of 4 (25% fewer parameters) and no separate cell state; quality is usually similar.</li>
+<li>&quot;RNN vs Transformer?&quot; RNN training is sequential in <code>T</code> but inference costs <code>O(1)</code> per token; attention trains in parallel but costs <code>O(T)</code> per token with a KV cache and <code>O(T^2)</code> for the full sequence.</li>
+</ul>
+<h2>Problems in This Section</h2>
+<ol>
+<li><strong>Vanilla RNN: Forward &amp; BPTT</strong>: unroll <code>h_t = tanh(x_t W_xh + h_{t-1} W_hh + b)</code> over <code>(N, T, D)</code> inputs and backpropagate through time by hand.</li>
+<li><strong>LSTM Cell</strong>: one step of <code>nn.LSTMCell</code> with gate order <code>i, f, g, o</code>.</li>
+<li><strong>GRU Cell</strong>: one step of <code>nn.GRUCell</code> with gate order <code>r, z, n</code> and PyTorch&#x27;s reset-gate placement.</li>
+</ol>
+<p>Related: <strong>Gradient Clipping by Global Norm</strong> (Optimization &amp; Training) for exploding gradients, and <strong>Scaled Dot-Product Attention</strong> (Transformer Architecture), which replaced recurrence in most language models.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/sequence-models/rnn-forward">Vanilla RNN: Forward &amp; BPTT →</a></li><li><a href="/problem/sequence-models/lstm-cell">LSTM Cell →</a></li><li><a href="/problem/sequence-models/gru-cell">GRU Cell →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

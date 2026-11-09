@@ -78,57 +78,73 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
-  <title>PCA: Center Data - Unsupervised Learning | ML Grind</title>
-<meta name="description" content="Implement PCA: Center Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
+  <title>PCA Step 1: Center the Data - Unsupervised Learning | ML Grind</title>
+<meta name="description" content="Implement PCA Step 1: Center the Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation" data-rh="true" />
-<meta property="og:title" content="PCA: Center Data - Unsupervised Learning | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement PCA: Center Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:title" content="PCA Step 1: Center the Data - Unsupervised Learning | ML Grind" data-rh="true" />
+<meta property="og:description" content="Implement PCA Step 1: Center the Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="PCA: Center Data - Unsupervised Learning | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement PCA: Center Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:title" content="PCA Step 1: Center the Data - Unsupervised Learning | ML Grind" data-rh="true" />
+<meta name="twitter:description" content="Implement PCA Step 1: Center the Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PCA: Center Data - Unsupervised Learning","description":"Implement PCA: Center Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"PCA Step 1: Center the Data - Unsupervised Learning","description":"Implement PCA Step 1: Center the Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/unsupervised-learning/pca-implementation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PCA: Center Data - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement PCA: Center Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>PCA: Center the Data</h2>
-<p>The first step in PCA is to center the data by subtracting the mean of each feature.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def center_data(X: np.ndarray) -&gt; np.ndarray:
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">PCA Step 1: Center the Data - Unsupervised Learning</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement PCA Step 1: Center the Data in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>PCA Step 1: Center the Data</h2>
+<h3>What you&#x27;ll build</h3>
+<p>The first step of Principal Component Analysis: subtract each feature&#x27;s mean so every column of the data has mean 0.</p>
+<h3>Background</h3>
+<p>PCA looks for the directions along which the data varies most, which are the eigenvectors of the covariance matrix <code>Xc^T Xc / (n - 1)</code>. That formula is only the covariance if <code>Xc</code> is <strong>centred</strong>. Skip this step and the first &quot;principal component&quot; points from the origin towards the data&#x27;s mean instead of along its spread. scikit-learn&#x27;s <code>PCA</code> centres automatically and stores the mean as <code>mean_</code>, which it reuses to transform new data.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">mu[f]     = (1/n) * sum_i X[i, f]          # column means, shape (n_features,)
+Xc[i, f]  = X[i, f] - mu[f]
 </code></pre>
-<h3>Args</h3>
+<h3>Inputs</h3>
 <ul>
-<li>X: Data matrix of shape (n_samples, n_features)</li>
+<li><code>X</code>: data matrix of shape <code>(n_samples, n_features)</code>, ints or floats (tests may pass nested lists)</li>
 </ul>
-<h3>Returns</h3>
+<h3>Expected return format</h3>
+<p>A float array with the same shape as <code>X</code>, whose column means are all 0 (up to floating-point error).</p>
+<h3>Edge cases and conventions</h3>
 <ul>
-<li>Centered data where each column has mean 0</li>
+<li>Means are taken <strong>per column</strong> (<code>axis=0</code>), not over the whole matrix.</li>
+<li>Already-centred data comes back unchanged; a single column works the same way.</li>
+<li>Don&#x27;t modify the input; return a new array.</li>
 </ul>
-<h3>Why Center?</h3>
-<p>Centering ensures PCA finds directions of maximum variance from the origin, not from an arbitrary point.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: X = [[1, 2], [3, 4], [5, 6]]
-Output: [[-2, -2], [0, 0], [2, 2]]</pre><p>Column means are [3, 4], so we subtract them</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Constraints</h3>
+<ul>
+<li>NumPy only, no loops: broadcasting subtracts the <code>(n_features,)</code> mean from every row.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Finish PCA: compute the covariance, take <code>np.linalg.eigh</code>, sort the eigenvalues in descending order and project onto the top <code>k</code> eigenvectors. Why is the SVD of <code>Xc</code> often preferred?</li>
+<li>At inference time, which mean do you subtract from a new sample?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: center_data(np.array([[1, 2], [3, 4], [5, 6]]))
+Output: [[-2.0, -2.0], [0.0, 0.0], [2.0, 2.0]]</pre><p>The column means are [3, 4]; subtracting them from every row centres each column.</p></div><div><pre class="overflow-auto">Input: center_data(np.array([[10], [20], [30]]))
+Output: [[-10.0], [0.0], [10.0]]</pre><p>A single feature with mean 20.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def center_data(X: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
-    Center the data by subtracting the mean of each feature.
+    Center the data by subtracting the mean of each feature (column).
 
     Args:
         X: Data matrix of shape (n_samples, n_features)
 
     Returns:
-        Centered data matrix of same shape
+        Float array of the same shape whose columns have mean 0
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/unsupervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/unsupervised-learning">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

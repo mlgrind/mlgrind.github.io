@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Cross-Attention - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Cross-Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/cross-attention" data-rh="true" />
@@ -100,17 +100,41 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Cross-Attention - PyTorch Basics","description":"Implement Cross-Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/cross-attention","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Cross-Attention - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Cross-Attention in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Cross-Attention</h2>
-<p>Q from one sequence, K/V from another (different lengths). Used in transformer decoders and Stable Diffusion.</p>
+<p><strong>What you&#x27;ll build:</strong> <code>cross_attention(Q, K, V)</code>: scaled dot-product attention where the queries come from one sequence and the keys and values from another, possibly of a different length.</p>
+<h3>Background</h3>
+<p>In <strong>self</strong>-attention, <code>Q</code>, <code>K</code> and <code>V</code> are all projections of the same sequence. In <strong>cross</strong>-attention the queries come from one sequence (the decoder&#x27;s tokens, or an image&#x27;s latent pixels) and the keys and values from another (the encoder&#x27;s output, or a text prompt). It is how a translation decoder looks at the source sentence and how Stable Diffusion conditions an image on text.</p>
 <h3>Formula</h3>
-<pre><code>scores = (Q @ K.T) / sqrt(d_k)
-weights = softmax(scores)
-output = weights @ V
-</code></pre></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Q (4, 8), K (6, 8), V (6, 16)
-Output: Shape (4, 16)</pre><p>Output seq_len matches Q, feature dim matches V</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<pre><code class="language-text">scores  = Q @ K.T / sqrt(d_k)          (seq_q, seq_kv)
+weights = softmax(scores, axis=-1)     each row sums to 1: query i&#x27;s distribution over the keys
+output  = weights @ V                  (seq_q, d_v)
+</code></pre>
+<p>Dividing by <code>sqrt(d_k)</code> keeps the scores&#x27; variance around 1 for random unit-variance inputs; without it, large <code>d_k</code> pushes the softmax into a near one-hot regime with vanishing gradients.</p>
+<h3>Inputs</h3>
+<table><thead><tr><th>Name</th><th>Shape</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Q</code></td><td><code>(seq_q, d_k)</code></td><td>queries</td></tr><tr><td><code>K</code></td><td><code>(seq_kv, d_k)</code></td><td>keys (same feature size as Q)</td></tr><tr><td><code>V</code></td><td><code>(seq_kv, d_v)</code></td><td>values (same length as K)</td></tr></tbody></table>
+<h3>Expected Return Format</h3>
+<p>An array of shape <code>(seq_q, d_v)</code>: one output per query, a weighted average of the rows of <code>V</code>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>No mask and no batch or head dimensions.</li>
+<li>Use a numerically stable softmax (subtract the row max).</li>
+<li>If all keys are identical, every query attends uniformly and gets the mean of <code>V</code>.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li>Vectorised matrix products; no loops over queries.</li>
+<li><strong>PyTorch track:</strong> <code>F.softmax</code> is fine; don&#x27;t call <code>F.scaled_dot_product_attention</code> or <code>nn.MultiheadAttention</code>.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>What is the time and memory complexity in <code>seq_q</code> and <code>seq_kv</code>?</li>
+<li>In an encoder-decoder transformer, which cross-attention tensors can be cached across decoding steps?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: cross_attention(np.array([[2.0, 0.0]]), np.array([[1.0, 0.0], [0.0, 1.0]]), np.array([[1.0, 0.0], [0.0, 1.0]]))
+Output: array([[0.8044, 0.1956]])</pre><p>Scores are [2, 0] / sqrt(2) = [1.414, 0]; their softmax [0.8044, 0.1956] weights the rows of V.</p></div><div><pre class="overflow-auto">Input: Q (4, 8), K (6, 8), V (6, 16)
+Output: shape (4, 16)</pre><p>One output per query (4), with the value size (16); the 6 keys are averaged away.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def cross_attention(Q, K, V):
     &quot;&quot;&quot;
-    Cross-attention mechanism.
+    Scaled dot-product cross-attention.
 
     Args:
         Q: Queries (seq_len_q, d_k)
@@ -122,7 +146,7 @@ def cross_attention(Q, K, V):
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

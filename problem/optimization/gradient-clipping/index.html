@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Gradient Clipping by Global Norm - Optimization &amp; Training | ML Grind</title>
 <meta name="description" content="Implement Gradient Clipping by Global Norm in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/optimization/gradient-clipping" data-rh="true" />
@@ -100,26 +100,48 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gradient Clipping by Global Norm - Optimization & Training","description":"Implement Gradient Clipping by Global Norm in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/optimization/gradient-clipping","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gradient Clipping by Global Norm - Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gradient Clipping by Global Norm in Python with NumPy. easy exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gradient Clipping by Global Norm</h2>
-<p>A single bad batch can produce a huge gradient that throws the weights far away: a <em>loss spike</em>. Gradient clipping caps the size of the step. Clipping by <strong>global norm</strong> treats the gradients of <em>all</em> parameters as one long vector and rescales them together when their combined L2 norm is too large. Every gradient keeps its direction, and their relative sizes are preserved.</p>
-<p>This is what <code>torch.nn.utils.clip_grad_norm_</code> does, and most LLM training runs use it with <code>max_norm=1.0</code>.</p>
+<h3>What you&#x27;ll build</h3>
+<p><code>clip_grad_norm(grads, max_norm)</code>: treat the gradients of <em>all</em> parameters as one long vector, compute its L2 norm, and if it exceeds <code>max_norm</code>, rescale every gradient by the same factor. This is what <code>torch.nn.utils.clip_grad_norm_</code> does.</p>
+<h3>Background</h3>
+<p>A single bad batch can produce a huge gradient that throws the weights far away: a <em>loss spike</em>, sometimes followed by NaNs. Clipping caps the size of the step. Clipping by the <strong>global</strong> norm (rather than per tensor or per element) keeps the update&#x27;s direction and the relative sizes of all gradients; only the step length changes. Most LLM training runs clip with <code>max_norm=1.0</code>.</p>
 <h3>Formula</h3>
-<pre><code>total_norm = sqrt( sum_i  sum(g_i ** 2) )          # over every array, every element
-clip_coef  = max_norm / (total_norm + eps)          # eps = 1e-6, as in PyTorch
+<pre><code class="language-text">total_norm = sqrt( sum_i sum(g_i ** 2) )        # over every array and every element
+clip_coef  = max_norm / (total_norm + eps)       # eps = 1e-6, as in PyTorch
 if clip_coef &lt; 1:
-    g_i = g_i * clip_coef                           # for every array
+    g_i = g_i * clip_coef                        # same factor for every array
 </code></pre>
-<p>Gradients whose norm is already below <code>max_norm</code> are left unchanged.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def clip_grad_norm(grads: list, max_norm: float, eps: float = 1e-6):
-</code></pre>
-<h3>Return Format</h3>
+<ul>
+<li><code>g_i</code>: the gradient array of parameter <code>i</code> (any shape)</li>
+<li><code>max_norm</code>: the largest allowed global norm</li>
+<li><code>eps</code>: guards against division by zero when every gradient is 0</li>
+</ul>
+<h3>Inputs</h3>
+<ul>
+<li><code>grads</code>: list of NumPy float arrays of any shapes</li>
+<li><code>max_norm</code>: positive float</li>
+<li><code>eps</code>: small float, default <code>1e-6</code></li>
+</ul>
+<h3>Expected return format</h3>
 <p>Return a tuple <code>(clipped_grads, total_norm)</code>:</p>
 <ul>
-<li><code>clipped_grads</code>: a <strong>list</strong> of arrays with the same shapes as <code>grads</code> (new arrays; don&#x27;t modify the inputs)</li>
-<li><code>total_norm</code>: the global norm <strong>before</strong> clipping, as a float</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: grads=[np.array([3.0, 4.0])], max_norm=1.0
-Output: ([array([0.6, 0.8])], 5.0)</pre><p>The norm is 5, so every gradient is scaled by 1/5</p></div><div><pre class="overflow-auto">Input: grads=[np.array([1.0, 2.0]), np.array([2.0])], max_norm=5.0
-Output: ([array([1., 2.]), array([2.])], 3.0)</pre><p>The global norm sqrt(1 + 4 + 4) = 3 is below 5, so nothing changes</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>clipped_grads</code>: a <strong>list</strong> of new arrays with the same shapes as <code>grads</code> (don&#x27;t modify the inputs)</li>
+<li><code>total_norm</code>: the global norm <strong>before</strong> clipping, as a Python float</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>Gradients whose global norm is at most <code>max_norm</code> come back unchanged (copies).</li>
+<li>After clipping, the global norm equals <code>max_norm</code> (up to the tiny <code>eps</code>).</li>
+<li>All-zero gradients: <code>total_norm = 0.0</code> and nothing changes.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only; one pass over the arrays (no per-element Python loops).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Where does clipping go in a mixed-precision loop? (After <code>scaler.unscale_(optimizer)</code>, before <code>scaler.step</code>.)</li>
+<li>How does clipping by value (<code>clip_grad_value_</code>) differ, and why does it change the update direction?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: clip_grad_norm([np.array([3.0, 4.0])], max_norm=1.0)
+Output: ([array([0.6, 0.8])], 5.0)</pre><p>The norm is sqrt(9 + 16) = 5 &gt; 1, so every gradient is scaled by 1/5 (more precisely 1/(5 + 1e-6)).</p></div><div><pre class="overflow-auto">Input: clip_grad_norm([np.array([1.0, 2.0]), np.array([2.0])], max_norm=5.0)
+Output: ([array([1., 2.]), array([2.])], 3.0)</pre><p>The global norm sqrt(1 + 4 + 4) = 3 is below 5, so the gradients come back unchanged.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def clip_grad_norm(grads: list, max_norm: float, eps: float = 1e-6):
     &quot;&quot;&quot;
@@ -135,7 +157,7 @@ def clip_grad_norm(grads: list, max_norm: float, eps: float = 1e-6):
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/optimization">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/optimization">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

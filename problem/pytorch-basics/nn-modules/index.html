@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Neural Network Modules - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Neural Network Modules in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/nn-modules" data-rh="true" />
@@ -100,37 +100,52 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Neural Network Modules - PyTorch Basics","description":"Implement Neural Network Modules in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/nn-modules","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Neural Network Modules - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Neural Network Modules in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Neural Network Modules</h2>
-<p>Implement PyTorch-style nn.Module patterns in NumPy.</p>
-<h3>Module Pattern</h3>
-<pre><code class="language-python">class Linear:
-    def __init__(self, in_features, out_features):
-        self.W = np.random.randn(in_features, out_features) * 0.01
-        self.b = np.zeros(out_features)
-
-    def forward(self, x):
-        return x @ self.W + self.b
-
-    def parameters(self):
-        return [self.W, self.b]
-</code></pre>
-<h3>Task</h3>
-<p>Implement Linear and ReLU modules with forward method.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: Linear(10, 5).forward(x)
-Output: Output of shape (batch, 5)</pre><p>Linear transformation</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p><strong>What you&#x27;ll build:</strong> the three building blocks every PyTorch model is made of (a <code>Linear</code> layer, a <code>ReLU</code> activation and a <code>Sequential</code> container) and a <code>create_mlp</code> factory that chains them into a 2-layer MLP.</p>
+<h3>Background</h3>
+<p>In PyTorch every layer is an <code>nn.Module</code>: it owns its parameters, defines <code>forward(x)</code>, and can contain other modules. Calling <code>model(x)</code> runs <code>forward</code>, and <code>model.parameters()</code> walks the whole tree to find every trainable tensor, which is what the optimizer receives. Writing these classes yourself shows there is no magic: a model is a tree of objects with weights and a forward method.</p>
+<h3>Specification</h3>
+<ul>
+<li><strong><code>Linear(in_features, out_features)</code></strong> computes <code>Y = X @ W + b</code>.
+<ul>
+<li><code>self.W</code>: shape <code>(in_features, out_features)</code>, initialised to <code>randn * 0.01</code> (small random values break the symmetry between units).</li>
+<li><code>self.b</code>: shape <code>(out_features,)</code>, initialised to zeros.</li>
+<li><code>forward(x)</code>: <code>x</code> of shape <code>(batch, in_features)</code> returns <code>(batch, out_features)</code>.</li>
+</ul>
+</li>
+<li><strong><code>ReLU</code></strong>: <code>forward(x)</code> returns <code>max(0, x)</code> element-wise, same shape.</li>
+<li><strong><code>Sequential(*layers)</code></strong>: <code>forward(x)</code> passes <code>x</code> through the layers in order and returns the last output.</li>
+<li><strong><code>create_mlp(input_dim, hidden_dim, output_dim)</code></strong> returns <code>Sequential(Linear(input_dim, hidden_dim), ReLU(), Linear(hidden_dim, output_dim))</code>.</li>
+</ul>
+<p>A 2-layer MLP has <code>input_dim*hidden_dim + hidden_dim + hidden_dim*output_dim + output_dim</code> parameters: 325 for <code>(10, 20, 5)</code>.</p>
+<h3>Track Differences</h3>
+<table><thead><tr><th></th><th>PyTorch track</th><th>NumPy track</th></tr></thead><tbody><tr><td>Base class</td><td>subclass <code>nn.Module</code>, call <code>super().__init__()</code></td><td>plain Python classes</td></tr><tr><td>Parameters</td><td>wrap <code>W</code> and <code>b</code> in <code>nn.Parameter</code>; <code>parameters()</code> is inherited</td><td><code>Linear.parameters()</code> returns <code>[self.W, self.b]</code></td></tr><tr><td>Calling</td><td><code>layer(x)</code> (runs <code>forward</code>)</td><td><code>layer.forward(x)</code></td></tr></tbody></table>
+<h3>Constraints</h3>
+<p>Write the layers yourself: don&#x27;t wrap <code>nn.Linear</code>, <code>nn.ReLU</code> or <code>nn.Sequential</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Why must <code>W</code> not be initialised to all zeros?</li>
+<li>Why does PyTorch store <code>nn.Linear.weight</code> as <code>(out_features, in_features)</code> and compute <code>x @ W.T</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: create_mlp(10, 20, 5).forward(np.random.randn(4, 10)).shape
+Output: (4, 5)</pre><p>(4, 10) -&gt; Linear -&gt; (4, 20) -&gt; ReLU -&gt; (4, 20) -&gt; Linear -&gt; (4, 5).</p></div><div><pre class="overflow-auto">Input: ReLU().forward(np.array([-2.0, 0.0, 1.5]))
+Output: array([0. , 0. , 1.5])</pre><p>Negative values are clipped to zero; positive values pass through.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 class Linear:
     &quot;&quot;&quot;Linear layer: Y = X @ W + b&quot;&quot;&quot;
 
     def __init__(self, in_features: int, out_features: int):
-        # Initialize weights with small random values
+        # Create self.W (in_features, out_features) with np.random.randn(...) * 0.01
+        # and self.b (out_features,) with zeros
         # Your code here
         pass
 
     def forward(self, x: np.ndarray) -&gt; np.ndarray:
+        &quot;&quot;&quot;x: (batch, in_features) -&gt; (batch, out_features)&quot;&quot;&quot;
         # Your code here
         pass
 
     def parameters(self):
-        # Return list of parameters
+        &quot;&quot;&quot;Return the list [W, b].&quot;&quot;&quot;
+        # Your code here
         pass
 
 
@@ -143,7 +158,7 @@ class ReLU:
 
 
 class Sequential:
-    &quot;&quot;&quot;Container for sequential layers&quot;&quot;&quot;
+    &quot;&quot;&quot;Container that applies its layers in order&quot;&quot;&quot;
 
     def __init__(self, *layers):
         self.layers = layers
@@ -157,7 +172,7 @@ def create_mlp(input_dim: int, hidden_dim: int, output_dim: int):
     &quot;&quot;&quot;Create a 2-layer MLP: Linear -&gt; ReLU -&gt; Linear&quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 2 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

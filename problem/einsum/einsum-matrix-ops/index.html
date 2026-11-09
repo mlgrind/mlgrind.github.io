@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Matrix Operations with Einsum - Einstein Summation (Einsum) | ML Grind</title>
 <meta name="description" content="Implement Matrix Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/einsum/einsum-matrix-ops" data-rh="true" />
@@ -100,32 +100,46 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Matrix Operations with Einsum - Einstein Summation (Einsum)","description":"Implement Matrix Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/einsum/einsum-matrix-ops","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Matrix Operations with Einsum - Einstein Summation (Einsum)</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Matrix Operations with Einsum in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Matrix Operations with Einsum</h2>
-<p>Einsum can express matrix multiplication and more complex operations.</p>
-<h3>Key Operations</h3>
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>einsum_matrix_ops(A, B, v)</code> that computes six two-operand products (matrix multiply, matrix-vector, outer, Hadamard, Frobenius inner product and trace) with <code>np.einsum</code>.</p>
+<h3>Background</h3>
+<p>With two operands, a letter shared between them pairs up their axes. If that letter is missing from the output, the paired axis is <strong>contracted</strong> (multiplied and summed), which is how a matrix product works. If it&#x27;s kept, the entries are just multiplied elementwise. Every linear layer, attention score and bilinear model is one of these patterns.</p>
+<h3>Formulas</h3>
+<table><thead><tr><th>Key</th><th>Subscripts</th><th>Formula</th><th>Shape</th></tr></thead><tbody><tr><td><code>matmul</code></td><td><code>&#x27;ik,kj-&gt;ij&#x27;</code></td><td><code>C[i, j] = sum_k A[i, k] * B[k, j]</code></td><td><code>(m, n)</code></td></tr><tr><td><code>matvec</code></td><td><code>&#x27;ij,j-&gt;i&#x27;</code></td><td><code>y[i] = sum_j A[i, j] * v[j]</code></td><td><code>(m,)</code></td></tr><tr><td><code>outer_product</code></td><td><code>&#x27;i,j-&gt;ij&#x27;</code></td><td><code>O[i, j] = v[i] * v[j]</code></td><td><code>(k, k)</code></td></tr><tr><td><code>hadamard</code></td><td><code>&#x27;ij,ij-&gt;ij&#x27;</code></td><td><code>H[i, j] = A[i, j] * A[i, j]</code></td><td><code>(m, k)</code></td></tr><tr><td><code>frobenius</code></td><td><code>&#x27;ij,ij-&gt;&#x27;</code></td><td><code>sum_ij A[i, j] * A[i, j]</code></td><td>scalar</td></tr><tr><td><code>trace</code></td><td><code>&#x27;ii-&gt;&#x27;</code></td><td><code>sum_i A[i, i]</code></td><td>scalar</td></tr></tbody></table>
+<h3>Inputs</h3>
 <ul>
-<li><code>&#x27;ik,kj-&gt;ij&#x27;</code>: Matrix multiplication (A @ B)</li>
-<li><code>&#x27;ij,ij-&gt;ij&#x27;</code>: Element-wise multiplication (Hadamard)</li>
-<li><code>&#x27;ij,ij-&gt;&#x27;</code>: Frobenius inner product (sum of element-wise product)</li>
-<li><code>&#x27;ij,j-&gt;i&#x27;</code>: Matrix-vector multiplication</li>
-<li><code>&#x27;i,j-&gt;ij&#x27;</code>: Outer product</li>
+<li><code>A</code>: matrix of shape <code>(m, k)</code></li>
+<li><code>B</code>: matrix of shape <code>(k, n)</code></li>
+<li><code>v</code>: vector of shape <code>(k,)</code></li>
 </ul>
-<h3>Task</h3>
-<p>Implement matrix operations using einsum.</p>
 <h3>Expected Return Format</h3>
 <p>Return a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;matmul&#x27;</code>: Matrix multiplication A @ B</li>
-<li><code>&#x27;matvec&#x27;</code>: Matrix-vector multiplication A @ v</li>
-<li><code>&#x27;outer_product&#x27;</code>: Outer product of v with itself</li>
-<li><code>&#x27;hadamard&#x27;</code>: Element-wise A * A</li>
-<li><code>&#x27;frobenius&#x27;</code>: Sum of A * A (Frobenius inner product)</li>
-<li><code>&#x27;trace&#x27;</code>: Trace of A (if square, else None)</li>
-</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: A=[[1,2],[3,4]], B=[[5,6],[7,8]], v=[1,2]
-Output: {&#x27;matmul&#x27;: [[19,22],[43,50]], &#x27;matvec&#x27;: [5,11], &#x27;outer_product&#x27;: [[1,2],[2,4]], &#x27;hadamard&#x27;: [[1,4],[9,16]], &#x27;frobenius&#x27;: 30, &#x27;trace&#x27;: 5}</pre><p>Matrix operations via einsum</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<li><code>&#x27;matmul&#x27;</code>: <code>A @ B</code>, shape <code>(m, n)</code></li>
+<li><code>&#x27;matvec&#x27;</code>: <code>A @ v</code>, shape <code>(m,)</code></li>
+<li><code>&#x27;outer_product&#x27;</code>: outer product of <code>v</code> with itself, shape <code>(k, k)</code></li>
+<li><code>&#x27;hadamard&#x27;</code>: elementwise <code>A * A</code>, shape <code>(m, k)</code></li>
+<li><code>&#x27;frobenius&#x27;</code>: Frobenius inner product of <code>A</code> with itself, <code>(A * A).sum()</code> (the squared Frobenius norm), a scalar</li>
+<li><code>&#x27;trace&#x27;</code>: trace of <code>A</code> if <code>A</code> is square, otherwise <code>None</code></li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li><code>&#x27;ii-&gt;&#x27;</code> requires a square <code>A</code>; return <code>None</code> for the trace when <code>m != k</code>.</li>
+<li>Integer inputs give integer outputs.</li>
+</ul>
+<h3>Constraints</h3>
+<p>Compute every value with <code>np.einsum</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Write <code>u^T A w</code> (a bilinear form) as a single einsum with three operands.</li>
+<li>What is the cost of <code>&#x27;ik,kj-&gt;ij&#x27;</code> in terms of <code>m</code>, <code>k</code> and <code>n</code>?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: einsum_matrix_ops(np.array([[1, 2], [3, 4]]), np.array([[5, 6], [7, 8]]), np.array([1, 2]))
+Output: {&#x27;matmul&#x27;: array([[19, 22], [43, 50]]), &#x27;matvec&#x27;: array([ 5, 11]), &#x27;outer_product&#x27;: array([[1, 2], [2, 4]]), &#x27;hadamard&#x27;: array([[ 1,  4], [ 9, 16]]), &#x27;frobenius&#x27;: 30, &#x27;trace&#x27;: 5}</pre><p>matvec[0] = 1*1 + 2*2 = 5; frobenius = 1 + 4 + 9 + 16 = 30; trace = 1 + 4 = 5.</p></div><div><pre class="overflow-auto">Input: einsum_matrix_ops(np.array([[1, 0, 2]]), np.array([[1], [2], [3]]), np.array([1, 1, 1]))[&quot;trace&quot;]
+Output: None</pre><p>A is 1 x 3, not square, so it has no trace.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def einsum_matrix_ops(A: np.ndarray, B: np.ndarray, v: np.ndarray) -&gt; dict:
     &quot;&quot;&quot;
-    Perform matrix operations using einsum.
+    Two-operand products with np.einsum.
 
     Args:
         A: Matrix of shape (m, k)
@@ -133,11 +147,17 @@ def einsum_matrix_ops(A: np.ndarray, B: np.ndarray, v: np.ndarray) -&gt; dict:
         v: Vector of shape (k,)
 
     Returns:
-        Dictionary with operation results
+        dict with keys:
+            &#x27;matmul&#x27;:        A @ B, shape (m, n)
+            &#x27;matvec&#x27;:        A @ v, shape (m,)
+            &#x27;outer_product&#x27;: outer(v, v), shape (k, k)
+            &#x27;hadamard&#x27;:      A * A, shape (m, k)
+            &#x27;frobenius&#x27;:     (A * A).sum(), scalar
+            &#x27;trace&#x27;:         trace of A if square, else None
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/einsum">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

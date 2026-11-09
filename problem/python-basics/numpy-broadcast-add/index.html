@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Broadcasting Addition - Python Basics for ML | ML Grind</title>
 <meta name="description" content="Implement Broadcasting Addition in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/python-basics/numpy-broadcast-add" data-rh="true" />
@@ -100,19 +100,33 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Broadcasting Addition - Python Basics for ML","description":"Implement Broadcasting Addition in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/python-basics/numpy-broadcast-add","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Broadcasting Addition - Python Basics for ML</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Broadcasting Addition in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Broadcasting Addition</h2>
-<p>Given a 2D matrix and a 1D vector, add the vector to each row of the matrix using broadcasting.</p>
-<h3>Function Signature</h3>
-<pre><code class="language-python">def broadcast_add(matrix: np.ndarray, vector: np.ndarray) -&gt; np.ndarray:
+<h3>What you&#x27;ll build</h3>
+<p>A function <code>broadcast_add(matrix, vector)</code> that adds a vector to every row of a matrix with a single <code>+</code>, letting broadcasting do the repetition.</p>
+<h3>Background</h3>
+<p>This is exactly how a neural network layer adds its bias: <code>x @ W</code> has shape <code>(batch, d_out)</code> and the bias <code>b</code> has shape <code>(d_out,)</code>. Broadcasting stretches <code>b</code> across the batch without ever copying it, so the same code works for any batch size.</p>
+<h3>Formula</h3>
+<pre><code class="language-text">result[i, j] = matrix[i, j] + vector[j]      for every row i
 </code></pre>
-<h3>Constraints</h3>
+<h3>Broadcasting rule</h3>
+<p>NumPy compares shapes from the right. <code>(m, n)</code> and <code>(n,)</code> line up as <code>(m, n)</code> and <code>(1, n)</code>; the size-1 dimension is stretched to <code>m</code>, giving <code>(m, n)</code>.</p>
+<h3>Inputs</h3>
 <ul>
-<li>Matrix has shape (m, n)</li>
-<li>Vector has shape (n,)</li>
-<li>1 &lt;= m, n &lt;= 100</li>
+<li><code>matrix</code>: 2D array of shape <code>(m, n)</code></li>
+<li><code>vector</code>: 1D array of shape <code>(n,)</code>, with <code>1 &lt;= m, n &lt;= 100</code>. Integer or float entries.</li>
 </ul>
-<h3>Note</h3>
-<p>Broadcasting is a powerful NumPy feature that allows operations between arrays of different shapes.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: matrix = [[1, 2, 3], [4, 5, 6]], vector = [10, 20, 30]
-Output: [[11, 22, 33], [14, 25, 36]]</pre><p>Vector is added to each row</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Expected Return Format</h3>
+<p>A 2D array of shape <code>(m, n)</code>: <code>vector</code> added to each row.</p>
+<h3>Constraints</h3>
+<p>Use broadcasting; no loops, <code>np.tile</code> or <code>np.repeat</code>.</p>
+<h3>Follow-up</h3>
+<ul>
+<li>How would you add a value to every <strong>column</strong> instead, with one value per row? (Hint: a vector of shape <code>(m, 1)</code>.)</li>
+<li>What error do you get for a <code>(2, 3)</code> matrix plus a <code>(2,)</code> vector, and why?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: broadcast_add(np.array([[1, 2, 3], [4, 5, 6]]), np.array([10, 20, 30]))
+Output: array([[11, 22, 33],
+       [14, 25, 36]])</pre><p>The vector [10, 20, 30] is added to each of the two rows.</p></div><div><pre class="overflow-auto">Input: broadcast_add(np.array([[1, 2], [3, 4]]), np.array([-1, -2]))
+Output: array([[0, 0],
+       [2, 2]])</pre><p>Column 0 gets -1 and column 1 gets -2 in every row.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def broadcast_add(matrix: np.ndarray, vector: np.ndarray) -&gt; np.ndarray:
     &quot;&quot;&quot;
@@ -123,11 +137,11 @@ def broadcast_add(matrix: np.ndarray, vector: np.ndarray) -&gt; np.ndarray:
         vector: 1D array of shape (n,)
 
     Returns:
-        Result matrix of shape (m, n)
+        Array of shape (m, n) with result[i, j] = matrix[i, j] + vector[j]
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/python-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/python-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

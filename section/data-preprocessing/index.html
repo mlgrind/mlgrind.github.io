@@ -78,60 +78,76 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Data Preprocessing | ML Grind</title>
-<meta name="description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<meta name="description" content="Scale, impute, encode and split data without leaking the test set into training." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/data-preprocessing" data-rh="true" />
 <meta property="og:title" content="Data Preprocessing | ML Grind" data-rh="true" />
-<meta property="og:description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<meta property="og:description" content="Scale, impute, encode and split data without leaking the test set into training." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/data-preprocessing" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Data Preprocessing | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Learn essential data cleaning and transformation techniques." data-rh="true" />
+<meta name="twitter:description" content="Scale, impute, encode and split data without leaking the test set into training." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Data Preprocessing","description":"Learn essential data cleaning and transformation techniques.","url":"https://mlgrind.github.io/section/data-preprocessing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Data Preprocessing","description":"Scale, impute, encode and split data without leaking the test set into training.","url":"https://mlgrind.github.io/section/data-preprocessing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Learn essential data cleaning and transformation techniques.</p><div class="prose dark:prose-invert max-w-none"><h2>Data Preprocessing</h2>
-<p>Real-world data is messy. Before training any model, you need to clean and transform your data.</p>
-<h2>Key Concepts</h2>
-<h3>Handling Missing Data</h3>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Data Preprocessing</h1><p class="text-lg text-gray-600 dark:text-dark-200">Scale, impute, encode and split data without leaking the test set into training.</p><div class="prose dark:prose-invert max-w-none"><h2>Data Preprocessing</h2>
+<h2>Why it matters</h2>
+<p>Every production model sits behind a preprocessing pipeline: missing values are filled, features are scaled, categories are encoded and the data is split before any training happens. Bugs here are silent. The model still trains, but it learns from leaked or distorted data, and the offline score stops predicting what happens in production. Interviewers like this topic because it separates people who have shipped models from people who have only called <code>fit</code>.</p>
+<h2>Core ideas</h2>
+<p>Throughout, <code>X</code> has shape <code>(n_samples, n_features)</code>; statistics such as a mean or a median are computed <strong>per column</strong> (<code>axis=0</code>).</p>
+<h3>Feature scaling</h3>
+<p>Distance-based models (k-NN, k-means, SVMs) and gradient descent are sensitive to the scale of each feature: a feature measured in thousands dominates one measured in fractions.</p>
+<table><thead><tr><th>Method</th><th>Formula</th><th>Result</th><th>Sensitive to outliers?</th></tr></thead><tbody><tr><td>Min-max</td><td><code>(x - min) / (max - min)</code></td><td>values in <code>[0, 1]</code></td><td>Very: one extreme value sets the range</td></tr><tr><td>Standardisation (z-score)</td><td><code>(x - mean) / std</code></td><td>mean 0, std 1</td><td>Less, but the mean and std still move</td></tr></tbody></table>
+<p>Tree-based models (decision trees, random forests, gradient boosting) only compare a feature with thresholds, so they don&#x27;t need scaling.</p>
+<h3>Missing values</h3>
+<p>Detect with <code>np.isnan</code>. Simple strategies are dropping rows, or filling (imputing) with the column <strong>mean</strong> (fine for symmetric data) or <strong>median</strong> (robust to outliers and skew). Adding a &quot;was missing&quot; indicator column often helps, because missingness itself can carry signal.</p>
+<h3>Categorical features</h3>
+<p><strong>One-hot encoding</strong> turns a category <code>c</code> out of <code>K</code> into a length-<code>K</code> vector with a single 1 at index <code>c</code>, so the model doesn&#x27;t read an order into the labels. <strong>Label encoding</strong> (category to integer) is fine for trees but implies a false order for linear models.</p>
+<h3>Splitting the data</h3>
+<p>Fit on <strong>train</strong>, tune hyperparameters on <strong>validation</strong>, and report on <strong>test</strong> once. A <strong>stratified</strong> split splits each class separately, so a rare class keeps its proportion in every split instead of disappearing from the test set by chance.</p>
+<h3>The golden rule: fit on train only</h3>
+<p>Every statistic (min, max, mean, std, median, the category list) is <strong>learned</strong> from the training split and then <strong>applied</strong> unchanged to validation and test. Computing it on the full dataset leaks test information into training.</p>
+<h2>Worked micro-example</h2>
+<p>One feature with an outlier: <code>x = [2, 4, 6, 8, 100]</code>.</p>
+<pre><code class="language-text">min-max:  (x - 2) / 98       -&gt; [0.000, 0.020, 0.041, 0.061, 1.000]
+z-score:  mean = 24, std = 38.05
+          (x - 24) / 38.05   -&gt; [-0.578, -0.526, -0.473, -0.420, 1.997]
+</code></pre>
+<p>Min-max squashes the four normal values into <code>[0, 0.06]</code> because the outlier sets the range. Now leakage: with train <code>[1, 2, 3, NaN]</code> the median fill is <code>2.0</code>; if you (wrongly) include a test value of <code>100</code> before imputing, the fill becomes <code>2.5</code>, so the test set has changed the training data.</p>
+<h2>Common pitfalls</h2>
 <ul>
-<li><strong>Detection</strong>: <code>np.isnan()</code>, <code>pd.isnull()</code></li>
-<li><strong>Strategies</strong>: Remove, fill with mean/median/mode, interpolate</li>
+<li><strong>Train/test leakage</strong>: scaling, imputing or selecting features on the whole dataset before splitting.</li>
+<li><strong>Division by zero</strong>: a constant column has <code>max - min = 0</code> and <code>std = 0</code>. Decide on a convention (scikit-learn leaves such a column at 0).</li>
+<li><strong><code>np.mean</code> on NaNs</strong> returns <code>nan</code>; use <code>np.nanmean</code> / <code>np.nanmedian</code> or a mask.</li>
+<li><strong>Modifying inputs in place</strong>: <code>arr[mask] = v</code> changes the caller&#x27;s array; copy first.</li>
+<li><strong>Banker&#x27;s rounding</strong>: Python&#x27;s <code>round(2.5) == 2</code>, which matters when you turn fractions into counts.</li>
+<li><strong>Population vs sample std</strong>: NumPy&#x27;s <code>std</code> uses <code>ddof=0</code>, which is also what <code>StandardScaler</code> uses.</li>
 </ul>
-<h3>Feature Scaling</h3>
+<h2>Interview angle</h2>
 <ul>
-<li><strong>Normalization</strong>: Scale to [0, 1] range using min-max scaling</li>
-<li><strong>Standardization</strong>: Transform to zero mean, unit variance (z-score)</li>
-<li><strong>When to use</strong>: Most algorithms need scaled features</li>
+<li>&quot;Why must the scaler be fit on train only?&quot; and &quot;How would you catch leakage?&quot; (a validation score that is too good to be true, or a feature that is only available after the label).</li>
+<li>&quot;Mean or median imputation?&quot; (median for skewed data; mention indicator features).</li>
+<li>&quot;When does one-hot encoding break down?&quot; (high cardinality: use hashing, target encoding with out-of-fold statistics, or embeddings).</li>
+<li>&quot;Why stratify?&quot; (rare classes and stable metric estimates). All of these transforms are <code>O(n * d)</code>.</li>
 </ul>
-<h3>Encoding Categorical Data</h3>
-<ul>
-<li><strong>One-Hot Encoding</strong>: Convert categories to binary vectors</li>
-<li><strong>Label Encoding</strong>: Map categories to integers</li>
-<li><strong>When to use</strong>: Tree-based models handle label encoding; others need one-hot</li>
-</ul>
-<h3>Splitting the Data</h3>
-<ul>
-<li><strong>Train / validation / test</strong>: fit on train, tune on validation, report on test once</li>
-<li><strong>Stratified split</strong>: split each class separately so every split keeps the class proportions, which matters for rare classes</li>
-</ul>
-<h3>Why It Matters</h3>
-<p>Garbage in, garbage out. Proper preprocessing can:</p>
-<ul>
-<li>Improve model accuracy by 10-30%</li>
-<li>Prevent training failures</li>
-<li>Reduce overfitting</li>
-</ul>
-<p>Let&#x27;s practice these essential skills!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/data-preprocessing/normalize-features">Normalize Features →</a></li><li><a href="/problem/data-preprocessing/handle-missing-data">Handle Missing Data →</a></li><li><a href="/problem/data-preprocessing/one-hot-encode">One-Hot Encoding →</a></li><li><a href="/problem/data-preprocessing/stratified-split">Stratified Train/Val/Test Split →</a></li><li><a href="/problem/data-preprocessing/leakage-safe-imputation">Leakage-Safe Imputation and Scaling →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<h2>Problems in this section</h2>
+<ol>
+<li><strong>Normalize Features</strong>: min-max scale a 1-D array to <code>[0, 1]</code>, with a convention for constant input.</li>
+<li><strong>Handle Missing Data</strong>: replace NaNs with the mean of the observed values without touching the input.</li>
+<li><strong>One-Hot Encoding</strong>: turn integer labels into a <code>(n, num_classes)</code> indicator matrix.</li>
+<li><strong>Stratified Train/Val/Test Split</strong>: reproducible per-class splitting with an explicit rounding rule.</li>
+<li><strong>Leakage-Safe Imputation and Scaling</strong>: fit the imputer and scaler on train only, then transform both splits.</li>
+</ol>
+<p>Related: the cross-validation and evaluation problems in <strong>Model Evaluation</strong>, and the distance-based models in <strong>Supervised Learning</strong> and <strong>Unsupervised Learning</strong>, which depend on well-scaled features.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/data-preprocessing/normalize-features">Normalize Features (Min-Max Scaling) →</a></li><li><a href="/problem/data-preprocessing/handle-missing-data">Handle Missing Data (Mean Imputation) →</a></li><li><a href="/problem/data-preprocessing/one-hot-encode">One-Hot Encoding →</a></li><li><a href="/problem/data-preprocessing/stratified-split">Stratified Train/Val/Test Split →</a></li><li><a href="/problem/data-preprocessing/leakage-safe-imputation">Leakage-Safe Imputation and Scaling →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

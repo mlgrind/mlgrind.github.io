@@ -78,63 +78,84 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Optimization &amp; Training | ML Grind</title>
-<meta name="description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<meta name="description" content="Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/section/optimization" data-rh="true" />
 <meta property="og:title" content="Optimization &amp; Training | ML Grind" data-rh="true" />
-<meta property="og:description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<meta property="og:description" content="Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.github.io/section/optimization" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.github.io/og-image.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Optimization &amp; Training | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable." data-rh="true" />
+<meta name="twitter:description" content="Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Optimization & Training","description":"Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.","url":"https://mlgrind.github.io/section/optimization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Optimization & Training","description":"Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.","url":"https://mlgrind.github.io/section/optimization","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Gradient clipping, mixed-precision loss scaling and the tricks that keep long training runs stable.</p><div class="prose dark:prose-invert max-w-none"><h2>Optimization &amp; Training</h2>
-<p>A model is only as good as the procedure that fits it. This section covers what happens between <code>loss.backward()</code> and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging.</p>
-<h2>From SGD to Adam</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Optimization &amp; Training</h1><p class="text-lg text-gray-600 dark:text-dark-200">Gradient clipping by global norm and mixed-precision dynamic loss scaling: the tricks that keep long training runs stable.</p><div class="prose dark:prose-invert max-w-none"><h2>Optimization &amp; Training</h2>
+<p>A model is only as good as the procedure that fits it. This section covers what happens between <code>loss.backward()</code> and the next forward pass: how the update is computed, how large it is, and the tricks that stop long training runs from diverging. Most &quot;my model won&#x27;t train&quot; bugs are optimization bugs, and interviews regularly ask you to write Adam from memory or explain why a run produced NaNs.</p>
+<h2>Core Ideas</h2>
+<h3>From SGD to Adam</h3>
 <p>Every optimizer turns a gradient <code>g</code> into an update for the parameters <code>θ</code>:</p>
-<table><thead><tr><th>Optimizer</th><th>Update</th><th>Idea</th></tr></thead><tbody><tr><td><strong>SGD</strong></td><td><code>θ -= lr * g</code></td><td>Step down the current gradient</td></tr><tr><td><strong>Momentum</strong></td><td><code>v = μv + g;  θ -= lr * v</code></td><td>Average gradients over time: speed up along consistent directions, damp oscillations</td></tr><tr><td><strong>Nesterov</strong></td><td><code>θ -= lr * (g + μv)</code></td><td>Look ahead along the velocity before stepping</td></tr><tr><td><strong>RMSprop</strong></td><td><code>s = ρs + (1-ρ)g²;  θ -= lr * g / √s</code></td><td>Per-parameter step size from recent gradient scale</td></tr><tr><td><strong>Adam</strong></td><td>momentum on <code>g</code> + RMSprop on <code>g²</code> + bias correction</td><td>Default for most deep learning</td></tr><tr><td><strong>AdamW</strong></td><td>Adam + decoupled weight decay <code>θ *= 1 - lr·λ</code></td><td>Default for transformers; L2 inside Adam is <em>not</em> the same thing</td></tr></tbody></table>
+<table><thead><tr><th>Optimizer</th><th>Update</th><th>Idea</th></tr></thead><tbody><tr><td><strong>SGD</strong></td><td><code>θ -= lr * g</code></td><td>Step down the current gradient</td></tr><tr><td><strong>Momentum</strong></td><td><code>v = μv + g;  θ -= lr * v</code></td><td>Average gradients over time: speed up along consistent directions, damp oscillations</td></tr><tr><td><strong>Nesterov</strong></td><td><code>θ -= lr * (g + μv)</code></td><td>Look ahead along the velocity before stepping</td></tr><tr><td><strong>RMSprop</strong></td><td><code>s = ρs + (1-ρ)g²;  θ -= lr * g / (√s + ε)</code></td><td>Per-parameter step size from recent gradient scale</td></tr><tr><td><strong>Adam</strong></td><td><code>m = β1·m + (1-β1)g;  s = β2·s + (1-β2)g²;  θ -= lr * m̂ / (√ŝ + ε)</code></td><td>Momentum + RMSprop, with bias correction <code>m̂ = m / (1 - β1^t)</code>, <code>ŝ = s / (1 - β2^t)</code></td></tr><tr><td><strong>AdamW</strong></td><td>Adam + decoupled weight decay <code>θ *= 1 - lr·λ</code></td><td>Default for transformers; L2 added to the loss inside Adam is <em>not</em> the same thing</td></tr></tbody></table>
 <p>You implement SGD with momentum, Adam and learning-rate schedules in <strong>PyTorch Basics</strong> (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling).</p>
-<h2>Learning-Rate Schedules</h2>
-<p>The learning rate is the single most important hyperparameter, and it rarely stays constant:</p>
-<pre><code>warmup (linear 0 -&gt; max)  -&gt;  decay (cosine / linear / step)  -&gt;  floor (min_lr)
+<h3>Learning-rate schedules</h3>
+<p>The learning rate is the most important hyperparameter, and it rarely stays constant:</p>
+<pre><code class="language-text">warmup (linear 0 -&gt; max_lr)  -&gt;  decay (cosine / linear / step)  -&gt;  floor (min_lr)
 </code></pre>
 <p>Warmup protects the first steps, when Adam&#x27;s statistics are noisy and the weights are random. Decay lets the model settle into a minimum.</p>
-<h2>Keeping Training Stable</h2>
-<table><thead><tr><th>Problem</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Exploding gradients</td><td>Loss spikes, NaNs</td><td><strong>Gradient clipping</strong> by global norm (<code>clip_grad_norm_</code>, usually <code>max_norm=1.0</code>)</td></tr><tr><td>Batch doesn&#x27;t fit in memory</td><td>OOM errors</td><td><strong>Gradient accumulation</strong>: sum the gradients of k micro-batches (each loss / k) before stepping (practiced in PyTorch Basics)</td></tr><tr><td>fp16 gradients underflow to 0</td><td>Training stalls in mixed precision</td><td><strong>Dynamic loss scaling</strong>: multiply the loss by S, halve S on overflow, grow it after N clean steps</td></tr></tbody></table>
-<pre><code class="language-python"># A typical modern training step
+<h3>Keeping training stable</h3>
+<table><thead><tr><th>Problem</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Exploding gradients</td><td>Loss spikes, NaNs</td><td><strong>Gradient clipping</strong> by global norm (<code>clip_grad_norm_</code>, usually <code>max_norm=1.0</code>)</td></tr><tr><td>Batch doesn&#x27;t fit in memory</td><td>OOM errors</td><td><strong>Gradient accumulation</strong>: sum the gradients of k micro-batches (each loss / k) before stepping (practised in PyTorch Basics)</td></tr><tr><td>fp16 gradients underflow to 0</td><td>Training stalls in mixed precision</td><td><strong>Dynamic loss scaling</strong>: multiply the loss by S, back off S on overflow, grow it after N clean steps</td></tr></tbody></table>
+<pre><code class="language-python"># A typical mixed-precision training step with accumulation
 with torch.autocast(&#x27;cuda&#x27;, dtype=torch.float16):
     loss = model(x, y) / accum_steps
 scaler.scale(loss).backward()
 if (step + 1) % accum_steps == 0:
-    scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    scaler.step(optimizer)          # skipped if the gradients overflowed
-    scaler.update()                 # adjust the loss scale
+    scaler.unscale_(optimizer)                                # true gradients again
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)   # clip the unscaled grads
+    scaler.step(optimizer)                                    # skipped if any grad is inf/NaN
+    scaler.update()                                           # adjust the loss scale
     optimizer.zero_grad()
     scheduler.step()
 </code></pre>
-<h2>Why It Matters</h2>
+<h2>Worked Micro-Example</h2>
+<p><strong>Global-norm clipping.</strong> Two parameters have gradients <code>g1 = [3, 4]</code> and <code>g2 = [12]</code>, and <code>max_norm = 1</code>:</p>
+<pre><code class="language-text">total_norm = sqrt(3² + 4² + 12²) = sqrt(169) = 13
+clip_coef  = 1 / 13 = 0.0769
+g1 -&gt; [0.2308, 0.3077],  g2 -&gt; [0.9231]       # new global norm = 1, direction unchanged
+</code></pre>
+<p>Clipping each tensor separately would instead give <code>[0.6, 0.8]</code> and <code>[1.0]</code>: a different direction.</p>
+<p><strong>Adam&#x27;s first step.</strong> With <code>g = 0.5</code>, <code>β1 = 0.9</code>, <code>β2 = 0.999</code>: <code>m = 0.05</code>, <code>s = 0.00025</code>, and after bias correction <code>m̂ = 0.5</code>, <code>ŝ = 0.25</code>, so the step is <code>lr * 0.5 / 0.5 = lr</code>. Adam&#x27;s early steps have size about <code>lr</code> whatever the gradient&#x27;s scale; without bias correction the first step would be <code>lr * 0.05 / sqrt(0.00025) ≈ 3.16 * lr</code>, because the second-moment estimate starts much closer to 0 than the first.</p>
+<h2>Common Pitfalls</h2>
 <ul>
-<li><strong>Interviews</strong> regularly ask you to write Adam from memory, explain bias correction, or explain why AdamW decouples weight decay.</li>
-<li><strong>In practice</strong>, most &quot;my model won&#x27;t train&quot; bugs are optimization bugs: a missing warmup, no clipping, a forgotten <code>1/k</code> in accumulation, or a loss scale stuck at 0.</li>
+<li><strong>Clipping the scaled gradients</strong> in mixed precision: unscale first, otherwise <code>max_norm</code> is compared with <code>S</code> times the real norm.</li>
+<li><strong>Per-tensor instead of global clipping</strong>: it changes the update direction; <code>clip_grad_norm_</code> uses one norm over all parameters.</li>
+<li><strong>Gradient accumulation without <code>1/k</code></strong>: the effective learning rate becomes k times larger.</li>
+<li><strong>L2 penalty vs weight decay in Adam</strong>: adding <code>λ‖θ‖²</code> to the loss gets rescaled by Adam&#x27;s denominator; AdamW decays the weights directly.</li>
+<li><strong>No warmup</strong> with Adam on transformers: early updates are large and noisy and can diverge.</li>
+<li><strong>A loss scale that keeps shrinking</strong>: the overflows are real (a numerical bug or a too-high learning rate), not a scaling problem.</li>
+</ul>
+<h2>Interview Angle</h2>
+<ul>
+<li>Write Adam from memory, including bias correction; explain why the first steps are about <code>lr</code> in size and what happens without it.</li>
+<li>&quot;Why does AdamW decouple weight decay?&quot; and &quot;What does warmup protect against?&quot;</li>
+<li>&quot;Your loss goes to NaN after 10k steps. What do you check?&quot; Learning rate, clipping, fp16 overflow and loss scale, bad data, log of 0, division by a zero norm.</li>
+<li>Memory: Adam stores two extra tensors per parameter (<code>m</code> and <code>s</code>), so optimizer state is 2x the model size in fp32.</li>
+<li>Clipping costs one pass over all gradients, <code>O(P)</code> time for <code>P</code> parameters.</li>
 </ul>
 <h2>Problems in This Section</h2>
-<ul>
-<li><strong>Gradient Clipping by Global Norm</strong>: rescale all gradients together when their combined norm is too large</li>
-<li><strong>Dynamic Loss Scaling</strong>: simulate <code>GradScaler</code>&#x27;s scale updates for mixed-precision training</li>
-</ul>
-<p>Let&#x27;s implement the stability tricks of a training step!</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/optimization/gradient-clipping">Gradient Clipping by Global Norm →</a></li><li><a href="/problem/optimization/loss-scaling">Dynamic Loss Scaling (Mixed Precision) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+<ol>
+<li><strong>Gradient Clipping by Global Norm</strong>: rescale all gradients together when their combined norm is too large, like <code>clip_grad_norm_</code>.</li>
+<li><strong>Dynamic Loss Scaling (Mixed Precision)</strong>: simulate <code>GradScaler</code>&#x27;s backoff and growth of the loss scale and the skipped steps.</li>
+</ol>
+<p>Related: the optimizers and schedules themselves (SGD with Momentum, Adam Optimizer, Learning Rate Scheduling, Gradient Accumulation) are in <strong>PyTorch Basics</strong>; a full training loop is in <strong>PyTorch Basics</strong> (Training Loop) and <strong>E2E Implementations</strong>.</p></div><h2 class="text-2xl">Practice exercises</h2><ol><li><a href="/problem/optimization/gradient-clipping">Gradient Clipping by Global Norm →</a></li><li><a href="/problem/optimization/loss-scaling">Dynamic Loss Scaling (Mixed Precision) →</a></li></ol><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

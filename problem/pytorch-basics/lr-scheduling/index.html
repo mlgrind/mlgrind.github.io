@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Learning Rate Scheduling - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Learning Rate Scheduling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/lr-scheduling" data-rh="true" />
@@ -100,42 +100,60 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Learning Rate Scheduling - PyTorch Basics","description":"Implement Learning Rate Scheduling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/lr-scheduling","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Learning Rate Scheduling - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Learning Rate Scheduling in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Learning Rate Scheduling</h2>
-<p>A <strong>learning rate schedule</strong> adjusts the learning rate during training. The warmup + cosine decay schedule is standard in modern training (GPT, LLaMA, etc.).</p>
-<h3>Warmup + Cosine Decay</h3>
-<ol>
-<li><strong>Warmup phase</strong> (step &lt; warmup_steps): Linear increase from 0 to base_lr</li>
-<li><strong>Decay phase</strong> (step ≥ warmup_steps): Cosine decay from base_lr to min_lr</li>
-</ol>
-<h3>Formulas</h3>
-<p><strong>Warmup</strong>:</p>
-<pre><code>lr = base_lr * step / warmup_steps
+<p><strong>What you&#x27;ll build:</strong> <code>lr_schedule(step, warmup_steps, total_steps, base_lr, min_lr)</code>, the learning rate at a given step under <strong>linear warmup followed by cosine decay</strong>.</p>
+<h3>Background</h3>
+<p>A fixed learning rate is rarely best. Early in training, Adam&#x27;s second-moment estimates are noisy and large updates can destabilise the model, so the rate is <strong>warmed up</strong> from 0. Later, smaller steps let the model settle into a minimum, so the rate is <strong>decayed</strong>. Warmup + cosine decay is the standard schedule for transformers (GPT-3, LLaMA, ViT).</p>
+<h3>Formula</h3>
+<pre><code class="language-text">if step &lt; warmup_steps:                       # linear warmup, 0 -&gt; base_lr
+    lr = base_lr * step / warmup_steps
+else:                                         # cosine decay, base_lr -&gt; min_lr
+    progress = (step - warmup_steps) / (total_steps - warmup_steps)    # 0 -&gt; 1
+    lr = min_lr + 0.5 * (base_lr - min_lr) * (1 + cos(π * progress))
 </code></pre>
-<p><strong>Cosine Decay</strong>:</p>
-<pre><code>progress = (step - warmup_steps) / (total_steps - warmup_steps)
-lr = min_lr + 0.5 * (base_lr - min_lr) * (1 + cos(π * progress))
-</code></pre>
-<h3>Task</h3>
-<p>Implement a learning rate schedule with linear warmup and cosine decay.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: lr_schedule(step=0, warmup_steps=100, total_steps=1000)
-Output: 0.0</pre><p>At step 0, warmup starts from 0</p></div><div><pre class="overflow-auto">Input: lr_schedule(step=100, warmup_steps=100, total_steps=1000)
-Output: 0.001</pre><p>At end of warmup, lr = base_lr</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<p>At <code>progress = 0</code> the cosine term is 1 (<code>lr = base_lr</code>), at <code>0.5</code> it is 0 (half way between the two), at <code>1</code> it is -1 (<code>lr = min_lr</code>).</p>
+<h3>Inputs</h3>
+<ul>
+<li><code>step</code>: integer in <code>[0, total_steps]</code>.</li>
+<li><code>warmup_steps</code>: integer in <code>[0, total_steps)</code>; 0 means no warmup.</li>
+<li><code>total_steps</code>: integer, the step at which the schedule reaches <code>min_lr</code>.</li>
+<li><code>base_lr</code>: peak rate (default <code>1e-3</code>); <code>min_lr</code>: final rate (default <code>1e-6</code>).</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>A Python <code>float</code>.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li><code>step == warmup_steps</code> belongs to the decay branch and returns exactly <code>base_lr</code>, so the two pieces join continuously.</li>
+<li><code>step == 0</code> returns <code>0.0</code> when there is warmup.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li><strong>PyTorch track:</strong> return a plain float (use <code>math.cos</code>). The function plugs into <code>torch.optim.lr_scheduler.LambdaLR</code>, which the hidden tests use.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>With <code>warmup_steps = 0</code> this equals PyTorch&#x27;s <code>CosineAnnealingLR</code>. Check it.</li>
+<li>What does &quot;warmup-stable-decay&quot; (WSD) change, and why do some LLM runs prefer it?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: [lr_schedule(s, warmup_steps=100, total_steps=1000) for s in (0, 50, 100)]
+Output: [0.0, 0.0005, 0.001]</pre><p>Linear warmup: half way through warmup the rate is half of base_lr.</p></div><div><pre class="overflow-auto">Input: [lr_schedule(s, 100, 1000) for s in (550, 1000)]
+Output: [0.0005005, 1e-06]</pre><p>Step 550 is half way through the decay, so lr = (base_lr + min_lr) / 2; the last step reaches min_lr.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def lr_schedule(step, warmup_steps, total_steps, base_lr=0.001, min_lr=1e-6):
     &quot;&quot;&quot;
-    Compute learning rate with linear warmup and cosine decay.
+    Learning rate with linear warmup and cosine decay.
 
     Args:
-        step: Current training step
-        warmup_steps: Number of warmup steps
-        total_steps: Total number of training steps
+        step: Current training step (0 &lt;= step &lt;= total_steps)
+        warmup_steps: Number of warmup steps (0 for none)
+        total_steps: Step at which the rate reaches min_lr
         base_lr: Peak learning rate (default 0.001)
-        min_lr: Minimum learning rate (default 1e-6)
+        min_lr: Final learning rate (default 1e-6)
 
     Returns:
         Learning rate (float) for the given step
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 7 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

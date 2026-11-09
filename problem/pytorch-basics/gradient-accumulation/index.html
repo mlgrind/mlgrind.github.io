@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>Gradient Accumulation - PyTorch Basics | ML Grind</title>
 <meta name="description" content="Implement Gradient Accumulation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/pytorch-basics/gradient-accumulation" data-rh="true" />
@@ -100,28 +100,58 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Gradient Accumulation - PyTorch Basics","description":"Implement Gradient Accumulation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/pytorch-basics/gradient-accumulation","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Gradient Accumulation - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Gradient Accumulation in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Gradient Accumulation</h2>
-<p>Simulate gradient accumulation — train with large effective batch sizes when GPU memory is limited.</p>
-<h3>How It Works</h3>
-<pre><code>effective_grad = (1/N) * sum(grad_i for i in range(N))
+<p><strong>What you&#x27;ll build:</strong> <code>gradient_accumulation(micro_batches_grads, accumulation_steps)</code>, which combines the gradients of several micro-batches into the gradient of one large batch.</p>
+<h3>Background</h3>
+<p>When a batch of 512 does not fit in GPU memory, you can run 8 micro-batches of 64, add up their gradients, and take <strong>one</strong> optimizer step. If each micro-batch loss is a mean over its samples, the mean of the micro-batch gradients equals the gradient of the full 512-sample batch, so training behaves as if the large batch fit.</p>
+<p>In PyTorch this falls out of a design choice: <code>loss.backward()</code> <strong>adds</strong> into <code>.grad</code> instead of overwriting it (which is also why every loop calls <code>optimizer.zero_grad()</code>):</p>
+<pre><code class="language-python">optimizer.zero_grad()
+for i, (xb, yb) in enumerate(micro_batches):
+    loss = loss_fn(model(xb), yb) / accumulation_steps   # scale so the sum is a mean
+    loss.backward()                                      # adds into p.grad
+optimizer.step()
 </code></pre>
-<h3>Task</h3>
-<p>Given a list of gradient arrays (one per micro-batch), return the averaged gradient.</p></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: grads = [np.array([1,2]), np.array([3,4])], steps = 2
-Output: [2.0, 3.0]</pre><p>Average of [1,2] and [3,4]</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+<h3>Formula</h3>
+<p>For gradients <code>g_1, ..., g_K</code> with <code>K = accumulation_steps</code>:</p>
+<pre><code class="language-text">effective_grad = (1 / K) * (g_1 + g_2 + ... + g_K)
+</code></pre>
+<h3>Inputs</h3>
+<ul>
+<li><code>micro_batches_grads</code>: list of gradient arrays, all with the same shape (any shape).</li>
+<li><code>accumulation_steps</code>: integer <code>K</code>, with <code>1 &lt;= K &lt;= len(micro_batches_grads)</code>.</li>
+</ul>
+<h3>Expected Return Format</h3>
+<p>An array with the same shape as each gradient: the mean of the <strong>first</strong> <code>K</code> gradients.</p>
+<h3>Edge Cases and Conventions</h3>
+<ul>
+<li>Gradients after the first <code>K</code> belong to the next optimizer step and are ignored.</li>
+<li>With <code>K = 1</code> the result is the first gradient itself.</li>
+</ul>
+<h3>Constraints</h3>
+<ul>
+<li><strong>PyTorch track:</strong> the reference solution lets <code>backward()</code> do the accumulation; a <code>torch.stack(...).mean(dim=0)</code> one-liner also passes.</li>
+</ul>
+<h3>Follow-up</h3>
+<ul>
+<li>Accumulation matches a large batch exactly for a mean loss. Which layer breaks that equivalence? (Hint: it normalises with batch statistics.)</li>
+<li>How should the learning rate change if you raise the effective batch size 8 times?</li>
+</ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: gradient_accumulation([np.array([1.0, 2.0]), np.array([3.0, 4.0])], 2)
+Output: array([2., 3.])</pre><p>The mean of [1, 2] and [3, 4].</p></div><div><pre class="overflow-auto">Input: gradient_accumulation([np.array([1.0, 0.0]), np.array([3.0, 2.0]), np.array([100.0, 100.0])], 2)
+Output: array([2., 1.])</pre><p>Only the first accumulation_steps = 2 gradients count; the third belongs to the next step.</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def gradient_accumulation(micro_batches_grads, accumulation_steps):
     &quot;&quot;&quot;
-    Accumulate and average gradients from micro-batches.
+    Average the gradients of the first accumulation_steps micro-batches.
 
     Args:
-        micro_batches_grads: List of gradient arrays
-        accumulation_steps: Number of micro-batches to accumulate
+        micro_batches_grads: List of gradient arrays (all the same shape)
+        accumulation_steps: Number of micro-batches to accumulate (K)
 
     Returns:
-        Averaged gradient array
+        Mean of the first K gradients, same shape as each gradient
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 4 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/pytorch-basics">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {

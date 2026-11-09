@@ -78,13 +78,13 @@
         }
       }(window.location))
     </script>
-    <script type="module" crossorigin src="/assets/index-B7mNgiUD.js"></script>
+    <script type="module" crossorigin src="/assets/index-f4E9Zp81.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CAvrG4kB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-BVEjEmdA.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-D5Ow2JlE.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-DEiZF9OM.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Cb50ODRe.css">
   <title>GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency | ML Grind</title>
 <meta name="description" content="Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.github.io/problem/post-training/grpo-advantages" data-rh="true" />
@@ -99,47 +99,62 @@
 <meta name="twitter:image" content="https://mlgrind.github.io/og-image.png" />
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"GRPO: Group-Relative Advantages & Objective - Post-training & Efficiency","description":"Implement GRPO: Group-Relative Advantages & Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.github.io/problem/post-training/grpo-advantages","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GRPO: Group Relative Policy Optimization</h2>
-<p>GRPO (DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a <strong>group</strong> of G responses, score each with a reward model (or a verifier), and use the reward <strong>relative to the group</strong> as the advantage. The group mean plays the role of the critic&#x27;s baseline.</p>
-<h3>Step 1: group-normalized advantages</h3>
-<p>For prompt b with rewards r_{b,1..G}:</p>
-<pre><code>A_{b,i} = (r_{b,i} - mean_i(r_{b,:})) / (std_i(r_{b,:}) + eps)
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">GRPO: Group-Relative Advantages &amp; Objective - Post-training &amp; Efficiency</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement GRPO: Group-Relative Advantages &amp; Objective in Python with NumPy. hard exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>GRPO: Group-Relative Advantages &amp; Objective</h2>
+<h3>What you&#x27;ll build</h3>
+<p>Two functions: <code>group_advantages</code>, which turns each prompt&#x27;s group of rewards into normalized advantages, and <code>grpo_objective</code>, the clipped, masked GRPO objective with a k3 KL penalty.</p>
+<h3>Background</h3>
+<p>GRPO (Group Relative Policy Optimization, DeepSeekMath, Shao et al. 2024) is PPO without a value network. For each prompt, sample a <strong>group</strong> of G responses and score each one with a reward model or a verifier (e.g. 1 if the final answer is correct, 0 otherwise). The group mean plays the role of the critic&#x27;s baseline, so there is no critic to train. Compared with <strong>PPO-RLHF Objective</strong> (Reinforcement Learning), the KL to the reference model is a separate term in the objective rather than part of the reward, and it uses the k3 estimator, which is never negative (compare <strong>KL Divergence Penalty (RLHF)</strong>).</p>
+<h3>Formula</h3>
+<p><strong>Step 1: group-normalized advantages.</strong> For prompt b with rewards r_{b,1..G}:</p>
+<pre><code class="language-text">A_{b,i} = (r_{b,i} - mean_i r_{b,:}) / (std_i r_{b,:} + eps)
 </code></pre>
 <ul>
-<li><code>std</code> is the <strong>population</strong> standard deviation (ddof = 0, i.e. <code>np.std</code> default; in PyTorch <code>unbiased=False</code>)</li>
-<li><code>eps = 1e-8</code>, so a group where every response gets the same reward has advantage 0 everywhere (no learning signal, no division by zero)</li>
+<li><code>std</code> is the <strong>population</strong> standard deviation (ddof = 0: <code>np.std</code>&#x27;s default; PyTorch <code>unbiased=False</code>)</li>
 <li>This is outcome supervision: every token of response i gets the same advantage A_{b,i}</li>
 </ul>
-<h3>Step 2: per-token clipped surrogate with a KL term</h3>
-<p>For token t of response i (log-probs of the sampled token):</p>
-<pre><code>ratio = exp(logp - old_logp)
-surr  = min(ratio * A, clip(ratio, 1 - ε, 1 + ε) * A)
-
-# k3 estimator of KL(π_θ || π_ref), always &gt;= 0
-kl    = exp(ref_logp - logp) - (ref_logp - logp) - 1
-
-per_token = surr - β * kl
+<p><strong>Step 2: per-token clipped surrogate and k3 KL.</strong> For token t of response i (log-probs of the sampled token):</p>
+<pre><code class="language-text">ratio = exp(logp - old_logp)
+surr  = min(ratio · A, clip(ratio, 1 - ε, 1 + ε) · A)
+d     = ref_logp - logp
+kl    = exp(d) - d - 1                 k3 estimate of KL(π_θ ‖ π_ref), always ≥ 0
+per_token = surr - β · kl
 </code></pre>
-<h3>Step 3: averaging (as in the DeepSeekMath objective)</h3>
-<pre><code>J = mean over (b, i) of [ (1 / |o_i|) * Σ_t mask_t * per_token_t ]
+<p><strong>Step 3: average</strong> (as in the DeepSeekMath objective):</p>
+<pre><code class="language-text">J = mean over all (b, i) of [ Σ_t mask_t · per_token_t / Σ_t mask_t ]
 </code></pre>
-<p>Average over each response&#x27;s <strong>valid</strong> tokens first (<code>mask</code> is 1 for real tokens and 0 for padding, |o_i| = mask.sum()), then average over all B·G responses. <code>&#x27;mean_kl&#x27;</code> uses the same averaging applied to <code>kl</code>. The training loss is <code>-J</code>.</p>
-<h3>Shapes</h3>
+<p>First average over each response&#x27;s <strong>valid</strong> tokens (mask = 1 for real tokens, 0 for padding), then over all B·G responses. <code>&#x27;mean_kl&#x27;</code> uses the same averaging applied to <code>kl</code>. The training loss is -J.</p>
+<h3>Inputs</h3>
 <ul>
-<li><code>rewards</code>: (B, G)</li>
-<li><code>logp</code>, <code>old_logp</code>, <code>ref_logp</code>, <code>mask</code>: (B, G, T)</li>
+<li><code>rewards</code>: (B, G) floats, one scalar per response</li>
+<li><code>logp</code>, <code>old_logp</code>, <code>ref_logp</code>: (B, G, T) token log-probs under the current policy, the policy that sampled the data, and the frozen reference model</li>
+<li><code>mask</code>: (B, G, T) of 0/1, with at least one valid token per response</li>
+<li><code>epsilon</code> (clip range, default 0.2), <code>beta</code> (KL coefficient, default 0.04), <code>eps</code> (std epsilon, default 1e-8)</li>
 </ul>
-<h3>Expected Return Format</h3>
-<p><code>group_advantages(rewards, eps=1e-8)</code> returns the (B, G) array of advantages.</p>
+<h3>Expected return format</h3>
+<p><code>group_advantages(rewards, eps=1e-8)</code> returns the (B, G) float array of advantages.</p>
 <p><code>grpo_objective(...)</code> returns a dictionary with these keys:</p>
 <ul>
-<li><code>&#x27;advantages&#x27;</code>: (B, G) array from step 1</li>
+<li><code>&#x27;advantages&#x27;</code>: the (B, G) array from step 1</li>
 <li><code>&#x27;objective&#x27;</code>: J as a Python float (to maximize)</li>
-<li><code>&#x27;loss&#x27;</code>: <code>-J</code> as a Python float (to minimize)</li>
-<li><code>&#x27;mean_kl&#x27;</code>: averaged k3 KL as a Python float</li>
+<li><code>&#x27;loss&#x27;</code>: -J as a Python float (to minimize)</li>
+<li><code>&#x27;mean_kl&#x27;</code>: the masked, averaged k3 KL as a Python float</li>
+</ul>
+<h3>Edge cases and conventions</h3>
+<ul>
+<li>A group where every response has the same reward gets advantage 0 everywhere: no learning signal, and no division by zero thanks to eps.</li>
+<li>Values at padded positions (mask = 0) must not affect any output.</li>
+<li>On-policy with no drift (logp = old_logp = ref_logp), ratio = 1 and kl = 0, so J is the mean advantage, which is 0.</li>
+</ul>
+<h3>Constraints</h3>
+<p>NumPy only, fully vectorized (no Python loops over B, G or T).</p>
+<h3>Follow-up</h3>
+<ul>
+<li>Dr. GRPO argues that dividing by the response length (1/|o_i|) and by the group std biases training toward particular lengths and prompts. What changes if you drop them?</li>
+<li>How large should G be? What happens to the advantage estimates with G = 2?</li>
 </ul></div><h2 class="text-2xl">Examples</h2><div><pre class="overflow-auto">Input: group_advantages([[1.0, 0.0, 0.0, 1.0]])
-Output: [[1.0, -1.0, -1.0, 1.0]]</pre><p>mean 0.5, std 0.5: correct answers get +1, wrong ones -1</p></div><div><pre class="overflow-auto">Input: logp == old_logp == ref_logp
-Output: {&#x27;objective&#x27;: 0.0, &#x27;mean_kl&#x27;: 0.0, ...}</pre><p>ratio = 1 and KL = 0, so J is the mean advantage, which is 0 within every group</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
+Output: [[1.0, -1.0, -1.0, 1.0]]</pre><p>Mean 0.5, population std 0.5: correct answers get +1, wrong ones -1</p></div><div><pre class="overflow-auto">Input: group_advantages([[0.5, 0.5, 0.5], [1.0, 2.0, 3.0]])
+Output: [[0.0, 0.0, 0.0], [-1.224745, 0.0, 1.224745]]</pre><p>Identical rewards give 0 (no NaN); the second group has std √(2/3) = 0.8165</p></div><div><pre class="overflow-auto">Input: grpo_objective(logp=[[[0.0], [0.0]]], old_logp=[[[-1.0], [0.0]]], ref_logp=[[[0.0], [0.0]]], rewards=[[1.0, 0.0]], mask=[[[1], [1]]], epsilon=0.2, beta=0.0)
+Output: {&#x27;objective&#x27;: 0.1, &#x27;loss&#x27;: -0.1, &#x27;mean_kl&#x27;: 0.0, ...}</pre><p>A = [+1, -1]; response 1 has ratio e ≈ 2.72, clipped to 1.2; response 2 has ratio 1, so J = (1.2 - 1) / 2 = 0.1</p></div><h2 id="practice" class="text-2xl">Practice in Python</h2><pre class="overflow-auto p-4 bg-gray-100 dark:bg-dark-800">import numpy as np
 
 def group_advantages(rewards, eps=1e-8):
     &quot;&quot;&quot;
@@ -172,11 +187,13 @@ def grpo_objective(logp, old_logp, ref_logp, rewards, mask,
         eps: std epsilon for the advantages
 
     Returns:
-        dict with &#x27;advantages&#x27; (B, G), &#x27;objective&#x27;, &#x27;loss&#x27;, &#x27;mean_kl&#x27; (floats)
+        dict with &#x27;advantages&#x27; (B, G) array, and &#x27;objective&#x27;, &#x27;loss&#x27; (= -objective)
+        and &#x27;mean_kl&#x27; as Python floats; token terms are averaged over each
+        response&#x27;s valid tokens, then over all responses
     &quot;&quot;&quot;
     # Your code here
     pass
-</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 5 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
+</pre><p>The interactive editor loads with Python and NumPy. Run your implementation against 6 tests, or use the progressive hints.</p><p><a href="/section/post-training">More exercises in this section →</a></p><noscript><p>JavaScript is required to execute Python, save progress, and use the interactive editor. Exercise descriptions and examples remain available here.</p></noscript></main><footer class="p-6 text-sm"><a href="https://itzsid.github.io/" target="_blank" rel="noopener noreferrer">Siddharth Choudhary</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/mlgrind/mlgrind.github.io">GitHub</a></footer></div></div>
     <script>
       // Apply theme before React loads to prevent flash
       (function() {
