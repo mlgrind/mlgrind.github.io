@@ -9,6 +9,7 @@ export const LECTURES = [
   'transformers',
   'numpy-fundamentals',
   'deep-learning',
+  'neural-networks',
 ];
 
 type Props = { manifest: LectureManifest | null };
