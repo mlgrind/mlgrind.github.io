@@ -114,16 +114,16 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 06: Supervised Learning
 
 **URL**: /section/supervised-learning
-**Summary**: Implement core supervised learning algorithms from scratch.
+**Summary**: Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees.
 **Problems** (12):
 
-1. **Sigmoid Function** (`/problem/supervised-learning/logistic-regression`) — easy
+1. **Sigmoid for Logistic Regression** (`/problem/supervised-learning/logistic-regression`) — easy
 2. **Binary Cross-Entropy Loss** (`/problem/supervised-learning/binary-cross-entropy`) — easy
 3. **Hinge Loss** (`/problem/supervised-learning/hinge-loss`) — easy
-4. **Gini Impurity** (`/problem/supervised-learning/decision-tree-split`) — medium
+4. **Gini Impurity for Decision-Tree Splits** (`/problem/supervised-learning/decision-tree-split`) — medium
 5. **Linear Regression with Gradient Descent** (`/problem/supervised-learning/linear-regression-gd`) — medium
 6. **Logistic Regression with Gradient Descent** (`/problem/supervised-learning/logistic-regression-full`) — medium
-7. **Linear SVM with Gradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
+7. **Linear SVM with Subgradient Descent** (`/problem/supervised-learning/linear-svm`) — medium
 8. **k-Nearest Neighbours Classifier** (`/problem/supervised-learning/knn-classifier`) — medium
 9. **Gaussian Naive Bayes** (`/problem/supervised-learning/naive-bayes`) — medium
 10. **Ridge & Lasso Regression** (`/problem/supervised-learning/ridge-lasso`) — hard
