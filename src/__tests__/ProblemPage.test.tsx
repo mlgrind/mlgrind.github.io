@@ -229,7 +229,7 @@ describe("section default track", () => {
 describe("track examples", () => {
   const path = "/problem/pytorch-basics/tensor-creation";
   const problem = getProblemById("tensor-creation")!;
-  const showExamples = () => fireEvent.click(screen.getByRole("button", { name: "Examples" }));
+  const showExamples = () => fireEvent.click(screen.getByRole("tab", { name: "Examples" }));
   let saved: Pick<typeof problem, "examples"> & { torch: typeof problem.examples | undefined };
   beforeEach(() => {
     saved = { examples: problem.examples, torch: problem.pytorch!.examples };
