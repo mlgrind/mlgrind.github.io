@@ -43,6 +43,12 @@ export default function Footer({ onOpenFeedback }: { onOpenFeedback?: () => void
               Privacy
             </Link>
             <a
+              href="mailto:sid@mlgrind.dev"
+              className="text-gray-500 dark:text-dark-200 hover:text-gray-700 dark:hover:text-dark-100 transition-colors"
+            >
+              Contact
+            </a>
+            <a
               href="https://github.com/mlgrind/mlgrind.github.io"
               target="_blank"
               rel="noopener noreferrer"

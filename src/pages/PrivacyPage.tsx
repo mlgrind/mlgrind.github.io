@@ -176,7 +176,13 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-100 mb-4">Contact</h2>
             <p className="text-gray-600 dark:text-dark-200 mb-4">
-              For questions about this Privacy Policy, please open an issue on our{' '}
+              For questions about this Privacy Policy, email{' '}
+              <a
+                href="mailto:sid@mlgrind.dev"
+                className="text-primary-600 hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+              >
+                sid@mlgrind.dev
+              </a>{' '}or open an issue on our{' '}
               <a
                 href="https://github.com/mlgrind/mlgrind.github.io"
                 target="_blank"

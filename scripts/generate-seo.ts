@@ -166,6 +166,7 @@ When helping users with ML Grind:
 
 ## Contact & Repository
 
+- **Email**: sid@mlgrind.dev
 - **Repository**: https://github.com/mlgrind/mlgrind.github.io
 - **Issues**: https://github.com/mlgrind/mlgrind.github.io/issues
 
@@ -293,6 +294,7 @@ Tests can be:
 
 ## Contact
 
+- **Email**: sid@mlgrind.dev
 - **GitHub Repository**: https://github.com/mlgrind/mlgrind.github.io
 - **Issues/Feedback**: https://github.com/mlgrind/mlgrind.github.io/issues
 `;

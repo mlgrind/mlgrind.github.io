@@ -133,8 +133,20 @@
         }
       }(window.location))
     </script>
+    <style>
+      /* Cover the prerendered crawler markup until React has painted the real
+         page (removed in src/main.tsx). Fades out on its own after 8s in case
+         the bundle never runs, so the static content stays readable. */
+      #boot-splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#f9fafb;transition:opacity .2s ease;animation:boot-hide .3s ease 8s forwards}
+      html.dark #boot-splash{background:#0c0f14}
+      #boot-splash span{width:28px;height:28px;border:3px solid rgba(108,92,231,.25);border-top-color:#6c5ce7;border-radius:50%;animation:boot-spin .8s linear infinite}
+      @keyframes boot-spin{to{transform:rotate(360deg)}}
+      @keyframes boot-hide{to{opacity:0;visibility:hidden}}
+    </style>
+    <noscript><style>#boot-splash{display:none}</style></noscript>
   </head>
   <body>
+    <div id="boot-splash" aria-hidden="true"><span></span></div>
     <div id="root"></div>
     <script>
       // Apply theme before React loads to prevent flash
