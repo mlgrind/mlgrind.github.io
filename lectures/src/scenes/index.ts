@@ -2,7 +2,7 @@ import type React from 'react';
 import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
-import { supervised-learning } from './data-preprocessing';
+import { DataPreprocessingScenes } from './data-preprocessing';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -22,5 +22,5 @@ export type SceneComponent = React.FC<SceneProps>;
  */
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
-  'data-preprocessing': supervised-learning,
+  'data-preprocessing': DataPreprocessingScenes,
 };
