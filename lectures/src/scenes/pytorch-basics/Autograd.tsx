@@ -77,16 +77,16 @@ export const AutogradScene: React.FC<SceneProps> = ({ cues, durationInFrames }) 
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 110, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: 50 }}>
           <div style={{ opacity: ease(frame, pB[0], 14) }}>
-            <Matrix data={LX} digits={0} cellW={70} cellH={54} fontSize={26} label="X" labelSize={40} color={signedColor(3, 0.4)} />
+            <Matrix data={LX} digits={0} cellW={70} cellH={54} fontSize={26} label="X" labelSize={40} shapeSize={22} color={signedColor(3, 0.4)} />
           </div>
           <div style={{ opacity: ease(frame, gyAt, 14) }}>
-            <Matrix data={LG} digits={0} cellW={70} cellH={54} fontSize={26} label="∂L/∂Y" labelSize={40} color={signedColor(3, 0.4)} />
+            <Matrix data={LG} digits={0} cellW={70} cellH={54} fontSize={26} label="∂L/∂Y" labelSize={40} shapeSize={22} color={signedColor(3, 0.4)} />
           </div>
           <div style={{ opacity: ease(frame, gwAt, 14), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <Matrix data={GRAD_W} digits={0} cellW={74} cellH={54} fontSize={26} label="∂L/∂W = X^T ∂L/∂Y" labelSize={36} color={() => rgba(C.amber, 0.3)} />
+            <Matrix data={GRAD_W} digits={0} cellW={74} cellH={54} fontSize={26} label="∂L/∂W = X^T ∂L/∂Y" labelSize={36} shapeSize={22} color={() => rgba(C.amber, 0.3)} />
           </div>
           <div style={{ opacity: ease(frame, gbAt, 14) }}>
-            <Matrix data={[GRAD_B]} digits={0} cellW={74} cellH={54} fontSize={26} label="∂L/∂b = Σ_{rows}" labelSize={36} color={() => rgba(C.teal, 0.3)} />
+            <Matrix data={[GRAD_B]} digits={0} cellW={74} cellH={54} fontSize={26} label="∂L/∂b = Σ_{rows}" labelSize={36} shapeSize={22} color={() => rgba(C.teal, 0.3)} />
           </div>
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 470, textAlign: 'center', fontFamily: F.mono, fontSize: 28, color: C.muted, opacity: ease(frame, gwAt + 20, 14) }}>

@@ -44,7 +44,7 @@ export const MatMulScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =>
             data={QTY}
             digits={0}
             label="quantities"
-            labelSize={38}
+            labelSize={38} shapeSize={22}
             rowLabels={SHOPPERS}
             colLabels={ITEMS}
             cellW={110}
@@ -60,7 +60,7 @@ export const MatMulScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =>
             data={PRICE}
             digits={0}
             label="prices"
-            labelSize={38}
+            labelSize={38} shapeSize={22}
             rowLabels={ITEMS}
             colLabels={STORES}
             cellW={124}
@@ -70,7 +70,7 @@ export const MatMulScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =>
             reveal={(_, j) => (focusing ? (j === 0 ? 1 : 0.35) : 1)}
           />
           <Tex size={60} color={C.muted} style={{ marginTop: 150 }}>=</Tex>
-          <Matrix data={BILL} digits={0} label="bill" labelSize={38} colLabels={STORES} rowLabels={SHOPPERS} cellW={124} fontSize={28} axisLabelSize={22} color={() => rgba(C.amber, 0.3)} reveal={billReveal} />
+          <Matrix data={BILL} digits={0} label="bill" labelSize={38} shapeSize={22} colLabels={STORES} rowLabels={SHOPPERS} cellW={124} fontSize={28} axisLabelSize={22} color={() => rgba(C.amber, 0.3)} reveal={billReveal} />
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 440, display: 'flex', justifyContent: 'center', opacity: ease(frame, dotAt + 20, 14) * (frame < matchAt ? 1 : 0) }}>
           <span style={{ fontFamily: F.mono, fontSize: 34, color: C.text }}>

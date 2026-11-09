@@ -86,6 +86,8 @@ export interface MatrixProps {
   label?: string;
   labelSize?: number;
   shape?: boolean;
+  /** font size of the rows×cols tag next to the label (default 16) */
+  shapeSize?: number;
   rowLabels?: string[];
   colLabels?: string[];
   /** per-cell reveal 0..1 */
@@ -110,6 +112,7 @@ export const Matrix: React.FC<MatrixProps> = ({
   label,
   labelSize = 44,
   shape = true,
+  shapeSize = 16,
   rowLabels,
   colLabels,
   reveal,
@@ -138,7 +141,7 @@ export const Matrix: React.FC<MatrixProps> = ({
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
           <Tex size={labelSize}>{label}</Tex>
           {shape && (
-            <span style={{ fontFamily: F.mono, fontSize: 16, color: C.dim }}>
+            <span style={{ fontFamily: F.mono, fontSize: shapeSize, color: C.dim }}>
               {rows}×{cols}
             </span>
           )}

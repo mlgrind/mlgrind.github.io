@@ -29,20 +29,20 @@ export const ModulesScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =
     <>
       <Layer opacity={windowed(frame, pA[0], pA[1])}>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 0, display: 'flex', justifyContent: 'center', opacity: ease(frame, ownAt, 14) }}>
-          <Code size={28}>{'class Linear(nn.Module):  self.weight, self.bias   def forward(x): return x @ W + b'}</Code>
+          <Code size={28}>{'class Linear(nn.Module):   # parameters self.W, self.b\n    def forward(self, x): return x @ self.W + self.b'}</Code>
         </div>
-        <div style={{ position: 'absolute', left: 0, right: 0, top: 130, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 26 }}>
-          <Matrix data={MX} {...mat} digits={1} label="x" labelSize={36} color={signedColor(2, 0.4)} />
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 160, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 26 }}>
+          <Matrix data={MX} {...mat} digits={1} label="x" labelSize={36} shapeSize={22} color={signedColor(2, 0.4)} />
           <Arrow width={150} label="Linear(3, 2)" progress={ease(frame, linAt, 14)} />
           <div style={{ opacity: ease(frame, linAt + 10, 14) }}>
-            <Matrix data={LIN_OUT} {...mat} label="xW + b" labelSize={36} color={(v) => (v < 0 && reluP > 0 ? rgba(C.rose, 0.4 * reluP) : signedColor(1.5, 0.4)(v, 0, 0))} />
+            <Matrix data={LIN_OUT} {...mat} label="xW + b" labelSize={36} shapeSize={22} color={(v) => (v < 0 && reluP > 0 ? rgba(C.rose, 0.4 * reluP) : signedColor(1.5, 0.4)(v, 0, 0))} />
           </div>
           <Arrow width={120} label="ReLU" progress={ease(frame, reluAt, 14)} />
           <div style={{ opacity: ease(frame, reluAt + 10, 14) }}>
-            <Matrix data={RELU_OUT} {...mat} label="max(0, ·)" labelSize={36} color={(_, i, j) => (LIN_OUT[i][j] < 0 ? rgba(C.text, 0.03) : rgba(C.teal, 0.3))} textColor={(_, i, j) => (LIN_OUT[i][j] < 0 ? C.dim : undefined)} />
+            <Matrix data={RELU_OUT} {...mat} label="max(0, ·)" labelSize={36} shapeSize={22} color={(_, i, j) => (LIN_OUT[i][j] < 0 ? rgba(C.text, 0.03) : rgba(C.teal, 0.3))} textColor={(_, i, j) => (LIN_OUT[i][j] < 0 ? C.dim : undefined)} />
           </div>
         </div>
-        <div style={{ position: 'absolute', left: 0, right: 0, top: 520, textAlign: 'center', fontFamily: F.mono, fontSize: 30, color: C.muted, opacity: ease(frame, stackAt, 14) }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 550, textAlign: 'center', fontFamily: F.mono, fontSize: 30, color: C.muted, opacity: ease(frame, stackAt, 14) }}>
           model = nn.Sequential(nn.Linear(3, 2), nn.ReLU())
         </div>
       </Layer>

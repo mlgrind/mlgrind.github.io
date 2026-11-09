@@ -37,7 +37,7 @@ export const BatchesScene: React.FC<SceneProps> = ({ cues, durationInFrames }) =
     <Layer opacity={windowed(frame, start, durationInFrames + 30)}>
       <div style={{ opacity: 1 - restO }}>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 0, display: 'flex', justifyContent: 'center', opacity: ease(frame, start + 10, 14) }}>
-          <Code size={26}>{`DataLoader(dataset, batch_size=${BATCH}, shuffle=True, generator=torch.Generator().manual_seed(0))`}</Code>
+          <Code size={26}>{`DataLoader(dataset, batch_size=${BATCH}, shuffle=True, generator=g)`}</Code>
         </div>
         <div style={{ position: 'absolute', left: x0 - 150, top: 196, fontFamily: F.body, fontSize: 24, color: C.muted }}>index</div>
         <div style={{ position: 'absolute', left: x0 - 150, top: 300, fontFamily: F.body, fontSize: 24, color: C.muted, opacity: pair }}>x, y</div>

@@ -50,7 +50,7 @@ export const ArraySumScene: React.FC<SceneProps> = ({ cues, durationInFrames }) 
                   return (
                     <g key={i}>
                       <rect x={s.x(i) - bw / 2} y={Math.min(y0, y1)} width={bw} height={Math.abs(y1 - y0)} rx={5} fill={v >= 0 ? C.violet : C.rose} opacity={active ? 0.95 : 0.45} />
-                      <text x={s.x(i)} y={v >= 0 ? y1 - 12 : y1 + 30} fill={C.text} fontFamily={F.mono} fontSize={24} textAnchor="middle" opacity={p}>
+                      <text x={s.x(i)} y={s.h + 40} fill={v >= 0 ? C.violetLight : C.rose} fontFamily={F.mono} fontSize={28} textAnchor="middle" opacity={p}>
                         {fmt(v, 0)}
                       </text>
                     </g>
