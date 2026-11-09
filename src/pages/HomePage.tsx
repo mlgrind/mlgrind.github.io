@@ -94,9 +94,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Interview problems by company */}
-      <CompanyStrip />
-
       {/* Dashboard — only renders when user has progress */}
       <Dashboard />
 
@@ -152,10 +149,10 @@ export default function HomePage() {
             );
           })}
         </div>
-        <p className="mt-8 text-sm text-gray-500 dark:text-dark-200">
-          Preparing for a specific company?{' '}
-          <Link to="/companies" className="text-primary-600 dark:text-primary-300 hover:underline">Browse problems reported in interviews →</Link>
-        </p>
+        {/* Interview problems by company, after the last group (Capstone) */}
+        <div className="mt-10">
+          <CompanyStrip />
+        </div>
       </section>
     </div>
   );
@@ -168,7 +165,7 @@ function CompanyStrip() {
   return (
     <section
       aria-labelledby="companies-heading"
-      className="mb-10 rounded-xl border border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 p-4 sm:p-5"
+      className="rounded-xl border border-gray-200 dark:border-dark-500 bg-white dark:bg-dark-800 p-4 sm:p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
         <h2 id="companies-heading" className="text-base font-semibold text-gray-900 dark:text-dark-100">
