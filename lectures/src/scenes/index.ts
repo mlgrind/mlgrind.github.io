@@ -2,6 +2,7 @@ import type React from 'react';
 import type { Cues } from '../lib/anim';
 import type { LectureManifest, ManifestChapter, ManifestSentence } from '../types';
 import { TransformersScenes } from './transformers';
+import { DeepLearningScenes } from './deep-learning';
 
 export interface SceneProps {
   chapter: ManifestChapter;
@@ -21,4 +22,5 @@ export type SceneComponent = React.FC<SceneProps>;
  */
 export const SCENES: Record<string, SceneComponent[]> = {
   transformers: TransformersScenes,
+  'deep-learning': DeepLearningScenes,
 };
