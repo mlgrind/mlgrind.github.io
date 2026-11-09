@@ -234,7 +234,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 14: Transformer Architecture
 
 **URL**: /section/transformers
-**Summary**: Master attention, positional encoding, and modern LLM architecture.
+**Summary**: Build the Transformer from scratch: attention (multi-head, grouped-query, sliding-window), positional encodings, LayerNorm, tokenizers and the attention backward pass.
 **Problems** (11):
 
 1. **Scaled Dot-Product Attention** (`/problem/transformers/scaled-dot-product-attention`) — medium
@@ -254,7 +254,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 15: LLM Generation & Decoding
 
 **URL**: /section/llm-generation
-**Summary**: Master decoding strategies: temperature, sampling, KV cache, beam search, and speculative decoding.
+**Summary**: Turn logits into text: temperature, top-k and nucleus sampling, repetition penalty, the KV cache, beam search and speculative decoding.
 **Problems** (7):
 
 1. **Temperature Scaling** (`/problem/llm-generation/llm-temperature-scaling`) — easy
@@ -270,7 +270,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 16: LLM Internals
 
 **URL**: /section/llm-internals
-**Summary**: SwiGLU blocks, online softmax (FlashAttention), mixture-of-experts routing and perplexity: how modern LLMs are built and measured.
+**Summary**: How production LLMs are built and measured: RMSNorm + SwiGLU blocks, FlashAttention's online softmax, mixture-of-experts routing and perplexity.
 **Problems** (4):
 
 1. **SwiGLU Feed-Forward Block (LLaMA MLP)** (`/problem/llm-internals/rmsnorm-swiglu`) — medium
@@ -283,7 +283,7 @@ ML Grind is a LeetCode-style web application for learning machine learning throu
 ### Section 17: Representation Learning & Retrieval
 
 **URL**: /section/representation-learning
-**Summary**: Contrastive learning, embedding search and retrieval for RAG.
+**Summary**: Learn and use embeddings: the CLIP contrastive loss, cosine top-k vector search, and BM25 + embedding hybrid retrieval for RAG.
 **Problems** (3):
 
 1. **CLIP Contrastive Loss (InfoNCE)** (`/problem/representation-learning/infonce-loss`) — medium
