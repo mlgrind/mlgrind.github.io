@@ -45,7 +45,7 @@ The platform covers 21 learning sections with 149 problems:
 - **18 Generative Models** (`/section/generative-models`) — Build the maths behind VAEs, VQ-VAEs, diffusion, classifier-free guidance and flow matching, from Gaussian KL to a full sampling step. _(9 problems)_
 - **19 Reinforcement Learning** (`/section/reinforcement-learning`) — Master RL fundamentals from Q-learning to policy gradients. _(15 problems)_
 - **20 Post-training & Efficiency** (`/section/post-training`) — GRPO for verifiable rewards and int8 quantization: turning a base model into a useful, cheap one. _(2 problems)_
-- **21 End-to-End Implementations** (`/section/e2e-implementations`) — Build complete ML models from scratch. _(9 problems)_
+- **21 End-to-End Implementations** (`/section/e2e-implementations`) — Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt. _(9 problems)_
 
 ## Learning Paths
 

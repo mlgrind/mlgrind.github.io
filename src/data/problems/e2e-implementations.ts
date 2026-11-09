@@ -7,59 +7,82 @@ export const e2eImplementationProblems: Problem[] = [
     section: 'e2e-implementations',
     difficulty: 'hard',
     description: `
-## End-to-End 2-Layer MLP
+## End-to-End 2-Layer MLP with Backprop
 
-Implement a complete 2-layer MLP with forward pass, backward pass, and training loop.
+### What you'll build
+A complete 2-layer classifier in plain NumPy: forward pass, softmax cross-entropy, hand-derived backward pass, an SGD step and a training loop. This is the "implement backprop from scratch" interview question.
 
 ### Architecture
-\`\`\`
-Input (batch, input_dim)
-  ↓
-Linear(input_dim, hidden_dim) + ReLU
-  ↓
-Linear(hidden_dim, output_dim)
-  ↓
-Softmax + Cross-Entropy Loss
-\`\`\`
+| Step | Operation | Output shape |
+|------|-----------|--------------|
+| input | \`X\` | \`(batch, input_dim)\` |
+| layer 1 | \`z1 = X @ W1 + b1\` | \`(batch, hidden_dim)\` |
+| activation | \`h = relu(z1)\` | \`(batch, hidden_dim)\` |
+| layer 2 | \`logits = h @ W2 + b2\` | \`(batch, output_dim)\` |
+| loss | \`mean_i −log softmax(logits)[i, y_i]\` | scalar |
 
-### Forward Pass
+The constructor (given) uses He initialization, \`W ~ N(0, 2 / fan_in)\`, with \`np.random.seed(42)\`, and zero biases.
+
+### Backward pass
+With the loss averaged over the batch \`N\`, softmax and cross-entropy combine into a simple gradient:
 \`\`\`python
-h = relu(X @ W1 + b1)
-logits = h @ W2 + b2
-loss = cross_entropy(softmax(logits), y)
+d_logits = (probs - y_onehot) / N         # (N, output_dim)
+dW2 = h.T @ d_logits                      # (hidden_dim, output_dim)
+db2 = d_logits.sum(axis=0)                # (output_dim,)
+d_h = d_logits @ W2.T                     # (N, hidden_dim)
+d_z1 = d_h * (z1 > 0)                     # ReLU passes gradient only where z1 > 0
+dW1 = X.T @ d_z1                          # (input_dim, hidden_dim)
+db1 = d_z1.sum(axis=0)                    # (hidden_dim,)
 \`\`\`
 
-### Backward Pass (Chain Rule)
-\`\`\`python
-# Output layer
-d_logits = softmax(logits) - y_onehot  # (batch, output_dim)
-d_W2 = h.T @ d_logits
-d_b2 = d_logits.sum(axis=0)
+### Method contract
+| Method | Does | Returns |
+|--------|------|---------|
+| \`forward(X)\` | computes logits and stores \`self.cache = {'X', 'z1', 'h', 'logits'}\` | \`logits (batch, output_dim)\` |
+| \`compute_loss(logits, y)\` | softmax (max-subtracted) + mean cross-entropy; stores \`self.cache['probs']\` | float |
+| \`backward(y)\` | uses the cache from \`forward\` and \`compute_loss\` | dict \`{'dW1', 'db1', 'dW2', 'db2'}\`, each shaped like its parameter |
+| \`train_step(X, y, lr=0.01)\` | forward, loss, backward, then \`param -= lr * grad\` for all four | the loss **before** the update (float) |
+| \`train_mlp(X_train, y_train, epochs=100, lr=0.01)\` | builds \`MLP(input_dim, 64, num_classes)\` (classes = \`len(np.unique(y_train))\`) and calls \`train_step\` on the full batch each epoch | \`(model, losses)\`, with \`len(losses) == epochs\` |
 
-# Hidden layer
-d_h = d_logits @ W2.T
-d_relu = d_h * (h > 0)  # ReLU derivative
-d_W1 = X.T @ d_relu
-d_b1 = d_relu.sum(axis=0)
-\`\`\`
+### Inputs
+- \`X\`: float array \`(batch, input_dim)\`
+- \`y\`: int array \`(batch,)\` with class ids in \`[0, output_dim)\`
 
-### Task
-Implement forward, backward, and training step.
+### Edge cases and conventions
+- Clip the picked probabilities to \`[1e-15, 1]\` before the log (or use log-softmax) so a confident wrong prediction does not give \`log(0)\`.
+- The ReLU derivative at exactly 0 is taken as 0 (\`z1 > 0\`).
+
+### Constraints
+NumPy only; vectorise over the batch (no per-example loops).
+
+### Follow-up
+- How would you verify the gradients? (Finite differences: \`(L(w + ε) − L(w − ε)) / 2ε\`.)
+- Add L2 weight decay or momentum; what changes in \`backward\` and \`train_step\`?
     `,
     examples: [
       {
-        input: 'MLP(784, 128, 10) on MNIST-like data',
-        output: 'Trained model with decreasing loss',
-        explanation: 'Full training loop',
+        input: 'm = MLP(3, 2, 2); X = np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]); m.forward(X)',
+        output: 'array([[0.0, 0.0], [0.7148, 2.4115]])',
+        explanation: 'Both hidden units are negative for row 0, so ReLU zeroes them and the logits equal b2 = 0',
+      },
+      {
+        input: 'm.compute_loss(m.cache["logits"], np.array([1, 0]))',
+        output: '1.2791',
+        explanation: 'Row 0: −log 0.5 = 0.6931; row 1: −log softmax([0.7148, 2.4115])[0] = 1.8650; the mean is 1.2791',
+      },
+      {
+        input: '[m.train_step(X, np.array([1, 0]), lr=0.5) for _ in range(3)]',
+        output: '[1.2791, 0.4081, 0.3437]',
+        explanation: 'Each value is the loss before that step, so the first equals the loss above',
       },
     ],
     starterCode: `import numpy as np
 
 class MLP:
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int):
-        """Initialize 2-layer MLP with random weights."""
+        """Initialize a 2-layer MLP (given; keep as is)."""
         np.random.seed(42)
-        # Xavier initialization
+        # He initialization: N(0, 2 / fan_in), suited to ReLU
         self.W1 = np.random.randn(input_dim, hidden_dim) * np.sqrt(2.0 / input_dim)
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, output_dim) * np.sqrt(2.0 / hidden_dim)
@@ -77,57 +100,62 @@ class MLP:
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """
-        Forward pass.
+        Forward pass. Store X, z1, h and logits in self.cache.
 
         Args:
             X: Input (batch, input_dim)
 
         Returns:
-            logits: Output (batch, output_dim)
+            logits: (batch, output_dim)
         """
         # Your code here
         pass
 
     def compute_loss(self, logits: np.ndarray, y: np.ndarray) -> float:
         """
-        Compute cross-entropy loss.
+        Mean softmax cross-entropy. Store the softmax probabilities in self.cache['probs'].
 
         Args:
             logits: Model output (batch, output_dim)
             y: True labels (batch,) as integers
 
         Returns:
-            loss: Scalar loss value
+            loss: Python float
         """
         # Your code here
         pass
 
     def backward(self, y: np.ndarray) -> dict:
         """
-        Backward pass.
+        Backward pass for the mean loss, using self.cache.
 
         Args:
             y: True labels (batch,) as integers
 
         Returns:
-            gradients: Dictionary with dW1, db1, dW2, db2
+            gradients: {'dW1', 'db1', 'dW2', 'db2'}, each shaped like its parameter
         """
         # Your code here
         pass
 
     def train_step(self, X: np.ndarray, y: np.ndarray, lr: float = 0.01) -> float:
         """
-        Single training step: forward, loss, backward, update.
+        Forward, loss, backward, SGD update of W1, b1, W2, b2.
 
         Returns:
-            loss: Loss value before update
+            loss: Loss value before the update
         """
         # Your code here
         pass
 
 
 def train_mlp(X_train, y_train, epochs=100, lr=0.01):
-    """Train MLP and return loss history."""
+    """
+    Build MLP(input_dim, 64, num_classes) and run \`epochs\` full-batch train steps.
+
+    Returns:
+        (model, losses): the trained MLP and the list of per-epoch losses
+    """
     # Your code here
     pass
 `,
@@ -167,18 +195,58 @@ def train_mlp(X_train, y_train, epochs=100, lr=0.01):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Forward and loss values for a fixed input',
+        input: '(lambda: (m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]), logits := m.forward(X), (np.round(logits, 4).tolist(), round(float(m.compute_loss(logits, np.array([1, 0]))), 4)))[-1])()',
+        expected: '([[0.0, 0.0], [0.7148, 2.4115]], 1.2791)',
+        hidden: false,
+      },
+      {
+        id: '7',
+        description: 'Gradient values (mean loss, so divided by the batch size)',
+        input: '(lambda: (m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]), y := np.array([1, 0]), m.forward(X), m.compute_loss(m.cache["logits"], y), g := m.backward(y), (np.round(g["dW1"], 4).tolist(), np.round(g["db2"], 4).tolist()))[-1])()',
+        expected: '([[0.0, 0.0], [-0.686, 0.8553], [0.343, -0.4276]], [-0.1726, 0.1726])',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'dW1 matches a finite-difference gradient check',
+        input: `(lambda: (
+    m := MLP(5, 4, 3), X := np.random.randn(6, 5), y := np.array([0, 1, 2, 0, 1, 2]),
+    m.forward(X), m.compute_loss(m.cache["logits"], y), g := m.backward(y),
+    L := lambda: float(m.compute_loss(m.forward(X), y)),
+    num := np.array([[(lambda a: (m.W1.__setitem__((i, j), a + 1e-6), lp := L(), m.W1.__setitem__((i, j), a - 1e-6), lm := L(), m.W1.__setitem__((i, j), a), (lp - lm) / 2e-6)[-1])(m.W1[i, j]) for j in range(4)] for i in range(5)]),
+    bool(np.allclose(num, g["dW1"], atol=1e-6))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'train_step returns the pre-update loss; train_mlp returns (model, losses)',
+        input: `(lambda: (
+    m := MLP(3, 2, 2), X := np.array([[1.0, -1.0, 0.5], [0.0, 2.0, -1.0]]),
+    steps := [round(float(m.train_step(X, np.array([1, 0]), 0.5)), 4) for _ in range(3)],
+    r := train_mlp(np.random.randn(20, 4), np.arange(20) % 3, epochs=30, lr=0.1),
+    (steps, len(r[1]), r[0].W1.shape, bool(r[1][-1] < r[1][0]))
+)[-1])()`,
+        expected: '([1.2791, 0.4081, 0.3437], 30, (4, 64), True)',
+        hidden: true,
+      },
     ],
     hints: [
-      'Cache X, h (hidden activations), and logits in forward pass',
-      'd_logits = probs - y_onehot (softmax gradient combined with cross-entropy)',
-      'ReLU gradient: 1 if x > 0, else 0',
-      'Update: W = W - lr * dW',
+      'Backprop is the chain rule applied layer by layer in reverse; everything the backward pass needs (X, z1, h, probs) must be saved during the forward pass.',
+      'Order: forward (cache X, z1, h, logits) → compute_loss (cache probs) → backward (output layer first, then the hidden layer) → SGD update.',
+      'd_logits = (probs - one_hot(y)) / N; dW2 = h.T @ d_logits; d_z1 = (d_logits @ W2.T) * (z1 > 0); dW1 = X.T @ d_z1; biases sum over axis 0.',
+      'Pitfall: forgetting the / N makes gradients N times too large (the loss is a mean). Index probabilities with probs[np.arange(N), y], not probs[:, y].',
     ],
     solution: `import numpy as np
 
 class MLP:
     def __init__(self, input_dim: int, hidden_dim: int, output_dim: int):
         np.random.seed(42)
+        # He initialization: N(0, 2 / fan_in)
         self.W1 = np.random.randn(input_dim, hidden_dim) * np.sqrt(2.0 / input_dim)
         self.b1 = np.zeros(hidden_dim)
         self.W2 = np.random.randn(hidden_dim, output_dim) * np.sqrt(2.0 / hidden_dim)
@@ -189,79 +257,54 @@ class MLP:
         return np.maximum(0, x)
 
     def softmax(self, x):
-        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+        exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))   # stable
         return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
 
     def forward(self, X: np.ndarray) -> np.ndarray:
-        # Layer 1: Linear + ReLU
-        z1 = X @ self.W1 + self.b1
+        z1 = X @ self.W1 + self.b1          # (N, H)
         h = self.relu(z1)
-
-        # Layer 2: Linear
-        logits = h @ self.W2 + self.b2
-
-        # Cache for backward
+        logits = h @ self.W2 + self.b2      # (N, C)
         self.cache = {'X': X, 'z1': z1, 'h': h, 'logits': logits}
-
         return logits
 
     def compute_loss(self, logits: np.ndarray, y: np.ndarray) -> float:
         probs = self.softmax(logits)
-        batch_size = logits.shape[0]
-        correct_probs = probs[np.arange(batch_size), y]
-        loss = -np.mean(np.log(np.clip(correct_probs, 1e-15, 1)))
+        n = logits.shape[0]
+        correct_probs = probs[np.arange(n), y]
         self.cache['probs'] = probs
-        return loss
+        return float(-np.mean(np.log(np.clip(correct_probs, 1e-15, 1.0))))
 
     def backward(self, y: np.ndarray) -> dict:
-        X = self.cache['X']
-        h = self.cache['h']
-        z1 = self.cache['z1']
-        probs = self.cache['probs']
-        batch_size = X.shape[0]
+        X, z1, h, probs = (self.cache[k] for k in ('X', 'z1', 'h', 'probs'))
+        n = X.shape[0]
 
-        # One-hot encode targets
-        y_onehot = np.zeros_like(probs)
-        y_onehot[np.arange(batch_size), y] = 1
+        # Softmax + cross-entropy: dL/dlogits = (p - onehot) / N for the mean loss
+        d_logits = probs.copy()
+        d_logits[np.arange(n), y] -= 1
+        d_logits /= n
 
-        # Output layer gradients
-        d_logits = (probs - y_onehot) / batch_size
         dW2 = h.T @ d_logits
         db2 = d_logits.sum(axis=0)
 
-        # Hidden layer gradients
-        d_h = d_logits @ self.W2.T
-        d_relu = d_h * (z1 > 0)  # ReLU derivative
-        dW1 = X.T @ d_relu
-        db1 = d_relu.sum(axis=0)
-
+        d_z1 = (d_logits @ self.W2.T) * (z1 > 0)   # ReLU gate
+        dW1 = X.T @ d_z1
+        db1 = d_z1.sum(axis=0)
         return {'dW1': dW1, 'db1': db1, 'dW2': dW2, 'db2': db2}
 
     def train_step(self, X: np.ndarray, y: np.ndarray, lr: float = 0.01) -> float:
-        logits = self.forward(X)
-        loss = self.compute_loss(logits, y)
+        loss = self.compute_loss(self.forward(X), y)
         grads = self.backward(y)
-
-        # Update weights
-        self.W1 -= lr * grads['dW1']
-        self.b1 -= lr * grads['db1']
-        self.W2 -= lr * grads['dW2']
-        self.b2 -= lr * grads['db2']
-
+        for name in ('W1', 'b1', 'W2', 'b2'):
+            setattr(self, name, getattr(self, name) - lr * grads['d' + name])
         return loss
 
 
 def train_mlp(X_train, y_train, epochs=100, lr=0.01):
-    input_dim = X_train.shape[1]
-    output_dim = len(np.unique(y_train))
-    model = MLP(input_dim, 64, output_dim)
-
-    losses = []
-    for _ in range(epochs):
-        loss = model.train_step(X_train, y_train, lr)
-        losses.append(loss)
-
+    model = MLP(X_train.shape[1], 64, len(np.unique(y_train)))
+    losses = [model.train_step(X_train, y_train, lr) for _ in range(epochs)]
     return model, losses
+
+# Per step: O(N * (input_dim * H + H * C)) time, O(N * H) memory for the cache
 `,
   },
   {
@@ -272,38 +315,67 @@ def train_mlp(X_train, y_train, epochs=100, lr=0.01):
     description: `
 ## End-to-End Transformer Encoder
 
-Implement a complete Transformer encoder block.
+### What you'll build
+Every piece of the original (post-norm) Transformer encoder from "Attention Is All You Need", written as small functions and then stacked: layer norm, sinusoidal positions, scaled dot-product attention, multi-head attention, the feed-forward network, an encoder block and a multi-layer encoder.
 
 ### Architecture
-\`\`\`
-Input Embeddings + Positional Encoding
-  ↓
-Multi-Head Self-Attention
-  ↓
-Add & LayerNorm (Residual)
-  ↓
-Feed-Forward Network (FFN)
-  ↓
-Add & LayerNorm (Residual)
-  ↓
-Output
-\`\`\`
+| Step | Operation | Shape |
+|------|-----------|-------|
+| input | \`x\` | \`(batch, seq_len, d_model)\` |
+| positions | \`x = x + positional_encoding(seq_len, d_model)\` | same |
+| per block: attention | \`a = multi_head_attention(x, x, x, num_heads)\` | same |
+| per block: add & norm | \`x = layer_norm(x + a, ln1_gamma, ln1_beta)\` | same |
+| per block: FFN | \`f = relu(x @ W1 + b1) @ W2 + b2\` | hidden \`(…, d_ff)\`, out same |
+| per block: add & norm | \`x = layer_norm(x + f, ln2_gamma, ln2_beta)\` | same |
 
-### Components
-1. **Positional Encoding**: Sinusoidal position embeddings
-2. **Multi-Head Attention**: Parallel attention heads
-3. **FFN**: Two linear layers with ReLU
-4. **Layer Normalization**: Normalize across features
-5. **Residual Connections**: Add input to output
+This is **post-norm** (LayerNorm after the residual add), as in the 2017 paper. GPT-style models use pre-norm; see **Mini GPT**.
 
-### Task
-Implement all components and combine into encoder block.
+### Function contract
+| Function | Formula / behaviour | Returns |
+|----------|---------------------|---------|
+| \`layer_norm(x, gamma, beta, eps=1e-5)\` | \`gamma · (x − mean) / sqrt(var + eps) + beta\` over the last axis, population variance | array shaped like \`x\` |
+| \`positional_encoding(seq_len, d_model)\` | \`PE[p, 2i] = sin(p / 10000^(2i/d_model))\`, \`PE[p, 2i+1] = cos(…)\` | \`(seq_len, d_model)\` |
+| \`scaled_dot_product_attention(Q, K, V, mask=None)\` | \`A = softmax(Q Kᵀ / sqrt(d_k) + mask)\`; \`mask\` is **additive** (0 or −inf) | tuple \`(A @ V, A)\` for 3-D inputs \`(batch, seq, d_k)\` |
+| \`multi_head_attention(Q, K, V, num_heads)\` | split \`d_model\` into \`num_heads\` heads of \`d_k = d_model / num_heads\`, attend per head, concatenate | output only, \`(batch, seq_len, d_model)\` |
+| \`feed_forward(x, W1, b1, W2, b2)\` | \`relu(x @ W1 + b1) @ W2 + b2\` | \`(…, d_model)\` |
+| \`TransformerEncoderBlock(d_model, num_heads, d_ff)\` | attributes below; \`forward(x)\` runs one post-norm block | \`(batch, seq_len, d_model)\` |
+| \`transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256)\` | add positions, then \`num_layers\` fresh blocks | \`(batch, seq_len, d_model)\` |
+
+**Simplification:** \`multi_head_attention\` has **no learned projections**: the heads are slices of the given Q, K, V and there is no \`W_O\`. Real layers project first (\`Q = x W_Q\` etc.); the PyTorch \`nn.MultiheadAttention\` and the **Mini GPT** problem do.
+
+### Block parameters (the tests use these names)
+After \`np.random.seed(42)\` (in the starter), create, in this order:
+- \`ln1_gamma\`, \`ln2_gamma\`: ones \`(d_model,)\`; \`ln1_beta\`, \`ln2_beta\`: zeros \`(d_model,)\`
+- \`W1 = np.random.randn(d_model, d_ff) * 0.02\`, then \`W2 = np.random.randn(d_ff, d_model) * 0.02\`; \`b1\`, \`b2\` zeros
+
+Because every block re-seeds, all blocks in \`transformer_encoder\` start with identical weights; that keeps the exercise deterministic.
+
+### Edge cases and conventions
+- Subtract the row max inside softmax (the provided \`softmax\` does).
+- \`d_model\` must be divisible by \`num_heads\`.
+
+### Constraints
+NumPy only, no loops over batch, heads or positions (\`einsum\` or \`@\` with transposes).
+
+### Follow-up
+- Attention costs \`O(seq_len² · d_model)\` time and \`O(seq_len²)\` memory per head. What do FlashAttention and sliding windows change?
+- Why does pre-norm train more stably than post-norm in deep stacks?
     `,
     examples: [
       {
-        input: 'TransformerEncoder(d_model=64, nhead=8, dim_ff=256)',
-        output: 'Encoded sequence (batch, seq_len, d_model)',
-        explanation: 'Complete encoder forward pass',
+        input: 'layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4))',
+        output: 'array([[-1.3416, -0.4472, 0.4472, 1.3416]])',
+        explanation: 'Mean 2.5 and population variance 1.25, so each value becomes (x − 2.5) / 1.118',
+      },
+      {
+        input: 'positional_encoding(3, 4)[2]',
+        output: 'array([0.9093, -0.4161, 0.02, 0.9998])',
+        explanation: 'Position 2: sin(2), cos(2), then the slower pair sin(2/100), cos(2/100)',
+      },
+      {
+        input: 'Q = K = [[[1, 0], [0, 1]]], V = [[[1, 2], [3, 4]]]; scaled_dot_product_attention(Q, K, V)',
+        output: '(array([[[1.6605, 2.6605], [2.3395, 3.3395]]]), array([[[0.6698, 0.3302], [0.3302, 0.6698]]]))',
+        explanation: 'Scores are I / sqrt(2), so each query puts softmax([0.707, 0]) = [0.67, 0.33] on itself and the other key',
       },
     ],
     starterCode: `import numpy as np
@@ -314,25 +386,33 @@ def softmax(x, axis=-1):
 
 
 def layer_norm(x, gamma, beta, eps=1e-5):
-    """Layer normalization."""
+    """Normalize over the last axis (population variance), then scale and shift."""
     # Your code here
     pass
 
 
 def positional_encoding(seq_len, d_model):
-    """Sinusoidal positional encoding."""
+    """Sinusoidal positional encoding, shape (seq_len, d_model): sin on even, cos on odd columns."""
     # Your code here
     pass
 
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
-    """Scaled dot-product attention."""
+    """
+    Q, K, V: (batch, seq_len, d_k). mask: optional additive mask (0 / -inf).
+
+    Returns:
+        (output, attention): (batch, seq_len, d_k) and (batch, seq_len, seq_len)
+    """
     # Your code here
     pass
 
 
 def multi_head_attention(Q, K, V, num_heads):
-    """Multi-head attention."""
+    """
+    Split d_model into num_heads heads (no learned projections), attend per head,
+    concatenate. Returns the output only: (batch, seq_len, d_model).
+    """
     # Your code here
     pass
 
@@ -346,12 +426,11 @@ def feed_forward(x, W1, b1, W2, b2):
 class TransformerEncoderBlock:
     def __init__(self, d_model: int, num_heads: int, d_ff: int):
         """
-        Initialize transformer encoder block.
+        Post-norm encoder block.
 
-        Args:
-            d_model: Model dimension
-            num_heads: Number of attention heads
-            d_ff: Feed-forward hidden dimension
+        Create: ln1_gamma, ln1_beta, ln2_gamma, ln2_beta (ones / zeros, shape (d_model,)),
+        W1 = np.random.randn(d_model, d_ff) * 0.02, b1 = zeros(d_ff),
+        W2 = np.random.randn(d_ff, d_model) * 0.02, b2 = zeros(d_model)  (W1 drawn before W2).
         """
         np.random.seed(42)
         self.d_model = d_model
@@ -363,7 +442,7 @@ class TransformerEncoderBlock:
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
-        Forward pass through encoder block.
+        x = LN1(x + MHA(x)); x = LN2(x + FFN(x)).
 
         Args:
             x: Input (batch, seq_len, d_model)
@@ -376,7 +455,7 @@ class TransformerEncoderBlock:
 
 
 def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
-    """Stack multiple encoder blocks."""
+    """Add positional encoding, then apply num_layers new TransformerEncoderBlocks."""
     # Your code here
     pass
 `,
@@ -416,12 +495,65 @@ def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'layer_norm and positional_encoding values',
+        input: '(lambda: (np.round(layer_norm(np.array([[1.0, 2.0, 3.0, 4.0]]), np.ones(4), np.zeros(4)), 4).tolist(), np.round(positional_encoding(3, 4), 4).tolist()))()',
+        expected: '([[-1.3416, -0.4472, 0.4472, 1.3416]], [[0.0, 1.0, 0.0, 1.0], [0.8415, 0.5403, 0.01, 1.0], [0.9093, -0.4161, 0.02, 0.9998]])',
+        hidden: false,
+      },
+      {
+        id: '7',
+        description: 'Attention output and weights (values), and an additive causal mask',
+        input: `(lambda: (
+    Q := np.array([[[1.0, 0.0], [0.0, 1.0]]]), V := np.array([[[1.0, 2.0], [3.0, 4.0]]]),
+    r := scaled_dot_product_attention(Q, Q, V),
+    m := scaled_dot_product_attention(Q, Q, V, np.array([[0.0, -np.inf], [0.0, 0.0]]))[1],
+    (np.round(r[0], 4).tolist(), np.round(r[1], 4).tolist(), np.round(m, 4).tolist())
+)[-1])()`,
+        expected: '([[[1.6605, 2.6605], [2.3395, 3.3395]]], [[[0.6698, 0.3302], [0.3302, 0.6698]]], [[[1.0, 0.0], [0.3302, 0.6698]]])',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'Multi-head attention equals attention applied to each head slice',
+        input: `(lambda: (
+    x := np.random.randn(2, 5, 8),
+    ref := np.concatenate([scaled_dot_product_attention(x[..., h*2:(h+1)*2], x[..., h*2:(h+1)*2], x[..., h*2:(h+1)*2])[0] for h in range(4)], axis=-1),
+    bool(np.allclose(multi_head_attention(x, x, x, 4), ref))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '9',
+        description: 'Block forward is post-norm: LN2(y + FFN(y)) with y = LN1(x + MHA(x))',
+        input: `(lambda: (
+    blk := TransformerEncoderBlock(8, 2, 16),
+    blk.__setattr__('ln1_gamma', np.linspace(0.5, 1.5, 8)), blk.__setattr__('ln2_beta', np.full(8, 0.1)),
+    blk.__setattr__('W1', np.random.randn(8, 16) * 0.5), blk.__setattr__('W2', np.random.randn(16, 8) * 0.5),
+    x := np.random.randn(2, 3, 8),
+    ln := lambda z, g, b: g * (z - z.mean(-1, keepdims=True)) / np.sqrt(z.var(-1, keepdims=True) + 1e-5) + b,
+    y := ln(x + multi_head_attention(x, x, x, 2), blk.ln1_gamma, blk.ln1_beta),
+    ref := ln(y + np.maximum(0, y @ blk.W1 + blk.b1) @ blk.W2 + blk.b2, blk.ln2_gamma, blk.ln2_beta),
+    bool(np.allclose(blk.forward(x), ref))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '10',
+        description: 'Full encoder values with the documented initialization',
+        input: '(lambda: (x := np.random.randn(1, 4, 8), np.round(transformer_encoder(x, num_layers=2, d_model=8, num_heads=2, d_ff=16)[0, 0], 4).tolist())[-1])()',
+        expected: '[0.352, -0.1325, -0.7185, 2.3788, 0.2482, -0.829, -0.863, -0.436]',
+        hidden: true,
+      },
     ],
     hints: [
-      'Attention: softmax(QK^T / sqrt(d_k)) @ V',
-      'Layer norm: (x - mean) / sqrt(var + eps) * gamma + beta',
-      'Residual: output = LayerNorm(x + Sublayer(x))',
-      'FFN: max(0, xW1 + b1)W2 + b2',
+      'Build bottom-up: get layer_norm, positional_encoding and attention right on tiny inputs before assembling the block; the block is just two "sublayer, add, normalize" steps.',
+      'Multi-head attention is reshaping: (B, T, D) → (B, T, H, D/H) → (B, H, T, D/H), attend over the last two axes, then undo the transposes and reshape back to (B, T, D).',
+      'scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k) (or np.einsum("bhqd,bhkd->bhqk", ...)); PE uses div = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model)).',
+      'Pitfall: np.var defaults to the population variance (what LayerNorm wants); adding the mask after the softmax, or forgetting to transpose before the final reshape, silently scrambles heads.',
     ],
     solution: `import numpy as np
 
@@ -432,13 +564,13 @@ def softmax(x, axis=-1):
 
 def layer_norm(x, gamma, beta, eps=1e-5):
     mean = np.mean(x, axis=-1, keepdims=True)
-    var = np.var(x, axis=-1, keepdims=True)
+    var = np.var(x, axis=-1, keepdims=True)          # population variance
     return gamma * (x - mean) / np.sqrt(var + eps) + beta
 
 
 def positional_encoding(seq_len, d_model):
     PE = np.zeros((seq_len, d_model))
-    position = np.arange(seq_len)[:, np.newaxis]
+    position = np.arange(seq_len)[:, None]                                   # (T, 1)
     div_term = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model))
     PE[:, 0::2] = np.sin(position * div_term)
     PE[:, 1::2] = np.cos(position * div_term)
@@ -447,9 +579,9 @@ def positional_encoding(seq_len, d_model):
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
     d_k = Q.shape[-1]
-    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)
+    scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)      # (B, T, T)
     if mask is not None:
-        scores = scores + mask
+        scores = scores + mask                            # additive: 0 or -inf
     attention = softmax(scores, axis=-1)
     return attention @ V, attention
 
@@ -458,22 +590,17 @@ def multi_head_attention(Q, K, V, num_heads):
     batch, seq_len, d_model = Q.shape
     d_k = d_model // num_heads
 
-    Q = Q.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
-    K = K.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
-    V = V.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
+    def split_heads(x):                                   # (B, T, D) -> (B, H, T, d_k)
+        return x.reshape(batch, seq_len, num_heads, d_k).transpose(0, 2, 1, 3)
 
-    d_k = Q.shape[-1]
-    scores = np.einsum('bhqd,bhkd->bhqk', Q, K) / np.sqrt(d_k)
-    attention = softmax(scores, axis=-1)
-    output = np.einsum('bhqk,bhkd->bhqd', attention, V)
-
-    output = output.transpose(0, 2, 1, 3).reshape(batch, seq_len, d_model)
-    return output
+    q, k, v = split_heads(Q), split_heads(K), split_heads(V)
+    scores = np.einsum('bhqd,bhkd->bhqk', q, k) / np.sqrt(d_k)
+    out = np.einsum('bhqk,bhkd->bhqd', softmax(scores, axis=-1), v)
+    return out.transpose(0, 2, 1, 3).reshape(batch, seq_len, d_model)   # concat heads
 
 
 def feed_forward(x, W1, b1, W2, b2):
-    hidden = np.maximum(0, x @ W1 + b1)
-    return hidden @ W2 + b2
+    return np.maximum(0, x @ W1 + b1) @ W2 + b2
 
 
 class TransformerEncoderBlock:
@@ -482,43 +609,32 @@ class TransformerEncoderBlock:
         self.d_model = d_model
         self.num_heads = num_heads
 
-        # Layer norm parameters
         self.ln1_gamma = np.ones(d_model)
         self.ln1_beta = np.zeros(d_model)
         self.ln2_gamma = np.ones(d_model)
         self.ln2_beta = np.zeros(d_model)
 
-        # FFN parameters
         self.W1 = np.random.randn(d_model, d_ff) * 0.02
         self.b1 = np.zeros(d_ff)
         self.W2 = np.random.randn(d_ff, d_model) * 0.02
         self.b2 = np.zeros(d_model)
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        # Multi-head self-attention + residual + layer norm
-        attn_output = multi_head_attention(x, x, x, self.num_heads)
-        x = layer_norm(x + attn_output, self.ln1_gamma, self.ln1_beta)
-
-        # Feed-forward + residual + layer norm
-        ff_output = feed_forward(x, self.W1, self.b1, self.W2, self.b2)
-        x = layer_norm(x + ff_output, self.ln2_gamma, self.ln2_beta)
-
+        # Post-norm: sublayer, residual add, then LayerNorm
+        x = layer_norm(x + multi_head_attention(x, x, x, self.num_heads),
+                       self.ln1_gamma, self.ln1_beta)
+        x = layer_norm(x + feed_forward(x, self.W1, self.b1, self.W2, self.b2),
+                       self.ln2_gamma, self.ln2_beta)
         return x
 
 
 def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
-    batch, seq_len, _ = x.shape
-
-    # Add positional encoding
-    PE = positional_encoding(seq_len, d_model)
-    x = x + PE
-
-    # Stack encoder blocks
+    x = x + positional_encoding(x.shape[1], d_model)
     for _ in range(num_layers):
-        block = TransformerEncoderBlock(d_model, num_heads, d_ff)
-        x = block.forward(x)
-
+        x = TransformerEncoderBlock(d_model, num_heads, d_ff).forward(x)
     return x
+
+# Per block: O(B * T^2 * D) for attention + O(B * T * D * d_ff) for the FFN
 `,
   },
   {
@@ -529,32 +645,62 @@ def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
     description: `
 ## End-to-End Variational Autoencoder
 
-Implement a complete VAE with encoder, decoder, reparameterization, and ELBO loss.
+### What you'll build
+A complete VAE in NumPy: an MLP encoder that outputs a Gaussian per input, the reparameterization trick, an MLP decoder, the negative-ELBO loss, and sampling from the prior. It assembles **VAE Reparameterization Trick** and **VAE Loss Function** from Generative Models into one model.
 
 ### Architecture
-\`\`\`
-Encoder: x → h → (μ, log_σ²)
-         ↓
-Reparameterization: z = μ + σ * ε, ε ~ N(0,1)
-         ↓
-Decoder: z → h → x_reconstructed
-\`\`\`
+| Stage | Operation | Shape |
+|-------|-----------|-------|
+| input | \`x\` | \`(batch, input_dim)\` |
+| encoder hidden | \`h = relu(x @ W_enc + b_enc)\` | \`(batch, hidden_dim)\` |
+| latent mean | \`mu = h @ W_mu + b_mu\` | \`(batch, latent_dim)\` |
+| latent log-variance | \`log_var = h @ W_logvar + b_logvar\` | \`(batch, latent_dim)\` |
+| sample | \`z = mu + exp(0.5·log_var) ⊙ ε\`, \`ε = np.random.randn(*mu.shape)\` | \`(batch, latent_dim)\` |
+| decoder hidden | \`h' = relu(z @ W_dec1 + b_dec1)\` | \`(batch, hidden_dim)\` |
+| reconstruction | \`x_recon = sigmoid(h' @ W_dec2 + b_dec2)\` | \`(batch, input_dim)\`, values in (0, 1) |
 
-### Loss (ELBO)
-\`\`\`
-L = Reconstruction Loss + KL Divergence
-L = ||x - x_hat||² + KL(q(z|x) || p(z))
-KL = -0.5 * sum(1 + log_var - μ² - exp(log_var))
-\`\`\`
+The constructor (given) seeds \`np.random.seed(42)\` and initializes every weight as \`N(0, 0.01²)\` with zero biases.
 
-### Task
-Implement encoder, decoder, reparameterization trick, and loss computation.
+### Loss (negative ELBO)
+The same convention as **VAE Loss Function** (the standard one from Kingma & Welling and the PyTorch VAE example):
+\`\`\`text
+recon_loss = mean((x − x_recon)²)                                        # over all elements
+kl_loss    = mean_i [ −0.5 · Σ_j (1 + log_var_ij − mu_ij² − exp(log_var_ij)) ]   # sum over latent dims, mean over batch
+total_loss = recon_loss + kl_loss
+\`\`\`
+Earlier versions of this problem averaged the KL over latent dims as well; that shrinks it by a factor of \`latent_dim\` relative to the reconstruction term. The convention above is the one both problems now use.
+
+### Method contract
+| Method | Returns |
+|--------|---------|
+| \`encode(x)\` | tuple \`(mu, log_var)\`, each \`(batch, latent_dim)\` |
+| \`reparameterize(mu, log_var)\` | \`z\`, drawing ε once with \`np.random.randn(*mu.shape)\` (no re-seeding) |
+| \`decode(z)\` | \`x_recon\` \`(batch, input_dim)\`, sigmoid output |
+| \`forward(x)\` | dict \`{'mu', 'log_var', 'z', 'x_recon'}\` |
+| \`compute_loss(x, x_recon, mu, log_var)\` | dict \`{'total_loss', 'recon_loss', 'kl_loss'}\` of floats |
+| \`sample(num_samples)\` | \`decode(z)\` with \`z = np.random.randn(num_samples, latent_dim)\`: \`(num_samples, input_dim)\` |
+
+### Edge cases and conventions
+- With the tiny initial weights, \`mu ≈ 0\` and \`log_var ≈ 0\`, so the initial KL is close to 0 and \`x_recon ≈ 0.5\`.
+- \`kl_loss ≥ 0\` always; \`total_loss\` is exactly the sum of the other two.
+
+### Constraints
+NumPy only, vectorised over the batch. Training (backprop) is not required here; the PyTorch track's autograd makes it a one-liner.
+
+### Follow-up
+- With sigmoid outputs and binary data, why is BCE the more principled reconstruction loss?
+- How do you detect posterior collapse (KL → 0 for every latent dim), and what do KL annealing and free bits do?
     `,
     examples: [
       {
-        input: 'VAE(input_dim=784, latent_dim=20)',
-        output: 'Reconstructed images + latent samples',
-        explanation: 'Full VAE forward pass',
+        input: 'vae.compute_loss(x=[[1.0, 2.0]], x_recon=[[0.0, 0.0]], mu=[[0.5, -0.5]], log_var=[[0.0, 1.0]])',
+        output: "{'total_loss': 3.1091, 'recon_loss': 2.5, 'kl_loss': 0.6091} (rounded)",
+        explanation: 'Same numbers as the VAE Loss Function example: recon = 5/2, KL summed over the 2 latent dims',
+      },
+      {
+        input: 'VAE(784, 256, 20).forward(np.random.randn(4, 784))',
+        output: "{'mu': (4, 20), 'log_var': (4, 20), 'z': (4, 20), 'x_recon': (4, 784)}",
+        explanation: 'Shapes of the returned arrays',
       },
     ],
     starterCode: `import numpy as np
@@ -592,24 +738,28 @@ class VAE:
     def encode(self, x: np.ndarray) -> tuple:
         """
         Encode input to latent distribution parameters.
+        h = relu(x @ W_enc + b_enc); mu = h @ W_mu + b_mu; log_var = h @ W_logvar + b_logvar
 
         Returns:
-            mu: Mean of latent distribution
-            log_var: Log variance of latent distribution
+            (mu, log_var): each (batch, latent_dim)
         """
         # Your code here
         pass
 
     def reparameterize(self, mu: np.ndarray, log_var: np.ndarray) -> np.ndarray:
         """
-        Reparameterization trick: z = mu + std * epsilon
+        Reparameterization trick: z = mu + exp(0.5 * log_var) * eps,
+        with eps = np.random.randn(*mu.shape) (drawn once, no re-seeding).
         """
         # Your code here
         pass
 
     def decode(self, z: np.ndarray) -> np.ndarray:
         """
-        Decode latent vector to reconstruction.
+        Decode latent vectors: relu(z @ W_dec1 + b_dec1), then sigmoid(... @ W_dec2 + b_dec2).
+
+        Returns:
+            x_recon: (batch, input_dim), values in (0, 1)
         """
         # Your code here
         pass
@@ -619,7 +769,7 @@ class VAE:
         Full forward pass.
 
         Returns:
-            Dictionary with mu, log_var, z, x_recon
+            {'mu', 'log_var', 'z', 'x_recon'}
         """
         # Your code here
         pass
@@ -627,17 +777,22 @@ class VAE:
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      mu: np.ndarray, log_var: np.ndarray) -> dict:
         """
-        Compute VAE loss (ELBO).
+        Negative ELBO.
+        recon_loss = MSE over all elements;
+        kl_loss = -0.5 * sum over latent dims of (1 + log_var - mu^2 - exp(log_var)), averaged over the batch.
 
         Returns:
-            Dictionary with total_loss, recon_loss, kl_loss
+            {'total_loss', 'recon_loss', 'kl_loss'} as floats, total = recon + kl
         """
         # Your code here
         pass
 
     def sample(self, num_samples: int) -> np.ndarray:
         """
-        Generate samples by decoding random latent vectors.
+        Decode z = np.random.randn(num_samples, latent_dim) drawn from the prior.
+
+        Returns:
+            (num_samples, input_dim)
         """
         # Your code here
         pass
@@ -678,19 +833,56 @@ class VAE:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'compute_loss values: KL sums over latent dims and averages over the batch',
+        input: `(lambda: (
+    vae := VAE(4, 3, 2),
+    a := vae.compute_loss(np.array([[1.0, 2.0]]), np.zeros((1, 2)), np.array([[0.5, -0.5]]), np.array([[0.0, 1.0]])),
+    b := vae.compute_loss(np.full((2, 3), 0.5), np.zeros((2, 3)), np.array([[1.0, 1.0], [0.0, 0.0]]), np.zeros((2, 2))),
+    [round(float(d[k]), 4) for d in (a, b) for k in ('total_loss', 'recon_loss', 'kl_loss')]
+)[-1])()`,
+        expected: '[3.1091, 2.5, 0.6091, 0.75, 0.25, 0.5]',
+        hidden: false,
+      },
+      {
+        id: '7',
+        description: 'encode and decode values (weights scaled up so the outputs are not tiny)',
+        input: `(lambda: (
+    vae := VAE(4, 3, 2),
+    [setattr(vae, n, getattr(vae, n) * 100) for n in ('W_enc', 'W_mu', 'W_logvar', 'W_dec1', 'W_dec2')],
+    mu_lv := vae.encode(np.array([[1.0, 0.0, -1.0, 2.0]])),
+    (np.round(mu_lv[0], 4).tolist(), np.round(mu_lv[1], 4).tolist(), np.round(vae.decode(np.array([[0.5, -1.0]])), 4).tolist())
+)[-1])()`,
+        expected: '([[-0.1875, 0.0533]], [[0.0102, -0.2683]], [[0.6317, 0.3098, 0.5342, 0.2166]])',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'forward is consistent: x_recon = decode(z), and z - mu is scaled by exp(0.5 * log_var)',
+        input: `(lambda: (
+    vae := VAE(6, 5, 3),
+    [setattr(vae, n, getattr(vae, n) * 100) for n in ('W_enc', 'W_mu', 'W_logvar', 'W_dec1', 'W_dec2')],
+    out := vae.forward(np.random.randn(4, 6)),
+    eps := (out['z'] - out['mu']) / np.exp(0.5 * out['log_var']),
+    s := vae.sample(5),
+    bool(np.allclose(out['x_recon'], vae.decode(out['z'])) and abs(eps.std() - 1) < 0.6 and s.shape == (5, 6) and np.all((s > 0) & (s < 1)))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
     ],
     hints: [
-      'Encoder: h = relu(x @ W + b), then mu = h @ W_mu, logvar = h @ W_logvar',
-      'Reparameterize: std = exp(0.5 * log_var), z = mu + std * epsilon',
-      'KL = -0.5 * mean(1 + log_var - mu² - exp(log_var))',
-      'Reconstruction loss: MSE or BCE',
+      'A VAE is an autoencoder whose bottleneck is a distribution: encode to (mu, log_var), sample z, decode. The loss pays for both bad reconstructions and posteriors far from N(0, I).',
+      'Write the methods in order: encode → reparameterize → decode → forward (chains the three and returns a dict) → compute_loss → sample (decode prior samples).',
+      'Encoder: h = np.maximum(0, x @ W_enc + b_enc), then two linear heads. Decoder ends with 1 / (1 + np.exp(-a)). KL: np.mean(-0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)).',
+      'Pitfall: np.mean over the whole (batch, latent_dim) KL array divides by latent_dim too; sum over axis=1 first. Use exp(0.5 * log_var) (the std), not exp(log_var).',
     ],
     solution: `import numpy as np
 
 class VAE:
     def __init__(self, input_dim: int, hidden_dim: int, latent_dim: int):
         np.random.seed(42)
-
         self.W_enc = np.random.randn(input_dim, hidden_dim) * 0.01
         self.b_enc = np.zeros(hidden_dim)
         self.W_mu = np.random.randn(hidden_dim, latent_dim) * 0.01
@@ -706,39 +898,31 @@ class VAE:
     def encode(self, x: np.ndarray) -> tuple:
         h = np.maximum(0, x @ self.W_enc + self.b_enc)
         mu = h @ self.W_mu + self.b_mu
-        log_var = h @ self.W_logvar + self.b_logvar
+        log_var = h @ self.W_logvar + self.b_logvar    # unconstrained, unlike sigma
         return mu, log_var
 
     def reparameterize(self, mu: np.ndarray, log_var: np.ndarray) -> np.ndarray:
-        std = np.exp(0.5 * log_var)
-        eps = np.random.randn(*mu.shape)
-        return mu + std * eps
+        eps = np.random.randn(*mu.shape)               # randomness outside the parameters
+        return mu + np.exp(0.5 * log_var) * eps
 
     def decode(self, z: np.ndarray) -> np.ndarray:
         h = np.maximum(0, z @ self.W_dec1 + self.b_dec1)
-        x_recon = 1 / (1 + np.exp(-(h @ self.W_dec2 + self.b_dec2)))  # Sigmoid
-        return x_recon
+        return 1 / (1 + np.exp(-(h @ self.W_dec2 + self.b_dec2)))   # sigmoid
 
     def forward(self, x: np.ndarray) -> dict:
         mu, log_var = self.encode(x)
         z = self.reparameterize(mu, log_var)
-        x_recon = self.decode(z)
-        return {'mu': mu, 'log_var': log_var, 'z': z, 'x_recon': x_recon}
+        return {'mu': mu, 'log_var': log_var, 'z': z, 'x_recon': self.decode(z)}
 
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      mu: np.ndarray, log_var: np.ndarray) -> dict:
-        # Reconstruction loss (MSE)
-        recon_loss = np.mean((x - x_recon) ** 2)
-
-        # KL divergence
-        kl_loss = -0.5 * np.mean(1 + log_var - mu**2 - np.exp(log_var))
-
-        total_loss = recon_loss + kl_loss
-
-        return {'total_loss': total_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
+        recon_loss = float(np.mean((x - x_recon) ** 2))
+        # KL(q(z|x) || N(0, I)): sum over latent dims, mean over the batch
+        kl_loss = float(np.mean(-0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var), axis=1)))
+        return {'total_loss': recon_loss + kl_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
 
     def sample(self, num_samples: int) -> np.ndarray:
-        z = np.random.randn(num_samples, self.latent_dim)
+        z = np.random.randn(num_samples, self.latent_dim)   # prior N(0, I)
         return self.decode(z)
 `,
   },
@@ -750,53 +934,68 @@ class VAE:
     description: `
 ## End-to-End VQ-VAE
 
-Implement a complete VQ-VAE (Vector Quantized Variational Autoencoder) with encoder, vector quantization, and decoder.
+### What you'll build
+A small but complete VQ-VAE: a vector-quantization layer with its losses, an encoder and decoder around it, the total loss, and codebook-usage statistics. It extends **VQ-VAE Vector Quantization** (Generative Models) into a model.
 
-### Architecture
+### Background
+A VQ-VAE autoencodes through a **discrete** bottleneck: each encoder vector is replaced by its nearest codebook entry. The indices are a compressed, tokenized version of the input that a Transformer can model later (this is how VQGAN and many audio and image tokenizers work). Unlike a VAE there is no KL term; the codebook and commitment losses keep encoder outputs and codes close.
+
+### Architecture (simplified to MLPs on 4×4 inputs)
+| Stage | Operation | Shape |
+|-------|-----------|-------|
+| input | \`x\` | \`(batch, C, 4, 4)\` |
+| flatten | \`x.reshape(batch, -1)\` | \`(batch, 16·C)\` |
+| encoder | \`relu(· @ enc_w1 + enc_b1) @ enc_w2 + enc_b2\` | \`(batch, D)\` |
+| as a 1×1 latent grid | reshape | \`z_e: (batch, 1, 1, D)\` |
+| quantize | nearest row of \`vq.embedding\` | \`z_q: (batch, 1, 1, D)\`, \`indices: (batch, 1, 1)\` |
+| decoder | \`relu(flat(z_q) @ dec_w1 + dec_b1) @ dec_w2 + dec_b2\` | \`(batch, 16·C)\` |
+| reshape | | \`x_recon: (batch, C, 4, 4)\` (no output activation) |
+
+\`D = embedding_dim\`, \`K = num_embeddings\`. Both constructors are given: they seed \`np.random.seed(42)\` and create the weights listed above (the codebook \`vq.embedding\` is \`N(0, 0.1²)\` of shape \`(K, D)\`).
+
+### Losses
+\`sg[·]\` is stop-gradient; in a NumPy forward pass the two VQ terms have the same value:
+\`\`\`text
+recon_loss      = mean((x − x_recon)²)
+codebook_loss   = mean((sg[z_e] − z_q)²)        # trains the codebook
+commitment_loss = β · mean((z_e − sg[z_q])²)     # trains the encoder; β is already included here
+total_loss      = recon_loss + codebook_loss + commitment_loss
 \`\`\`
-Encoder: x → z_e (continuous latents)
-           ↓
-Vector Quantization: z_e → z_q (discrete latents from codebook)
-           ↓
-Decoder: z_q → x_reconstructed
-\`\`\`
+With autograd, the decoder's gradient reaches the encoder through the straight-through estimator \`z_q_st = z_e + sg[z_q − z_e]\` (forward value \`z_q\`); the PyTorch track implements it.
 
-### Key Difference from VAE
-- VAE: Continuous latent space with KL regularization
-- VQ-VAE: Discrete latent space using learned codebook
+### Method contract
+| Method | Returns |
+|--------|---------|
+| \`VectorQuantizer.quantize(z_e)\` | tuple \`(z_q, indices, distances)\`: \`z_q\` like \`z_e\`; \`indices\` int \`(batch, H, W)\` (ties → lowest index); \`distances\` = squared distance to the chosen code, \`(batch, H, W)\` |
+| \`VectorQuantizer.compute_loss(z_e, z_q, beta=0.25)\` | dict \`{'codebook_loss', 'commitment_loss'}\` (floats) |
+| \`VQVAE.encode(x)\` | \`z_e (batch, 1, 1, D)\` |
+| \`VQVAE.decode(z_q)\` | \`x_recon (batch, C, 4, 4)\` |
+| \`VQVAE.forward(x)\` | dict \`{'z_e', 'z_q', 'indices', 'x_recon'}\` (decode \`z_q\`, not \`z_e\`) |
+| \`VQVAE.compute_loss(x, x_recon, z_e, z_q, beta=0.25)\` | dict \`{'total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss'}\` |
+| \`VQVAE.get_codebook_usage(indices)\` | int array \`(K,)\`: how many times each code was chosen (zeros for unused codes) |
 
-### Vector Quantization
-1. Encoder outputs continuous vectors z_e
-2. Find nearest codebook entry for each spatial position
-3. Replace z_e with quantized z_q from codebook
-4. Use straight-through estimator for gradients
+### Constraints
+NumPy only; vectorised nearest-neighbour search (no loop over positions or codes).
 
-### Loss Function
-\`\`\`
-L = L_reconstruction + L_codebook + β * L_commitment
-
-L_reconstruction = ||x - x_hat||²
-L_codebook = ||sg[z_e] - e||²  (moves codebook toward encoder output)
-L_commitment = ||z_e - sg[e]||²  (commits encoder to codebook)
-\`\`\`
-Where sg[] is stop-gradient.
-
-### Codebook EMA Update (Alternative)
-Instead of gradient updates, codebook can be updated with exponential moving average:
-\`\`\`
-N_i = γ * N_i + (1 - γ) * n_i     (count of assignments)
-m_i = γ * m_i + (1 - γ) * sum(z_e assigned to i)
-e_i = m_i / N_i
-\`\`\`
-
-### Task
-Implement encoder, vector quantization layer, decoder, and all loss components.
+### Follow-up
+- **Codebook collapse**: few codes get all the assignments. Usage statistics reveal it; dead-code restarts fix it.
+- **EMA codebook updates** replace the codebook loss: \`N_k ← γN_k + (1−γ)n_k\`, \`m_k ← γm_k + (1−γ)Σ z_e assigned to k\`, \`e_k = m_k / N_k\`.
     `,
     examples: [
       {
-        input: 'VQVAE(input_dim=784, num_embeddings=512, embedding_dim=64)',
-        output: 'Reconstructed images + discrete codes',
-        explanation: 'Full VQ-VAE forward pass',
+        input: 'vq.embedding = [[0, 0], [10, 10], [5, 5]]; vq.quantize(np.array([[[[1, 1], [9, 8], [4, 6]]]]))',
+        output: 'indices = [[[0, 1, 2]]], distances = [[[2.0, 5.0, 2.0]]]',
+        explanation: '[9, 8] is 1² + 2² = 5 from [10, 10]; the others are 2 from their nearest code',
+      },
+      {
+        input: 'vq.compute_loss(z_e, z_q) for the example above',
+        output: "{'codebook_loss': 1.5, 'commitment_loss': 0.375}",
+        explanation: 'Mean squared error 9 / 6 = 1.5, and β = 0.25 times that',
+      },
+      {
+        input: 'model.get_codebook_usage(np.array([[[0]], [[2]], [[2]]])) with K = 6',
+        output: 'array([1, 0, 2, 0, 0, 0])',
+        explanation: 'Code 0 used once, code 2 twice, the rest never',
       },
     ],
     starterCode: `import numpy as np
@@ -804,44 +1003,37 @@ Implement encoder, vector quantization layer, decoder, and all loss components.
 class VectorQuantizer:
     def __init__(self, num_embeddings: int, embedding_dim: int):
         """
-        Vector Quantization layer.
+        Vector quantization layer (given).
 
         Args:
             num_embeddings: Size of codebook (K)
-            embedding_dim: Dimension of each embedding
+            embedding_dim: Dimension of each embedding (D)
         """
         np.random.seed(42)
-        # Initialize codebook with small random values
-        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1
+        self.embedding = np.random.randn(num_embeddings, embedding_dim) * 0.1   # (K, D)
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
 
     def quantize(self, z_e: np.ndarray) -> tuple:
         """
-        Quantize encoder output to nearest codebook entries.
+        Replace every vector of z_e by its nearest codebook entry.
 
         Args:
-            z_e: Encoder output (batch, height, width, embedding_dim)
+            z_e: Encoder output (batch, H, W, D)
 
         Returns:
             z_q: Quantized vectors (same shape as z_e)
-            indices: Codebook indices (batch, height, width)
-            distances: Distances to nearest embeddings
+            indices: Codebook indices (batch, H, W); ties go to the lowest index
+            distances: Squared distance to the chosen code (batch, H, W)
         """
         # Your code here
         pass
 
     def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
         """
-        Compute VQ losses.
-
-        Args:
-            z_e: Encoder output
-            z_q: Quantized vectors
-            beta: Commitment loss weight
-
         Returns:
-            Dictionary with codebook_loss and commitment_loss
+            {'codebook_loss': mean((z_e - z_q)**2),
+             'commitment_loss': beta * mean((z_e - z_q)**2)}
         """
         # Your code here
         pass
@@ -851,65 +1043,54 @@ class VQVAE:
     def __init__(self, input_channels: int, hidden_dim: int,
                  num_embeddings: int, embedding_dim: int):
         """
-        Initialize VQ-VAE.
-
-        Args:
-            input_channels: Number of input channels
-            hidden_dim: Hidden layer dimension
-            num_embeddings: Codebook size
-            embedding_dim: Embedding dimension
+        VQ-VAE for (batch, input_channels, 4, 4) inputs, with MLP encoder/decoder (given).
         """
         np.random.seed(42)
+        self.input_channels = input_channels
+        self.hidden_dim = hidden_dim
+        self.embedding_dim = embedding_dim
 
-        # Encoder: conv layers to get spatial feature maps
-        self.enc_conv1_w = np.random.randn(hidden_dim, input_channels, 4, 4) * 0.1
-        self.enc_conv1_b = np.zeros(hidden_dim)
-        self.enc_conv2_w = np.random.randn(embedding_dim, hidden_dim, 4, 4) * 0.1
-        self.enc_conv2_b = np.zeros(embedding_dim)
+        # Encoder: (C*16) -> hidden_dim -> embedding_dim
+        self.enc_w1 = np.random.randn(input_channels * 16, hidden_dim) * 0.1
+        self.enc_b1 = np.zeros(hidden_dim)
+        self.enc_w2 = np.random.randn(hidden_dim, embedding_dim) * 0.1
+        self.enc_b2 = np.zeros(embedding_dim)
 
-        # Vector Quantizer
+        # Vector quantizer (re-seeds, so its codebook does not depend on the encoder size)
         self.vq = VectorQuantizer(num_embeddings, embedding_dim)
 
-        # Decoder: transposed conv to reconstruct
-        self.dec_conv1_w = np.random.randn(hidden_dim, embedding_dim, 4, 4) * 0.1
-        self.dec_conv1_b = np.zeros(hidden_dim)
-        self.dec_conv2_w = np.random.randn(input_channels, hidden_dim, 4, 4) * 0.1
-        self.dec_conv2_b = np.zeros(input_channels)
-
-        self.embedding_dim = embedding_dim
+        # Decoder: embedding_dim -> hidden_dim -> (C*16)
+        self.dec_w1 = np.random.randn(embedding_dim, hidden_dim) * 0.1
+        self.dec_b1 = np.zeros(hidden_dim)
+        self.dec_w2 = np.random.randn(hidden_dim, input_channels * 16) * 0.1
+        self.dec_b2 = np.zeros(input_channels * 16)
 
     def encode(self, x: np.ndarray) -> np.ndarray:
         """
-        Encode input to continuous latent representation.
-
-        Args:
-            x: Input (batch, channels, height, width)
+        x: (batch, C, 4, 4) -> flatten -> relu(x @ enc_w1 + enc_b1) @ enc_w2 + enc_b2
 
         Returns:
-            z_e: Encoder output (batch, height', width', embedding_dim)
+            z_e: (batch, 1, 1, embedding_dim)
         """
-        # Your code here (simplified: use strided conv or just reshape for demo)
+        # Your code here
         pass
 
     def decode(self, z_q: np.ndarray) -> np.ndarray:
         """
-        Decode quantized latents to reconstruction.
-
-        Args:
-            z_q: Quantized vectors (batch, height, width, embedding_dim)
+        z_q: (batch, 1, 1, D) -> flatten -> relu(z @ dec_w1 + dec_b1) @ dec_w2 + dec_b2
 
         Returns:
-            x_recon: Reconstructed input
+            x_recon: (batch, C, 4, 4)
         """
         # Your code here
         pass
 
     def forward(self, x: np.ndarray) -> dict:
         """
-        Full forward pass.
+        Encode, quantize, decode z_q.
 
         Returns:
-            Dictionary with z_e, z_q, indices, x_recon
+            {'z_e', 'z_q', 'indices', 'x_recon'}
         """
         # Your code here
         pass
@@ -917,20 +1098,17 @@ class VQVAE:
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
         """
-        Compute total VQ-VAE loss.
-
         Returns:
-            Dictionary with total_loss, recon_loss, codebook_loss, commitment_loss
+            {'total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss'},
+            total = recon + codebook + commitment (commitment already includes beta)
         """
         # Your code here
         pass
 
     def get_codebook_usage(self, indices: np.ndarray) -> np.ndarray:
         """
-        Compute codebook usage statistics.
-
         Returns:
-            usage: Count of each codebook entry used
+            usage: int array (num_embeddings,), count of each code in indices
         """
         # Your code here
         pass
@@ -964,13 +1142,48 @@ class VQVAE:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'Nearest codes, distances and VQ losses on a hand-checked example',
+        input: `(lambda: (
+    vq := VectorQuantizer(3, 2),
+    vq.__setattr__('embedding', np.array([[0.0, 0.0], [10.0, 10.0], [5.0, 5.0]])),
+    z := np.array([[[[1.0, 1.0], [9.0, 8.0], [4.0, 6.0]]]]),
+    q := vq.quantize(z),
+    l := vq.compute_loss(z, q[0]),
+    (q[1].tolist(), np.round(q[2], 4).tolist(), round(float(l['codebook_loss']), 4), round(float(l['commitment_loss']), 4))
+)[-1])()`,
+        expected: '([[[0, 1, 2]]], [[[2.0, 5.0, 2.0]]], 1.5, 0.375)',
+        hidden: false,
+      },
+      {
+        id: '6',
+        description: 'VQVAE forward shapes and decoder input is z_q',
+        input: `(lambda: (
+    m := VQVAE(1, 8, 6, 3), x := np.random.randn(5, 1, 4, 4), o := m.forward(x),
+    (o['z_e'].shape, o['z_q'].shape, o['indices'].shape, o['x_recon'].shape, bool(np.allclose(o['x_recon'], m.decode(o['z_q']))))
+)[-1])()`,
+        expected: '((5, 1, 1, 3), (5, 1, 1, 3), (5, 1, 1), (5, 1, 4, 4), True)',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'Total loss values and codebook usage',
+        input: `(lambda: (
+    m := VQVAE(1, 8, 6, 3), x := np.random.randn(5, 1, 4, 4), o := m.forward(x),
+    L := m.compute_loss(x, o['x_recon'], o['z_e'], o['z_q']),
+    ([round(float(L[k]), 4) for k in ('total_loss', 'recon_loss', 'codebook_loss', 'commitment_loss')],
+     m.get_codebook_usage(o['indices']).tolist(), m.get_codebook_usage(np.array([[[0]], [[2]], [[2]]])).tolist())
+)[-1])()`,
+        expected: '([1.0413, 1.0323, 0.0072, 0.0018], [1, 0, 1, 2, 0, 1], [1, 0, 2, 0, 0, 0])',
+        hidden: true,
+      },
     ],
     hints: [
-      'For quantization: flatten spatial dims, compute distances, find argmin',
-      'Distance: ||z - e||² = ||z||² + ||e||² - 2*z·e',
-      'Straight-through: z_q = z_e + stop_grad(z_q - z_e)',
-      'Codebook loss uses z_e detached, commitment uses z_q detached',
-      'For simplified encoder/decoder, use reshape operations',
+      'Three moving parts: an encoder to continuous vectors, a nearest-neighbour lookup into the codebook, and a decoder from the chosen codes. The losses compare z_e with z_q and x with x_recon.',
+      'quantize: flatten to (N, D), compute an (N, K) distance matrix, argmin per row, gather codes, reshape back. encode/decode: flatten, two linear layers with a ReLU between, reshape.',
+      'Distances: np.sum(z**2, 1, keepdims=True) - 2 * z @ E.T + np.sum(E**2, 1); usage: np.bincount(indices.ravel(), minlength=K).',
+      'Pitfall: decode z_q (not z_e) in forward; commitment_loss already includes β, so do not multiply by β again in the total. Without minlength, bincount drops trailing unused codes.',
     ],
     solution: `import numpy as np
 
@@ -982,144 +1195,77 @@ class VectorQuantizer:
         self.embedding_dim = embedding_dim
 
     def quantize(self, z_e: np.ndarray) -> tuple:
-        # z_e: (batch, H, W, D)
         batch, H, W, D = z_e.shape
+        z_flat = z_e.reshape(-1, D)                                    # (N, D)
 
-        # Flatten spatial dimensions
-        z_flat = z_e.reshape(-1, D)  # (N, D) where N = batch * H * W
+        # ||z - e||^2 = ||z||^2 - 2 z.e + ||e||^2 for every (vector, code) pair
+        distances = (np.sum(z_flat ** 2, axis=1, keepdims=True)
+                     - 2 * z_flat @ self.embedding.T
+                     + np.sum(self.embedding ** 2, axis=1))              # (N, K)
 
-        # Compute distances: ||z - e||² = ||z||² + ||e||² - 2*z·e
-        z_sq = np.sum(z_flat ** 2, axis=1, keepdims=True)  # (N, 1)
-        e_sq = np.sum(self.embedding ** 2, axis=1)          # (K,)
-        cross = z_flat @ self.embedding.T                    # (N, K)
-        distances = z_sq + e_sq - 2 * cross                  # (N, K)
-
-        # Find nearest embedding
-        indices_flat = np.argmin(distances, axis=1)          # (N,)
-
-        # Get quantized vectors
-        z_q_flat = self.embedding[indices_flat]              # (N, D)
-
-        # Reshape back
-        z_q = z_q_flat.reshape(batch, H, W, D)
+        indices_flat = np.argmin(distances, axis=1)                    # ties -> lowest index
+        z_q = self.embedding[indices_flat].reshape(batch, H, W, D)
         indices = indices_flat.reshape(batch, H, W)
-        min_distances = np.min(distances, axis=1).reshape(batch, H, W)
-
+        min_distances = distances[np.arange(len(indices_flat)), indices_flat].reshape(batch, H, W)
         return z_q, indices, min_distances
 
     def compute_loss(self, z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
-        # Codebook loss: ||sg[z_e] - z_q||²
-        # In practice, this updates the codebook to move toward encoder output
-        codebook_loss = np.mean((z_e - z_q) ** 2)
-
-        # Commitment loss: ||z_e - sg[z_q]||²
-        # This commits the encoder output to stay close to codebook
-        commitment_loss = beta * np.mean((z_e - z_q) ** 2)
-
-        return {
-            'codebook_loss': codebook_loss,
-            'commitment_loss': commitment_loss
-        }
+        mse = float(np.mean((z_e - z_q) ** 2))
+        # Same forward value; the stop-gradient decides which side each term trains
+        return {'codebook_loss': mse, 'commitment_loss': beta * mse}
 
 
 class VQVAE:
     def __init__(self, input_channels: int, hidden_dim: int,
                  num_embeddings: int, embedding_dim: int):
         np.random.seed(42)
-
         self.input_channels = input_channels
         self.hidden_dim = hidden_dim
         self.embedding_dim = embedding_dim
 
-        # Simplified: use linear projection instead of conv for demo
-        # Encoder projects input to embedding space
         self.enc_w1 = np.random.randn(input_channels * 16, hidden_dim) * 0.1
         self.enc_b1 = np.zeros(hidden_dim)
         self.enc_w2 = np.random.randn(hidden_dim, embedding_dim) * 0.1
         self.enc_b2 = np.zeros(embedding_dim)
 
-        # Vector Quantizer
         self.vq = VectorQuantizer(num_embeddings, embedding_dim)
 
-        # Decoder projects back
         self.dec_w1 = np.random.randn(embedding_dim, hidden_dim) * 0.1
         self.dec_b1 = np.zeros(hidden_dim)
         self.dec_w2 = np.random.randn(hidden_dim, input_channels * 16) * 0.1
         self.dec_b2 = np.zeros(input_channels * 16)
 
     def encode(self, x: np.ndarray) -> np.ndarray:
-        # x: (batch, channels, H, W) - assume H=W=4 for simplicity
         batch = x.shape[0]
-
-        # Flatten spatial dimensions
-        x_flat = x.reshape(batch, -1)  # (batch, channels * H * W)
-
-        # Encode
-        h = np.maximum(0, x_flat @ self.enc_w1 + self.enc_b1)  # ReLU
-        z_e = h @ self.enc_w2 + self.enc_b2  # (batch, embedding_dim)
-
-        # Reshape to spatial format (batch, 2, 2, embedding_dim)
-        z_e = z_e.reshape(batch, 1, 1, self.embedding_dim)
-
-        return z_e
+        h = np.maximum(0, x.reshape(batch, -1) @ self.enc_w1 + self.enc_b1)
+        z_e = h @ self.enc_w2 + self.enc_b2                             # (batch, D)
+        return z_e.reshape(batch, 1, 1, self.embedding_dim)            # a 1x1 latent grid
 
     def decode(self, z_q: np.ndarray) -> np.ndarray:
         batch = z_q.shape[0]
-
-        # Flatten
-        z_flat = z_q.reshape(batch, -1)  # (batch, embedding_dim)
-
-        # Decode
-        h = np.maximum(0, z_flat @ self.dec_w1 + self.dec_b1)  # ReLU
+        h = np.maximum(0, z_q.reshape(batch, -1) @ self.dec_w1 + self.dec_b1)
         x_recon = h @ self.dec_w2 + self.dec_b2
-
-        # Reshape to image format
-        x_recon = x_recon.reshape(batch, self.input_channels, 4, 4)
-
-        return x_recon
+        return x_recon.reshape(batch, self.input_channels, 4, 4)
 
     def forward(self, x: np.ndarray) -> dict:
-        # Encode
         z_e = self.encode(x)
-
-        # Quantize
-        z_q, indices, distances = self.vq.quantize(z_e)
-
-        # Straight-through estimator: gradient flows through z_q to z_e
-        # z_q_st = z_e + (z_q - z_e).detach()
-        # For forward pass, we just use z_q
-
-        # Decode
-        x_recon = self.decode(z_q)
-
-        return {
-            'z_e': z_e,
-            'z_q': z_q,
-            'indices': indices,
-            'x_recon': x_recon
-        }
+        z_q, indices, _ = self.vq.quantize(z_e)
+        # With autograd you would decode z_e + sg[z_q - z_e] (straight-through);
+        # its forward value is z_q.
+        return {'z_e': z_e, 'z_q': z_q, 'indices': indices, 'x_recon': self.decode(z_q)}
 
     def compute_loss(self, x: np.ndarray, x_recon: np.ndarray,
                      z_e: np.ndarray, z_q: np.ndarray, beta: float = 0.25) -> dict:
-        # Reconstruction loss
-        recon_loss = np.mean((x - x_recon) ** 2)
-
-        # VQ losses
-        vq_losses = self.vq.compute_loss(z_e, z_q, beta)
-
-        # Total loss
-        total_loss = recon_loss + vq_losses['codebook_loss'] + vq_losses['commitment_loss']
-
-        return {
-            'total_loss': total_loss,
-            'recon_loss': recon_loss,
-            'codebook_loss': vq_losses['codebook_loss'],
-            'commitment_loss': vq_losses['commitment_loss']
-        }
+        recon_loss = float(np.mean((x - x_recon) ** 2))
+        vq = self.vq.compute_loss(z_e, z_q, beta)
+        total = recon_loss + vq['codebook_loss'] + vq['commitment_loss']
+        return {'total_loss': total, 'recon_loss': recon_loss,
+                'codebook_loss': vq['codebook_loss'], 'commitment_loss': vq['commitment_loss']}
 
     def get_codebook_usage(self, indices: np.ndarray) -> np.ndarray:
-        usage = np.bincount(indices.flatten(), minlength=self.vq.num_embeddings)
-        return usage
+        return np.bincount(indices.ravel(), minlength=self.vq.num_embeddings)
+
+# Quantization: O(N * K * D) time, O(N * K) memory for the distance matrix
 `,
   },
   {
@@ -1128,42 +1274,56 @@ class VQVAE:
     section: 'e2e-implementations',
     difficulty: 'hard',
     description: `
-## End-to-End Diffusion Model
+## End-to-End Diffusion Model (DDPM)
 
-Implement core components of a diffusion model (DDPM-style).
+### What you'll build
+The full DDPM machinery as one class: the noise schedule, closed-form forward noising, the ε-prediction training loss, the reverse step and the sampling loop. A real model would plug a neural network in as \`noise_predictor\`; here any callable works, so you can test the plumbing. It combines **Diffusion Noise Schedule**, **Diffusion Forward Process** and **DDPM Reverse Sampling Step** from Generative Models.
 
-### Forward Process (Adding Noise)
-\`\`\`
-x_t = sqrt(α_bar_t) * x_0 + sqrt(1 - α_bar_t) * ε
-\`\`\`
+### Pipeline
+| Phase | Step | Formula |
+|-------|------|---------|
+| setup | schedule (0-indexed \`t = 0..T−1\`) | \`β = linspace(β_start, β_end, T)\`, \`α = 1 − β\`, \`ᾱ_t = Π_{s≤t} α_s\` |
+| training | noise data at a random t | \`x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε\` |
+| training | loss | \`mean((ε − ε_θ(x_t, t))²)\` |
+| sampling | reverse step | \`mean = (x_t − β_t / sqrt(1 − ᾱ_t)·ε_θ) / sqrt(α_t)\`; \`x_{t−1} = mean + sqrt(β_t)·z\` for t > 0, \`mean\` at t = 0 |
+| sampling | loop | start from \`x ~ N(0, I)\` and apply the reverse step for \`t = T−1, T−2, ..., 0\` |
 
-### Noise Schedule
-\`\`\`
-β_t: Linear from β_start to β_end
-α_t = 1 - β_t
-α_bar_t = cumulative product of α_t
-\`\`\`
+### Method contract
+| Method | Returns |
+|--------|---------|
+| \`__init__(T=1000, beta_start=1e-4, beta_end=0.02)\` | stores \`self.T\` and the schedule arrays \`self.betas\`, \`self.alphas\`, \`self.alpha_bars\` |
+| \`get_noise_schedule()\` | dict \`{'betas', 'alphas', 'alpha_bars'}\`, each \`(T,)\` |
+| \`forward_diffusion(x_0, t)\` | tuple \`(x_t, noise)\`, both shaped like \`x_0\`. Keep the starter's \`np.random.seed(42)\` and draw \`noise = np.random.randn(*x_0.shape)\` |
+| \`reverse_step(x_t, t, predicted_noise)\` | \`x_{t−1}\` shaped like \`x_t\`. For t > 0 draw \`z = np.random.randn(*x_t.shape)\` (no re-seeding); at t = 0 draw nothing |
+| \`compute_loss(true_noise, predicted_noise)\` | float, the MSE over all elements |
+| \`sample(shape, noise_predictor)\` | final \`x\` of the given shape; calls \`noise_predictor(x, t)\` once per step with \`t\` from \`T−1\` down to \`0\` |
 
-### Training Objective
-\`\`\`
-L = ||ε - ε_θ(x_t, t)||²
-\`\`\`
+### Inputs
+- \`x_0\`, \`x_t\`, \`predicted_noise\`, \`true_noise\`: float arrays of any matching shape
+- \`t\`: int in \`[0, T−1]\`; \`shape\`: tuple; \`noise_predictor(x, t)\`: callable returning an array shaped like \`x\`
 
-Model learns to predict the noise added at timestep t.
+### Constraints
+NumPy only; vectorised inside each step (the only loop is over timesteps in \`sample\`).
 
-### Reverse Process (Sampling)
-\`\`\`
-x_{t-1} = (1/sqrt(α_t)) * (x_t - (β_t/sqrt(1-α_bar_t)) * ε_θ(x_t, t)) + σ_t * z
-\`\`\`
-
-### Task
-Implement noise schedule, forward process, and reverse sampling.
+### Follow-up
+- Sampling needs T network calls. How do DDIM or a shorter flow-matching ODE cut this to 20–50?
+- Why do training batches sample a random \`t\` per example instead of looping over all t?
     `,
     examples: [
       {
-        input: 'DiffusionModel(T=1000)',
-        output: 'Denoised samples',
-        explanation: 'Forward and reverse diffusion',
+        input: "DiffusionModel(T=3, beta_start=0.1, beta_end=0.3).get_noise_schedule()",
+        output: "{'betas': [0.1, 0.2, 0.3], 'alphas': [0.9, 0.8, 0.7], 'alpha_bars': [0.9, 0.72, 0.504]}",
+        explanation: 'ᾱ is the running product of α',
+      },
+      {
+        input: 'dm.forward_diffusion(np.array([[1.0, -1.0]]), t=1) for the same model',
+        output: '(array([[1.1114, -0.9217]]), array([[0.4967, -0.1383]]))',
+        explanation: 'x_1 = sqrt(0.72)·x_0 + sqrt(0.28)·ε with ε the first draws after seed 42',
+      },
+      {
+        input: 'dm.reverse_step(np.array([1.0, -0.5]), t=0, predicted_noise=np.array([0.2, 0.4]))',
+        output: 'array([0.9874, -0.6604])',
+        explanation: 'At t = 0 there is no added noise: (x − 0.1 / sqrt(0.1)·ε) / sqrt(0.9)',
       },
     ],
     starterCode: `import numpy as np
@@ -1180,12 +1340,12 @@ class DiffusionModel:
         """
         self.T = T
 
-        # Compute noise schedule
+        # Compute the linear schedule: self.betas, self.alphas, self.alpha_bars (each (T,))
         # Your code here
         pass
 
     def get_noise_schedule(self) -> dict:
-        """Return computed noise schedule parameters."""
+        """Return {'betas', 'alphas', 'alpha_bars'}."""
         # Your code here
         pass
 
@@ -1195,13 +1355,12 @@ class DiffusionModel:
 
         Args:
             x_0: Original data (batch, ...)
-            t: Timestep
+            t: Timestep (0-indexed)
 
         Returns:
-            x_t: Noisy data
-            noise: The noise that was added
+            (x_t, noise): x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * noise
         """
-        np.random.seed(42)
+        np.random.seed(42)  # keep: draw noise once with np.random.randn(*x_0.shape)
         # Your code here
         pass
 
@@ -1211,17 +1370,18 @@ class DiffusionModel:
 
         Args:
             x_t: Noisy data at timestep t
-            t: Current timestep
-            predicted_noise: Noise predicted by model
+            t: Current timestep (0-indexed)
+            predicted_noise: Noise predicted by the model
 
         Returns:
-            x_{t-1}: Less noisy data
+            x_{t-1}: mean + sqrt(beta_t) * z for t > 0 (z = np.random.randn(*x_t.shape)),
+                     just the mean at t = 0
         """
         # Your code here
         pass
 
     def compute_loss(self, true_noise: np.ndarray, predicted_noise: np.ndarray) -> float:
-        """Compute MSE loss between true and predicted noise."""
+        """MSE between true and predicted noise (Python float)."""
         # Your code here
         pass
 
@@ -1234,7 +1394,8 @@ class DiffusionModel:
             noise_predictor: Function that predicts noise given (x_t, t)
 
         Returns:
-            Generated samples
+            Generated samples: start from np.random.randn(*shape), then
+            reverse_step for t = T-1, ..., 0
         """
         # Your code here
         pass
@@ -1275,80 +1436,85 @@ class DiffusionModel:
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '6',
+        description: 'Schedule and forward-diffusion values',
+        input: `(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3), s := dm.get_noise_schedule(),
+    r := dm.forward_diffusion(np.array([[1.0, -1.0]]), 1),
+    (np.round(s['alpha_bars'], 4).tolist(), np.round(r[0], 4).tolist(), np.round(r[1], 4).tolist())
+)[-1])()`,
+        expected: '([0.9, 0.72, 0.504], [[1.1114, -0.9217]], [[0.4967, -0.1383]])',
+        hidden: false,
+      },
+      {
+        id: '7',
+        description: 'Reverse step: deterministic at t = 0, adds sqrt(beta_t) * z otherwise',
+        input: `(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3),
+    a := dm.reverse_step(np.array([1.0, -0.5]), 0, np.array([0.2, 0.4])),
+    np.random.seed(5), b := dm.reverse_step(np.array([1.0, -0.5]), 2, np.array([0.2, 0.4])),
+    np.random.seed(5), z := np.random.randn(2),
+    mean := (np.array([1.0, -0.5]) - 0.3 / np.sqrt(1 - 0.504) * np.array([0.2, 0.4])) / np.sqrt(0.7),
+    (np.round(a, 4).tolist(), bool(np.allclose(b, mean + np.sqrt(0.3) * z)))
+)[-1])()`,
+        expected: '([0.9874, -0.6604], True)',
+        hidden: true,
+      },
+      {
+        id: '8',
+        description: 'compute_loss value; sample calls the predictor for t = T-1 down to 0',
+        input: `(lambda: (
+    dm := DiffusionModel(3, 0.1, 0.3), calls := [],
+    out := dm.sample((2, 2), lambda x, t: (calls.append(t), np.zeros_like(x))[1]),
+    (round(float(dm.compute_loss(np.array([1.0, 2.0]), np.array([0.0, 0.0]))), 4), calls, out.shape)
+)[-1])()`,
+        expected: '(2.5, [2, 1, 0], (2, 2))',
+        hidden: true,
+      },
     ],
     hints: [
-      'betas = np.linspace(beta_start, beta_end, T)',
-      'alpha_bars = np.cumprod(1 - betas)',
-      'x_t = sqrt(alpha_bar) * x_0 + sqrt(1 - alpha_bar) * noise',
-      'Reverse: use mean and add small noise (except at t=0)',
+      'Everything derives from the schedule: compute betas, alphas and alpha_bars once in __init__ and reuse them in every method.',
+      'forward_diffusion is one line of mixing; reverse_step computes the mean, then adds noise only when t > 0; sample loops t over reversed(range(T)).',
+      'np.linspace and np.cumprod for the schedule; mean = (x_t - betas[t] / np.sqrt(1 - alpha_bars[t]) * eps) / np.sqrt(alphas[t]); sigma_t = np.sqrt(betas[t]).',
+      'Pitfall: the reverse step divides by sqrt(α_t) (this step) but scales ε by β_t / sqrt(1 − ᾱ_t) (cumulative). Do not re-seed inside reverse_step, or every step draws the same z.',
     ],
     solution: `import numpy as np
 
 class DiffusionModel:
     def __init__(self, T: int = 1000, beta_start: float = 0.0001, beta_end: float = 0.02):
         self.T = T
-
-        # Linear noise schedule
         self.betas = np.linspace(beta_start, beta_end, T)
         self.alphas = 1 - self.betas
         self.alpha_bars = np.cumprod(self.alphas)
 
-        # For reverse process
-        self.sqrt_alpha_bars = np.sqrt(self.alpha_bars)
-        self.sqrt_one_minus_alpha_bars = np.sqrt(1 - self.alpha_bars)
-        self.sqrt_alphas = np.sqrt(self.alphas)
-
     def get_noise_schedule(self) -> dict:
-        return {
-            'betas': self.betas,
-            'alphas': self.alphas,
-            'alpha_bars': self.alpha_bars
-        }
+        return {'betas': self.betas, 'alphas': self.alphas, 'alpha_bars': self.alpha_bars}
 
     def forward_diffusion(self, x_0: np.ndarray, t: int) -> tuple:
         np.random.seed(42)
         noise = np.random.randn(*x_0.shape)
-
-        sqrt_alpha_bar = self.sqrt_alpha_bars[t]
-        sqrt_one_minus_alpha_bar = self.sqrt_one_minus_alpha_bars[t]
-
-        x_t = sqrt_alpha_bar * x_0 + sqrt_one_minus_alpha_bar * noise
-
+        ab = self.alpha_bars[t]
+        x_t = np.sqrt(ab) * x_0 + np.sqrt(1 - ab) * noise   # q(x_t | x_0) in one shot
         return x_t, noise
 
     def reverse_step(self, x_t: np.ndarray, t: int, predicted_noise: np.ndarray) -> np.ndarray:
-        alpha = self.alphas[t]
-        alpha_bar = self.alpha_bars[t]
-        beta = self.betas[t]
-
-        # Mean of reverse distribution
-        coef1 = 1 / np.sqrt(alpha)
-        coef2 = beta / np.sqrt(1 - alpha_bar)
-        mean = coef1 * (x_t - coef2 * predicted_noise)
-
-        if t > 0:
-            # Add noise (except at final step)
-            sigma = np.sqrt(beta)
-            noise = np.random.randn(*x_t.shape)
-            x_prev = mean + sigma * noise
-        else:
-            x_prev = mean
-
-        return x_prev
+        beta, alpha, ab = self.betas[t], self.alphas[t], self.alpha_bars[t]
+        mean = (x_t - beta / np.sqrt(1 - ab) * predicted_noise) / np.sqrt(alpha)
+        if t == 0:
+            return mean                                   # final step: no noise
+        return mean + np.sqrt(beta) * np.random.randn(*x_t.shape)   # sigma_t^2 = beta_t
 
     def compute_loss(self, true_noise: np.ndarray, predicted_noise: np.ndarray) -> float:
-        return np.mean((true_noise - predicted_noise) ** 2)
+        return float(np.mean((true_noise - predicted_noise) ** 2))
 
     def sample(self, shape: tuple, noise_predictor) -> np.ndarray:
-        # Start from pure noise
-        x = np.random.randn(*shape)
-
-        # Reverse diffusion
+        x = np.random.randn(*shape)                       # x_{T-1} ~ N(0, I)
         for t in reversed(range(self.T)):
-            predicted_noise = noise_predictor(x, t)
-            x = self.reverse_step(x, t, predicted_noise)
-
+            x = self.reverse_step(x, t, noise_predictor(x, t))
         return x
+
+# Sampling: T calls of the noise predictor, O(T * size(x)) extra work
 `,
   },
   {
@@ -1359,50 +1525,61 @@ class DiffusionModel:
     description: `
 ## End-to-End CNN
 
-Implement a complete CNN for image classification.
+### What you'll build
+A LeNet-style image classifier in NumPy: 2-D convolution, max pooling and flatten as standalone functions, then a \`CNN\` class that chains two conv blocks and two fully connected layers into logits.
 
-### Architecture
-\`\`\`
-Input (batch, channels, height, width)
-  ↓
-Conv2D(in_channels, 32, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Conv2D(32, 64, kernel=3) + ReLU
-  ↓
-MaxPool2D(2x2)
-  ↓
-Flatten
-  ↓
-Linear(flattened_size, 128) + ReLU
-  ↓
-Linear(128, num_classes)
-  ↓
-Softmax
-\`\`\`
+### Architecture (input \`(batch, C, H, W)\`, e.g. MNIST \`(batch, 1, 28, 28)\`)
+| Layer | Operation | Output shape (28×28 input) |
+|-------|-----------|----------------------------|
+| conv1 | \`conv2d(x, conv1_w (32, C, 3, 3), conv1_b)\` + ReLU | \`(batch, 32, 26, 26)\` |
+| pool1 | \`maxpool2d(·, 2)\` | \`(batch, 32, 13, 13)\` |
+| conv2 | \`conv2d(·, conv2_w (64, 32, 3, 3), conv2_b)\` + ReLU | \`(batch, 64, 11, 11)\` |
+| pool2 | \`maxpool2d(·, 2)\` | \`(batch, 64, 5, 5)\` |
+| flatten | \`flatten(·)\` | \`(batch, 1600)\` |
+| fc1 | \`· @ fc1_w + fc1_b\` + ReLU | \`(batch, 128)\` |
+| fc2 | \`· @ fc2_w + fc2_b\` | \`(batch, num_classes)\` **logits** (no softmax) |
 
-### Components
-- 2D Convolution (no padding for simplicity)
-- Max Pooling
-- Flatten
-- Fully Connected layers
+General sizes: a 3×3 valid conv maps \`H → H − 2\`; a 2×2 pool maps \`H → H // 2\` (an odd leftover row/column is dropped). So \`flat_size = 64 · h2 · w2\` with \`h1 = (H − 2) // 2\`, \`h2 = (h1 − 2) // 2\` (same for W).
 
-### Task
-Implement conv2d, maxpool, and combine into CNN.
+### Function contract
+| Function | Behaviour | Returns |
+|----------|-----------|---------|
+| \`conv2d(x, kernel, bias)\` | stride 1, no padding, **cross-correlation** (no kernel flip, like every DL framework): \`out[b, o, i, j] = Σ_{c,u,v} x[b, c, i+u, j+v] · kernel[o, c, u, v] + bias[o]\` | \`(batch, out_ch, H − kH + 1, W − kW + 1)\` |
+| \`maxpool2d(x, pool_size=2)\` | non-overlapping windows (stride = pool_size), max per window and channel | \`(batch, ch, H // p, W // p)\` |
+| \`flatten(x)\` | keep the batch axis, merge the rest | \`(batch, −1)\` |
+| \`CNN(input_shape, num_classes)\` | creates \`conv1_w/b\`, \`conv2_w/b\` (given, after \`np.random.seed(42)\`), then \`fc1_w (flat_size, 128)\`, \`fc1_b\`, \`fc2_w (128, num_classes)\`, \`fc2_b\` (weights \`N(0, 0.1²)\`, zero biases) | |
+| \`CNN.forward(x)\` | the table above | logits \`(batch, num_classes)\` |
+| \`test_cnn()\` | a smoke test: build \`CNN((1, 28, 28), 10)\`, run 4 random images | \`True\` if the logits have shape \`(4, 10)\` |
+
+### Constraints
+NumPy only. Loops over output positions are acceptable for clarity, but try to vectorise \`conv2d\` (\`np.lib.stride_tricks.sliding_window_view\` + \`np.einsum\`): the naive 4-level loop is very slow in the browser.
+
+### Follow-up
+- Parameter count of conv1 and fc1 for MNIST? (32·1·9 + 32 = 320 and 1600·128 + 128 = 204,928: the dense layer dominates.)
+- How does im2col turn convolution into one matrix multiply?
     `,
     examples: [
       {
-        input: 'CNN on 28x28 grayscale images',
-        output: 'Class probabilities',
-        explanation: 'Full CNN forward pass',
+        input: 'conv2d(np.arange(16.0).reshape(1, 1, 4, 4), np.array([[[[1.0, 0.0], [2.0, -1.0]]]]), np.array([0.5]))',
+        output: '[[[[3.5, 5.5, 7.5], [11.5, 13.5, 15.5], [19.5, 21.5, 23.5]]]]',
+        explanation: 'With x[i, j] = 4i + j, each output is x[i, j] + 2·x[i+1, j] − x[i+1, j+1] + 0.5 = 8i + 2j + 3.5',
+      },
+      {
+        input: 'maxpool2d(np.array([[[[1, 3, 2, 0], [4, 2, 1, 5], [0, 1, 7, 6], [2, 8, 3, 1]]]]))',
+        output: '[[[[4.0, 5.0], [8.0, 7.0]]]]',
+        explanation: 'The max of each non-overlapping 2×2 block',
+      },
+      {
+        input: 'CNN((1, 28, 28), 10).forward(np.random.randn(2, 1, 28, 28)).shape',
+        output: '(2, 10)',
+        explanation: '28 → 26 → 13 → 11 → 5, so fc1 sees 64·5·5 = 1600 features',
       },
     ],
     starterCode: `import numpy as np
 
 def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
     """
-    2D convolution (no padding, stride=1).
+    2D convolution (cross-correlation, no padding, stride=1).
 
     Args:
         x: Input (batch, in_channels, height, width)
@@ -1418,14 +1595,14 @@ def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
 
 def maxpool2d(x: np.ndarray, pool_size: int = 2) -> np.ndarray:
     """
-    2D max pooling.
+    2D max pooling with non-overlapping windows (stride = pool_size).
 
     Args:
         x: Input (batch, channels, height, width)
         pool_size: Size of pooling window
 
     Returns:
-        output: Pooled tensor
+        output: (batch, channels, height // pool_size, width // pool_size)
     """
     # Your code here
     pass
@@ -1457,11 +1634,11 @@ class CNN:
         self.conv2_w = np.random.randn(64, 32, 3, 3) * 0.1
         self.conv2_b = np.zeros(64)
 
-        # Calculate flattened size after convolutions and pooling
-        # Your code to compute this
-        pass
+        # Flattened size after conv(3x3) -> pool(2) -> conv(3x3) -> pool(2)
+        # Your code here
 
-        # Fully connected layers
+        # Fully connected layers: fc1_w (flat_size, 128), fc1_b (128,),
+        # fc2_w (128, num_classes), fc2_b (num_classes,); weights * 0.1, biases zero
         # Your code here
         pass
 
@@ -1473,14 +1650,14 @@ class CNN:
             x: Input images (batch, channels, height, width)
 
         Returns:
-            logits: (batch, num_classes)
+            logits: (batch, num_classes), no softmax
         """
         # Your code here
         pass
 
 
 def test_cnn():
-    """Test CNN with sample data."""
+    """Smoke test: CNN((1, 28, 28), 10) on 4 random images; return True if logits are (4, 10)."""
     # Your code here
     pass
 `,
@@ -1513,50 +1690,61 @@ def test_cnn():
         expected: '(2, 10)',
         hidden: true,
       },
+      {
+        id: '5',
+        description: 'conv2d and maxpool2d values',
+        input: '(lambda: (conv2d(np.arange(16.0).reshape(1, 1, 4, 4), np.array([[[[1.0, 0.0], [2.0, -1.0]]]]), np.array([0.5])).tolist(), maxpool2d(np.array([[[[1.0, 3, 2, 0], [4, 2, 1, 5], [0, 1, 7, 6], [2, 8, 3, 1]]]])).tolist(), maxpool2d(np.arange(25.0).reshape(1, 1, 5, 5)).tolist()))()',
+        expected: '([[[[3.5, 5.5, 7.5], [11.5, 13.5, 15.5], [19.5, 21.5, 23.5]]]], [[[[4.0, 5.0], [8.0, 7.0]]]], [[[[6.0, 8.0], [16.0, 18.0]]]])',
+        hidden: false,
+      },
+      {
+        id: '6',
+        description: 'conv2d matches a reference on random multi-channel inputs',
+        input: `(lambda: (
+    x := np.random.randn(2, 3, 7, 6), k := np.random.randn(4, 3, 3, 2), b := np.random.randn(4),
+    ref := np.einsum('bchwij,ocij->bohw', np.lib.stride_tricks.sliding_window_view(x, (3, 2), axis=(2, 3)), k) + b[None, :, None, None],
+    bool(np.allclose(conv2d(x, k, b), ref))
+)[-1])()`,
+        expected: 'True',
+        hidden: true,
+      },
+      {
+        id: '7',
+        description: 'forward follows the architecture (checked against the model weights)',
+        input: `(lambda: (
+    m := CNN((1, 14, 14), 3), x := np.random.randn(2, 1, 14, 14),
+    cv := lambda a, k, b: np.einsum('bchwij,ocij->bohw', np.lib.stride_tricks.sliding_window_view(a, k.shape[2:], axis=(2, 3)), k) + b[None, :, None, None],
+    pl := lambda a: a[:, :, :a.shape[2] // 2 * 2, :a.shape[3] // 2 * 2].reshape(a.shape[0], a.shape[1], a.shape[2] // 2, 2, a.shape[3] // 2, 2).max(axis=(3, 5)),
+    h := pl(np.maximum(0, cv(pl(np.maximum(0, cv(x, m.conv1_w, m.conv1_b))), m.conv2_w, m.conv2_b))).reshape(2, -1),
+    ref := np.maximum(0, h @ m.fc1_w + m.fc1_b) @ m.fc2_w + m.fc2_b,
+    (m.fc1_w.shape, m.fc2_w.shape, bool(np.allclose(m.forward(x), ref)))
+)[-1])()`,
+        expected: '((256, 128), (128, 3), True)',
+        hidden: true,
+      },
     ],
     hints: [
-      'Conv output size: (input - kernel + 1) for stride=1, no padding',
-      'Pool output size: input // pool_size',
-      'Use nested loops for convolution (or np.lib.stride_tricks)',
-      'Flatten: x.reshape(batch_size, -1)',
+      'Track shapes layer by layer first: write down H and W after every conv (H − k + 1) and pool (H // 2); that gives the input size of fc1.',
+      'Write conv2d, maxpool2d and flatten as standalone functions, test them on tiny arrays, then chain them in forward with ReLU after each conv and after fc1.',
+      'Vectorised conv: windows = np.lib.stride_tricks.sliding_window_view(x, (kH, kW), axis=(2, 3)); out = np.einsum("bchwij,ocij->bohw", windows, kernel) + bias[None, :, None, None]. Pool: reshape to (B, C, H//p, p, W//p, p) and take .max(axis=(3, 5)).',
+      'Pitfall: crop odd sizes before the pooling reshape (13 → 12), and do not flip the kernel; frameworks compute cross-correlation. forward returns logits, not softmax probabilities.',
     ],
     solution: `import numpy as np
 
 def conv2d(x: np.ndarray, kernel: np.ndarray, bias: np.ndarray) -> np.ndarray:
-    batch, in_ch, H, W = x.shape
-    out_ch, _, kH, kW = kernel.shape
-    out_H = H - kH + 1
-    out_W = W - kW + 1
-
-    output = np.zeros((batch, out_ch, out_H, out_W))
-
-    for b in range(batch):
-        for oc in range(out_ch):
-            for i in range(out_H):
-                for j in range(out_W):
-                    receptive_field = x[b, :, i:i+kH, j:j+kW]
-                    output[b, oc, i, j] = np.sum(receptive_field * kernel[oc]) + bias[oc]
-
-    return output
+    """Valid cross-correlation, stride 1: (B, C, H, W) -> (B, O, H-kH+1, W-kW+1)."""
+    kH, kW = kernel.shape[2:]
+    # windows[b, c, i, j, u, v] = x[b, c, i+u, j+v]  (a view, no copy)
+    windows = np.lib.stride_tricks.sliding_window_view(x, (kH, kW), axis=(2, 3))
+    return np.einsum('bchwij,ocij->bohw', windows, kernel) + bias[None, :, None, None]
 
 
 def maxpool2d(x: np.ndarray, pool_size: int = 2) -> np.ndarray:
-    batch, channels, H, W = x.shape
-    out_H = H // pool_size
-    out_W = W // pool_size
-
-    output = np.zeros((batch, channels, out_H, out_W))
-
-    for i in range(out_H):
-        for j in range(out_W):
-            h_start = i * pool_size
-            w_start = j * pool_size
-            output[:, :, i, j] = np.max(
-                x[:, :, h_start:h_start+pool_size, w_start:w_start+pool_size],
-                axis=(2, 3)
-            )
-
-    return output
+    B, C, H, W = x.shape
+    p = pool_size
+    Ho, Wo = H // p, W // p
+    x = x[:, :, :Ho * p, :Wo * p]                         # drop the odd leftover row/column
+    return x.reshape(B, C, Ho, p, Wo, p).max(axis=(3, 5))
 
 
 def flatten(x: np.ndarray) -> np.ndarray:
@@ -1568,56 +1756,35 @@ class CNN:
         np.random.seed(42)
         in_channels, H, W = input_shape
 
-        # Conv layers
         self.conv1_w = np.random.randn(32, in_channels, 3, 3) * 0.1
         self.conv1_b = np.zeros(32)
         self.conv2_w = np.random.randn(64, 32, 3, 3) * 0.1
         self.conv2_b = np.zeros(64)
 
-        # Calculate size after convolutions and pooling
-        # After conv1 (3x3): H-2, W-2
-        # After pool1 (2x2): (H-2)//2, (W-2)//2
-        # After conv2 (3x3): (H-2)//2 - 2, (W-2)//2 - 2
-        # After pool2 (2x2): ((H-2)//2 - 2)//2, ((W-2)//2 - 2)//2
-        h1 = (H - 2) // 2
-        w1 = (W - 2) // 2
-        h2 = (h1 - 2) // 2
-        w2 = (w1 - 2) // 2
+        # conv 3x3: H -> H-2; pool 2: H -> H//2 (twice)
+        h2 = ((H - 2) // 2 - 2) // 2
+        w2 = ((W - 2) // 2 - 2) // 2
         flat_size = 64 * h2 * w2
 
-        # FC layers
         self.fc1_w = np.random.randn(flat_size, 128) * 0.1
         self.fc1_b = np.zeros(128)
         self.fc2_w = np.random.randn(128, num_classes) * 0.1
         self.fc2_b = np.zeros(num_classes)
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        # Conv block 1
-        x = conv2d(x, self.conv1_w, self.conv1_b)
-        x = np.maximum(0, x)  # ReLU
-        x = maxpool2d(x)
-
-        # Conv block 2
-        x = conv2d(x, self.conv2_w, self.conv2_b)
-        x = np.maximum(0, x)  # ReLU
-        x = maxpool2d(x)
-
-        # Flatten
+        x = maxpool2d(np.maximum(0, conv2d(x, self.conv1_w, self.conv1_b)))
+        x = maxpool2d(np.maximum(0, conv2d(x, self.conv2_w, self.conv2_b)))
         x = flatten(x)
-
-        # FC layers
-        x = np.maximum(0, x @ self.fc1_w + self.fc1_b)  # ReLU
-        x = x @ self.fc2_w + self.fc2_b  # Logits
-
-        return x
+        x = np.maximum(0, x @ self.fc1_w + self.fc1_b)
+        return x @ self.fc2_w + self.fc2_b                # logits
 
 
 def test_cnn():
-    # Test with MNIST-like data
     cnn = CNN(input_shape=(1, 28, 28), num_classes=10)
-    x = np.random.randn(4, 1, 28, 28)
-    logits = cnn.forward(x)
+    logits = cnn.forward(np.random.randn(4, 1, 28, 28))
     return logits.shape == (4, 10)
+
+# conv2d: O(B * O * C * kH * kW * H_out * W_out) time
 `,
   },
   {
@@ -1628,57 +1795,65 @@ def test_cnn():
     description: `
 ## Mini GPT: a Character-Level Language Model
 
-Put the pieces together into a tiny decoder-only Transformer, the same architecture as GPT-2 (just very small), and run it end to end: forward pass, next-token loss, training and greedy generation.
+### What you'll build
+A tiny decoder-only Transformer with the same architecture as GPT-2 (just very small), run end to end: forward pass, next-token loss, a training loop and greedy generation.
 
 ### Architecture
-\`\`\`
-idx (B, T) integer token ids, T <= block_size
-x = tok_emb[idx] + pos_emb[:T]                       # (B, T, C)
-for each block:                                      # pre-norm residual blocks
-    x = x + Attn(LN1(x))                             # causal multi-head self-attention
-    x = x + MLP(LN2(x))                              # MLP(h) = gelu(h W_1 + b_1) W_2 + b_2
-h = LN_f(x)                                          # final LayerNorm
-logits = h @ W_lm                                    # (B, T, V)
-\`\`\`
+| Step | Operation | Shape |
+|------|-----------|-------|
+| input | \`idx\`: integer token ids, \`T ≤ block_size\` | \`(B, T)\` |
+| embeddings | \`x = tok_emb[idx] + pos_emb[:T]\` | \`(B, T, C)\` |
+| per block (pre-norm) | \`x = x + attention(LN1(x))\` | \`(B, T, C)\` |
+| per block (pre-norm) | \`x = x + gelu(LN2(x) @ W_1 + b_1) @ W_2 + b_2\` | hidden \`(B, T, 4C)\` |
+| final norm | \`h = LN_f(x)\` = \`hidden_states(idx)\` | \`(B, T, C)\` |
+| LM head (untied) | \`logits = h @ W_lm\` | \`(B, T, V)\` |
 
-**Causal self-attention** with \`H\` heads, \`d_head = C / H\`:
-\`\`\`
-q, k, v = split(x @ W_qkv, 3, axis=-1)               # each (B, T, C); W_qkv columns are [Q | K | V]
-reshape each to (B, H, T, d_head)                    # head h uses columns h*d_head:(h+1)*d_head
-scores = q @ k^T / sqrt(d_head), masked to -inf where key position > query position
-out = softmax(scores) @ v -> back to (B, T, C) -> @ W_o
-\`\`\`
-LayerNorm uses \`eps = 1e-5\`; GELU is the tanh approximation (both helpers are provided).
+### Causal self-attention (per block, \`H = n_heads\`, \`d_head = C / H\`)
+1. \`q, k, v = split(x @ W_qkv, 3, axis=-1)\`: each \`(B, T, C)\`; the columns of \`W_qkv\` are \`[Q | K | V]\`.
+2. Reshape each to \`(B, H, T, d_head)\`; head \`h\` uses columns \`h·d_head : (h+1)·d_head\`.
+3. \`scores = q @ kᵀ / sqrt(d_head)\`, set to \`−inf\` where the key position is **after** the query position.
+4. \`out = softmax(scores) @ v\`, merged back to \`(B, T, C)\`, then \`@ W_o\`. No biases in attention.
 
-### Loss
-Mean cross-entropy of the next token over all \`B*T\` positions: \`targets[b, t]\` is the token that follows \`idx[b, t]\`. With the small (std 0.02) initialization the logits start near 0, so the **initial loss is about \`log(V)\`**: the model starts out guessing uniformly.
+The constructor (given) creates every parameter with GPT-2-style \`N(0, 0.02²)\` weights from \`np.random.default_rng(seed)\`; LayerNorm (\`eps = 1e-5\`), tanh-GELU and softmax helpers are provided.
 
-### Generation (greedy)
-Repeat \`max_new_tokens\` times: crop the context to the last \`block_size\` tokens, run \`forward\`, take the **argmax** of the logits at the last position and append it.
+### Method contract
+| Method | Returns |
+|--------|---------|
+| \`attention(x, blk)\` | \`(B, T, C)\`, using the block dict's \`W_qkv\` and \`W_o\` |
+| \`hidden_states(idx)\` | \`(B, T, C)\`: embeddings → blocks → final LayerNorm |
+| \`forward(idx)\` | logits \`(B, T, vocab_size)\` |
+| \`loss(idx, targets)\` | float: mean cross-entropy over all \`B·T\` positions; \`targets[b, t]\` is the token after \`idx[b, t]\` |
+| \`generate(idx, max_new_tokens)\` | int array \`(B, T + max_new_tokens)\` starting with \`idx\` |
+| \`train_step(idx, targets, lr)\` | *(provided in the NumPy track)* one SGD step on \`W_lm\` only, using \`dL/dlogits = (softmax − one_hot) / N\` |
+| \`train(model, idx, targets, steps=20, lr=1.0)\` | list of \`steps\` losses, each computed **before** that step's update |
 
-### Training
-\`train_step\` (provided in the NumPy track) does one SGD step on the LM head only, using \`dL/dlogits = (softmax - one_hot) / N\`. You write the loop.
+### Conventions
+- **Initial loss ≈ log(V)**: with std-0.02 weights the logits start near 0, so the model guesses uniformly.
+- **Greedy generation**: repeat \`max_new_tokens\` times: crop the context to the last \`block_size\` tokens, run \`forward\`, append the **argmax** of the last position's logits.
+- Use a numerically stable log-softmax in \`loss\` (subtract the max).
 
-### Expected Return Format
-- \`MiniGPT(vocab_size, d_model=16, n_heads=2, n_layers=1, block_size=8)\`
-- \`model.forward(idx)\`: logits \`(B, T, vocab_size)\`
-- \`model.loss(idx, targets)\`: mean cross-entropy (scalar)
-- \`model.generate(idx, max_new_tokens)\`: integer array \`(B, T + max_new_tokens)\` that starts with \`idx\`
-- \`train(model, idx, targets, steps, lr)\`: list of \`steps\` losses, each computed **before** that step's update
+### Constraints
+NumPy only; no loops over batch, heads or positions (only over blocks and generation steps).
+
+### Follow-up
+- Generation re-runs the whole context each step: how does a **KV cache** make each new token \`O(T)\` instead of \`O(T²)\`?
+- Why do GPT-2 and most LLMs **tie** the LM head to \`tok_emb\`? (See **Transformer Bug Hunt**, which does.)
 `,
     examples: [
       {
         input: 'model = MiniGPT(vocab_size=5); model.forward(np.zeros((2, 8), dtype=int)).shape',
         output: '(2, 8, 5)',
+        explanation: 'One distribution over the 5 tokens for every position of every sequence',
       },
       {
-        input: 'model.loss(idx, targets)',
-        output: '≈ 1.609 (= log 5)',
-        explanation: 'Untrained model is close to uniform.',
+        input: 'seq = np.array([[i % 5 for i in range(9)]]); model.loss(seq[:, :-1], seq[:, 1:])',
+        output: '1.6769',
+        explanation: 'Close to log 5 = 1.6094: the untrained model is nearly uniform over the 5 tokens',
       },
       {
-        input: 'model.generate(np.array([[0, 1, 2]]), 5).shape',
-        output: '(1, 8)',
+        input: 'After train(model, seq[:, :-1], seq[:, 1:], steps=30, lr=2.0) on two shifted copies of the cycle 0→1→2→3→4→0: model.generate(np.array([[0, 1, 2]]), 5)',
+        output: '[[0, 1, 2, 3, 4, 0, 1, 2]]',
+        explanation: 'The prompt is kept and greedy decoding continues the learned cycle',
       },
     ],
     starterCode: `import numpy as np
@@ -1832,10 +2007,10 @@ def train(model, idx, targets, steps=20, lr=1.0):
       },
     ],
     hints: [
-      'Attention: q, k, v = np.split(x @ W_qkv, 3, axis=-1); reshape each to (B, T, H, d_head) and transpose to (B, H, T, d_head). Mask with np.triu(..., k=1) before the softmax.',
-      'hidden_states: x = tok_emb[idx] + pos_emb[:T]; each block does x += attn(LN1(x)) then x += MLP(LN2(x)); finish with the final LayerNorm.',
-      'loss: stable log-softmax over the last axis, pick the target log-probs with np.take_along_axis, return -mean as a float.',
-      'generate: loop max_new_tokens times on idx[:, -block_size:], take argmax at the last position, np.concatenate it onto idx.',
+      'Build it in the order data flows: attention for one block, then hidden_states (embeddings, blocks, final norm), then forward, loss and generate on top. Test the causal property early: changing a later token must not change earlier logits.',
+      'Attention is reshaping plus one masked softmax: split x @ W_qkv into q, k, v, move heads to axis 1, compute (B, H, T, T) scores, mask, softmax, multiply by v, move heads back, project with W_o.',
+      'np.split(x @ W_qkv, 3, axis=-1); a.reshape(B, T, H, d).transpose(0, 2, 1, 3); mask with np.where(np.triu(np.ones((T, T), bool), k=1), -np.inf, scores); loss with np.take_along_axis(log_probs, targets[..., None], axis=-1).',
+      'Pitfalls: the residual adds to x, not to LN(x) (pre-norm); generate must crop to idx[:, -block_size:] or pos_emb runs out of rows; record each training loss before calling train_step.',
     ],
     solution: `import numpy as np
 
@@ -1947,12 +2122,14 @@ def train(model, idx, targets, steps=20, lr=1.0):
     description: `
 ## End-to-End Tiny Vision Transformer (ViT)
 
-A Vision Transformer treats an image as a **sequence of patches**: cut it into \`P x P\` tiles, embed each tile linearly, prepend a learnable **[CLS]** token, add **position embeddings**, run a Transformer encoder, and classify from the final CLS token.
+### What you'll build
+\`TinyViT\`: a Vision Transformer classifier with **one pre-norm encoder block**, including patch extraction, the [CLS] token, position embeddings, the loss and a training step.
 
-Build \`TinyViT\` with **one pre-norm encoder block**.
+### Background
+A Vision Transformer (Dosovitskiy et al., 2021) treats an image as a **sequence of patches**: cut it into \`P × P\` tiles, embed each tile linearly, prepend a learnable **[CLS]** token, add **position embeddings**, run a Transformer encoder, and classify from the final CLS token. With no convolutions, everything the model knows about 2-D layout comes from the patch order and the position embeddings.
 
 ### Architecture
-\`\`\`
+\`\`\`text
 x (B, C, H, W)
   │ patchify                  (B, N, P*P*C)       N = (H/P) * (W/P)
   │ @ W_patch + b_patch       (B, N, D)
@@ -1976,17 +2153,28 @@ x (B, C, H, W)
 ### Why position embeddings matter
 Self-attention is **permutation-equivariant**, and the CLS token attends to all patches with the same weights regardless of where they are. So **without** position embeddings, shuffling the patches of an image leaves the CLS output (and the prediction) unchanged. Position embeddings are the only source of spatial order.
 
-### Methods to implement
-- \`patchify(x)\`: \`(B, C, H, W) -> (B, N, P*P*C)\`
-- \`cls_features(x)\`: final-LayerNormed CLS token, \`(B, D)\`
-- \`forward(x)\`: logits, \`(B, num_classes)\`
-- \`loss(x, y)\`: mean cross-entropy (float), with integer labels \`y\`
-- \`train_step(x, y, lr)\`: one plain SGD step on \`loss(x, y)\`; returns the loss **before** the step (float).
-  - **NumPy track**: update only the classification head (\`W_head\`, \`b_head\`); the encoder stays frozen (a *linear probe*). Its gradient is \`dlogits = (softmax(logits) - onehot(y)) / B\`, \`dW_head = cls^T @ dlogits\`, \`db_head = dlogits.sum(0)\`.
-  - **PyTorch track**: autograd updates **every** parameter.
+### Method contract
+| Method | Returns |
+|--------|---------|
+| \`TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)\` | creates all parameters (initialization above) |
+| \`patchify(x)\` | \`(B, C, H, W) → (B, N, P·P·C)\` |
+| \`cls_features(x)\` | final-LayerNormed CLS token, \`(B, D)\` |
+| \`forward(x)\` | logits \`(B, num_classes)\` |
+| \`loss(x, y)\` | float, mean cross-entropy with integer labels \`y (B,)\` |
+| \`train_step(x, y, lr=0.1)\` | float, the loss **before** one plain SGD step |
 
-### Constructor
-\`TinyViT(img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2, mlp_dim=32, num_classes=2, use_pos_emb=True)\`
+\`train_step\` differs by track:
+- **NumPy track**: update only the classification head (\`W_head\`, \`b_head\`); the encoder stays frozen (a *linear probe*). Gradient: \`dlogits = (softmax(logits) − onehot(y)) / B\`, \`dW_head = clsᵀ @ dlogits\`, \`db_head = dlogits.sum(0)\`.
+- **PyTorch track**: autograd updates **every** parameter.
+
+In the NumPy track, parameter names and storage are up to you (the tests only use the methods above); the PyTorch starter names the patch embedding \`patch_embed\`.
+
+### Constraints
+NumPy only, no loops over batch, heads or tokens.
+
+### Follow-up
+- Attention over N patches costs \`O(N²)\`: what happens to the cost if you halve the patch size?
+- Why do ViTs need more data (or strong augmentation) than CNNs? (They lack the convolutional inductive bias of locality and translation equivariance.)
     `,
     examples: [
       {
@@ -2112,10 +2300,10 @@ class TinyViT:
       },
     ],
     hints: [
-      'patchify: reshape to (B, C, H/P, P, W/P, P), transpose to (B, H/P, W/P, P, P, C), then reshape to (B, N, P*P*C).',
-      'Prepend CLS with np.concatenate([np.broadcast_to(cls, (B, 1, D)), tokens], axis=1), then add pos (N+1, D) if use_pos_emb.',
-      'Multi-head attention: split h @ W_qkv into Q, K, V; reshape each to (B, T, heads, d_head) and transpose to (B, heads, T, d_head); scores are Q @ K^T / sqrt(d_head).',
-      'Head-only SGD: dlogits = (softmax(logits) - onehot(y)) / B; W_head -= lr * cls.T @ dlogits; b_head -= lr * dlogits.sum(0).',
+      'Follow the shapes: an image becomes N patch vectors, then N + 1 tokens of width D with the CLS token in front; only token 0 is used for classification.',
+      'patchify is pure reshaping: (B, C, H, W) → (B, C, H/P, P, W/P, P) → transpose to (B, H/P, W/P, P, P, C) → (B, N, P·P·C). Then embed, prepend CLS, add pos, run one pre-norm block, LayerNorm the CLS row.',
+      'Prepend with np.concatenate([np.broadcast_to(cls, (B, 1, D)), tokens], axis=1). Attention: np.split(h @ W_qkv, 3, axis=-1), heads via reshape(B, T, nh, hd).transpose(0, 2, 1, 3), scores = q @ k.transpose(0, 1, 3, 2) / np.sqrt(hd).',
+      'Pitfall: the transpose order decides the (p1, p2, c) flattening; a plain reshape without it mixes pixels from different patches. In the NumPy train_step compute the loss before updating the head.',
     ],
     solution: `import numpy as np
 
@@ -2220,13 +2408,17 @@ class TinyViT:
     description: `
 ## Transformer Bug Hunt: Fix a Broken Mini-GPT
 
+### What you'll build
+A working \`gpt_forward\` by debugging a broken one. Reading and fixing someone else's model code is a common interview format, and these four bugs are the classic silent ones: the code runs and the shapes are right, but the numbers are wrong.
+
+### The setup
 The starter code is a tiny GPT-style language model: token and position embeddings, one causal self-attention block, one MLP block, a final LayerNorm and an LM head. It runs without errors on short inputs, but its outputs are wrong.
 
 **There are exactly 4 bugs, all inside \`gpt_forward\`.** The helpers \`init_params\`, \`layer_norm\`, \`softmax\` and \`gelu\` are correct. Find and fix the bugs; you shouldn't need to rewrite the model.
 
 ### Reference architecture (what the code should compute)
 For token ids \`tokens\` of length \`T\` (positions \`t = 0 .. T-1\`), with \`d = d_model\`:
-\`\`\`
+\`\`\`text
 x   = wte[tokens] + wpe[t]                               # learned positions, t starts at 0
 
 h   = LN1(x)
@@ -2252,6 +2444,13 @@ The tests check properties every correct decoder must have (causality, attention
 
 ### Debugging tips
 Write small experiments in the editor: inspect \`att\`, try a single token, zero out \`W_o\` or \`W_2\`, compare positions.
+
+### Constraints
+Edit only \`gpt_forward\`; keep the signature and the \`(logits, att)\` return.
+
+### Follow-up
+- Which of these bugs would still let training loss go down? (Most of them: that is why they are dangerous.)
+- What unit tests would have caught each bug before training?
 `,
     examples: [
       {

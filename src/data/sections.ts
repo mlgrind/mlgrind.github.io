@@ -1128,72 +1128,78 @@ The reward-model loss, KL penalty, PPO-RLHF objective and DPO are practiced in *
   {
     id: 'e2e-implementations',
     title: 'End-to-End Implementations',
-    description: 'Build complete ML models from scratch.',
+    description: 'Assemble full models from scratch: an MLP with hand-written backprop, a Transformer encoder, a VAE, a VQ-VAE, a DDPM, a CNN, a mini GPT and a tiny ViT, plus a Transformer bug hunt.',
     icon: '🏗️',
     introduction: `
 # End-to-End Implementations
 
-Put everything together to build complete models from scratch.
+## Why it matters
+Single formulas are only half the job: real bugs live in the glue between layers, in caches, shapes, masks and loss reductions. "Implement a small model from scratch" is a standard ML coding interview, and these capstones are the models interviewers ask for most: an MLP with backprop, a Transformer, a CNN, a GPT and the main generative models.
 
-## Why Build From Scratch?
+## Core ideas
 
-1. **Deep Understanding**: Know every component
-2. **Interview Preparation**: Common coding questions
-3. **Debugging Skills**: Understand what can go wrong
-4. **Framework Independence**: Adapt to any library
+### Think in a pipeline of shapes
+Write the shape after every step before writing code. For a CNN on MNIST:
 
-## Models Covered
+| Step | Shape |
+|------|-------|
+| input | \`(batch, 1, 28, 28)\` |
+| conv 3×3 → pool 2 | \`(batch, 32, 26, 26)\` → \`(batch, 32, 13, 13)\` |
+| conv 3×3 → pool 2 | \`(batch, 64, 11, 11)\` → \`(batch, 64, 5, 5)\` |
+| flatten → fc → fc | \`(batch, 1600)\` → \`(batch, 128)\` → \`(batch, 10)\` |
 
-### 2-Layer MLP with Backprop
-Complete neural network with:
-- Forward pass through hidden layer
-- Backpropagation of gradients
-- Weight updates via gradient descent
+For sequence models the residual stream keeps one shape, \`(batch, seq_len, d_model)\`, and attention scores are \`(batch, heads, seq_len, seq_len)\`.
 
-### Transformer Encoder
-Full encoder block with:
-- Multi-head self-attention
-- Positional encoding
-- Layer normalization
-- Feed-forward network
-- Residual connections
+### The recurring building blocks
+| Block | Formula | Where it appears |
+|-------|---------|------------------|
+| Softmax cross-entropy | \`loss = mean(−log softmax(z)[y])\`, \`∂loss/∂z = (p − onehot(y)) / N\` | MLP, CNN, GPT, ViT |
+| Scaled dot-product attention | \`softmax(Q Kᵀ / sqrt(d_k) + mask) V\` | Transformer, GPT, ViT, bug hunt |
+| LayerNorm | \`γ · (x − mean) / sqrt(var + eps) + β\` over the last axis | all Transformers |
+| Residual block | post-norm \`LN(x + f(x))\` (2017 Transformer) or pre-norm \`x + f(LN(x))\` (GPT, ViT) | all Transformers |
+| Reparameterization | \`z = μ + exp(0.5·log_var) ⊙ ε\` | VAE |
+| Vector quantization | nearest code \`argmin_k ‖z − e_k‖²\`, straight-through gradient | VQ-VAE |
+| Diffusion | \`x_t = sqrt(ᾱ_t)·x_0 + sqrt(1 − ᾱ_t)·ε\`; reverse step removes predicted ε | DDPM |
 
-### Variational Autoencoder (VAE)
-Generative model with:
-- Encoder → latent distribution
-- Reparameterization trick
-- Decoder → reconstruction
-- ELBO loss (reconstruction + KL)
+### Contracts matter
+Each problem spells out a **method contract**: which dict keys to return, what to cache, which values are floats. Treat it like an API: the tests call your methods exactly as documented. Losses follow one convention across the course: MSE over all elements; the VAE KL summed over latent dims and averaged over the batch.
 
-### Diffusion Model
-DDPM-style diffusion with:
-- Noise schedule (β, α, ᾱ)
-- Forward diffusion process
-- Reverse denoising process
-- Training objective
+## Worked micro-example
+Softmax cross-entropy and its gradient for one example with logits \`z = [2.0, 1.0, 0.1]\` and label 0:
+- \`p = softmax(z) = [0.659, 0.2424, 0.0986]\`
+- \`loss = −log 0.659 = 0.417\`
+- \`∂loss/∂z = p − onehot(0) = [−0.341, 0.2424, 0.0986]\` (divide by N for a batch mean)
 
-### Convolutional Neural Network
-Image classifier with:
-- Conv2D layers
-- Max pooling
-- Flatten + FC layers
-- Full forward pass
+Parameter count of the MNIST CNN above: conv1 \`32·1·9 + 32 = 320\`, conv2 \`64·32·9 + 64 = 18,496\`, fc1 \`1600·128 + 128 = 204,928\`, fc2 \`1,290\`. The dense layer holds over 90% of the weights.
 
-### Mini GPT
-Character-level decoder-only Transformer with:
-- Token + position embeddings
-- Causal self-attention blocks
-- Next-token cross-entropy loss and training
-- Greedy generation
+## Common pitfalls
+- **Loss reduction**: a mean loss needs the \`/ N\` in its gradient; averaging the KL over latent dims shrinks it.
+- **Cache discipline**: backward needs the pre-activation \`z1\` for the ReLU gate, not just \`h\`.
+- **Masks**: apply the causal mask as \`−inf\` **before** the softmax; zeroing probabilities afterwards breaks normalisation.
+- **Residuals**: in pre-norm blocks add to \`x\`, not to \`LN(x)\`.
+- **Head reshapes**: transpose heads back before merging, or features from different heads get interleaved.
+- **Positions**: they start at 0, and generation must crop the context to \`block_size\`.
+- **Stop-gradients**: in a VQ-VAE the codebook and commitment terms differ only in where \`.detach()\` goes.
+- **Randomness**: draw noise exactly where the contract says, so seeded tests can reproduce it.
 
-### Tiny Vision Transformer
-Image classifier with:
-- Patch embeddings + [CLS] token
-- Position embeddings
-- A pre-norm encoder block
-- Classification from the CLS token
+## Interview angle
+- Expect "implement it, then extend it": add a mask, a KV cache, weight decay, a second layer, or a training loop.
+- Be ready with complexity: attention is \`O(T²·d)\` time and \`O(T²)\` memory per head; a conv layer is \`O(B·C_out·C_in·k²·H·W)\`.
+- Verify gradients with finite differences, and know the initial-loss sanity check: about \`log(num_classes)\`.
+- Explain design choices: pre-norm vs post-norm, tied vs untied LM heads, why VAEs predict \`log_var\`, why DDPM predicts noise.
 
-Build these models to truly understand deep learning!
+## Problems in this section
+1. **E2E: 2-Layer MLP with Backprop**: forward, cross-entropy, hand-derived gradients, SGD and a training loop.
+2. **E2E: Transformer Encoder**: layer norm, sinusoidal positions, multi-head attention and a post-norm encoder stack.
+3. **E2E: Variational Autoencoder**: encoder, reparameterization, sigmoid decoder, negative ELBO and prior sampling.
+4. **E2E: Vector Quantized VAE**: codebook lookup, VQ losses, MLP encoder/decoder and codebook usage.
+5. **E2E: Diffusion Model**: schedule, forward noising, ε-MSE loss, reverse step and the sampling loop.
+6. **E2E: Convolutional Neural Network**: conv2d, max pooling, flatten and a two-block classifier.
+7. **Mini GPT (Character-Level Language Model)**: causal pre-norm decoder, next-token loss, training and greedy generation.
+8. **E2E: Tiny Vision Transformer**: patches, [CLS] token, position embeddings and a linear-probe training step.
+9. **Transformer Bug Hunt: Fix a Broken Mini-GPT**: find four silent bugs in a working-looking forward pass.
+
+The single-concept versions live in earlier sections: **Neural Networks** (backprop, init), **Transformer Architecture** (attention, layer norm, masks), **CNNs & Computer Vision** (convolution, pooling) and **Generative Models** (VAE, VQ, diffusion).
     `,
     problems: ['e2e-mlp', 'e2e-transformer', 'e2e-vae', 'e2e-vqvae', 'e2e-diffusion', 'e2e-cnn', 'e2e-mini-gpt', 'e2e-vit-classifier', 'transformer-bug-hunt'],
   },

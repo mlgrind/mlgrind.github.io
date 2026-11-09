@@ -7,7 +7,7 @@ import { LanguageVariant } from '../../../types';
  */
 export const e2eImplementationsPyTorch: Record<string, LanguageVariant> = {
   'e2e-mlp': {
-    note: "MLP is an nn.Module with nn.Parameter weights. Write backward() by hand (no loss.backward() or F.cross_entropy inside the class); a hidden test checks your gradients against autograd. compute_loss returns a scalar tensor.",
+    note: 'MLP is an nn.Module with nn.Parameter weights. Write backward() by hand: no loss.backward(), autograd.grad or F.cross_entropy inside the class (a hidden test compares your gradients with autograd). compute_loss returns a scalar tensor in this track.',
     starterCode: `import math
 import torch
 import torch.nn as nn
@@ -224,14 +224,14 @@ def train_mlp(X_train, y_train, epochs=100, lr=0.01):
       },
     ],
     hints: [
-      'Cache X, z1 (pre-activation), h and logits in forward',
-      'Stable log-softmax: logits - torch.logsumexp(logits, dim=-1, keepdim=True)',
-      'd_logits = (probs - one_hot(y)) / batch_size; dW2 = h.T @ d_logits; d_relu = (d_logits @ W2.T) * (z1 > 0)',
-      'Update parameters inside torch.no_grad(): self.W1 -= lr * dW1',
+      'Backprop is the chain rule in reverse: save X, z1, h and logits in forward and the softmax probabilities in compute_loss, because backward needs all of them.',
+      'Order: forward → compute_loss → backward (output layer, then hidden layer) → SGD update inside torch.no_grad().',
+      'log_probs = logits - torch.logsumexp(logits, dim=-1, keepdim=True); d_logits = (probs - F.one_hot(y, C).float()) / N; dW2 = h.T @ d_logits; d_z1 = (d_logits @ W2.T) * (z1 > 0).float().',
+      'Pitfall: forgetting / N (the loss is a mean), or updating parameters outside torch.no_grad(); detach the cached tensors before using them in backward.',
     ],
   },
   'e2e-transformer': {
-    note: "TransformerEncoderBlock is an nn.Module with nn.Parameter weights. Implement attention and layer norm with tensor ops: don't use nn.MultiheadAttention, F.scaled_dot_product_attention, F.layer_norm/nn.LayerNorm or nn.TransformerEncoderLayer. Hidden tests compare each piece against those built-ins.",
+    note: 'TransformerEncoderBlock is an nn.Module with nn.Parameter weights. Implement attention and layer norm with tensor ops: don\'t use nn.MultiheadAttention, F.scaled_dot_product_attention, F.layer_norm/nn.LayerNorm or nn.TransformerEncoderLayer (hidden tests compare each piece against them).',
     starterCode: `import math
 import torch
 import torch.nn as nn
@@ -480,15 +480,14 @@ def transformer_encoder(x, num_layers=2, d_model=64, num_heads=8, d_ff=256):
       },
     ],
     hints: [
-      'Attention: softmax(Q @ K.transpose(-2, -1) / sqrt(d_k) + mask) @ V',
-      'Heads: reshape to (batch, seq, heads, d_k) and transpose(1, 2); undo it after attention',
-      'Layer norm: (x - mean) / sqrt(var(unbiased=False) + eps) * gamma + beta over dim=-1',
-      'Register weights as nn.Parameter in __init__ (after super().__init__())',
-      'Post-norm block: x = LN(x + MHA(x)); x = LN(x + FFN(x))',
+      'Build bottom-up: layer_norm, positional_encoding and attention first, each checked on tiny inputs; the block is two \'sublayer, add, normalize\' steps.',
+      'Multi-head attention is reshaping: (B, T, D) → (B, T, H, D/H) → transpose(1, 2), attend over the last two dims, transpose back and reshape to (B, T, D).',
+      'scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k) (+ mask); layer norm uses x.var(dim=-1, keepdim=True, unbiased=False); register weights as nn.Parameter after super().__init__().',
+      'Pitfall: torch.var is unbiased by default, which is not what LayerNorm uses; add the mask before the softmax, not after.',
     ],
   },
   'e2e-vae': {
-    note: 'VAE is an nn.Module built from nn.Linear layers. Write the reparameterization trick and the KL term yourself (no torch.distributions). compute_loss returns tensors so you can call total_loss.backward().',
+    note: 'VAE is an nn.Module built from nn.Linear layers. Write the reparameterization trick and the KL term yourself (no torch.distributions). compute_loss returns scalar tensors so total_loss.backward() works; KL sums over latent dims and averages over the batch.',
     starterCode: `import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -532,7 +531,7 @@ class VAE(nn.Module):
 
     def reparameterize(self, mu: torch.Tensor, log_var: torch.Tensor) -> torch.Tensor:
         """
-        Reparameterization trick: z = mu + std * epsilon
+        Reparameterization trick: z = mu + exp(0.5 * log_var) * eps, eps ~ N(0, I)
         """
         # Your code here
         pass
@@ -557,7 +556,8 @@ class VAE(nn.Module):
     def compute_loss(self, x: torch.Tensor, x_recon: torch.Tensor,
                      mu: torch.Tensor, log_var: torch.Tensor) -> dict:
         """
-        Compute VAE loss (ELBO): MSE reconstruction + KL (both averaged over all elements).
+        Negative ELBO: MSE reconstruction over all elements + KL summed over
+        latent dims and averaged over the batch.
 
         Returns:
             Dictionary with 'total_loss', 'recon_loss', 'kl_loss' (scalar tensors)
@@ -609,7 +609,8 @@ class VAE(nn.Module):
     def compute_loss(self, x: torch.Tensor, x_recon: torch.Tensor,
                      mu: torch.Tensor, log_var: torch.Tensor) -> dict:
         recon_loss = F.mse_loss(x_recon, x)
-        kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+        # KL(q(z|x) || N(0, I)): sum over latent dims, mean over the batch
+        kl_loss = (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean()
         total_loss = recon_loss + kl_loss
         return {'total_loss': total_loss, 'recon_loss': recon_loss, 'kl_loss': kl_loss}
 
@@ -640,7 +641,7 @@ class VAE(nn.Module):
             loss := VAE(4, 8, 2).compute_loss(torch.tensor([[1.0, 0.0]]), torch.tensor([[0.5, 0.5]]), torch.ones(1, 2), torch.zeros(1, 2)),
             (round(float(loss["recon_loss"]), 4), round(float(loss["kl_loss"]), 4), round(float(loss["total_loss"]), 4))
         )[-1])()`,
-        expected: '(0.25, 0.5, 0.75)',
+        expected: '(0.25, 1.0, 1.25)',
         hidden: false,
       },
       {
@@ -675,16 +676,23 @@ class VAE(nn.Module):
         expected: 'True',
         hidden: true,
       },
+      {
+        id: '7',
+        description: 'KL sums over latent dims and averages over the batch',
+        input: '(lambda: (loss := VAE(3, 4, 2).compute_loss(torch.zeros(2, 3), torch.zeros(2, 3), torch.tensor([[1.0, 1.0], [0.0, 0.0]]), torch.zeros(2, 2)), round(float(loss["kl_loss"]), 4))[-1])()',
+        expected: '0.5',
+        hidden: true,
+      },
     ],
     hints: [
-      'Encoder: h = relu(enc(x)); mu = fc_mu(h); log_var = fc_logvar(h)',
-      'Reparameterize: std = torch.exp(0.5 * log_var); z = mu + std * torch.randn_like(std)',
-      'Decoder: sigmoid(dec2(relu(dec1(z))))',
-      'KL = -0.5 * torch.mean(1 + log_var - mu**2 - log_var.exp()); return tensors so total_loss.backward() works',
+      'A VAE is an autoencoder whose bottleneck is a distribution: encode to (mu, log_var), sample z differentiably, decode; the loss pays for bad reconstructions and for posteriors far from N(0, I).',
+      'Methods in order: encode → reparameterize → decode → forward (dict) → compute_loss → sample (under torch.no_grad()).',
+      'h = torch.relu(self.enc(x)); z = mu + torch.exp(0.5 * log_var) * torch.randn_like(mu); decode with torch.sigmoid(self.dec2(torch.relu(self.dec1(z)))); KL = (-0.5 * (1 + log_var - mu.pow(2) - log_var.exp()).sum(dim=1)).mean().',
+      'Pitfall: torch.mean over the whole KL tensor divides by latent_dim too; return tensors (not .item()) from compute_loss so you can backpropagate.',
     ],
   },
   'e2e-vqvae': {
-    note: "Both classes are nn.Modules; the codebook is an nn.Parameter. Use .detach() for stop-gradients and the straight-through estimator z_e + (z_q - z_e).detach() in forward. Don't use torch.cdist.",
+    note: 'Both classes are nn.Modules; the codebook is an nn.Parameter. Use .detach() for stop-gradients and decode the straight-through z_e + (z_q - z_e).detach() in forward. Don\'t use torch.cdist.',
     starterCode: `import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -946,15 +954,14 @@ class VQVAE(nn.Module):
       },
     ],
     hints: [
-      'Flatten z_e to (N, D); distances = (z**2).sum(1, keepdim=True) + (e**2).sum(1) - 2 * z @ e.T',
-      'argmin over the codebook axis gives indices; self.embedding[indices] gives z_q',
-      'Losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach())',
-      'Straight-through: decode z_e + (z_q - z_e).detach()',
-      'Usage: torch.bincount(indices.flatten(), minlength=K)',
+      'Three parts: encoder, nearest-neighbour lookup into the codebook, decoder. Without the straight-through trick no gradient reaches the encoder, because argmin is not differentiable.',
+      'quantize: flatten to (N, D), (N, K) distances, argmin, gather, reshape. forward: encode, quantize, decode z_e + (z_q - z_e).detach().',
+      'Distances: (z**2).sum(1, keepdim=True) - 2 * z @ E.T + (E**2).sum(1); losses: F.mse_loss(z_q, z_e.detach()) and beta * F.mse_loss(z_e, z_q.detach()); usage: torch.bincount(indices.flatten(), minlength=K).',
+      'Pitfall: putting .detach() on the wrong side trains the wrong module; commitment_loss already includes beta, so don\'t multiply again in the total.',
     ],
   },
   'e2e-diffusion': {
-    note: 'DiffusionModel is an nn.Module that stores its schedule with register_buffer. Use torch.linspace/cumprod and torch.randn_like. Tests use a small T so sampling stays fast.',
+    note: 'DiffusionModel is an nn.Module that stores its schedule with register_buffer. Use torch.linspace/cumprod and torch.randn_like; sample runs under torch.no_grad(). Tests use a small T so sampling stays fast.',
     starterCode: `import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -1146,14 +1153,14 @@ class DiffusionModel(nn.Module):
       },
     ],
     hints: [
-      'betas = torch.linspace(beta_start, beta_end, T); alpha_bars = torch.cumprod(1 - betas, dim=0)',
-      "self.register_buffer('betas', betas) makes the schedule part of the module state",
-      'x_t = sqrt(alpha_bar) * x_0 + sqrt(1 - alpha_bar) * noise',
-      'Reverse mean: (x_t - beta / sqrt(1 - alpha_bar) * eps) / sqrt(alpha); add sqrt(beta) * z only for t > 0',
+      'Everything derives from the schedule: compute betas, alphas and alpha_bars once in __init__ and reuse them.',
+      'forward_diffusion is one mixing line; reverse_step computes the mean and adds noise only for t > 0; sample loops t over reversed(range(T)).',
+      'self.register_buffer(\'alpha_bars\', torch.cumprod(1 - betas, dim=0)); mean = (x_t - beta / torch.sqrt(1 - alpha_bar) * eps) / torch.sqrt(alpha).',
+      'Pitfall: the outer division uses α_t (this step) while the ε coefficient uses 1 − ᾱ_t (cumulative); don\'t re-seed inside reverse_step.',
     ],
   },
   'e2e-cnn': {
-    note: "Write conv2d and maxpool2d with tensor ops: don't use nn.Conv2d, F.conv2d, nn.MaxPool2d, F.max_pool2d or unfold (hidden tests compare against them). CNN is an nn.Module; nn.Linear is fine for the fully connected layers.",
+    note: 'Write conv2d and maxpool2d with tensor ops: don\'t use nn.Conv2d, F.conv2d, nn.MaxPool2d, F.max_pool2d or unfold (hidden tests compare against them). CNN is an nn.Module; nn.Linear is fine for the fully connected layers.',
     starterCode: `import torch
 import torch.nn as nn
 
@@ -1369,10 +1376,10 @@ def test_cnn():
       },
     ],
     hints: [
-      'Conv output size: (input - kernel + 1) for stride=1, no padding',
-      'Loop over kernel taps: output += einsum("bchw,oc->bohw", x[:, :, a:a+out_H, b:b+out_W], kernel[:, :, a, b])',
-      'Pool: reshape to (B, C, out_H, p, out_W, p) and max over the two p axes',
-      'Flatten: x.reshape(x.shape[0], -1); FC layers: nn.Linear',
+      'Track shapes first: a 3×3 valid conv maps H → H − 2 and a 2×2 pool maps H → H // 2; that gives fc1\'s input size.',
+      'Write conv2d, maxpool2d and flatten as functions, test them on tiny tensors, then chain them in forward with ReLU after each conv and after fc1.',
+      'Conv by kernel taps: output += torch.einsum(\'bchw,oc->bohw\', x[:, :, a:a+out_H, b:b+out_W], kernel[:, :, a, b]); pool: reshape to (B, C, H//p, p, W//p, p) and max over dims 5 and 3.',
+      'Pitfall: crop odd sizes before the pooling reshape, don\'t flip the kernel (frameworks compute cross-correlation), and return logits, not probabilities.',
     ],
   },
   // Ported with the new problems from the ML Coding Lab fork.
@@ -1588,10 +1595,10 @@ def train(model, idx, targets, steps=20, lr=1e-2):
       },
     ],
     hints: [
-      'Attention: q, k, v = self.qkv(x).split(C, dim=-1); view each as (B, T, H, d_head).transpose(1, 2); mask with masked_fill(~tril[:T, :T], -inf).',
-      'Init: loop over self.modules() and call nn.init.normal_(m.weight, std=0.02) on Linear/Embedding layers so the initial loss is ~log(V).',
-      'loss: F.cross_entropy(logits.reshape(-1, V), targets.reshape(-1)).',
-      'train: optimizer = torch.optim.AdamW(model.parameters(), lr=lr); loop zero_grad, loss.backward(), step; record loss.item().',
+      'Build it in the order data flows: attention, then the block, then forward, loss and generate. Test causality early: changing a later token must not change earlier logits.',
+      'Attention: q, k, v = self.qkv(x).split(C, dim=-1); view each as (B, T, H, d_head).transpose(1, 2); mask with masked_fill(~tril[:T, :T], float(\'-inf\')) before the softmax.',
+      'Init every Linear/Embedding weight with nn.init.normal_(w, std=0.02) so the initial loss is about log(V); loss = F.cross_entropy(logits.reshape(-1, V), targets.reshape(-1)).',
+      'Pitfalls: pre-norm residuals add to x, not LN(x); generate under torch.no_grad() and crop to idx[:, -block_size:]; in train, record loss.item() before optimizer.step().',
     ],
   },
   'e2e-vit-classifier': {
@@ -1605,8 +1612,9 @@ class TinyViT(nn.Module):
     def __init__(self, img_size=8, patch_size=4, in_chans=1, dim=16, num_heads=2,
                  mlp_dim=32, num_classes=2, use_pos_emb=True):
         """
-        Patch embedding (nn.Linear), CLS token and position embeddings (nn.Parameter,
-        ~ N(0, 0.02^2)), one pre-norm encoder block, final LayerNorm and a linear head.
+        Patch embedding self.patch_embed = nn.Linear(P*P*C, dim) (a test uses this name),
+        CLS token and position embeddings (nn.Parameter, ~ N(0, 0.02^2)), one pre-norm
+        encoder block, final LayerNorm and a linear head.
         """
         super().__init__()
         self.patch_size = patch_size
@@ -1772,10 +1780,10 @@ class TinyViT(nn.Module):
       },
     ],
     hints: [
-      'patchify: x.reshape(B, C, H//P, P, W//P, P).permute(0, 2, 4, 3, 5, 1).reshape(B, N, P*P*C).',
-      'Prepend CLS with torch.cat([self.cls.expand(B, 1, -1), tokens], dim=1).',
-      'Attention: self.qkv(h).chunk(3, dim=-1), reshape to (B, T, heads, d_head).transpose(1, 2), softmax(Q @ K^T / sqrt(d_head)) @ V.',
-      'train_step: zero_grad, loss.backward(), then under torch.no_grad() do p -= lr * p.grad for every parameter.',
+      'Follow the shapes: an image becomes N patch vectors, then N + 1 tokens with the CLS token in front; only token 0 is classified.',
+      'patchify is pure reshaping: x.reshape(B, C, H//P, P, W//P, P).permute(0, 2, 4, 3, 5, 1).reshape(B, N, P*P*C); then patch_embed, prepend CLS, add pos, one pre-norm block, LayerNorm the CLS row.',
+      'torch.cat([self.cls.expand(B, 1, -1), tokens], dim=1); attention: self.qkv(h).chunk(3, dim=-1), heads via view(B, T, nh, hd).transpose(1, 2), softmax(q @ k.transpose(-2, -1) / sqrt(hd)) @ v.',
+      'Pitfall: the permute order decides the (p1, p2, c) flattening. train_step: zero_grad, loss.backward(), then p -= lr * p.grad under torch.no_grad() for every parameter.',
     ],
   },
   'transformer-bug-hunt': {
