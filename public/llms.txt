@@ -30,7 +30,7 @@ The platform covers 21 learning sections with 149 problems:
 - **03 Einstein Summation (Einsum)** (`/section/einsum`) — Write sums, matrix products and batched multi-head attention as einsum index strings. _(5 problems)_
 - **04 PyTorch Basics** (`/section/pytorch-basics`) — Tensors, autograd, modules, losses, optimizers and the training loop, plus the norms, activations and adapters of modern models: in idiomatic PyTorch or from scratch in NumPy. _(23 problems)_
 - **05 Data Preprocessing** (`/section/data-preprocessing`) — Scale, impute, encode and split data without leaking the test set into training. _(5 problems)_
-- **06 Supervised Learning** (`/section/supervised-learning`) — Implement core supervised learning algorithms from scratch. _(12 problems)_
+- **06 Supervised Learning** (`/section/supervised-learning`) — Build the classic supervised learners from scratch: sigmoid and loss functions, linear and logistic regression, SVMs, k-NN, Naive Bayes, Ridge/Lasso, boosted stumps and bagged decision trees. _(12 problems)_
 - **07 Unsupervised Learning** (`/section/unsupervised-learning`) — Build k-means, PCA centring, Gaussian mixtures with EM and DBSCAN from scratch. _(5 problems)_
 - **08 Model Evaluation** (`/section/model-evaluation`) — Compute classification metrics, k-fold splits, ROC/AUC, PR curves and calibration error, with the edge cases done right. _(6 problems)_
 - **09 Deep Learning Basics** (`/section/deep-learning`) — ReLU, a batched dense layer and numerically stable softmax: the three pieces every neural network is built from. _(3 problems)_
