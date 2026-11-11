@@ -22,11 +22,13 @@ export function useRecommendations(progress: Progress, limit = 3): Recommendatio
     inProgress.sort((a, b) => b.timestamp - a.timestamp);
     for (const item of inProgress.slice(0, 2)) {
       const problem = getProblemById(item.problemId);
-      if (problem) {
+      // Saved progress can outlive a problem's move to another section; link to
+      // where the problem lives now.
+      if (problem && problem.section === item.sectionId) {
         recommendations.push({
           type: 'continue',
           problemId: item.problemId,
-          sectionId: item.sectionId,
+          sectionId: problem.section,
           title: problem.title,
           reason: 'Pick up where you left off',
           priority: 1,
@@ -84,14 +86,14 @@ export function useRecommendations(progress: Progress, limit = 3): Recommendatio
     completedProblems.sort((a, b) => b.daysSince - a.daysSince);
     for (const item of completedProblems.slice(0, 1)) {
       const problem = getProblemById(item.problemId);
-      if (problem && !recommendations.some(r => r.problemId === item.problemId)) {
+      if (problem && problem.section === item.sectionId && !recommendations.some(r => r.problemId === item.problemId)) {
         const days = Math.floor(item.daysSince);
         recommendations.push({
           type: 'review',
           problemId: item.problemId,
-          sectionId: item.sectionId,
+          sectionId: problem.section,
           title: problem.title,
-          reason: `Completed ${days}d ago — reinforce your understanding`,
+          reason: `Solved ${days === 1 ? 'yesterday' : `${days} days ago`}. Try it again from a blank editor`,
           priority: 3,
         });
       }
@@ -101,8 +103,8 @@ export function useRecommendations(progress: Progress, limit = 3): Recommendatio
     for (const section of sections) {
       const sp = progress[section.id];
       if (!sp) continue;
-      const completed = Object.values(sp).filter(p => p.status === 'completed').length;
-      const started = Object.values(sp).length;
+      const completed = section.problems.filter(pid => sp[pid]?.status === 'completed').length;
+      const started = section.problems.filter(pid => sp[pid]).length;
       if (started > 0 && completed / section.problems.length < 0.5) {
         const nextProblemId = section.problems.find(pid => {
           const p = sp[pid];
@@ -116,7 +118,7 @@ export function useRecommendations(progress: Progress, limit = 3): Recommendatio
               problemId: nextProblemId,
               sectionId: section.id,
               title: problem.title,
-              reason: `${section.title} is below 50% — keep building`,
+              reason: `${completed} of ${section.problems.length} solved in ${section.title}`,
               priority: 4,
             });
             break;
@@ -132,7 +134,7 @@ export function useRecommendations(progress: Progress, limit = 3): Recommendatio
           type: 'new_territory',
           sectionId: section.id,
           title: section.title,
-          reason: 'Start a new section',
+          reason: `New section · ${section.problems.length} problem${section.problems.length === 1 ? '' : 's'}`,
           priority: 5,
         });
         break;

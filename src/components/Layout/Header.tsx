@@ -19,8 +19,10 @@ interface HeaderProps {
 export default function Header({ onMenuToggle, isMenuOpen = false, menuOnDesktop = false, onOpenFeedback }: HeaderProps) {
   const { progress } = useProgress();
   const { isDark, toggle } = useDarkMode();
-  const { getDueCount } = useFlashCards();
-  const flashDueCount = getDueCount();
+  // Only cards the learner has reviewed before count as due: a first-time
+  // visitor has new cards to try, not a backlog.
+  const { getReviewDueCount } = useFlashCards();
+  const flashDueCount = getReviewDueCount();
   const { pathname } = useLocation();
 
   const totalProblems = sections.reduce((sum, s) => sum + s.problems.length, 0);

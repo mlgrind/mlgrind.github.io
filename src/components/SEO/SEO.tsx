@@ -1,4 +1,5 @@
 import * as helmetAsync from 'react-helmet-async';
+import { allProblems } from '../../data/problems';
 const { Helmet } = (Reflect.get(helmetAsync, 'default') ?? helmetAsync) as typeof helmetAsync;
 
 interface SEOProps {
@@ -12,7 +13,8 @@ interface SEOProps {
 
 const BASE_URL = 'https://mlgrind.dev';
 const DEFAULT_TITLE = 'ML Grind - Learn Machine Learning by Building It';
-const DEFAULT_DESCRIPTION = 'Practice hands-on machine learning coding problems. Implement NumPy, neural networks, CNNs, transformers, and more. Run Python code directly in your browser with instant feedback.';
+// Counts come from the data so the description never drifts from the site.
+const DEFAULT_DESCRIPTION = `${allProblems.length} ML coding problems, from NumPy and backprop to transformers, diffusion and RL. Solve them in NumPy or PyTorch in your browser, with animated lectures. Free, no install.`;
 const DEFAULT_KEYWORDS = 'machine learning, ML, deep learning, neural networks, Python, NumPy, transformers, CNN, PyTorch, coding practice, interview prep, AI';
 
 export default function SEO({

@@ -220,15 +220,15 @@ export default function Console({
             spellCheck={false}
           />
           {hiddenCount > 0 && (
-            <div className="px-4 py-2 bg-dark-800 text-dark-300 text-xs border-t border-dark-500">
-              + {hiddenCount} hidden test{hiddenCount > 1 ? 's' : ''} (not editable)
+            <div className="px-4 py-2 bg-dark-800 text-dark-200 text-xs border-t border-dark-500">
+              + {hiddenCount} hidden test{hiddenCount > 1 ? 's' : ''}, run with these every time (not editable)
             </div>
           )}
         </div>
       ) : activeTab === 'results' && testResults && testResults.length > 0 ? (
         <div className="flex-1 overflow-auto">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-dark-500 flex items-center justify-between bg-gray-50 dark:bg-dark-900">
-            <span className="font-medium text-gray-900 dark:text-dark-100 text-sm">Test Results</span>
+            <span className="font-medium text-gray-900 dark:text-dark-100 text-sm">Test results</span>
             <span
               className={`text-sm font-medium font-mono ${
                 passedCount === totalCount ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'
@@ -272,7 +272,7 @@ export default function Console({
 
             {testResults.some(r => r.hidden) && (
               <div className="p-4 text-gray-500 dark:text-dark-300 text-sm italic">
-                + {testResults.filter(r => r.hidden).length} hidden test(s)
+                + {testResults.filter(r => r.hidden).length} hidden {testResults.filter(r => r.hidden).length === 1 ? 'test' : 'tests'}
                 {testResults.filter(r => r.hidden && r.passed).length ===
                 testResults.filter(r => r.hidden).length ? (
                   <span className="text-green-600 dark:text-green-400 ml-2">(all passed)</span>
@@ -298,8 +298,8 @@ export default function Console({
       ) : (
         <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-dark-900 rounded-b-lg">
           {output.length === 0 ? (
-            <div className="text-dark-300 italic">
-              Output will appear here when you run your code...
+            <div className="text-dark-200 italic">
+              Output will appear here when you run your code. print() works too.
             </div>
           ) : (
             output.map((line, index) => (

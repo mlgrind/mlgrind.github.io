@@ -8,6 +8,7 @@ import { resolvedGroups } from "../../data/curriculum";
 import { allPaths, pathMeta, problemHref } from "../../data/learningPaths";
 import { getCompanyIndex } from "../../data/companyTags";
 import { lectures } from "../../data/lectures";
+import { flashCards } from "../../data/flashcards";
 
 export const staticRoutes = [
   "/",
@@ -37,7 +38,7 @@ export function routeContent(path: string) {
   if (problem)
     return {
       title: `${problem.title} - ${sections.find((s) => s.id === problem.section)!.title}`,
-      description: `Implement ${problem.title} in Python with NumPy. ${problem.difficulty} exercise with examples, hints, and instant feedback. No setup or signup required.`,
+      description: `Implement ${problem.title} from scratch in NumPy${problem.pytorch ? " or PyTorch" : ""}. A ${problem.difficulty} exercise with examples, hints and tests that run in your browser. No install or account needed.`,
       problem,
     };
   if (section)
@@ -51,28 +52,25 @@ export function routeContent(path: string) {
   const pages: Record<string, { title: string; description: string }> = {
     "/": {
       title: "ML Grind - Learn Machine Learning by Building It",
-      description:
-        "Free hands-on ML coding practice. Implement NumPy, neural networks, attention, and transformers in your browser. No setup or signup required.",
+      description: `${allProblems.length} ML coding problems, from NumPy and backprop to transformers, diffusion and RL. Solve them in NumPy or PyTorch in your browser, with animated lectures. Free, no install.`,
     },
     "/scratchpad": {
       title: "Python Scratchpad",
       description:
-        "Run real Python with NumPy in your browser. No installation required.",
+        "A Python scratchpad with NumPy loaded, running entirely in your browser. No install or account; your code is saved locally.",
     },
     "/flashcards": {
-      title: "ML Flashcards",
-      description:
-        "Review machine learning concepts with interactive flashcards.",
+      title: "Flash Cards",
+      description: `${flashCards.length} spaced-repetition flash cards on the ideas behind the problems: NumPy, backprop, attention, diffusion, RL and more.`,
     },
     "/companies": {
       title: "Problems by Company",
-      description:
-        "ML coding problems reported in interviews at specific companies, with links to the public interview reports.",
+      description: `ML coding problems candidates report being asked at ${getCompanyIndex().length} companies, with links to the public interview reports.`,
     },
     "/privacy": {
       title: "Privacy Policy",
       description:
-        "How ML Grind handles progress, account information, and usage analytics.",
+        "What ML Grind stores in your browser, what Google sign-in syncs, what AI feedback sends, and how to turn off analytics.",
     },
     "/terms": {
       title: "Terms of Service",
@@ -82,7 +80,7 @@ export function routeContent(path: string) {
   return (
     pages[path] ?? {
       title: "Page Not Found",
-      description: "This page does not exist.",
+      description: "This page does not exist on ML Grind.",
     }
   );
 }
@@ -133,7 +131,7 @@ export function StaticContent({ path }: { path: string }) {
             >
               Solve your first problem →
             </a>
-            <p>About 5 minutes · Basic Python · No signup</p>
+            <p>About 5 minutes · Basic Python is enough · No account needed</p>
             <h2 className="text-2xl">Choose your learning path</h2>
             {allPaths.map((p) => (
               <p key={p.id}>

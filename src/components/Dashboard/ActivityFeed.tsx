@@ -54,11 +54,13 @@ export default function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
     <div className="bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 overflow-hidden">
       <button
+        type="button"
         onClick={() => setCollapsed(v => !v)}
+        aria-expanded={!collapsed}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
       >
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 font-mono">
-          Recent Activity
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-dark-300 font-mono">
+          Recent activity
         </span>
         <svg
           className={`w-4 h-4 text-gray-400 dark:text-dark-300 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
@@ -91,10 +93,10 @@ export default function ActivityFeed({ items }: { items: ActivityItem[] }) {
                       {item.title}
                     </span>
                     {item.detail && (
-                      <span className="text-[11px] text-gray-400 dark:text-dark-300">{item.detail}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-dark-300">{item.detail}</span>
                     )}
                   </div>
-                  <span className="shrink-0 font-mono text-[10px] text-gray-400 dark:text-dark-300">
+                  <span className="shrink-0 font-mono text-[10px] text-gray-500 dark:text-dark-300">
                     {relativeTime(item.timestamp)}
                   </span>
                 </Link>

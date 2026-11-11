@@ -62,7 +62,7 @@ export default function Footer({ onOpenFeedback }: { onOpenFeedback?: () => void
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-500/50 text-center text-xs text-gray-400 dark:text-dark-300">
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-500/50 text-center text-xs text-gray-500 dark:text-dark-300">
           <p>
             Code licensed under MIT. Educational content is copyrighted.
           </p>

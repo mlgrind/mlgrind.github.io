@@ -534,7 +534,7 @@ describe('Console Component', () => {
       );
 
       // Should show Results tab content
-      expect(screen.getByText('Test Results')).toBeInTheDocument();
+      expect(screen.getByText('Test results')).toBeInTheDocument();
       expect(screen.getByText('1/1 passed')).toBeInTheDocument();
     });
   });

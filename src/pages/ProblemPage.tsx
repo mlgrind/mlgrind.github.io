@@ -11,6 +11,7 @@ import ProblemDescription from '../components/ProblemView/ProblemDescription';
 import Examples from '../components/ProblemView/Examples';
 import Hints from '../components/ProblemView/Hints';
 import SEO from '../components/SEO/SEO';
+import NotFoundPage from './NotFoundPage';
 import { TestResult, TestCase, Language } from '../types';
 import SuccessBanner from '../components/SuccessBanner/SuccessBanner';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -187,14 +188,9 @@ export default function ProblemPage() {
   }, [problem, code, testResults, requestFeedback, activeLanguage]);
 
   if (!problem || !variant || !section || problem.section !== sectionId) {
-    return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">Problem Not Found</h1>
-        <Link to="/" className="text-primary-500 hover:text-primary-400">
-          Return to Home
-        </Link>
-      </div>
-    );
+    // Same page as any other dead link, including a "Looking for ...?" link
+    // when the problem exists under a different section.
+    return <NotFoundPage />;
   }
 
   // Find prev/next problems in section
@@ -217,11 +213,11 @@ export default function ProblemPage() {
   const pythonStatus = (
     <span
       className="text-gray-500 dark:text-dark-200 text-xs flex items-center gap-2 whitespace-nowrap"
-      title={isReady ? 'Python ready' : isLoading ? 'Loading Python...' : 'Python unavailable'}
+      title={isReady ? 'Python ready' : isLoading ? 'Loading Python…' : 'Python unavailable'}
     >
       <span className={`w-2 h-2 rounded-full shrink-0 ${isReady ? 'bg-accent-500' : 'bg-yellow-500 animate-pulse'}`} />
       <span className={isReady ? 'sr-only' : 'hidden sm:inline'}>
-        {isReady ? 'Python ready' : isLoading ? 'Loading Python...' : 'Python unavailable'}
+        {isReady ? 'Python ready' : isLoading ? 'Loading Python…' : 'Python unavailable'}
       </span>
     </span>
   );
@@ -250,7 +246,7 @@ export default function ProblemPage() {
         ) : (
           <span aria-hidden="true" className={`${navIconClass} opacity-30 pointer-events-none`}>{navIcon('M15 6l-6 6 6 6')}</span>
         )}
-        <span className="text-xs text-gray-400 dark:text-dark-300 font-mono whitespace-nowrap">
+        <span className="text-xs text-gray-500 dark:text-dark-300 font-mono whitespace-nowrap">
           {currentIndex + 1} / {section.problems.length}
         </span>
         {nextProblemId ? (
@@ -367,7 +363,7 @@ export default function ProblemPage() {
       aria-keyshortcuts="Shift+Enter"
       className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
-      {isRunning ? 'Running...' : 'Run Tests'}
+      {isRunning ? 'Running…' : 'Run tests'}
     </button>
   );
   // Stop sits next to Run in the action bar, so a run doesn't shift the layout.
@@ -393,7 +389,7 @@ export default function ProblemPage() {
       to={`/problem/${sectionId}/${nextProblemId}`}
       className="whitespace-nowrap px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
     >
-      Next Problem &rarr;
+      Next problem &rarr;
     </Link>
   ) : null;
 
@@ -417,8 +413,8 @@ export default function ProblemPage() {
         keywords={`${problem.title}, ${section.title}, machine learning, coding practice, ${problem.difficulty}`}
       />
       <SuccessBanner show={showCelebration} onDismiss={() => setShowCelebration(false)} />
-      {syncError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Cloud progress could not load. Cloud writes are paused to protect your saved work. Your edits remain on this device; refresh to retry.</p>}
-      {storageError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your browser could not save your code. Keep a copy before leaving this page.</p>}
+      {syncError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your synced progress could not be loaded, so syncing is paused to avoid overwriting it. Your edits are still saved on this device. Refresh the page to try again.</p>}
+      {storageError && <p role="status" className="p-3 text-amber-700 dark:text-amber-200">Your browser is not saving your code (storage is full or blocked). Copy it somewhere before you leave this page.</p>}
       {error && <div role="alert" className="p-3 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
       {/* Mobile Layout */}
       {isMobile ? (

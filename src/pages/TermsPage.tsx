@@ -14,7 +14,7 @@ export default function TermsPage() {
 
         <div className="prose prose-gray max-w-none">
           <p className="text-gray-600 dark:text-dark-200 mb-6">
-            <strong>Last updated:</strong> February 1, 2026
+            <strong>Last updated:</strong> November 11, 2026
           </p>
 
           <section className="mb-8">
@@ -32,11 +32,11 @@ export default function TermsPage() {
               coding exercises, tutorials, and learning materials. The Service allows users to:
             </p>
             <ul className="list-disc list-inside text-gray-600 dark:text-dark-200 mb-4 space-y-2">
-              <li>Read problem descriptions and theoretical introductions</li>
-              <li>Write and execute Python code in the browser</li>
-              <li>Run tests and receive feedback on solutions</li>
-              <li>Track learning progress across sections</li>
-              <li>Use a Python scratchpad for experimentation</li>
+              <li>Read problem descriptions, section introductions, and watch animated lectures</li>
+              <li>Write and run Python code (NumPy or a PyTorch-style API) in the browser</li>
+              <li>Run tests, and optionally request AI-generated feedback on a solution</li>
+              <li>Track progress, optionally synced across devices by signing in with Google</li>
+              <li>Review concepts with flash cards and experiment in a Python scratchpad</li>
             </ul>
           </section>
 
@@ -89,9 +89,17 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-100 mb-4">6. User Code</h2>
             <p className="text-gray-600 dark:text-dark-200 mb-4">
-              Code that you write in the code editor is stored locally in your browser. We do not
-              collect or store your code on our servers. You retain full ownership of any original
-              code you create while using the Service.
+              Code that you write in the editor is saved in your browser. If you sign in, it is also
+              stored in our database so it can sync across your devices, and if you request AI feedback,
+              the submission is sent for review as described in the{' '}
+              <a href="/privacy" className="text-primary-600 hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200">
+                Privacy Policy
+              </a>
+              . You retain full ownership of any original code you write while using the Service.
+            </p>
+            <p className="text-gray-600 dark:text-dark-200 mb-4">
+              AI feedback is generated automatically and can be wrong. Treat it as a suggestion, not
+              as a verdict on your solution; the tests are the reference.
             </p>
           </section>
 

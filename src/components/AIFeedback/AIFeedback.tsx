@@ -11,8 +11,8 @@ interface AIFeedbackProps {
 export default function AIFeedback({ feedback, isLoading, error, onRequest, hasTestResults }: AIFeedbackProps) {
   if (!hasTestResults && !feedback && !isLoading && !error) {
     return (
-      <div className="p-4 font-mono text-sm text-dark-300 italic">
-        Run your tests first, then click this tab to get AI feedback.
+      <div className="p-4 font-mono text-sm text-dark-200 italic">
+        Run the tests first. AI feedback reviews your code together with the test results.
       </div>
     );
   }
@@ -22,7 +22,7 @@ export default function AIFeedback({ feedback, isLoading, error, onRequest, hasT
       {isLoading && (
         <div className="flex items-center gap-3 text-dark-200">
           <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          Analyzing your code...
+          Reviewing your code…
         </div>
       )}
 
@@ -35,7 +35,7 @@ export default function AIFeedback({ feedback, isLoading, error, onRequest, hasT
             onClick={onRequest}
             className="px-3 py-1.5 bg-dark-600 text-dark-200 text-sm rounded-lg hover:bg-dark-500 transition-colors"
           >
-            Try Again
+            Try again
           </button>
         </div>
       )}
@@ -79,7 +79,7 @@ export default function AIFeedback({ feedback, isLoading, error, onRequest, hasT
             onClick={onRequest}
             className="mt-3 px-3 py-1.5 bg-dark-600 text-dark-200 text-sm rounded-lg hover:bg-dark-500 transition-colors"
           >
-            Refresh Feedback
+            Get fresh feedback
           </button>
         </div>
       )}

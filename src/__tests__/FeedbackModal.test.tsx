@@ -31,7 +31,7 @@ describe("FeedbackModal", () => {
     opener.focus();
     fireEvent.click(opener);
 
-    const dialog = screen.getByRole("dialog", { name: "Send Feedback" });
+    const dialog = screen.getByRole("dialog", { name: "Send feedback" });
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(screen.getByLabelText("Name")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Close feedback form" })).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe("FeedbackModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open feedback" }));
     const dialog = screen.getByRole("dialog");
     const close = screen.getByRole("button", { name: "Close feedback form" });
-    const submit = screen.getByRole("button", { name: "Send Feedback" });
+    const submit = screen.getByRole("button", { name: "Send feedback" });
 
     submit.focus();
     fireEvent.keyDown(dialog, { key: "Tab" });

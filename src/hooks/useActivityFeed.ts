@@ -20,7 +20,9 @@ export function useActivityFeed(progress: Progress, limit = 8): ActivityItem[] {
         if (!problemProgress.lastAttempt) continue;
 
         const problem = getProblemById(problemId);
-        const title = problem?.title ?? problemId;
+        // Skip entries for problems that were removed or moved to another section.
+        if (!problem || problem.section !== sectionId) continue;
+        const title = problem.title;
 
         if (problemProgress.status === 'completed') {
           completedCount++;
@@ -57,7 +59,7 @@ export function useActivityFeed(progress: Progress, limit = 8): ActivityItem[] {
               sectionId,
               title: section.title,
               timestamp: latestTimestamp,
-              detail: 'Section completed!',
+              detail: 'Section complete',
             });
           }
         } else if (pct >= 50) {
@@ -74,7 +76,7 @@ export function useActivityFeed(progress: Progress, limit = 8): ActivityItem[] {
               sectionId,
               title: section.title,
               timestamp: milestoneTimestamp,
-              detail: '50% complete',
+              detail: 'Halfway through the section',
             });
           }
         }

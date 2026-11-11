@@ -25,7 +25,7 @@ export default function SuccessBanner({ show, onDismiss }: SuccessBannerProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg" aria-hidden="true">&#x2705;</span>
-            <span className="font-medium">All tests passed! Great work!</span>
+            <span className="font-medium">All tests passed. Problem marked as solved.</span>
           </div>
           <button
             type="button"

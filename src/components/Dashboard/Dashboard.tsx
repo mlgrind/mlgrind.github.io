@@ -10,17 +10,17 @@ export default function Dashboard() {
   const { progress } = useProgress();
   const activity = useActivityFeed(progress);
   const recommendations = useRecommendations(progress);
-  const { getDueCount } = useFlashCards();
+  const { getReviewDueCount, hasStarted, allCards } = useFlashCards();
 
   const hasProgress = Object.keys(progress).length > 0;
   if (!hasProgress) return null;
 
-  const dueCount = getDueCount();
+  const dueCount = getReviewDueCount();
 
   return (
     <div className="mb-12 animate-fade-up">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-dark-300 mb-5 font-mono">
-        Your Dashboard
+      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-dark-300 mb-5 font-mono">
+        Your progress
       </div>
 
       {recommendations.length > 0 && (
@@ -32,7 +32,7 @@ export default function Dashboard() {
           <ActivityFeed items={activity} />
         </div>
         <div className="lg:col-span-1">
-          <FlashCardWidget dueCount={dueCount} />
+          <FlashCardWidget dueCount={dueCount} started={hasStarted} totalCards={allCards.length} />
         </div>
       </div>
     </div>

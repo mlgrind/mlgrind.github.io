@@ -26,7 +26,7 @@ function Icon({ d }: { d: string }) {
 function DueBadge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <span className="min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold rounded-full bg-primary-500 text-white">
+    <span title={`${count} flash ${count === 1 ? 'card' : 'cards'} due for review`} className="min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold rounded-full bg-primary-500 text-white">
       {count > 99 ? '99+' : count}
     </span>
   );
@@ -37,11 +37,11 @@ interface ToolsProps {
   onOpenFeedback: () => void;
 }
 
-/** Desktop header dropdown holding Scratchpad, Problems by Company, Flash Cards, Cheat Sheet and Feedback. */
+/** Desktop header dropdown holding Scratchpad, Problems by company, Flash cards, Cheat sheet and Feedback. */
 export function ToolsMenu({ flashDueCount, onOpenFeedback }: ToolsProps) {
   return (
     <MenuButton
-      label={flashDueCount > 0 ? `Tools, ${flashDueCount} flash cards due` : 'Tools'}
+      label={flashDueCount > 0 ? `Tools, ${flashDueCount} flash ${flashDueCount === 1 ? 'card' : 'cards'} due for review` : 'Tools'}
       buttonClassName="flex px-3 py-1.5 text-gray-600 dark:text-dark-200 text-sm font-medium rounded-lg bg-white/60 dark:bg-dark-800/60 border border-gray-200 dark:border-dark-500 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-dark-100 aria-expanded:bg-gray-100 dark:aria-expanded:bg-dark-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 transition-all items-center gap-2"
       trigger={
         <>
@@ -61,11 +61,11 @@ export function ToolsMenu({ flashDueCount, onOpenFeedback }: ToolsProps) {
           </Link>
           <Link role="menuitem" to="/companies" onClick={close} className={menuItemClass}>
             <Icon d={icons.companies} />
-            <span className="flex-1">Problems by Company</span>
+            <span className="flex-1">Problems by company</span>
           </Link>
           <Link role="menuitem" to="/flashcards" onClick={close} className={menuItemClass}>
             <Icon d={icons.flashcards} />
-            <span className="flex-1">Flash Cards</span>
+            <span className="flex-1">Flash cards</span>
             <DueBadge count={flashDueCount} />
           </Link>
           <a
@@ -77,7 +77,7 @@ export function ToolsMenu({ flashDueCount, onOpenFeedback }: ToolsProps) {
             className={menuItemClass}
           >
             <Icon d={icons.cheatsheet} />
-            <span className="flex-1">Cheat Sheet</span>
+            <span className="flex-1">Cheat sheet</span>
             <span aria-hidden="true" className="text-xs text-gray-400 dark:text-dark-300">↗</span>
             <span className="sr-only">(opens in a new tab)</span>
           </a>
@@ -107,7 +107,7 @@ const drawerItemClass =
 export function DrawerTools({ flashDueCount, onOpenFeedback, onNavigate }: ToolsProps & { onNavigate: () => void }) {
   return (
     <nav aria-label="Tools" className="lg:hidden mb-4 pb-4 border-b border-gray-200 dark:border-dark-500">
-      <h3 className="text-dark-300 dark:text-dark-300 text-[11px] font-semibold uppercase tracking-widest mb-2 px-3 font-mono">
+      <h3 className="text-gray-500 dark:text-dark-300 text-[11px] font-semibold uppercase tracking-widest mb-2 px-3 font-mono">
         Tools
       </h3>
       <Link to="/scratchpad" onClick={onNavigate} className={drawerItemClass}>
@@ -116,16 +116,16 @@ export function DrawerTools({ flashDueCount, onOpenFeedback, onNavigate }: Tools
       </Link>
       <Link to="/companies" onClick={onNavigate} className={drawerItemClass}>
         <Icon d={icons.companies} />
-        <span className="flex-1">Problems by Company</span>
+        <span className="flex-1">Problems by company</span>
       </Link>
       <Link to="/flashcards" onClick={onNavigate} className={drawerItemClass}>
         <Icon d={icons.flashcards} />
-        <span className="flex-1">Flash Cards</span>
+        <span className="flex-1">Flash cards</span>
         <DueBadge count={flashDueCount} />
       </Link>
       <a href={cheatSheetHref} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={drawerItemClass}>
         <Icon d={icons.cheatsheet} />
-        <span className="flex-1">Cheat Sheet</span>
+        <span className="flex-1">Cheat sheet</span>
         <span aria-hidden="true" className="text-xs text-gray-400 dark:text-dark-300">↗</span>
       </a>
       <button
