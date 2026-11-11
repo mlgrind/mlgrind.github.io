@@ -77,7 +77,7 @@ export default function Sidebar({ onNavigate, extra, inDrawer = false }: Sidebar
     >
       {extra}
       <nav className="flex-1" aria-label="Curriculum">
-        <h3 className="text-dark-300 dark:text-dark-300 text-[11px] font-semibold uppercase tracking-widest mb-3 px-3 font-mono">
+        <h3 className="text-gray-500 dark:text-dark-300 text-[11px] font-semibold uppercase tracking-widest mb-3 px-3 font-mono">
           Curriculum
         </h3>
         <ul className="space-y-1">
@@ -110,7 +110,7 @@ export default function Sidebar({ onNavigate, extra, inDrawer = false }: Sidebar
                   <span className="flex-1 min-w-0">{group.title}</span>
                   <span
                     className={`font-mono text-[10px] font-normal ${
-                      done > 0 ? 'text-primary-600 dark:text-primary-300' : 'text-gray-400 dark:text-dark-300'
+                      done > 0 ? 'text-primary-600 dark:text-primary-300' : 'text-gray-500 dark:text-dark-300'
                     }`}
                     aria-label={`${done} of ${total} problems solved`}
                   >
@@ -142,7 +142,7 @@ export default function Sidebar({ onNavigate, extra, inDrawer = false }: Sidebar
                           )}
                         </span>
                         <span
-                          className="font-mono text-[10px] mt-[3px] text-gray-400 dark:text-dark-300"
+                          className="font-mono text-[10px] mt-[3px] text-gray-500 dark:text-dark-300"
                           aria-label={`${section.problems.length} problems`}
                         >
                           {section.problems.length}
@@ -174,7 +174,7 @@ export default function Sidebar({ onNavigate, extra, inDrawer = false }: Sidebar
                 onClick={() => { signOut(); onNavigate?.(); }}
                 className="text-xs text-gray-500 dark:text-dark-300 hover:text-gray-700 dark:hover:text-dark-100"
               >
-                Sign Out
+                Sign out
               </button>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function Sidebar({ onNavigate, extra, inDrawer = false }: Sidebar
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" />
             </svg>
-            Sign In with Google
+            Sign in with Google
           </button>
         )}
       </div>}

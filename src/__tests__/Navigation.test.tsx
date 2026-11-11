@@ -15,7 +15,7 @@ vi.mock("../lib/firestoreSync", () => ({
   saveProgressToFirestore: vi.fn(),
 }));
 vi.mock("../hooks/useFlashCards", () => ({
-  useFlashCards: () => ({ getDueCount: () => 41 }),
+  useFlashCards: () => ({ getReviewDueCount: () => 41 }),
 }));
 
 function mount(ui: React.ReactNode, path = "/") {
@@ -86,9 +86,9 @@ describe("header", () => {
     const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
     expect(items).toEqual([
       "Scratchpad",
-      "Problems by Company",
-      expect.stringContaining("Flash Cards"),
-      expect.stringContaining("Cheat Sheet"),
+      "Problems by company",
+      expect.stringContaining("Flash cards"),
+      expect.stringContaining("Cheat sheet"),
       "Send feedback",
     ]);
     fireEvent.click(screen.getByRole("menuitem", { name: "Send feedback" }));

@@ -16,8 +16,10 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const { pathname } = useLocation();
-  const { getDueCount } = useFlashCards();
-  const flashDueCount = getDueCount();
+  // Only cards the learner has reviewed before count as due: a first-time
+  // visitor has new cards to try, not a backlog.
+  const { getReviewDueCount } = useFlashCards();
+  const flashDueCount = getReviewDueCount();
   useEffect(() => {
     trackVisit();
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
