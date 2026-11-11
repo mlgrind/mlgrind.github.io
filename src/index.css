@@ -180,8 +180,11 @@ code {
   perspective: 1000px;
 }
 
+/* Both faces share one grid cell, so the card grows to fit the longer side
+   (no inner scrolling) while the 3D flip still works. */
 .flashcard-inner {
   position: relative;
+  display: grid;
   width: 100%;
   min-height: 280px;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -193,8 +196,8 @@ code {
 }
 
 .flashcard-face {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
+  position: relative;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

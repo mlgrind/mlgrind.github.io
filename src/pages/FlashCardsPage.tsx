@@ -194,7 +194,7 @@ export default function FlashCardsPage() {
             <div className="flashcard-container mb-6" style={{ minHeight: 280 }}>
               <div className={`flashcard-inner ${showAnswer ? 'flashcard-flipped' : ''}`}>
                 {/* Front — Question */}
-                <div className="flashcard-face flashcard-front bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 p-8 flex flex-col">
+                <div className="flashcard-face flashcard-front bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 p-5 sm:p-8 flex flex-col">
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-600 dark:text-primary-300 font-mono mb-4">
                     Question
                     {!browsing && isNewCard && (
@@ -221,7 +221,7 @@ export default function FlashCardsPage() {
                 </div>
 
                 {/* Back — Answer */}
-                <div className="flashcard-face flashcard-back bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 p-8 flex flex-col overflow-y-auto">
+                <div className="flashcard-face flashcard-back bg-white dark:bg-dark-800 rounded-[14px] border border-gray-200 dark:border-dark-500 p-5 sm:p-8 flex flex-col">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-accent-700 dark:text-accent-400 font-mono mb-4">
                     Answer
                   </div>
