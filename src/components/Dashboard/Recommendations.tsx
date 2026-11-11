@@ -9,7 +9,7 @@ const badgeConfig: Record<Recommendation['type'], { label: string; bg: string; t
     border: 'border-primary-200 dark:border-primary-500/20',
   },
   next: {
-    label: 'Next',
+    label: 'Up next',
     bg: 'bg-blue-50 dark:bg-blue-500/10',
     text: 'text-blue-600 dark:text-blue-300',
     border: 'border-blue-200 dark:border-blue-500/20',
@@ -21,13 +21,13 @@ const badgeConfig: Record<Recommendation['type'], { label: string; bg: string; t
     border: 'border-amber-200 dark:border-amber-500/20',
   },
   weak_area: {
-    label: 'Weak Area',
+    label: 'Keep going',
     bg: 'bg-rose-50 dark:bg-rose-500/10',
     text: 'text-rose-600 dark:text-rose-300',
     border: 'border-rose-200 dark:border-rose-500/20',
   },
   new_territory: {
-    label: 'Try New',
+    label: 'Explore',
     bg: 'bg-accent-50 dark:bg-accent-500/10',
     text: 'text-accent-600 dark:text-accent-300',
     border: 'border-accent-200 dark:border-accent-500/20',

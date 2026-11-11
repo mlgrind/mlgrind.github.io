@@ -11,6 +11,8 @@ import { CompanyLogo } from '../components/CompanyTags/CompanyTags';
 import { getCompanyIndex } from '../data/companyTags';
 
 const totalProblems = sections.reduce((sum, s) => sum + s.problems.length, 0);
+const FIRST_PROBLEM_ID = 'numpy-array-sum';
+const firstProblem = getProblemById(FIRST_PROBLEM_ID);
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default function HomePage() {
@@ -29,14 +31,15 @@ export default function HomePage() {
       <section className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 pt-4 sm:pt-8 pb-8 sm:pb-10 mb-8 sm:mb-10 border-b border-gray-200 dark:border-dark-500">
         <div className="flex-[1_1_520px] min-w-0">
           <p className="mb-3 font-mono text-[11px] sm:text-xs tracking-[0.08em] uppercase text-gray-500 dark:text-dark-300 animate-fade-up">
-            {totalProblems} problems &middot; NumPy or PyTorch &middot; Runs in your browser
+            {totalProblems} problems &middot; {sections.length} sections &middot; NumPy or PyTorch
           </p>
           <h1 className="font-display text-[clamp(2.25rem,5.5vw,4rem)] font-normal leading-[1.05] tracking-tight text-gray-900 dark:text-dark-100 animate-fade-up [animation-delay:0.1s]">
             Learn machine learning<br className="hidden sm:inline" /> by <em className="text-accent-600 dark:text-accent-300">building it.</em>
           </h1>
           <p className="mt-4 max-w-[560px] text-base sm:text-lg text-gray-500 dark:text-dark-200 font-light leading-relaxed animate-fade-up [animation-delay:0.2s]">
-            Implement algorithms from scratch — NumPy, neural networks, transformers,
-            diffusion models. Write real Python with instant feedback, no setup or signup.
+            Implement the algorithms behind modern ML from scratch, from NumPy broadcasting to
+            attention, diffusion and PPO. Write Python in your browser and run real tests
+            against it. No install, no account.
           </p>
         </div>
         <div className="flex flex-col gap-2 animate-fade-up [animation-delay:0.3s]">
@@ -50,7 +53,7 @@ export default function HomePage() {
               </Link>
             ) : (
               <Link
-                to={problemHref('numpy-array-sum')}
+                to={problemHref(FIRST_PROBLEM_ID)}
                 className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
               >
                 Solve your first problem →
@@ -89,12 +92,14 @@ export default function HomePage() {
             </MenuButton>
           </div>
           {!recent && (
-            <p className="text-xs text-gray-500 dark:text-dark-300">Start with array sum · About 5 minutes · Basic Python</p>
+            <p className="text-xs text-gray-500 dark:text-dark-300">
+              {firstProblem ? `${firstProblem.title}, about 5 minutes` : 'About 5 minutes'} &middot; Basic Python is enough
+            </p>
           )}
         </div>
       </section>
 
-      {/* Dashboard — only renders when user has progress */}
+      {/* Dashboard: only renders once the learner has progress */}
       <Dashboard />
 
       {/* Curriculum, grouped */}
@@ -109,9 +114,10 @@ export default function HomePage() {
                 className="grid grid-cols-1 lg:grid-cols-[minmax(0,200px)_minmax(0,1fr)] gap-3 lg:gap-6 items-start"
               >
                 <div>
-                  <p className="font-mono text-xs text-gray-400 dark:text-dark-300">{String(groupIndex + 1).padStart(2, '0')}</p>
+                  <p className="font-mono text-xs text-gray-500 dark:text-dark-300">{String(groupIndex + 1).padStart(2, '0')}</p>
                   <h3 className="mt-0.5 mb-1 text-lg sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-dark-100">{group.title}</h3>
-                  <p className="text-[13px] text-gray-500 dark:text-dark-300">
+                  <p className="text-[13px] leading-snug text-gray-600 dark:text-dark-200">{group.blurb}</p>
+                  <p className="mt-1.5 font-mono text-[11px] text-gray-500 dark:text-dark-300">
                     {plural(group.sections.length, 'section')} &middot; {plural(groupTotal, 'problem')}
                   </p>
                 </div>
@@ -131,7 +137,7 @@ export default function HomePage() {
                           </span>
                           <span
                             className={`shrink-0 mt-0.5 font-mono text-xs ${
-                              done > 0 ? 'text-primary-600 dark:text-primary-300' : 'text-gray-400 dark:text-dark-300'
+                              done > 0 ? 'text-primary-600 dark:text-primary-300' : 'text-gray-500 dark:text-dark-300'
                             }`}
                             aria-label={`${done} of ${total} problems solved`}
                           >
@@ -172,9 +178,12 @@ function CompanyStrip() {
           Interviewing somewhere specific?
         </h2>
         <Link to="/companies" className="text-sm font-medium text-primary-600 dark:text-primary-300 hover:underline">
-          Problems by company ({index.length}) →
+          See all {index.length} companies →
         </Link>
       </div>
+      <p className="-mt-1.5 mb-3 text-[13px] text-gray-600 dark:text-dark-200">
+        Problems candidates report being asked, with links to the public interview reports.
+      </p>
       <ul className="flex flex-wrap gap-2">
         {top.map(entry => (
           <li key={entry.slug}>
@@ -184,7 +193,10 @@ function CompanyStrip() {
             >
               <CompanyLogo company={entry.company} size={14} />
               {entry.company}
-              <span className="font-mono text-xs text-gray-400 dark:text-dark-300">{entry.problemIds.length}</span>
+              <span className="font-mono text-xs text-gray-500 dark:text-dark-300">
+                {entry.problemIds.length}
+                <span className="sr-only"> {entry.problemIds.length === 1 ? 'problem' : 'problems'}</span>
+              </span>
             </Link>
           </li>
         ))}
