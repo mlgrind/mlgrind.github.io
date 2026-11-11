@@ -78,3 +78,29 @@ describe('flash card deck', () => {
     }
   });
 });
+
+describe('flash card practice links', () => {
+  it('every card links to at least one existing problem', async () => {
+    const { getProblemById } = await import('../data/problems');
+    for (const card of flashCards) {
+      expect(card.problemIds?.length, card.id).toBeGreaterThan(0);
+      for (const id of card.problemIds ?? []) expect(getProblemById(id), `${card.id} -> ${id}`).toBeDefined();
+    }
+  });
+});
+
+describe('flash card cloud merge', () => {
+  it('keeps the most recently reviewed copy of each card', async () => {
+    const { mergeFlashCardProgress } = await import('../hooks/useFlashCards');
+    const mk = (cardId: string, lastReviewed: string, interval: number) => ({
+      cardId, ease: 2.5, interval, repetitions: 1, nextReview: lastReviewed, lastReviewed,
+    });
+    const local = { a: mk('a', '2026-11-10T00:00:00Z', 3), b: mk('b', '2026-11-01T00:00:00Z', 1) };
+    const cloud = { b: mk('b', '2026-11-09T00:00:00Z', 6), c: mk('c', '2026-11-05T00:00:00Z', 2) };
+    const merged = mergeFlashCardProgress(local, cloud);
+    expect(Object.keys(merged).sort()).toEqual(['a', 'b', 'c']);
+    expect(merged.a.interval).toBe(3);
+    expect(merged.b.interval).toBe(6);
+    expect(merged.c.interval).toBe(2);
+  });
+});

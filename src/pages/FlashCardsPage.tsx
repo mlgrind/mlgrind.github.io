@@ -5,6 +5,8 @@ import { sections } from '../data/sections';
 import { useFlashCards } from '../hooks/useFlashCards';
 import { FlashCard } from '../types';
 import SEO from '../components/SEO/SEO';
+import { getProblemById } from '../data/problems';
+import { problemHref } from '../data/learningPaths';
 
 export default function FlashCardsPage() {
   const { getDueCards, reviewCard, allCards, progress, hasStarted } = useFlashCards();
@@ -29,6 +31,9 @@ export default function FlashCardsPage() {
   const currentCards = browsing ? browseCards : dueCards;
   const currentIndex = browsing ? browseIndex : 0;
   const currentCard: FlashCard | undefined = currentCards[currentIndex];
+  const practice = (currentCard?.problemIds ?? [])
+    .map(id => getProblemById(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const totalCards = currentCards.length;
 
@@ -128,7 +133,7 @@ export default function FlashCardsPage() {
             : `${allCards.length} short recall questions on the ideas behind the problems. Answer in your head, flip the card, then say whether you got it. Cards you miss come back the next day; cards you know come back after longer and longer gaps.`}
         </p>
         <p className="text-xs text-gray-500 dark:text-dark-300 mt-1.5">
-          Progress is saved in this browser.
+          Progress is saved in this browser, and synced to your account when you sign in.
         </p>
       </div>
 
@@ -228,6 +233,21 @@ export default function FlashCardsPage() {
                   <div className="flex-1 prose-sm text-gray-700 dark:text-dark-100 leading-relaxed flashcard-answer">
                     <ReactMarkdown>{currentCard.answer}</ReactMarkdown>
                   </div>
+                  {practice.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-500 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+                      <span className="text-gray-500 dark:text-dark-300">Practice:</span>
+                      {practice.map(p => (
+                        <Link
+                          key={p.id}
+                          to={problemHref(p.id)}
+                          onClick={e => e.stopPropagation()}
+                          className="font-medium text-primary-600 dark:text-primary-300 hover:underline"
+                        >
+                          {p.title} →
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

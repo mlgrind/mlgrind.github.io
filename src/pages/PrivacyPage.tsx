@@ -43,7 +43,7 @@ export default function PrivacyPage() {
               <li><strong>Progress data:</strong> which problems you've started or solved, when, and in which track (NumPy or PyTorch)</li>
               <li><strong>Saved code:</strong> your code for each problem, in each track</li>
               <li><strong>Scratchpad code:</strong> code you've written in the Python scratchpad</li>
-              <li><strong>Flash card progress:</strong> which cards you've reviewed and when each is next due (this stays in your browser even when you are signed in)</li>
+              <li><strong>Flash card progress:</strong> which cards you've reviewed and when each is next due (synced to your account too when you are signed in)</li>
               <li><strong>Preferences:</strong> light or dark theme, your preferred track, which sidebar groups are open, and whether analytics is turned off</li>
               <li><strong>Analytics markers:</strong> your last visit date and whether you've run or passed a first exercise, used to count returning visits and first runs</li>
             </ul>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc list-inside text-gray-600 dark:text-dark-200 mb-4 space-y-2">
               <li><strong>Google profile information:</strong> your name, email address, and profile photo URL</li>
-              <li><strong>Progress data:</strong> problem status, saved code for each track, and timestamps, plus the time of your last sync</li>
+              <li><strong>Progress data:</strong> problem status, saved code for each track, flash card review schedules, and timestamps, plus the time of your last sync</li>
               <li><strong>Sign-in log:</strong> each sign-in records your account ID, name, email, profile photo URL, the time, and your browser&apos;s user-agent string, for security and to understand usage</li>
             </ul>
             <p className="text-gray-600 dark:text-dark-200 mb-4">

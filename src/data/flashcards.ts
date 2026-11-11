@@ -9,6 +9,7 @@ export const flashCards: FlashCard[] = [
   {
     id: 'fc-numpy-broadcasting',
     sectionId: 'numpy-fundamentals',
+    problemIds: ['numpy-broadcasting'],
     question: "What are NumPy's broadcasting rules, and does (3, 4) + (3,) work?",
     answer: `Compare shapes from the **right**, one dimension at a time:
 
@@ -24,6 +25,7 @@ export const flashCards: FlashCard[] = [
   {
     id: 'fc-numpy-axis-keepdims',
     sectionId: 'numpy-fundamentals',
+    problemIds: ['numpy-aggregations'],
     question: "What does axis=0 mean in x.sum(axis=0), and why does keepdims=True matter?",
     answer: `\`axis=k\` is the dimension that gets **collapsed**. For \`x\` of shape \`(N, D)\`:
 
@@ -40,6 +42,7 @@ export const flashCards: FlashCard[] = [
   {
     id: 'fc-numpy-reshape-transpose',
     sectionId: 'numpy-fundamentals',
+    problemIds: ['numpy-reshape-transpose'],
     question: "How do reshape and transpose differ, and why is x.reshape(4, 3) not the same as x.T for a (3, 4) array?",
     answer: `- \`reshape\` keeps the elements in row-major (C) order and re-cuts that sequence into a new shape.
 - \`transpose\` / \`.T\` permutes the **axes**: element \`[i, j]\` moves to \`[j, i]\`. It returns a view with swapped strides.
@@ -52,6 +55,7 @@ For \`x = np.arange(12).reshape(3, 4)\`: \`x.reshape(4, 3)[0]\` is \`[0, 1, 2]\`
   {
     id: 'fc-numpy-view-copy',
     sectionId: 'numpy-fundamentals',
+    problemIds: ['numpy-indexing'],
     question: "When does NumPy indexing return a view, and when a copy?",
     answer: `- **Basic indexing** (integers, slices, \`None\`, \`...\`), e.g. \`a[1:5]\`, \`a[:, 2]\`: a **view**. Writing to it changes \`a\`.
 - **Advanced indexing** (integer arrays or boolean masks), e.g. \`a[[0, 2]]\`, \`a[a > 0]\`: a **copy**.
@@ -66,6 +70,7 @@ Check with \`np.shares_memory(a, b)\`; call \`.copy()\` when you need an indepen
   {
     id: 'fc-numpy-dtype-pitfalls',
     sectionId: 'numpy-fundamentals',
+    problemIds: ['numpy-array-creation'],
     question: "Name two NumPy dtype pitfalls that silently corrupt results.",
     answer: `1. **Floats assigned into an integer array are truncated.** \`a = np.array([1, 2, 3]); a[0] = 0.7\` leaves \`a[0] == 0\`. Create float arrays explicitly (\`dtype=float\`, or \`np.zeros(n)\`, which is float64).
 2. **Integer overflow wraps around without an error:** \`np.array([200], dtype=np.uint8) + 100\` gives \`[44]\`. Image arrays (uint8) are the usual victim: convert to float before arithmetic.
@@ -77,6 +82,7 @@ Related: compare float results with \`np.allclose\`, not \`==\`, and remember fl
   {
     id: 'fc-python-vectorization',
     sectionId: 'python-basics',
+    problemIds: ['numpy-array-sum'],
     question: "Why is vectorized NumPy code much faster than a Python loop?",
     answer: `A Python loop pays interpreter overhead on **every element**: bytecode dispatch, a boxed Python object per number, dynamic type checks. A NumPy call pays it **once**, then runs a compiled C loop over a contiguous buffer of one dtype, which is cache-friendly and can use SIMD instructions. Matrix products go to an optimized, multithreaded BLAS.
 
@@ -88,6 +94,7 @@ Typical speedup: 10–100× for elementwise work, much more for \`@\` versus a t
   {
     id: 'fc-python-matmul',
     sectionId: 'python-basics',
+    problemIds: ['numpy-matrix-multiply'],
     question: "What shapes does A @ B accept, and how is it different from A * B?",
     answer: `- \`(m, k) @ (k, n)\` → \`(m, n)\`: inner dimensions must match. \`C[i, j] = Σ_k A[i, k] · B[k, j]\`, costing \`m·k·n\` multiply-adds.
 - Batched: leading dimensions broadcast. \`(b, m, k) @ (b, k, n)\` → \`(b, m, n)\`, and \`(b, m, k) @ (k, n)\` → \`(b, m, n)\`.
@@ -99,6 +106,7 @@ Typical speedup: 10–100× for elementwise work, much more for \`@\` versus a t
   {
     id: 'fc-python-rank1-arrays',
     sectionId: 'python-basics',
+    problemIds: ['numpy-broadcast-add'],
     question: "What is the difference between arrays of shape (n,), (n, 1) and (1, n)?",
     answer: `- \`(n,)\`: a 1-D array, neither a row nor a column; \`.T\` does nothing to it.
 - \`(n, 1)\`: a column vector. \`(1, n)\`: a row vector.
@@ -112,6 +120,7 @@ For \`v\` of shape \`(n,)\`, \`v @ v\` is a scalar. For a column \`c\` of shape 
   {
     id: 'fc-einsum-rules',
     sectionId: 'einsum',
+    problemIds: ['einsum-basics'],
     question: "How do you read an einsum string, and which indices get summed?",
     answer: `Each operand gets one letter per axis; the letters after \`->\` name the output axes.
 
@@ -126,6 +135,7 @@ For \`v\` of shape \`(n,)\`, \`v @ v\` is a scalar. For a column \`c\` of shape 
   {
     id: 'fc-einsum-patterns',
     sectionId: 'einsum',
+    problemIds: ['einsum-matrix-ops', 'einsum-vs-matmul'],
     question: "Give the einsum strings for trace, diagonal, transpose, outer product, row sums and batched matmul.",
     answer: `- Trace: \`'ii->'\`
 - Diagonal: \`'ii->i'\`
@@ -141,6 +151,7 @@ For \`v\` of shape \`(n,)\`, \`v @ v\` is a scalar. For a column \`c\` of shape 
   {
     id: 'fc-einsum-attention',
     sectionId: 'einsum',
+    problemIds: ['einsum-advanced'],
     question: "Write the einsums for multi-head attention scores and for applying the attention weights to V.",
     answer: `Letters: b batch, h heads, q / k query and key positions, d head dimension.
 
@@ -151,6 +162,7 @@ For \`v\` of shape \`(n,)\`, \`v @ v\` is a scalar. For a column \`c\` of shape 
   {
     id: 'fc-einsum-vs-matmul',
     sectionId: 'einsum',
+    problemIds: ['einsum-vs-matmul'],
     question: "When would you use einsum instead of @, and what can go wrong with its performance?",
     answer: `Einsum states the contraction explicitly and replaces chains of \`transpose\` / \`reshape\`, which helps with multi-axis contractions such as attention, or merging heads into the output projection with \`'bthd,hdm->btm'\`.
 
@@ -163,6 +175,7 @@ Performance: NumPy's \`einsum\` defaults to \`optimize=False\`, contracting oper
   {
     id: 'fc-pytorch-autograd',
     sectionId: 'pytorch-basics',
+    problemIds: ['autograd-concepts'],
     question: "How does PyTorch autograd compute gradients, and why do gradients accumulate?",
     answer: `During the forward pass, every operation on a tensor with \`requires_grad=True\` records a node (its \`grad_fn\`) in a dynamic graph and saves what it needs for backward. \`loss.backward()\` walks the graph in reverse, applying each node's vector-Jacobian product (the chain rule), then frees the graph.
 
@@ -174,6 +187,7 @@ Gradients are **added** into each leaf's \`.grad\`, so a parameter used twice, o
   {
     id: 'fc-pytorch-training-loop',
     sectionId: 'pytorch-basics',
+    problemIds: ['training-loop'],
     question: "Write a PyTorch training step in the correct order.",
     answer: `After \`model.train()\`, for each batch \`(x, y)\`:
 
@@ -190,6 +204,7 @@ Log \`loss.item()\`, not \`loss\`: keeping the tensor keeps its graph alive.`,
   {
     id: 'fc-pytorch-train-eval',
     sectionId: 'pytorch-basics',
+    problemIds: ['training-loop'],
     question: "What do model.eval() and torch.no_grad() each do, and why do you usually need both at inference?",
     answer: `- \`model.eval()\` changes **layer behavior**: Dropout becomes the identity and BatchNorm uses its running mean/variance instead of batch statistics. It does not touch autograd.
 - \`torch.no_grad()\` (or \`torch.inference_mode()\`) stops **graph recording**: less memory, faster, no gradients.
@@ -202,6 +217,7 @@ They are independent, so inference needs both.
   {
     id: 'fc-pytorch-loss',
     sectionId: 'pytorch-basics',
+    problemIds: ['loss-functions'],
     question: "When do you use CrossEntropyLoss vs BCEWithLogitsLoss, and what inputs does each expect?",
     answer: `- **CrossEntropyLoss**: exactly one of C classes. Input: raw logits \`(N, C)\`. Target: class indices \`(N,)\` (int64) or class probabilities \`(N, C)\`. Computes log-softmax + negative log-likelihood.
 - **BCEWithLogitsLoss**: binary or multi-label (an independent yes/no per class). Input: logits \`(N,)\` or \`(N, C)\`. Target: floats in [0, 1], same shape. Computes sigmoid + binary cross-entropy.
@@ -214,6 +230,7 @@ Both take **logits** and use the log-sum-exp trick internally for numerical stab
   {
     id: 'fc-pytorch-view-reshape',
     sectionId: 'pytorch-basics',
+    problemIds: ['tensor-operations'],
     question: "What is the difference between view and reshape in PyTorch, and when does view fail?",
     answer: `\`view\` reinterprets the same storage with new strides and never copies, so it needs a compatible memory layout. After \`transpose\` / \`permute\` a tensor is usually non-contiguous, and \`view\` raises an error.
 
@@ -225,6 +242,7 @@ Both take **logits** and use the log-sum-exp trick internally for numerical stab
   {
     id: 'fc-pytorch-detach',
     sectionId: 'pytorch-basics',
+    problemIds: ['autograd-concepts'],
     question: "What do .detach(), .item() and .numpy() do, and when do you need them?",
     answer: `- \`.detach()\`: same data, cut out of the graph, so no gradient flows through it. Used for fixed targets (TD targets, EMA teachers) and logging.
 - \`.item()\`: a one-element tensor → Python number (forces a GPU sync).
@@ -236,6 +254,7 @@ Both take **logits** and use the log-sum-exp trick internally for numerical stab
   {
     id: 'fc-pytorch-gelu-silu',
     sectionId: 'pytorch-basics',
+    problemIds: ['gelu-activation', 'leaky-relu-swish'],
     question: "Define GELU and SiLU (Swish). Why do transformers use them instead of ReLU?",
     answer: `- **GELU**: \`x · Φ(x)\`, where Φ is the standard normal CDF. Tanh approximation: \`0.5·x·(1 + tanh(√(2/π)·(x + 0.044715·x³)))\`.
 - **SiLU / Swish**: \`x · σ(x)\`.
@@ -249,6 +268,7 @@ GELU and SiLU are smooth, slightly non-monotonic (a small dip below 0), and pass
   {
     id: 'fc-pytorch-norm-family',
     sectionId: 'pytorch-basics',
+    problemIds: ['group-norm', 'instance-norm'],
     question: "BatchNorm, LayerNorm, InstanceNorm, GroupNorm: which axes does each normalize over for an (N, C, H, W) tensor?",
     answer: `Each subtracts a mean, divides by a standard deviation, then applies learnable γ, β:
 
@@ -263,6 +283,7 @@ Only BatchNorm mixes samples. The others work with batch size 1 and behave ident
   {
     id: 'fc-pytorch-label-smoothing',
     sectionId: 'pytorch-basics',
+    problemIds: ['label-smoothing'],
     question: "What is label smoothing, what are the smoothed targets, and why does it help?",
     answer: `Replace the one-hot target with \`y = (1 − ε) · one_hot + ε / K\` for K classes, then use cross-entropy as usual. ε = 0.1, K = 10: the true class gets 0.91, every other class 0.01.
 
@@ -276,6 +297,7 @@ In PyTorch: \`nn.CrossEntropyLoss(label_smoothing=0.1)\`.
   {
     id: 'fc-pytorch-cross-attention',
     sectionId: 'pytorch-basics',
+    problemIds: ['cross-attention'],
     question: "How does cross-attention differ from self-attention, and what are the shapes?",
     answer: `Queries come from one sequence; keys and values from another (the "memory"):
 
@@ -290,6 +312,7 @@ Uses: the decoder attending to the encoder output in translation; image latents 
   {
     id: 'fc-pytorch-dataloader',
     sectionId: 'pytorch-basics',
+    problemIds: ['dataloader-batching'],
     question: "What do shuffle, batch_size and drop_last do in a DataLoader, and what are common bugs?",
     answer: `- \`shuffle=True\` draws a new permutation every epoch, so each minibatch gradient is an unbiased estimate of the full gradient. Training only.
 - \`batch_size\` = samples per step; there are \`ceil(N / batch_size)\` steps per epoch.
@@ -302,6 +325,7 @@ Common bugs: shuffling features and labels with *different* permutations; shuffl
   {
     id: 'fc-preprocess-normalize',
     sectionId: 'data-preprocessing',
+    problemIds: ['normalize-features'],
     question: "Min-max normalization vs standardization: what are the formulas, when do you use each, and what is the leakage pitfall?",
     answer: `- **Min-max**: \`(x − min) / (max − min)\` → [0, 1]. For bounded inputs such as pixels. A single outlier squashes everything else into a narrow band.
 - **Standardization (z-score)**: \`(x − μ) / σ\` → mean 0, std 1. The default for gradient descent, regularized linear models, SVMs, k-NN and PCA. It does not assume Gaussian data.
@@ -314,6 +338,7 @@ Neither is robust to outliers: use median/IQR scaling, clipping or a log transfo
   {
     id: 'fc-preprocess-onehot',
     sectionId: 'data-preprocessing',
+    problemIds: ['one-hot-encode'],
     question: "Why one-hot encode categorical features instead of label encoding them, and when is one-hot a bad idea?",
     answer: `Label encoding (cat = 0, dog = 1, bird = 2) invents an order and distances that linear, distance-based and neural models will use. One-hot gives each category its own independent column.
 
@@ -329,6 +354,7 @@ Tree ensembles often do fine with integer codes or native categorical support.`,
   {
     id: 'fc-preprocess-leakage',
     sectionId: 'data-preprocessing',
+    problemIds: ['leakage-safe-imputation'],
     question: "What is data leakage? Give three common ways it gets into a pipeline.",
     answer: `Leakage: during training the model gets information it won't have at prediction time, so validation scores are inflated and production performance disappoints.
 
@@ -342,6 +368,7 @@ Red flag: a validation score that looks too good to be true.`,
   {
     id: 'fc-preprocess-missing',
     sectionId: 'data-preprocessing',
+    problemIds: ['handle-missing-data'],
     question: "What are the main strategies for handling missing values?",
     answer: `- **Drop** rows or columns: only when few values are missing at random, or a column is mostly empty.
 - **Simple imputation**: mean (sensitive to outliers), median (robust), most-frequent or an explicit "missing" category for categoricals.
@@ -356,6 +383,7 @@ Fit imputation statistics on the training split only. XGBoost and LightGBM handl
   {
     id: 'fc-preprocess-stratified',
     sectionId: 'data-preprocessing',
+    problemIds: ['stratified-split'],
     question: "What is a stratified split, and when do you need one?",
     answer: `A split that preserves each class's proportion in every subset: split each class's indices separately with the same fraction, then combine and shuffle.
 
@@ -368,6 +396,7 @@ Use \`StratifiedKFold\` for CV. With grouped or temporal data, group or time spl
   {
     id: 'fc-supervised-bias-variance',
     sectionId: 'supervised-learning',
+    problemIds: ['ridge-lasso'],
     question: "Explain the bias-variance decomposition. How does model complexity affect each term?",
     answer: `For squared error, averaged over possible training sets:
 
@@ -382,6 +411,7 @@ More complexity lowers bias and raises variance. Regularization, bagging and mor
   {
     id: 'fc-supervised-normal-equation',
     sectionId: 'supervised-learning',
+    problemIds: ['linear-regression-gd'],
     question: "What is the closed-form solution of linear regression, and when should you use gradient descent instead?",
     answer: `Minimizing \`‖Xw − y‖²\` gives the normal equations \`XᵀX w = Xᵀy\`, so \`w = (XᵀX)⁻¹ Xᵀy\`. Add a column of ones to X for the bias.
 
@@ -393,6 +423,7 @@ Prefer gradient descent when D is very large, when the data doesn't fit in memor
   {
     id: 'fc-supervised-gd-convergence',
     sectionId: 'supervised-learning',
+    problemIds: ['linear-regression-gd'],
     question: "What determines whether gradient descent converges, and how do you spot a bad learning rate?",
     answer: `The learning rate relative to the curvature. On a quadratic whose Hessian has largest eigenvalue L, gradient descent converges iff \`lr < 2/L\` (\`lr = 1/L\` is the safe choice). Speed depends on the condition number L/μ: long, narrow valleys make it zig-zag.
 
@@ -407,6 +438,7 @@ Fixes: feature scaling (better conditioning), momentum or Adam, learning-rate sc
   {
     id: 'fc-supervised-logistic',
     sectionId: 'supervised-learning',
+    problemIds: ['logistic-regression-full', 'logistic-regression'],
     question: "Why does logistic regression use the sigmoid, and what is the gradient of its loss?",
     answer: `Model the log-odds as linear: \`log(p / (1 − p)) = w·x + b\`. Solving for p gives \`p = σ(z) = 1 / (1 + e^(−z))\`, a smooth map to (0, 1) that can be read as a probability. A hard threshold has zero gradient almost everywhere.
 
@@ -420,6 +452,7 @@ Also \`σ'(z) = σ(z)(1 − σ(z))\`. Cross-entropy with a sigmoid is convex in 
   {
     id: 'fc-supervised-bce-stable',
     sectionId: 'supervised-learning',
+    problemIds: ['binary-cross-entropy'],
     question: "How do you compute binary cross-entropy without log(0) or overflow?",
     answer: `\`BCE = −[y·log p + (1 − y)·log(1 − p)]\`, averaged over samples.
 
@@ -432,6 +465,7 @@ Also \`σ'(z) = σ(z)(1 − σ(z))\`. Cross-entropy with a sigmoid is convex in 
   {
     id: 'fc-supervised-l1-l2',
     sectionId: 'supervised-learning',
+    problemIds: ['ridge-lasso'],
     question: "L1 vs L2 regularization: what does each do to the weights, and why does L1 produce sparsity?",
     answer: `- **L2 (ridge)**: add \`λ‖w‖²\`. Its gradient \`2λw\` shrinks weights in proportion to their size, so they get small but rarely exactly 0. Closed form \`w = (XᵀX + λI)⁻¹ Xᵀy\`, which also fixes collinear, ill-conditioned XᵀX.
 - **L1 (lasso)**: add \`λ‖w‖₁\`. Its pull \`λ·sign(w)\` has constant size, so small weights are driven exactly to 0: built-in feature selection. Geometrically, the L1 ball has corners on the axes.
@@ -444,6 +478,7 @@ Lasso has no closed form; coordinate descent uses soft-thresholding \`sign(z)·m
   {
     id: 'fc-supervised-decision-tree',
     sectionId: 'supervised-learning',
+    problemIds: ['decision-tree-split', 'decision-tree-bagging'],
     question: "How does a decision tree choose a split? Define Gini impurity, entropy and information gain.",
     answer: `For class proportions p_k in a node:
 
@@ -458,6 +493,7 @@ Regression trees use variance (MSE). Trees overfit easily: limit depth and leaf 
   {
     id: 'fc-supervised-bagging-boosting',
     sectionId: 'supervised-learning',
+    problemIds: ['decision-tree-bagging', 'gradient-boosting'],
     question: "Bagging vs boosting: how do they differ, and which error does each reduce?",
     answer: `- **Bagging** (Random Forest): train many deep trees **in parallel** on bootstrap samples (a random forest also samples a feature subset at every split), then average or vote. Reduces **variance**; adding trees doesn't overfit. Out-of-bag samples give a free validation estimate.
 - **Boosting** (AdaBoost, gradient boosting, XGBoost, LightGBM): train shallow trees **sequentially**, each fixing the current ensemble's errors. Reduces **bias** (and variance), but can overfit with too many rounds: tune the learning rate and stop early.
@@ -468,6 +504,7 @@ On tabular data, a tuned gradient-boosting model is usually the strongest baseli
   {
     id: 'fc-supervised-gradient-boosting',
     sectionId: 'supervised-learning',
+    problemIds: ['gradient-boosting'],
     question: "How does gradient boosting work, and why do the trees fit residuals?",
     answer: `Start from a constant prediction F₀ (e.g. the mean of y). For m = 1..M:
 
@@ -481,6 +518,7 @@ For \`L = ½(y − F)²\` the negative gradient is exactly the residual \`y − 
   {
     id: 'fc-supervised-svm',
     sectionId: 'supervised-learning',
+    problemIds: ['linear-svm', 'hinge-loss'],
     question: "What does a linear SVM optimize, and what is the hinge loss?",
     answer: `It finds the maximum-margin hyperplane. Soft-margin primal, with labels y ∈ {−1, +1}:
 
@@ -496,6 +534,7 @@ Train with subgradient descent (subgradient \`−y_i x_i\` for violators), or so
   {
     id: 'fc-supervised-knn',
     sectionId: 'supervised-learning',
+    problemIds: ['knn-classifier'],
     question: "How does k-NN classify, and what are its main pitfalls?",
     answer: `Store the training set. For a query, find the k nearest points (usually Euclidean) and take a majority or distance-weighted vote. No training; brute-force prediction costs \`O(N·D)\` per query.
 
@@ -509,6 +548,7 @@ Vectorize distances with \`‖a − b‖² = ‖a‖² − 2a·b + ‖b‖²\`.`
   {
     id: 'fc-supervised-naive-bayes',
     sectionId: 'supervised-learning',
+    problemIds: ['naive-bayes'],
     question: "What is the naive assumption in Naive Bayes, and how do you implement Gaussian Naive Bayes safely?",
     answer: `Bayes' rule: \`P(y | x) ∝ P(y) · P(x | y)\`. The naive assumption: features are conditionally independent given the class, so \`P(x | y) = Π_j P(x_j | y)\`.
 
@@ -525,6 +565,7 @@ The independence assumption is rarely true; the argmax is often still right, but
   {
     id: 'fc-unsupervised-kmeans-algo',
     sectionId: 'unsupervised-learning',
+    problemIds: ['kmeans-full', 'kmeans-clustering'],
     question: "State Lloyd's algorithm for k-means. Why does it always converge, and what is k-means++?",
     answer: `Objective (inertia): \`J = Σ_i ‖x_i − μ_c(i)‖²\`. Repeat until the assignments stop changing:
 
@@ -541,6 +582,7 @@ Neither step can increase J (the mean minimizes the sum of squared distances), a
   {
     id: 'fc-unsupervised-kmeans-limitations',
     sectionId: 'unsupervised-learning',
+    problemIds: ['kmeans-full'],
     question: "What are the main limitations of k-means?",
     answer: `1. **K must be chosen** in advance (elbow on inertia, silhouette score).
 2. **Roughly spherical, similar-size clusters**: points go to the nearest centroid, so the boundaries are straight lines (Voronoi cells). It fails on rings, moons and elongated clusters.
@@ -554,6 +596,7 @@ Alternatives: GMMs (soft, elliptical clusters), DBSCAN (arbitrary shapes, explic
   {
     id: 'fc-unsupervised-pca',
     sectionId: 'unsupervised-learning',
+    problemIds: ['pca-implementation'],
     question: "What does PCA compute, and how do you implement it?",
     answer: `The orthogonal directions of maximum variance. Projecting onto the top k of them minimizes the squared reconstruction error.
 
@@ -570,6 +613,7 @@ Equivalently, SVD \`Xc = U S Vᵀ\`: components are the rows of Vᵀ and \`λ = 
   {
     id: 'fc-unsupervised-gmm',
     sectionId: 'unsupervised-learning',
+    problemIds: ['gmm-em'],
     question: "How does a Gaussian mixture model fit with EM, and how does it relate to k-means?",
     answer: `Model: \`p(x) = Σ_k π_k · N(x; μ_k, Σ_k)\`. EM alternates:
 
@@ -584,6 +628,7 @@ The log-likelihood never decreases; EM converges to a local optimum. K-means is 
   {
     id: 'fc-unsupervised-dbscan',
     sectionId: 'unsupervised-learning',
+    problemIds: ['dbscan'],
     question: "How does DBSCAN cluster, and what are its parameters?",
     answer: `Parameters: a radius \`eps\` and \`min_samples\`.
 
@@ -600,6 +645,7 @@ Pros: no K to choose, arbitrary shapes, explicit outliers. Cons: a single global
   {
     id: 'fc-eval-precision-recall',
     sectionId: 'model-evaluation',
+    problemIds: ['precision-recall-f1', 'pr-curve-thresholds'],
     question: "Define precision, recall and F1. When do you favor precision, and when recall?",
     answer: `- \`Precision = TP / (TP + FP)\`: of the predicted positives, how many are right.
 - \`Recall = TP / (TP + FN)\`: of the actual positives, how many were found.
@@ -613,6 +659,7 @@ You move along the trade-off by changing the decision **threshold**. Define the 
   {
     id: 'fc-eval-confusion-matrix',
     sectionId: 'model-evaluation',
+    problemIds: ['confusion-matrix'],
     question: "How is a confusion matrix laid out, and what is the difference between macro and micro averaging?",
     answer: `\`C[i, j]\` counts samples whose **true** class is i and predicted class is j (scikit-learn: rows true, columns predicted). Build it with \`np.add.at(C, (y_true, y_pred), 1)\`.
 
@@ -626,6 +673,7 @@ Per class k: \`TP = C[k, k]\`, \`FP = column k sum − TP\`, \`FN = row k sum �
   {
     id: 'fc-eval-roc-auc',
     sectionId: 'model-evaluation',
+    problemIds: ['roc-auc'],
     question: "What does ROC-AUC measure, and what is its probabilistic interpretation?",
     answer: `The ROC curve plots TPR (recall) against FPR = \`FP / (FP + TN)\` as the threshold sweeps from high to low; AUC is the area under it.
 
@@ -639,6 +687,7 @@ From ranks (Mann–Whitney U): \`AUC = (sum of positives' ranks − n₊(n₊ + 
   {
     id: 'fc-eval-imbalanced',
     sectionId: 'model-evaluation',
+    problemIds: ['pr-curve-thresholds', 'precision-recall-f1'],
     question: "Your fraud model has 99.5% accuracy. Why might that be meaningless, and what should you report instead?",
     answer: `If 0.5% of transactions are fraudulent, predicting "not fraud" for everything scores 99.5% and catches nothing.
 
@@ -654,6 +703,7 @@ Pick the threshold from business costs (e.g. the highest recall with precision �
   {
     id: 'fc-eval-crossval',
     sectionId: 'model-evaluation',
+    problemIds: ['cross-validation'],
     question: "Why use k-fold cross-validation instead of a single train/test split, and how do you avoid leakage through it?",
     answer: `A single split gives a noisy estimate that depends on which samples landed in the test set. K-fold (K = 5 or 10): split into K folds, train on K − 1, evaluate on the held-out fold, rotate, and report mean ± std. Every sample is evaluated exactly once.
 
@@ -667,6 +717,7 @@ Doing it right:
   {
     id: 'fc-eval-calibration',
     sectionId: 'model-evaluation',
+    problemIds: ['calibration-ece'],
     question: "What does it mean for a classifier to be calibrated, and how is ECE computed?",
     answer: `Calibrated: of all predictions made with confidence 0.8, about 80% are correct. Accuracy and AUC don't measure this.
 
@@ -683,6 +734,7 @@ Modern deep nets tend to be **over-confident**. Fix after training with **temper
   {
     id: 'fc-dl-perceptron',
     sectionId: 'deep-learning',
+    problemIds: ['perceptron'],
     question: "What is the perceptron update rule, and why can't a single perceptron learn XOR?",
     answer: `Prediction: \`ŷ = 1 if w·x + b > 0 else 0\`. For each sample: \`w ← w + lr·(y − ŷ)·x\` and \`b ← b + lr·(y − ŷ)\`, which changes nothing when the prediction is right.
 
@@ -694,6 +746,7 @@ XOR's positives (0, 1), (1, 0) and negatives (0, 0), (1, 1) can't be separated b
   {
     id: 'fc-dl-why-nonlinearity',
     sectionId: 'deep-learning',
+    problemIds: ['neural-network-forward'],
     question: "Why does a neural network need non-linear activations between layers?",
     answer: `Without them, the layers collapse into one: \`W2(W1x + b1) + b2 = (W2W1)x + (W2b1 + b2)\`, a single linear map however deep the network is. It could only learn linear decision boundaries (no XOR).
 
@@ -705,6 +758,7 @@ With a non-linearity, one hidden layer is a universal approximator: with enough 
   {
     id: 'fc-dl-relu-advantages',
     sectionId: 'deep-learning',
+    problemIds: ['perceptron'],
     question: "Why did ReLU become the default activation, and what is the dying-ReLU problem?",
     answer: `\`ReLU(x) = max(0, x)\`: derivative 1 for x > 0, 0 for x < 0.
 
@@ -718,6 +772,7 @@ With a non-linearity, one hidden layer is a universal approximator: with enough 
   {
     id: 'fc-dl-backprop',
     sectionId: 'deep-learning',
+    problemIds: ['mlp-forward-backward'],
     question: "Explain backpropagation in one sentence, and why it is efficient.",
     answer: `Backpropagation is reverse-mode automatic differentiation: it applies the chain rule from the loss back to every parameter, reusing the gradient that flows in from the layer above.
 
@@ -730,6 +785,7 @@ The price is memory: forward activations must be kept for the backward pass.`,
   {
     id: 'fc-nn-stable-softmax',
     sectionId: 'neural-networks',
+    problemIds: ['backpropagation'],
     question: "How do you compute softmax and log-softmax without overflow?",
     answer: `Softmax doesn't change if you subtract a constant from every logit, so subtract the max:
 
@@ -745,6 +801,7 @@ Log-softmax with log-sum-exp: \`log p_i = z_i − m − log Σ_j exp(z_j − m)\
   {
     id: 'fc-nn-softmax-ce-grad',
     sectionId: 'neural-networks',
+    problemIds: ['cross-entropy-loss', 'mlp-forward-backward'],
     question: "What is the gradient of softmax followed by cross-entropy with respect to the logits?",
     answer: `For logits z, \`p = softmax(z)\` and one-hot target y:
 
@@ -760,6 +817,7 @@ Intuition: every class is pushed down by its predicted probability, and the true
   {
     id: 'fc-nn-vanishing-gradient',
     sectionId: 'neural-networks',
+    problemIds: ['weight-init', 'resnet-block'],
     question: "What causes vanishing and exploding gradients, and how do you fix them?",
     answer: `Backprop multiplies one Jacobian per layer (or per time step in an RNN). If their typical scale is below 1, gradients shrink exponentially toward the early layers (vanishing); above 1, they blow up (exploding).
 
@@ -777,6 +835,7 @@ Fixes:
   {
     id: 'fc-nn-weight-init',
     sectionId: 'neural-networks',
+    problemIds: ['weight-init'],
     question: "Why can't you initialize all weights to zero, and what do Xavier and He initialization use?",
     answer: `If every unit in a layer starts with the same weights, they compute the same output, receive the same gradient and stay identical forever: symmetry is never broken. (With all-zero weights in a ReLU MLP, the hidden gradients are exactly 0.) Biases can start at zero.
 
@@ -791,6 +850,7 @@ Too large → activations explode or saturate; too small → they shrink toward 
   {
     id: 'fc-nn-batchnorm',
     sectionId: 'neural-networks',
+    problemIds: ['batch-norm'],
     question: "How does batch normalization work at training time and at inference time?",
     answer: `Per feature (per channel in a CNN), over the batch:
 
@@ -806,6 +866,7 @@ It allows larger learning rates and reduces sensitivity to initialization. The o
   {
     id: 'fc-nn-dropout',
     sectionId: 'neural-networks',
+    problemIds: ['dropout'],
     question: "How does inverted dropout work, and what changes at inference time?",
     answer: `Training: zero each activation with probability p and scale the survivors by \`1/(1 − p)\`:
 
@@ -821,6 +882,7 @@ Why it works: units can't rely on specific partners (less co-adaptation), and th
   {
     id: 'fc-nn-masked-loss',
     sectionId: 'neural-networks',
+    problemIds: ['masked-label-smoothing-ce'],
     question: "How do you average a token-level loss correctly when the batch contains padding?",
     answer: `Compute the per-token loss of shape \`(B, T)\`, multiply by a mask (1 for real tokens, 0 for padding), and divide by the **number of real tokens**:
 
@@ -835,6 +897,7 @@ Not \`.mean()\`, which divides by B·T, so padding dilutes the loss and its scal
   {
     id: 'fc-opt-momentum',
     sectionId: 'optimization',
+    problemIds: ['sgd-momentum'],
     question: "How does SGD with momentum work, and why does it help?",
     answer: `Keep a velocity, an exponentially decaying sum of past gradients:
 
@@ -850,6 +913,7 @@ Where gradients agree, steps grow up to \`1/(1 − μ)\` times (10× for μ = 0.
   {
     id: 'fc-opt-adam',
     sectionId: 'optimization',
+    problemIds: ['adam-optimizer'],
     question: "Write the Adam update, including bias correction. Why is bias correction needed?",
     answer: `At step t = 1, 2, … with gradient g:
 
@@ -866,6 +930,7 @@ Each parameter moves about lr per step, whatever its gradient scale. Memory: two
   {
     id: 'fc-opt-adamw',
     sectionId: 'optimization',
+    problemIds: ['adam-optimizer'],
     question: "What is the difference between Adam with L2 regularization and AdamW?",
     answer: `- **Adam + L2**: adds \`λθ\` to the gradient. That term then goes through Adam's per-parameter division by \`√v̂\`, so weights with large gradients are barely regularized; the decay strength is uneven.
 - **AdamW** (decoupled): decays the weights directly, outside the adaptive step: \`θ -= lr · (m̂ / (√v̂ + ε) + λθ)\`.
@@ -876,6 +941,7 @@ For plain SGD the two are equivalent (up to rescaling λ); for Adam they are not
   {
     id: 'fc-opt-lr-schedule',
     sectionId: 'optimization',
+    problemIds: ['lr-scheduling'],
     question: "Why do transformer runs use warmup followed by cosine decay? Write the schedule.",
     answer: `For step t, warmup length W and total steps T:
 
@@ -892,6 +958,7 @@ For plain SGD the two are equivalent (up to rescaling λ); for Adam they are not
   {
     id: 'fc-opt-grad-clipping',
     sectionId: 'optimization',
+    problemIds: ['gradient-clipping'],
     question: "How does gradient clipping by global norm work, and why clip globally rather than per tensor?",
     answer: `Compute one norm over **all** parameter gradients, \`total = √(Σ_p ‖g_p‖²)\`. If \`total > max_norm\`, multiply every gradient by \`max_norm / (total + 1e-6)\`.
 
@@ -905,6 +972,7 @@ It tames exploding gradients and loss spikes; it does nothing for vanishing grad
   {
     id: 'fc-opt-mixed-precision',
     sectionId: 'optimization',
+    problemIds: ['loss-scaling'],
     question: "fp16 vs bf16 in mixed-precision training: why does fp16 need loss scaling while bf16 usually doesn't?",
     answer: `- **fp16**: 5 exponent bits, 10 mantissa bits. Max ≈ 65,504, and values below ≈ 6e-8 flush to 0, so small gradients underflow.
 - **bf16**: 8 exponent bits (the same range as fp32) and 7 mantissa bits: less precise, but it rarely underflows or overflows.
@@ -917,6 +985,7 @@ Either way, keep fp32 master weights and optimizer state, and run reductions suc
   {
     id: 'fc-opt-grad-accumulation',
     sectionId: 'optimization',
+    problemIds: ['gradient-accumulation'],
     question: "How does gradient accumulation simulate a larger batch, and what are its pitfalls?",
     answer: `Run k micro-batches, calling \`backward()\` on each, and step once:
 
@@ -935,6 +1004,7 @@ Gradients add up in \`.grad\`, so the effective batch is \`k × micro_batch\` fo
   {
     id: 'fc-opt-memory',
     sectionId: 'optimization',
+    problemIds: ['gradient-checkpointing'],
     question: "Roughly how much GPU memory does training a 7B-parameter model with Adam in mixed precision need, before activations?",
     answer: `About **16 bytes per parameter** with the standard recipe:
 
@@ -951,6 +1021,7 @@ Inference needs only the weights, 7B × 2 B = 14 GB in bf16, plus the KV cache.`
   {
     id: 'fc-opt-checkpointing',
     sectionId: 'optimization',
+    problemIds: ['gradient-checkpointing'],
     question: "What does gradient (activation) checkpointing trade, and how does it work?",
     answer: `It trades compute for memory. Normally every layer's activations are kept for the backward pass. With checkpointing, only some are stored (e.g. each block's input); during backward, each segment's forward pass is **re-run** to recover the activations it needs.
 
@@ -963,6 +1034,7 @@ Cost: about one extra forward pass, roughly 30% more compute per training step (
   {
     id: 'fc-cnn-why-convolutions',
     sectionId: 'cnn',
+    problemIds: ['conv2d-forward'],
     question: "Why use convolutions instead of fully-connected layers for images?",
     answer: `- **Local connectivity**: each output looks at a small neighborhood, matching the local structure of images.
 - **Weight sharing**: the same kernel slides over every position, so the parameter count doesn't grow with image size.
@@ -975,6 +1047,7 @@ Numbers: a 224×224×3 input fully connected to 1,000 units needs 150.5M weights
   {
     id: 'fc-cnn-output-size',
     sectionId: 'cnn',
+    problemIds: ['conv-output-size'],
     question: "What is the output size of a convolution or pooling layer, and how many parameters does a conv layer have?",
     answer: `\`out = floor((W − K + 2P) / S) + 1\`
 
@@ -990,6 +1063,7 @@ Output channels = number of filters. Parameters: \`K·K·C_in·C_out + C_out\` (
   {
     id: 'fc-cnn-receptive-field',
     sectionId: 'cnn',
+    problemIds: ['conv2d-advanced'],
     question: "What is a receptive field, and why do VGG-style networks stack 3×3 convolutions?",
     answer: `The receptive field is the input region that can influence one output unit. Each stride-1 layer adds \`K − 1\`; in general a layer adds \`(K − 1) × (product of all earlier strides)\`.
 
@@ -1001,6 +1075,7 @@ Strides, pooling and dilation grow the receptive field fastest. The *effective* 
   {
     id: 'fc-cnn-pooling',
     sectionId: 'cnn',
+    problemIds: ['max-pool'],
     question: "How does max pooling work in the forward and backward pass?",
     answer: `Forward: slide a K×K window with stride S (usually 2×2, stride 2) over each channel separately and output the max. No parameters; a 2×2 / stride-2 pool halves H and W.
 
@@ -1014,6 +1089,7 @@ Average pooling spreads the gradient evenly instead (\`dout / K²\`). Global ave
   {
     id: 'fc-cnn-1x1-depthwise',
     sectionId: 'cnn',
+    problemIds: ['depthwise-separable-conv'],
     question: "What do 1×1 convolutions and depthwise-separable convolutions do, and how many parameters do they save?",
     answer: `A **1×1 conv** mixes channels at each pixel: a per-pixel linear layer from C_in to C_out. Used for bottlenecks (ResNet) and cheap channel projections.
 
@@ -1027,6 +1103,7 @@ Example, 3×3 with 256 → 256 channels: 2,304 + 65,536 = 67,840 vs 589,824, abo
   {
     id: 'fc-cnn-resnet-block',
     sectionId: 'cnn',
+    problemIds: ['resnet-block'],
     question: "What is in a ResNet basic block, and what happens when x and F(x) have different shapes?",
     answer: `Basic block: \`conv3×3 → BN → ReLU → conv3×3 → BN\`, then \`out = ReLU(F(x) + shortcut(x))\`.
 
@@ -1040,6 +1117,7 @@ Tip: initializing each block's last BN γ to 0 makes every block start as the id
   {
     id: 'fc-cnn-iou',
     sectionId: 'cnn',
+    problemIds: ['iou-bounding-box'],
     question: "Define IoU. How is it used in object detection?",
     answer: `\`IoU = area(A ∩ B) / area(A ∪ B)\`, where \`area(A ∪ B) = area(A) + area(B) − area(A ∩ B)\`. Ranges from 0 to 1 and is scale-invariant.
 
@@ -1055,6 +1133,7 @@ For corner boxes (x1, y1, x2, y2), the intersection width is \`max(0, min(x2a, x
   {
     id: 'fc-cnn-nms',
     sectionId: 'cnn',
+    problemIds: ['nms'],
     question: "Describe non-maximum suppression (NMS).",
     answer: `NMS removes duplicate detections of the same object:
 
@@ -1071,6 +1150,7 @@ Run it per class, so a dog box doesn't suppress an overlapping person box. Worst
   {
     id: 'fc-cnn-focal-loss',
     sectionId: 'cnn',
+    problemIds: ['focal-loss'],
     question: "What problem does focal loss solve, and what is its formula?",
     answer: `In dense detection, almost all anchors are easy background; their many small losses swamp the few hard positives.
 
@@ -1086,6 +1166,7 @@ The factor \`(1 − p_t)^γ\` down-weights well-classified examples: at p_t = 0.
   {
     id: 'fc-cnn-smooth-l1',
     sectionId: 'cnn',
+    problemIds: ['smooth-l1-loss'],
     question: "Why is Smooth L1 (Huber) loss used for bounding-box regression?",
     answer: `With x = prediction − target and threshold β:
 
@@ -1100,6 +1181,7 @@ The two pieces meet with equal value and slope at |x| = β. Huber loss with δ i
   {
     id: 'fc-cnn-seg-metrics',
     sectionId: 'cnn',
+    problemIds: ['seg-metrics'],
     question: "How are IoU (Jaccard) and Dice computed for segmentation masks, and how are they related?",
     answer: `For a predicted mask A and ground truth B, per class:
 
@@ -1117,6 +1199,7 @@ Pixel accuracy is dominated by the background; soft Dice loss (\`1 − Dice\` on
   {
     id: 'fc-seq-rnn-bptt',
     sectionId: 'sequence-models',
+    problemIds: ['rnn-forward'],
     question: "How does a vanilla RNN work, and why does it struggle with long-range dependencies?",
     answer: `\`h_t = tanh(x_t W_xh + h_{t−1} W_hh + b)\`, with the same weights at every step. Shapes: x_t \`(B, D)\`, h_t \`(B, H)\`.
 
@@ -1128,6 +1211,7 @@ Fixes: gradient clipping (exploding), gated cells or attention (vanishing), trun
   {
     id: 'fc-seq-lstm',
     sectionId: 'sequence-models',
+    problemIds: ['lstm-cell'],
     question: "What are the LSTM gates and equations, and why does the cell state help gradients flow?",
     answer: `From \`[h_{t−1}, x_t]\`, compute four pre-activations with one matmul to 4H outputs, then:
 
@@ -1143,6 +1227,7 @@ Parameters: \`4·H·(D + H + 1)\` (one bias per gate). Common trick: initialize 
   {
     id: 'fc-seq-gru',
     sectionId: 'sequence-models',
+    problemIds: ['gru-cell'],
     question: "How does a GRU differ from an LSTM?",
     answer: `A GRU merges the cell and hidden state and uses two gates:
 
@@ -1158,6 +1243,7 @@ Three weight blocks instead of four: about 25% fewer parameters and faster, with
   {
     id: 'fc-seq-rnn-vs-transformer',
     sectionId: 'sequence-models',
+    problemIds: ['rnn-forward', 'llm-kv-cache'],
     question: "RNNs vs transformers for sequence modeling: what are the trade-offs?",
     answer: `- **Parallelism**: an RNN is sequential in time (step t needs h_{t−1}); a transformer processes every position at once in training.
 - **Path length**: information between distant tokens passes through O(n) steps in an RNN and O(1) in self-attention, so long-range dependencies are easier to learn.
@@ -1171,6 +1257,7 @@ This trade-off motivates linear attention and state-space models (e.g. Mamba): p
   {
     id: 'fc-transformer-scaling',
     sectionId: 'transformers',
+    problemIds: ['scaled-dot-product-attention'],
     question: "Why are attention scores divided by √d_k?",
     answer: `If the components of q and k are independent with mean 0 and variance 1, then \`q·k = Σ_{i=1..d_k} q_i k_i\` has mean 0 and variance d_k. With d_k = 64, the scores have a standard deviation of 8.
 
@@ -1184,6 +1271,7 @@ Large scores push softmax toward one-hot, where its gradients are nearly zero, a
   {
     id: 'fc-transformer-multihead',
     sectionId: 'transformers',
+    problemIds: ['multi-head-attention'],
     question: "Why use multi-head attention instead of one head with the same total dimension?",
     answer: `A single head computes one softmax per query, so each output is one weighted average: it can't attend sharply to two different positions for two different reasons. With h heads of size \`d_k = d_model / h\`, each head projects into its own subspace with its own attention pattern; the head outputs are concatenated and mixed by W_O.
 
@@ -1195,6 +1283,7 @@ The cost and the parameters (\`4·d_model²\` for W_Q, W_K, W_V, W_O) match a si
   {
     id: 'fc-transformer-causal-mask',
     sectionId: 'transformers',
+    problemIds: ['causal-mask'],
     question: "How is causal masking implemented, and where in the computation must the mask be applied?",
     answer: `Position i may attend only to positions j ≤ i. Set the scores above the diagonal to −∞ **before** the softmax:
 
@@ -1213,6 +1302,7 @@ Softmax then gives future tokens exactly 0 weight, and each row still sums to 1.
   {
     id: 'fc-transformer-layernorm',
     sectionId: 'transformers',
+    problemIds: ['layer-norm'],
     question: "Write the LayerNorm formula as used in a transformer. Which axis does it normalize, and why not BatchNorm?",
     answer: `For each token vector x of size d_model (the last axis):
 
@@ -1228,6 +1318,7 @@ Unlike BatchNorm, it never looks at other samples or positions: it works with ba
   {
     id: 'fc-transformer-prenorm',
     sectionId: 'transformers',
+    problemIds: ['layer-norm', 'e2e-transformer'],
     question: "Pre-norm vs post-norm transformer blocks: what is the difference, and which do modern LLMs use?",
     answer: `- **Post-norm** (original 2017 Transformer): \`x = LN(x + Sublayer(x))\`.
 - **Pre-norm** (GPT-2 onward, LLaMA): \`x = x + Sublayer(LN(x))\`, plus a final norm before the output head.
@@ -1240,6 +1331,7 @@ Modern LLMs use pre-norm with **RMSNorm**.`,
   {
     id: 'fc-transformer-positional',
     sectionId: 'transformers',
+    problemIds: ['positional-encoding'],
     question: "Why do transformers need positional information, and how do sinusoidal encodings work?",
     answer: `Without positions, self-attention is **permutation-equivariant**: shuffling the input tokens just shuffles the outputs, so "dog bites man" and "man bites dog" get the same set of token representations.
 
@@ -1255,6 +1347,7 @@ BERT and GPT-2 learned absolute position embeddings instead; modern LLMs use **R
   {
     id: 'fc-transformer-rope',
     sectionId: 'transformers',
+    problemIds: ['rope-embeddings'],
     question: "How does RoPE (rotary position embedding) work, and why is it popular?",
     answer: `After projecting Q and K (per head), rotate each pair of dimensions by an angle \`pos · θ_i\`, with \`θ_i = 10000^(−2i/d_k)\`:
 
@@ -1269,6 +1362,7 @@ Rotations compose, so \`q_m · k_n\` depends only on the content and the **relat
   {
     id: 'fc-transformer-gqa',
     sectionId: 'transformers',
+    problemIds: ['grouped-query-attention'],
     question: "What are multi-query and grouped-query attention, and what do they save?",
     answer: `Standard multi-head attention has h query heads and h key/value heads. **GQA** uses g < h KV heads, each shared by a group of \`h / g\` query heads; K and V are repeated along the head axis before attention. **MQA** is the case g = 1.
 
@@ -1280,6 +1374,7 @@ The KV cache shrinks by \`h / g\`. Llama 2 70B: 64 query heads and 8 KV heads, s
   {
     id: 'fc-transformer-complexity',
     sectionId: 'transformers',
+    problemIds: ['scaled-dot-product-attention', 'sliding-window-attention'],
     question: "What is the cost of self-attention, and where does a transformer's compute actually go?",
     answer: `Per layer, for sequence length n and width d:
 
@@ -1294,6 +1389,7 @@ Parameters per block ≈ \`12·d²\`: 4d² for attention and 8d² for an MLP wit
   {
     id: 'fc-transformer-sliding-window',
     sectionId: 'transformers',
+    problemIds: ['sliding-window-attention'],
     question: "How does sliding-window attention work, and how far can information travel?",
     answer: `Each query at position i attends only to keys in \`[i − W + 1, i]\`. The cost drops from O(n²) to O(n·W), and the KV cache becomes a rolling buffer of size W.
 
@@ -1307,6 +1403,7 @@ It is often mixed with full-attention layers or global tokens (Longformer; Gemma
   {
     id: 'fc-transformer-bpe',
     sectionId: 'transformers',
+    problemIds: ['bpe-tokenization', 'longest-match-tokenizer'],
     question: "How does byte-pair encoding (BPE) tokenization work?",
     answer: `**Training**: start from characters (or raw bytes, in byte-level BPE as in GPT-2), count adjacent symbol pairs over the corpus, merge the most frequent pair into a new token, and repeat until the vocabulary reaches its target size (tens to hundreds of thousands). The ordered merge list *is* the tokenizer.
 
@@ -1318,6 +1415,7 @@ Byte-level BPE never produces unknown tokens. Consequences interviewers ask abou
   {
     id: 'fc-transformer-attention-backward',
     sectionId: 'transformers',
+    problemIds: ['attention-backward'],
     question: "What is the backward pass of attention, including the softmax?",
     answer: `Forward: \`S = QKᵀ / √d_k\`, \`P = softmax(S)\` per row, \`O = PV\`. Given dO:
 
@@ -1332,6 +1430,7 @@ The rowsum term comes from the softmax Jacobian \`diag(p) − ppᵀ\`. FlashAtte
   {
     id: 'fc-llm-temperature',
     sectionId: 'llm-generation',
+    problemIds: ['llm-temperature-scaling'],
     question: "How does temperature change the sampling distribution? What happens as T → 0 and for large T?",
     answer: `\`p = softmax(logits / T)\`
 
@@ -1347,6 +1446,7 @@ Temperature never changes the ranking of tokens. It is usually applied before to
   {
     id: 'fc-llm-topk-topp',
     sectionId: 'llm-generation',
+    problemIds: ['llm-top-k-sampling', 'llm-top-p-sampling'],
     question: "Compare top-k and top-p (nucleus) sampling.",
     answer: `- **Top-k**: keep the k most likely tokens, renormalize, sample. The count is fixed whatever the distribution looks like: when it is peaked, junk tokens get in; when it is flat, reasonable tokens are cut.
 - **Top-p**: sort descending and keep the smallest prefix whose cumulative probability ≥ p (always at least one token), renormalize, sample. Adaptive: few tokens when the model is confident, many when it is unsure. p = 0.9–0.95 is common.
@@ -1359,6 +1459,7 @@ They are often combined: temperature, then top-k, then top-p.
   {
     id: 'fc-llm-repetition-penalty',
     sectionId: 'llm-generation',
+    problemIds: ['llm-repetition-penalty'],
     question: "How does the CTRL-style repetition penalty change the logits, and why are positive and negative logits treated differently?",
     answer: `For every **distinct** token already generated, with penalty > 1:
 
@@ -1373,6 +1474,7 @@ OpenAI-style frequency and presence penalties instead subtract \`α·count + β�
   {
     id: 'fc-llm-kv-cache',
     sectionId: 'llm-generation',
+    problemIds: ['llm-kv-cache'],
     question: "What is a KV cache, what does it save, and how big does it get?",
     answer: `With causal attention, past tokens' keys and values never change, so store them per layer. Each step computes Q, K, V for the new token only, appends K and V to the cache, and attends with one query over all cached keys.
 
@@ -1384,6 +1486,7 @@ Size: \`2 × layers × kv_heads × head_dim × seq_len × batch × bytes\`. Llam
   {
     id: 'fc-llm-beam-search',
     sectionId: 'llm-generation',
+    problemIds: ['llm-beam-search'],
     question: "How does beam search work, and why does it need length normalization?",
     answer: `Keep the B best partial sequences by total log-probability. At each step, extend every beam with every possible next token, score \`score + log p(token)\`, and keep the top B overall; sequences that emit EOS move to a finished list.
 
@@ -1397,6 +1500,7 @@ Good for translation and summarization; for open-ended chat it produces bland, r
   {
     id: 'fc-llm-speculative',
     sectionId: 'llm-generation',
+    problemIds: ['llm-speculative-decoding'],
     question: "How does speculative decoding speed up generation without changing the output distribution?",
     answer: `A small draft model proposes k tokens; the large target model scores all k in **one** forward pass. Accept each draft token x with probability \`min(1, p(x) / q(x))\` (p = target, q = draft). At the first rejection, sample a replacement from \`max(0, p − q)\`, renormalized, and stop. If all k are accepted, sample one bonus token from p.
 
@@ -1409,6 +1513,7 @@ The speedup (often 2–3×) comes from decoding being memory-bandwidth-bound: ch
   {
     id: 'fc-llmi-rmsnorm',
     sectionId: 'llm-internals',
+    problemIds: ['rmsnorm'],
     question: "How does RMSNorm differ from LayerNorm, and why do LLMs use it?",
     answer: `\`RMSNorm(x) = x / √(mean(x²) + ε) ⊙ w\`, over the last axis (d_model).
 
@@ -1422,6 +1527,7 @@ w has shape \`(d_model,)\` and is usually initialized to ones.
   {
     id: 'fc-llmi-swiglu',
     sectionId: 'llm-internals',
+    problemIds: ['rmsnorm-swiglu'],
     question: "What is a SwiGLU feed-forward block, and why is d_ff about (8/3)·d_model?",
     answer: `\`FFN(x) = (SiLU(x W_gate) ⊙ (x W_up)) W_down\`, with \`SiLU(z) = z·σ(z)\`. W_gate and W_up are \`(d_model, d_ff)\`; W_down is \`(d_ff, d_model)\`.
 
@@ -1433,6 +1539,7 @@ It has **three** matrices instead of two. To match the \`8·d_model²\` paramete
   {
     id: 'fc-llmi-online-softmax',
     sectionId: 'llm-internals',
+    problemIds: ['online-softmax'],
     question: "What is the online softmax trick, and how does FlashAttention use it?",
     answer: `Process the scores in blocks, keeping a running max m, a normalizer l and an unnormalized output acc. For each new block S_b with values V_b:
 
@@ -1450,6 +1557,7 @@ FlashAttention tiles Q, K and V into fast on-chip memory and applies this per qu
   {
     id: 'fc-llmi-moe',
     sectionId: 'llm-internals',
+    problemIds: ['moe-routing'],
     question: "How does mixture-of-experts routing work, and why is a load-balancing loss needed?",
     answer: `A router (a linear layer) gives each token logits over E expert MLPs. Keep the top k (1 or 2), softmax over those for the gates, and output \`Σ_j gate_j · expert_j(x)\`. Only k experts run per token: total parameters grow with E, compute per token with k.
 
@@ -1461,6 +1569,7 @@ Without an auxiliary loss the router collapses onto a few experts. Switch Transf
   {
     id: 'fc-llmi-perplexity',
     sectionId: 'llm-internals',
+    problemIds: ['perplexity'],
     question: "How is perplexity computed, and what are its pitfalls?",
     answer: `\`PPL = exp(mean NLL) = exp(−(1/N) Σ_t log p(x_t | x_<t))\`, over the N real (non-padding) predicted tokens.
 
@@ -1476,6 +1585,7 @@ It is the effective number of equally likely choices per token: a uniform model 
   {
     id: 'fc-llmi-flops',
     sectionId: 'llm-internals',
+    problemIds: ['e2e-mini-gpt'],
     question: "Roughly how many FLOPs does it take to train and to run a transformer language model with N parameters?",
     answer: `- **Training**: ≈ \`6·N·D\` FLOPs for D training tokens: 2·N·D for the forward pass (one multiply-add per parameter per token) and 4·N·D for the backward pass.
 - **Inference**: ≈ \`2·N\` FLOPs per generated token, plus attention over the context.
@@ -1489,6 +1599,7 @@ Chinchilla scaling: compute-optimal training uses about **20 tokens per paramete
   {
     id: 'fc-rep-infonce',
     sectionId: 'representation-learning',
+    problemIds: ['infonce-loss'],
     question: "Write the CLIP (InfoNCE) loss. What roles do the batch size and the temperature play?",
     answer: `L2-normalize the image and text embeddings, I and T of shape \`(N, D)\`. \`logits = I Tᵀ / τ\`, shape \`(N, N)\`, with matching pairs on the diagonal:
 
@@ -1505,6 +1616,7 @@ Each image must pick its caption out of N, and each caption its image.
   {
     id: 'fc-rep-embedding-search',
     sectionId: 'representation-learning',
+    problemIds: ['embedding-search'],
     question: "How do you run embedding similarity search efficiently and correctly?",
     answer: `L2-normalize every vector once; cosine similarity is then a dot product, and a batch of queries is one matmul: \`S = Q @ Dᵀ\`, shape \`(n_queries, n_docs)\`.
 
@@ -1518,6 +1630,7 @@ Beyond that, approximate nearest-neighbor indexes (HNSW graphs, IVF with product
   {
     id: 'fc-rep-bi-cross-encoder',
     sectionId: 'representation-learning',
+    problemIds: ['retrieve-and-rerank'],
     question: "Bi-encoder vs cross-encoder: why do retrieval systems retrieve with one and rerank with the other?",
     answer: `- **Bi-encoder**: query and document are encoded separately and scored by a dot product. Documents are embedded offline and indexed, so searching millions is fast, but query and document tokens never interact, which limits accuracy.
 - **Cross-encoder**: the concatenated query and document go through one transformer that outputs a relevance score. Full token-level attention makes it much more accurate, but it costs one forward pass per pair: far too slow for a whole corpus.
@@ -1528,6 +1641,7 @@ Two-stage pipeline: retrieve the top ~100 with a bi-encoder (or BM25, or both), 
   {
     id: 'fc-rep-bm25',
     sectionId: 'representation-learning',
+    problemIds: ['retrieve-and-rerank'],
     question: "How does BM25 score a document, and when does lexical search beat dense retrieval?",
     answer: `For each query term t: \`IDF(t) · f(t,d)·(k1 + 1) / (f(t,d) + k1·(1 − b + b·|d|/avgdl))\`, summed over the terms.
 
@@ -1542,6 +1656,7 @@ Lexical search wins on exact matches an embedding model hasn't learned: product 
   {
     id: 'fc-gen-kl-divergence',
     sectionId: 'generative-models',
+    problemIds: ['kl-divergence'],
     question: "What is KL divergence, and what is the closed-form KL term in a VAE?",
     answer: `\`KL(P ‖ Q) = E_{x~P}[log P(x) − log Q(x)]\`: the expected extra nats paid for coding samples from P with a code built for Q. Always ≥ 0, equal to 0 iff P = Q, and **not symmetric**.
 
@@ -1557,6 +1672,7 @@ Forward KL(P ‖ Q) is mass-covering; reverse KL(Q ‖ P) is mode-seeking.
   {
     id: 'fc-gen-reparameterization',
     sectionId: 'generative-models',
+    problemIds: ['vae-reparameterization'],
     question: "What is the reparameterization trick in VAEs, and why is it needed?",
     answer: `The encoder outputs μ and log σ² for q(z | x). Sampling \`z ~ N(μ, σ²)\` directly isn't differentiable with respect to μ and σ, so no gradient would reach the encoder.
 
@@ -1570,6 +1686,7 @@ Now \`∂z/∂μ = 1\` and \`∂z/∂σ = ε\`, and all the randomness is in ε.
   {
     id: 'fc-gen-vae-loss',
     sectionId: 'generative-models',
+    problemIds: ['vae-loss', 'e2e-vae'],
     question: "What is the VAE training objective, and what happens when its two terms are weighted differently?",
     answer: `Minimize the negative ELBO:
 
@@ -1586,6 +1703,7 @@ Now \`∂z/∂μ = 1\` and \`∂z/∂σ = ε\`, and all the randomness is in ε.
   {
     id: 'fc-gen-vqvae',
     sectionId: 'generative-models',
+    problemIds: ['vqvae-quantization', 'e2e-vqvae'],
     question: "How does VQ-VAE quantize its latents, and how do gradients get through the non-differentiable lookup?",
     answer: `For each encoder output z_e, take the nearest codebook vector: \`k = argmin_j ‖z_e − e_j‖²\`, \`z_q = e_k\`.
 
@@ -1599,6 +1717,7 @@ Loss = reconstruction + \`‖stopgrad(z_e) − e_k‖²\` (codebook loss, moves 
   {
     id: 'fc-gen-diffusion',
     sectionId: 'generative-models',
+    problemIds: ['diffusion-forward', 'ddpm-sampling-step'],
     question: "Explain the forward and reverse processes of a DDPM, and its training loss.",
     answer: `**Forward (fixed)**: add Gaussian noise over T steps with a schedule β_t. With \`α_t = 1 − β_t\` and \`ᾱ_t = Π_{s≤t} α_s\`, any step is reachable in closed form:
 
@@ -1614,6 +1733,7 @@ At t = T, ᾱ_T ≈ 0 and x_T is nearly pure noise.
   {
     id: 'fc-gen-noise-schedule',
     sectionId: 'generative-models',
+    problemIds: ['diffusion-noise-schedule'],
     question: "What does a diffusion noise schedule control, and why was the cosine schedule introduced?",
     answer: `The schedule β_1 … β_T sets how fast the signal is destroyed. What matters is ᾱ_t, the fraction of signal left (signal-to-noise ratio \`ᾱ_t / (1 − ᾱ_t)\`).
 
@@ -1626,6 +1746,7 @@ At t = T, ᾱ_T ≈ 0 and x_T is nearly pure noise.
   {
     id: 'fc-gen-cfg',
     sectionId: 'generative-models',
+    problemIds: ['classifier-free-guidance'],
     question: "How does classifier-free guidance work?",
     answer: `Train one model with the condition c randomly dropped (e.g. replaced by a null token 10% of the time), so it learns both ε(x_t, c) and ε(x_t, ∅).
 
@@ -1641,6 +1762,7 @@ Cost: two forward passes per step, usually batched together. Unlike classifier g
   {
     id: 'fc-gen-flow-matching',
     sectionId: 'generative-models',
+    problemIds: ['flow-matching'],
     question: "What does a flow-matching (rectified flow) model learn, and how do you sample from it?",
     answer: `Training: draw noise x_0 ~ N(0, I), a data point x_1 and t ~ U(0, 1). Interpolate along a straight line, \`x_t = (1 − t)·x_0 + t·x_1\`; the target velocity is \`x_1 − x_0\`. Minimize \`‖v_θ(x_t, t) − (x_1 − x_0)‖²\`.
 
@@ -1655,6 +1777,7 @@ Straighter paths need fewer sampling steps than diffusion. Used by Stable Diffus
   {
     id: 'fc-rl-discounted-return',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-discounted-return'],
     question: "How do you compute the discounted returns of an episode efficiently?",
     answer: `\`G_t = r_t + γ·r_{t+1} + γ²·r_{t+2} + … = r_t + γ·G_{t+1}\`
 
@@ -1668,6 +1791,7 @@ Example: rewards [1, 1, 1, 1], γ = 0.9 → G₀ = 1 + 0.9 + 0.81 + 0.729 = 3.43
   {
     id: 'fc-rl-epsilon-greedy',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-epsilon-greedy'],
     question: "What is ε-greedy exploration, and what are its implementation details?",
     answer: `With probability ε take a uniformly random action, otherwise the greedy one, \`argmax_a Q(s, a)\`. The greedy action's total probability is \`1 − ε + ε/|A|\`; every other action gets \`ε/|A|\`.
 
@@ -1679,6 +1803,7 @@ It explores blindly. Alternatives: softmax (Boltzmann) exploration, UCB (optimis
   {
     id: 'fc-rl-onpolicy-offpolicy',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-q-learning-update', 'rl-sarsa-update'],
     question: "What is the difference between on-policy and off-policy learning? Give examples.",
     answer: `- **On-policy**: learns about the policy that collects the data. SARSA's target uses the action actually taken next, \`r + γ·Q(s', a')\`, so it learns the value of its own ε-greedy policy. REINFORCE and PPO are on-policy too: data must come from the current (or a very recent) policy.
 - **Off-policy**: learns a target policy from data produced by another behavior policy. Q-learning's target \`r + γ·max_a' Q(s', a')\` evaluates the greedy policy whatever action was taken, so it can learn from a replay buffer (DQN).
@@ -1689,6 +1814,7 @@ Off-policy reuses data and is more sample-efficient, but less stable. Classic ex
   {
     id: 'fc-rl-bellman',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-bellman-value', 'rl-q-learning-update'],
     question: "State the Bellman optimality equation for Q and the Q-learning update.",
     answer: `\`Q*(s, a) = E_{s'}[ r + γ · max_{a'} Q*(s', a') ]\`
 
@@ -1706,6 +1832,7 @@ Example: Q = 1, r = 5, Q(s', ·) = [3, 4], γ = 0.9, α = 0.5 → target 8.6, ne
   {
     id: 'fc-rl-td0',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-td0-prediction'],
     question: "What is TD(0) learning, and how does it compare with Monte Carlo?",
     answer: `Update V after every step toward a bootstrapped target:
 
@@ -1722,6 +1849,7 @@ n-step returns and TD(λ) / GAE interpolate between the two.
   {
     id: 'fc-rl-value-iteration',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-value-iteration'],
     question: "What is value iteration, and when does it stop?",
     answer: `Dynamic programming with a known model P(s' | s, a) and rewards R(s, a). Apply the Bellman optimality backup to every state:
 
@@ -1737,6 +1865,7 @@ Vectorized, with P of shape \`(S, A, S)\` and R of shape \`(S, A)\`: \`Q = R + �
   {
     id: 'fc-rl-nstep',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-n-step-return'],
     question: "What is the n-step return, and why use it?",
     answer: `\`G_t^(n) = r_t + γ·r_{t+1} + … + γ^(n−1)·r_{t+n−1} + γ^n·V(s_{t+n})\`
 
@@ -1748,6 +1877,7 @@ Use n real rewards, then bootstrap. n = 1 is TD(0); n reaching the end of the ep
   {
     id: 'fc-rl-reinforce',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-policy-gradient'],
     question: "State the REINFORCE policy gradient. Why subtract a baseline?",
     answer: `\`∇_θ J = E[ Σ_t ∇_θ log π_θ(a_t | s_t) · G_t ]\`: raise the log-probability of each action in proportion to the return that followed it. As a loss: \`loss = −(logp * G).mean()\`.
 
@@ -1761,6 +1891,7 @@ For a softmax policy with logits z: \`∇_z log π(a) = onehot(a) − π\`.
   {
     id: 'fc-rl-gae',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-advantage-estimation'],
     question: "How is Generalized Advantage Estimation (GAE) computed, and what does λ trade off?",
     answer: `TD errors: \`δ_t = r_t + γ·V(s_{t+1})·(1 − done_t) − V(s_t)\`.
 
@@ -1776,6 +1907,7 @@ Advantages, computed backwards: \`A_t = δ_t + γλ·(1 − done_t)·A_{t+1}\`, 
   {
     id: 'fc-rl-ppo',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-ppo-clip', 'rl-ppo-llm-objective'],
     question: "What is PPO's clipped objective, and why does the clipping work?",
     answer: `With ratio \`r_t = π_θ(a_t | s_t) / π_old(a_t | s_t)\` and advantage A_t, maximize
 
@@ -1791,6 +1923,7 @@ The full loss usually adds a value loss and an entropy bonus. PPO was the RL ste
   {
     id: 'fc-rl-reward-model',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-reward-modeling'],
     question: "How is an RLHF reward model trained from preference pairs?",
     answer: `Labelers pick the better of two responses to the same prompt. Bradley–Terry models the preference as
 
@@ -1806,6 +1939,7 @@ Only reward **differences** are learned: adding a constant changes nothing, so r
   {
     id: 'fc-rl-kl-penalty',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-kl-penalty'],
     question: "Why does RLHF add a KL penalty to the reward, and how is it estimated per token?",
     answer: `Optimized hard against an imperfect reward model, the policy finds outputs that score high without being good (reward hacking) and drifts away from fluent language. The penalty keeps it close to the reference (SFT) model:
 
@@ -1819,6 +1953,7 @@ Typical β ≈ 0.01–0.1; some setups adapt β to hit a target KL.`,
   {
     id: 'fc-rl-dpo',
     sectionId: 'reinforcement-learning',
+    problemIds: ['rl-dpo-loss'],
     question: "What is DPO's loss, and how does it avoid both the reward model and RL?",
     answer: `With a frozen reference model π_ref (the SFT model), a chosen response y_w and a rejected one y_l:
 
@@ -1836,6 +1971,7 @@ At initialization (π_θ = π_ref) the loss is log 2 ≈ 0.693. β ≈ 0.1–0.5
   {
     id: 'fc-post-pipeline',
     sectionId: 'post-training',
+    problemIds: ['rl-dpo-loss', 'grpo-advantages'],
     question: "Outline the modern LLM post-training pipeline. What does each stage do?",
     answer: `1. **Pretraining**: next-token prediction on trillions of tokens gives a base model that continues text.
 2. **SFT** (instruction tuning): cross-entropy on curated prompt–response pairs, with the loss **only on the response tokens**. Teaches format and instruction following.
@@ -1848,6 +1984,7 @@ Efficiency tools along the way: LoRA / QLoRA for cheaper fine-tuning; quantizati
   {
     id: 'fc-post-grpo',
     sectionId: 'post-training',
+    problemIds: ['grpo-advantages'],
     question: "How does GRPO compute advantages, and why doesn't it need a value network?",
     answer: `For each prompt, sample a group of G responses and score them, often with a verifier (1 if the final answer is correct). Each response's advantage is its reward normalized within the group:
 
@@ -1863,6 +2000,7 @@ Example: rewards [1, 0, 0, 0] → advantages [1.73, −0.58, −0.58, −0.58].
   {
     id: 'fc-post-lora',
     sectionId: 'post-training',
+    problemIds: ['lora-adapter'],
     question: "How does LoRA fine-tune a large model, and why is B initialized to zero?",
     answer: `Freeze W, shape \`(d_in, d_out)\`, and learn a low-rank update:
 
@@ -1876,6 +2014,7 @@ B starts at 0, so training starts exactly from the pretrained model; A is random
   {
     id: 'fc-post-int8',
     sectionId: 'post-training',
+    problemIds: ['int8-quantization'],
     question: "How does symmetric int8 (absmax) quantization work, and why use per-channel scales?",
     answer: `Per row (output channel): \`scale = max|w| / 127\`, \`q = clip(round(w / scale), −127, 127)\` stored as int8; dequantize with \`ŵ = q · scale\`. The rounding error per weight is at most scale / 2.
 
@@ -1890,6 +2029,7 @@ Example: row [0.7, −1.2, 0.3] → scale ≈ 0.00945, q = [74, −127, 32].
   {
     id: 'fc-e2e-mlp-backprop',
     sectionId: 'e2e-implementations',
+    problemIds: ['e2e-mlp'],
     question: "Write the backward pass of a 2-layer MLP with ReLU and softmax cross-entropy, with shapes.",
     answer: `Forward, rows are samples: \`Z1 = X W1 + b1\`, \`A1 = ReLU(Z1)\`, \`Z2 = A1 W2 + b2\`, \`P = softmax(Z2)\`, L = mean cross-entropy. X is \`(N, D)\`, hidden size M, C classes.
 
@@ -1907,6 +2047,7 @@ Sanity check: every gradient has its parameter's shape. Verify with a finite-dif
   {
     id: 'fc-e2e-transformer-components',
     sectionId: 'e2e-implementations',
+    problemIds: ['e2e-transformer'],
     question: "List the components of a transformer block in order. How do modern pre-norm blocks differ from the original post-norm ones?",
     answer: `Modern pre-norm decoder block (GPT-2, LLaMA) on x of shape \`(B, T, d_model)\`:
 
@@ -1923,6 +2064,7 @@ Attention mixes information across tokens; the FFN transforms each token separat
   {
     id: 'fc-e2e-residual',
     sectionId: 'e2e-implementations',
+    problemIds: ['resnet-block', 'e2e-transformer'],
     question: "Why are residual connections critical in deep networks?",
     answer: `A residual block outputs \`y = x + F(x)\`.
 
@@ -1936,6 +2078,7 @@ Used in ResNets, transformers (around every sublayer) and U-Nets. DenseNet conca
   {
     id: 'fc-e2e-mini-gpt',
     sectionId: 'e2e-implementations',
+    problemIds: ['e2e-mini-gpt'],
     question: "How is a GPT-style model trained on next-token prediction? Give the shapes and the target shift.",
     answer: `Token ids \`(B, T + 1)\`: inputs \`x = ids[:, :-1]\`, targets \`y = ids[:, 1:]\`, both \`(B, T)\`.
 
@@ -1951,6 +2094,7 @@ Generation: feed the prompt, sample from the **last** position's logits, append,
   {
     id: 'fc-e2e-vit',
     sectionId: 'e2e-implementations',
+    problemIds: ['e2e-vit-classifier', 'vit-patch-embeddings'],
     question: "How does a Vision Transformer turn an image into tokens and classify it?",
     answer: `Cut a \`(C, H, W)\` image into non-overlapping P×P patches: \`N = (H/P)·(W/P)\` patches, each flattened to \`P²·C\` values and linearly projected to d_model (equivalently, a Conv2d with kernel = stride = P).
 
@@ -1964,6 +2108,7 @@ ViTs have weaker built-in assumptions than CNNs, so they need large-scale pretra
   {
     id: 'fc-e2e-debugging',
     sectionId: 'e2e-implementations',
+    problemIds: ['transformer-bug-hunt'],
     question: "Your transformer's training loss won't go down. What do you check first?",
     answer: `1. **Overfit one small batch.** If the loss can't get near 0, it's a bug, not a hyperparameter.
 2. **Initial loss ≈ ln(V)** for V classes or tokens (ln 50,257 ≈ 10.8). Much higher means bad initialization or wrongly scaled logits.

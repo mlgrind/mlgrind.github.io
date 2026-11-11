@@ -101,6 +101,8 @@ export interface FlashCard {
   question: string;
   answer: string;
   tags?: string[];
+  /** Problems that practise this card, in order (shown as links on the back). */
+  problemIds?: string[];
 }
 
 export interface FlashCardProgress {

@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { ProgressProvider } from './context/ProgressContext'
+import FlashCardSync from './components/Sync/FlashCardSync'
 import './index.css'
 
 // Remove the boot splash (index.html) once React has committed the real page.
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <HelmetProvider>
       <BrowserRouter basename="/">
         <AuthProvider>
+          <FlashCardSync />
           <ProgressProvider>
             <App />
             <BootSplashRemover />

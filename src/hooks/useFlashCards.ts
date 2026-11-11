@@ -48,6 +48,36 @@ function subscribe(listener: () => void) {
   };
 }
 
+/** Current review state (for cloud sync). */
+export function getFlashCardProgress(): FlashProgress {
+  return getSnapshot();
+}
+
+/** Replace the review state, e.g. after merging with the cloud copy. */
+export function replaceFlashCardProgress(next: FlashProgress) {
+  setProgress(next);
+}
+
+/** Subscribe to review-state changes outside React (cloud sync). */
+export function subscribeFlashCardProgress(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+const reviewedAt = (p: FlashCardProgress) => p.lastReviewed ?? p.nextReview ?? '';
+
+/** Per card, keep whichever copy was reviewed most recently. */
+export function mergeFlashCardProgress(local: FlashProgress, cloud: FlashProgress): FlashProgress {
+  const merged: FlashProgress = { ...cloud };
+  for (const [id, entry] of Object.entries(local)) {
+    const other = merged[id];
+    if (!other || reviewedAt(entry) >= reviewedAt(other)) merged[id] = entry;
+  }
+  return merged;
+}
+
 /** Test helper: forget the cached snapshot so the next read comes from storage. */
 export function resetFlashCardStore() {
   current = null;

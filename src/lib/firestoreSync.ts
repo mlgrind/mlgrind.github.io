@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import { Progress } from '../types';
+import { FlashCardProgress, Progress } from '../types';
 
 interface UserInfo {
   displayName: string | null;
@@ -30,4 +30,20 @@ export async function saveProgressToFirestore(
     lastSynced: new Date().toISOString(),
     progress,
   }, { merge: true });
+}
+
+export type FlashCardProgressMap = Record<string, FlashCardProgress>;
+
+/** Flash-card review state lives in the same users/{uid} document. */
+export async function loadFlashCardsFromFirestore(uid: string): Promise<FlashCardProgressMap | null> {
+  if (!db) return null;
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (!snap.exists()) return null;
+  const value = snap.data().flashcards;
+  return value && typeof value === 'object' ? (value as FlashCardProgressMap) : null;
+}
+
+export async function saveFlashCardsToFirestore(uid: string, flashcards: FlashCardProgressMap): Promise<void> {
+  if (!db) return;
+  await setDoc(doc(db, 'users', uid), { flashcards, flashcardsSynced: new Date().toISOString() }, { merge: true });
 }
