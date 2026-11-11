@@ -49,10 +49,11 @@ The platform covers 21 learning sections with 149 problems:
 
 ## Learning Paths
 
-- [NumPy foundations](https://mlgrind.dev/learn/numpy-foundations): Get comfortable with arrays, shapes, broadcasting, and matrix operations. Prerequisites: Basic Python.
-- [ML interview prep](https://mlgrind.dev/learn/ml-interview-prep): Practice core building blocks and explain how they work. Prerequisites: Python and basic linear algebra.
-- [Build a transformer](https://mlgrind.dev/learn/build-a-transformer): Work through attention and the components behind modern language models. Prerequisites: NumPy, matrix multiplication, and neural networks.
-- [Seven days of ML coding](https://mlgrind.dev/challenge): One focused exercise per day. Start any time, follow at your own pace, and build a habit. Prerequisites: Basic Python; NumPy helps.
+- [NumPy foundations](https://mlgrind.dev/learn/numpy-foundations): Every model on this site is a few lines of array code, so shape fluency comes first. Work from a one-line sum to broadcasting, matrix products and einsum, and learn to predict the shape of an expression before you run it. Prerequisites: Basic Python: lists, functions and loops.
+- [ML coding interview prep](https://mlgrind.dev/learn/ml-interview-prep): The problems that come up most in ML coding interviews: stable losses, classic models, evaluation metrics, a neural network by hand and attention. Each fits in an interview slot, and the hidden tests check the edge cases interviewers ask about. Prerequisites: Comfortable with NumPy; basic calculus and linear algebra.
+- [Build a transformer](https://mlgrind.dev/learn/build-a-transformer): Build every part of a transformer in NumPy, then put the parts together. You will write attention, masking, multi-head projections, positional information and normalisation, assemble an encoder block, train a character-level GPT, and debug a broken one. Prerequisites: NumPy and a basic neural network (forward pass and softmax).
+- [LLM inference and training internals](https://mlgrind.dev/learn/llm-internals): The techniques behind production language models, one at a time: sampling strategies, the KV cache, grouped-query attention, the SwiGLU block, the FlashAttention softmax trick, mixture-of-experts routing, speculative decoding, preference optimisation and quantisation. Prerequisites: The Build a transformer path, or equivalent experience.
+- [7-day ML coding challenge](https://mlgrind.dev/challenge): Seven short exercises, one a day, each building on the last: vectorised NumPy, broadcasting, a stable softmax, training a linear model, a dense layer, k-means and attention. Start any day and go at your own pace. Prerequisites: Basic Python; some NumPy helps.
 
 ## Key URLs
 
