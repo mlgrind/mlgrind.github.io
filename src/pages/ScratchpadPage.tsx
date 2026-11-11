@@ -12,13 +12,18 @@ const STORAGE_KEY = 'ml-interview-scratchpad';
 
 const DEFAULT_CODE = `import numpy as np
 
-# Try out your code here!
-# NumPy is already loaded and ready to use.
+# A place to try things out. NumPy is loaded, and your code is saved in this browser.
+# Run with the button above or Shift+Enter.
 
-arr = np.array([1, 2, 3, 4, 5])
-print(f"Array: {arr}")
-print(f"Sum: {np.sum(arr)}")
-print(f"Mean: {np.mean(arr)}")
+rng = np.random.default_rng(0)
+X = rng.normal(size=(4, 3))   # 4 samples, 3 features
+W = rng.normal(size=(3, 2))   # a 3 -> 2 linear layer
+
+logits = X @ W
+z = np.exp(logits - logits.max(axis=1, keepdims=True))  # stable softmax
+probs = z / z.sum(axis=1, keepdims=True)
+print("logits shape:", logits.shape)
+print("softmax rows sum to 1:", np.allclose(probs.sum(axis=1), 1))
 `;
 
 export default function ScratchpadPage() {
@@ -39,10 +44,11 @@ export default function ScratchpadPage() {
   }, []);
 
   const handleReset = useCallback(() => {
+    if (code !== DEFAULT_CODE && !window.confirm('Replace your scratchpad code with the example? This cannot be undone.')) return;
     setCode(DEFAULT_CODE);
     writeStorage(STORAGE_KEY, DEFAULT_CODE);
     clearOutput();
-  }, [clearOutput]);
+  }, [clearOutput, code]);
 
   const handleRunCode = useCallback(async () => {
     if (!isReady || isRunning) return;
@@ -61,11 +67,11 @@ export default function ScratchpadPage() {
     <div className="h-full min-h-0 flex flex-col -m-6">
       <SEO
         title="Python Scratchpad"
-        description="Free Python playground with NumPy pre-loaded. Run Python code directly in your browser - no setup required. Practice machine learning code instantly."
+        description="A Python scratchpad with NumPy loaded, running entirely in your browser. No install or account; your code is saved locally."
         canonical="/scratchpad"
         keywords="Python playground, online Python, NumPy, code sandbox, ML practice, browser Python"
       />
-      {error && <div role="alert" className="p-3 text-red-600">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
+      {error && <div role="alert" className="p-3 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200">{error} <button className="underline" onClick={() => retry()}>Retry Python</button></div>}
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-dark-500">
         <div className="flex items-center gap-3">
@@ -76,14 +82,14 @@ export default function ScratchpadPage() {
             Home
           </Link>
           <span className="text-gray-300 dark:text-dark-500">/</span>
-          <h1 className="text-base text-gray-900 dark:text-dark-100 font-medium">Python Scratchpad</h1>
+          <h1 className="text-base text-gray-900 dark:text-dark-100 font-medium">Scratchpad</h1>
         </div>
 
         <div className="flex items-center gap-3">
           {!isReady && (
             <span className="text-gray-500 dark:text-dark-200 text-sm flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              {isLoading ? 'Loading Python...' : 'Python unavailable'}
+              {isLoading ? 'Loading Python…' : 'Python unavailable'}
             </span>
           )}
           {isReady && (
@@ -102,10 +108,12 @@ export default function ScratchpadPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleRunCode}
+              title="Run (Shift+Enter)"
+              aria-keyshortcuts="Shift+Enter"
               disabled={!isReady || isRunning}
               className="whitespace-nowrap px-4 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isRunning ? 'Running...' : 'Run Code'}
+              {isRunning ? 'Running…' : 'Run'}
             </button>
             {isRunning && (
               <button
@@ -120,6 +128,7 @@ export default function ScratchpadPage() {
             )}
             <button
               onClick={handleReset}
+              title="Replace your code with the example"
               className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
               Reset
@@ -128,10 +137,10 @@ export default function ScratchpadPage() {
               onClick={clearOutput}
               className="whitespace-nowrap px-4 py-1.5 bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
             >
-              Clear Output
+              Clear output
             </button>
           </div>
-          <span className="hidden sm:inline text-gray-500 dark:text-dark-300 text-sm">Code is auto-saved</span>
+          <span className="hidden sm:inline text-gray-500 dark:text-dark-300 text-sm">Saved in this browser · Shift+Enter to run</span>
         </div>
 
         {/* Editor and Console */}
@@ -147,6 +156,7 @@ export default function ScratchpadPage() {
             <CodeEditor
               value={code}
               onChange={handleCodeChange}
+              onRun={handleRunCode}
               height="100%"
               darkMode={isDark}
             />

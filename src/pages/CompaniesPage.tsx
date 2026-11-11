@@ -18,6 +18,7 @@ export default function CompaniesPage() {
   const { getProblemProgress } = useProgress();
   const selectedSlug = searchParams.get('company');
   const selected = index.find(entry => entry.slug === selectedSlug);
+  const unknownSlug = selectedSlug && !selected ? selectedSlug : null;
   const visible = selected ? [selected] : index;
   const problemCount = new Set(index.flatMap(entry => entry.problemIds)).size;
 
@@ -41,11 +42,17 @@ export default function CompaniesPage() {
       />
       <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-100 tracking-tight">Problems by company</h1>
       <p className="mt-2 text-gray-500 dark:text-dark-200">
-        {problemCount} problems that candidates report being asked in ML interviews at {index.length} companies.
-        Each problem page lists its sources.
+        {problemCount} problems that candidates report being asked in ML coding interviews at {index.length} companies.
+        Pick a company to filter. Each problem page links to the reports it comes from, and
+        &ldquo;first-hand&rdquo; marks a report written by the candidate.
       </p>
       <p className="mt-1 text-xs text-gray-500 dark:text-dark-200">{COMPANY_DISCLAIMER}</p>
 
+      {unknownSlug && (
+        <p role="status" className="mt-4 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-sm text-amber-800 dark:text-amber-200">
+          No problems are tagged for &ldquo;{unknownSlug}&rdquo; yet, so all companies are shown.
+        </p>
+      )}
       <div role="group" aria-label="Filter by company" className="flex flex-wrap gap-2 mt-6 mb-8">
         <button type="button" aria-pressed={!selected} onClick={() => select(null)} className={chipClass(!selected)}>
           All companies
@@ -111,7 +118,7 @@ export default function CompaniesPage() {
                             {problem.difficulty}
                           </span>
                           {section && <span className="text-gray-500 dark:text-dark-200">{section.title}</span>}
-                          <span className="text-gray-400 dark:text-dark-300 font-mono">
+                          <span className="text-gray-500 dark:text-dark-300 font-mono">
                             {sources.length} {sources.length === 1 ? 'source' : 'sources'}
                             {sources.some(tag => tag.confidence === 'high') ? ' · first-hand' : ''}
                           </span>

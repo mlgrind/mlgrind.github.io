@@ -56,7 +56,7 @@ export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
               onClick={handleRevealHint}
               className="text-sm text-primary-500 hover:text-primary-400 transition-colors"
             >
-              Show Hint ({revealedHints}/{hints.length})
+              Show hint {revealedHints + 1} of {hints.length}
             </button>
           )}
         </div>
@@ -76,8 +76,8 @@ export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
             ))}
           </div>
         ) : (
-          <div className="text-gray-400 dark:text-dark-300 text-sm italic">
-            Click "Show Hint" if you need help
+          <div className="text-gray-500 dark:text-dark-300 text-sm italic">
+            Stuck? Hints reveal one at a time, from a nudge to the full approach.
           </div>
         )}
       </div>
@@ -91,7 +91,7 @@ export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
               onClick={handleShowSolution}
               className="text-sm text-primary-500 hover:text-primary-400 transition-colors"
             >
-              Reveal Solution
+              Show solution
             </button>
           )}
         </div>
@@ -99,20 +99,20 @@ export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
         {showSolution ? (
           <div className="bg-white dark:bg-dark-800 rounded-lg overflow-hidden border border-gray-200 dark:border-dark-500">
             <div className="px-4 py-2 bg-gray-100 dark:bg-dark-900 border-b border-gray-200 dark:border-dark-500 flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-dark-200">Solution Code</span>
+              <span className="text-sm text-gray-600 dark:text-dark-200">Reference solution</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyToClipboard}
                   className="px-3 py-1 text-xs font-medium rounded-md bg-gray-200 dark:bg-dark-600 text-gray-700 dark:text-dark-200 hover:bg-gray-300 dark:hover:bg-dark-500 transition-colors"
                 >
-                  {copied ? 'Copied!' : 'Copy to Clipboard'}
+                  {copied ? 'Copied' : 'Copy'}
                 </button>
                 {onLoadToEditor && (
                   <button
                     onClick={handleLoadToEditor}
                     className="px-3 py-1 text-xs font-medium rounded-md bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                   >
-                    Load into Editor
+                    Load into editor
                   </button>
                 )}
               </div>
@@ -122,12 +122,12 @@ export default function Hints({ hints, solution, onLoadToEditor }: HintsProps) {
             </pre>
           </div>
         ) : revealedHints < hints.length ? (
-          <div className="text-gray-400 dark:text-dark-300 text-sm italic">
-            Reveal all hints first to unlock the solution
+          <div className="text-gray-500 dark:text-dark-300 text-sm italic">
+            The solution unlocks after the last hint.
           </div>
         ) : (
-          <div className="text-gray-400 dark:text-dark-300 text-sm italic">
-            Click "Reveal Solution" to see the answer
+          <div className="text-gray-500 dark:text-dark-300 text-sm italic">
+            Ready to compare? The reference solution is one click away.
           </div>
         )}
       </div>

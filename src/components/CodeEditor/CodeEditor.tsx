@@ -35,7 +35,7 @@ export default function CodeEditor({ value, onChange, height = '400px', onRun, d
 
     editor.addAction({
       id: 'run-tests',
-      label: 'Run Tests',
+      label: 'Run',
       keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.Enter],
       run: () => {
         if (onRunRef.current) {

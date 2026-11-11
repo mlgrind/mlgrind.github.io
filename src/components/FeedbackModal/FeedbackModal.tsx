@@ -86,10 +86,10 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         setEmail('');
         setFeedback('');
       } else {
-        setError('Failed to send feedback. Please try again.');
+        setError('Your feedback could not be sent. Please try again, or email sid@mlgrind.dev.');
       }
     } catch {
-      setError('Failed to send feedback. Please try again.');
+      setError('Your feedback could not be sent. Check your connection and try again, or email sid@mlgrind.dev.');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +129,11 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           </svg>
         </button>
 
-        <h2 id={titleId} className="text-xl font-semibold text-gray-900 dark:text-dark-100 mb-4">Send Feedback</h2>
+        <h2 id={titleId} className="text-xl font-semibold text-gray-900 dark:text-dark-100 mb-1">Send feedback</h2>
+        <p className="text-sm text-gray-600 dark:text-dark-200 mb-4">
+          Found a bug, a wrong test or a confusing explanation? Name the problem if it&apos;s
+          about one.
+        </p>
 
         {submitted ? (
           <div className="text-center py-8">
@@ -138,7 +142,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-gray-700 dark:text-dark-100 mb-4">Thank you for your feedback!</p>
+            <p className="text-gray-700 dark:text-dark-100 mb-4">Thanks, your feedback was sent.</p>
             <button
               onClick={handleClose}
               className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors"
@@ -188,7 +192,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 required
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-dark-500 bg-white dark:bg-dark-900 text-gray-900 dark:text-dark-100 placeholder:text-gray-400 dark:placeholder:text-dark-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                placeholder="Share your thoughts, suggestions, or report issues..."
+                placeholder="What happened, or what would make this better?"
               />
             </div>
 
@@ -209,7 +213,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 disabled={isSubmitting}
                 className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? 'Sending...' : 'Send Feedback'}
+                {isSubmitting ? 'Sending…' : 'Send feedback'}
               </button>
             </div>
           </form>

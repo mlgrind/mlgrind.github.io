@@ -109,7 +109,7 @@ describe("problem editor persistence", () => {
     mount();
     expect(screen.getByLabelText("Python code")).toHaveValue("");
     await act(async () =>
-      fireEvent.click(screen.getByRole("button", { name: "Run Tests" })),
+      fireEvent.click(screen.getByRole("button", { name: "Run tests" })),
     );
     const stored = JSON.parse(localStorage.getItem("ml-interview-progress")!);
     expect(stored["python-basics"]["numpy-array-sum"].status).not.toBe(
@@ -160,7 +160,7 @@ describe("NumPy | PyTorch track toggle", () => {
     );
     mount();
     await act(async () =>
-      fireEvent.click(screen.getByRole("button", { name: "Run Tests" })),
+      fireEvent.click(screen.getByRole("button", { name: "Run tests" })),
     );
     expect(pyodide.runTests).toHaveBeenCalledWith(
       problem.pytorch!.starterCode,
@@ -274,7 +274,7 @@ describe("decluttered problem page", () => {
     mount();
     expect(screen.getByRole("button", { name: "Share challenge" })).toBeInTheDocument();
     expect(screen.queryByText("Share challenge")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Run Tests" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Run tests" })).toHaveAttribute(
       "title",
       "Run tests (Shift+Enter)",
     );
