@@ -76,7 +76,7 @@ export default function LecturePlayer({ lecture, title }: Props) {
                     : 'border-gray-200 dark:border-dark-500 text-gray-600 dark:text-dark-200 hover:border-primary-300 hover:text-primary-600 dark:hover:text-primary-200'
                 }`}
               >
-                <span className="font-mono text-gray-400 dark:text-dark-300 mr-1.5">{fmt(c.start)}</span>
+                <span className="font-mono text-gray-500 dark:text-dark-300 mr-1.5">{fmt(c.start)}</span>
                 {c.title}
               </button>
             </li>
