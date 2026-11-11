@@ -1,868 +1,857 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ML Interview Cheat Sheet</title>
-  <style>
-    /* Reset and base styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Grind Cheat Sheet</title>
+<meta name="description" content="One-page ML coding interview reference from ML Grind: formulas, NumPy and PyTorch idioms and the classic pitfall for every section, from NumPy and einsum to attention, decoding, diffusion, RLHF, DPO and GRPO.">
+<link rel="canonical" href="https://mlgrind.dev/ml-cheatsheet.html">
+<meta property="og:title" content="ML Grind Cheat Sheet">
+<meta property="og:description" content="Formulas, NumPy/PyTorch idioms and pitfalls for all 21 ML Grind sections.">
+<meta property="og:url" content="https://mlgrind.dev/ml-cheatsheet.html">
+<meta property="og:image" content="https://mlgrind.dev/og-card.png">
+<meta name="color-scheme" content="light dark">
+<!--
+  The PDF next to this file (ml-cheatsheet.pdf) is printed from this page:
+  Playwright Chromium, page.emulateMedia({ media: 'print' }),
+  page.pdf({ format: 'Letter', printBackground: true, preferCSSPageSize: true }).
+  Regenerate it whenever this page changes.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f5fb;
+  --card: #ffffff;
+  --ink: #1c1b29;
+  --muted: #5d6175;
+  --line: #e2e0ee;
+  --brand: #5a49d6;
+  --brand-ink: #4837b5;
+  --brand-soft: #efecff;
+  --accent: #00806a;
+  --code-bg: #f5f4fa;
+  --code-ink: #2a2840;
+  --cmt: #737891;
+  --f-bg: #f4f2ff;
+  --f-line: #c7befa;
+  --pit-bg: #fff5ea;
+  --pit-line: #e0870f;
+  --pit-ink: #6e3b00;
+  --chip-bg: #ffffff;
+  --shadow: 0 1px 2px rgba(28, 27, 41, .05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0f14;
+    --card: #13161d;
+    --ink: #e8ecf4;
+    --muted: #97a0b3;
+    --line: #262b36;
+    --brand: #b5a8fe;
+    --brand-ink: #c9bfff;
+    --brand-soft: rgba(108, 92, 231, .16);
+    --accent: #4ddcbf;
+    --code-bg: #191d26;
+    --code-ink: #dfe3ee;
+    --cmt: #7f889c;
+    --f-bg: rgba(108, 92, 231, .11);
+    --f-line: rgba(149, 128, 240, .45);
+    --pit-bg: rgba(232, 137, 12, .10);
+    --pit-line: #d89a3c;
+    --pit-ink: #f1cf9b;
+    --chip-bg: #13161d;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0f14; --card: #13161d; --ink: #e8ecf4; --muted: #97a0b3; --line: #262b36;
+  --brand: #b5a8fe; --brand-ink: #c9bfff; --brand-soft: rgba(108, 92, 231, .16); --accent: #4ddcbf;
+  --code-bg: #191d26; --code-ink: #dfe3ee; --cmt: #7f889c; --f-bg: rgba(108, 92, 231, .11);
+  --f-line: rgba(149, 128, 240, .45); --pit-bg: rgba(232, 137, 12, .10); --pit-line: #d89a3c;
+  --pit-ink: #f1cf9b; --chip-bg: #13161d; --shadow: none;
+}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 9pt;
-      line-height: 1.3;
-      color: #1a1a1a;
-      background: white;
-      padding: 0.3in;
-    }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--bg);
+  padding: 20px 16px 40px;
+  overflow-x: hidden;
+}
+a { color: var(--brand-ink); }
+.wrap { max-width: 1440px; margin: 0 auto; }
 
-    /* Print styles */
-    @media print {
-      body {
-        padding: 0;
-        font-size: 8pt;
-      }
-      .no-print { display: none; }
-      .page-break { page-break-before: always; }
-      section { page-break-inside: avoid; }
-    }
+/* ---------- top bar ---------- */
+.top {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 12px 24px; border-bottom: 2px solid var(--brand); padding-bottom: 12px; margin-bottom: 12px;
+}
+.brand { font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-ink); text-decoration: none; }
+.top h1 { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 40px; line-height: 1.05; letter-spacing: -.01em; }
+.top .sub { color: var(--muted); max-width: 62ch; margin-top: 4px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1 'DM Sans', sans-serif;
+  padding: 9px 14px; border-radius: 8px; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--line); background: var(--chip-bg); color: var(--ink);
+}
+.btn:hover { border-color: var(--brand); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+:root:not([data-theme="light"]) .btn.primary { color: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #13161d; } }
+:root[data-theme="dark"] .btn.primary { color: #13161d; }
 
-    /* Header */
-    header {
-      text-align: center;
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-    }
+/* ---------- notation + toc ---------- */
+.notation {
+  font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 10px; margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.notation b { color: var(--ink); }
+.notation code { font-size: 11.5px; }
+.toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 14px; margin-bottom: 18px; }
+.toc div { font-size: 12px; }
+.toc strong { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 1px; }
+.toc a { text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--line); }
+.toc a:hover { color: var(--brand-ink); border-color: var(--brand); }
 
-    header h1 {
-      font-size: 18pt;
-      color: #1e40af;
-      margin-bottom: 2px;
-    }
+/* ---------- parts + cards ---------- */
+.part { margin-top: 18px; }
+.part > h2 {
+  display: flex; align-items: baseline; gap: 10px; font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400; font-size: 26px; line-height: 1.1; margin-bottom: 8px; color: var(--ink);
+}
+.part > h2 span { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-ink); }
+.cols { columns: 3 330px; column-gap: 12px; }
+/* JS masonry (see the script at the end); without JS the CSS columns above apply */
+.cols.masonry {
+  columns: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr));
+  grid-auto-rows: 2px; column-gap: 12px; align-items: start;
+}
+.cols.masonry > .card { align-self: start; }
+.card {
+  display: inline-block; width: 100%; break-inside: avoid; page-break-inside: avoid;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px 11px; margin: 0 0 12px; box-shadow: var(--shadow); min-width: 0;
+}
+.card > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 5px; margin-bottom: 6px; }
+.card h3 { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.card header a { flex: none; font-size: 11.5px; font-weight: 600; text-decoration: none; color: var(--brand-ink); white-space: nowrap; }
+.card header a:hover { text-decoration: underline; }
+.card h4 { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 8px 0 3px; }
+.card p, .card li { overflow-wrap: anywhere; }
+.card ul { padding-left: 16px; }
+.card li { margin: 1px 0; }
 
-    header p {
-      color: #64748b;
-      font-size: 9pt;
-    }
+.f {
+  background: var(--f-bg); border-left: 3px solid var(--f-line); border-radius: 0 6px 6px 0;
+  padding: 5px 8px; margin: 4px 0; font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11.6px; line-height: 1.55; overflow-wrap: anywhere;
+}
+.f > div + div { margin-top: 2px; }
+.f .n { font-family: 'DM Sans', sans-serif; color: var(--muted); font-size: 11.5px; }
 
-    /* Print button */
-    .print-btn {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      z-index: 1000;
-    }
+code, pre, .f { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+code, pre { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; }
+code { font-size: .88em; background: var(--code-bg); border-radius: 3px; padding: 0 3px; overflow-wrap: anywhere; }
+pre {
+  position: relative; background: var(--code-bg); color: var(--code-ink); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 8px; margin: 5px 0; font-size: 11.2px; line-height: 1.5;
+  white-space: pre; overflow-x: auto; tab-size: 4;
+}
+pre[data-lang]::before {
+  content: attr(data-lang); display: block; text-align: right; margin: -1px -2px 1px 0;
+  font: 600 9px/1.2 'DM Sans', sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); white-space: normal;
+}
+pre .c { color: var(--cmt); }
 
-    .print-btn:hover {
-      background: #1d4ed8;
-    }
+.pit {
+  background: var(--pit-bg); border-left: 3px solid var(--pit-line); color: var(--pit-ink);
+  border-radius: 0 6px 6px 0; padding: 5px 8px; margin-top: 6px; font-size: 12.3px;
+}
+.pit::before { content: "Pitfall  "; font-weight: 700; letter-spacing: .03em; }
+.ex { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.ex b { color: var(--ink); font-weight: 600; }
 
-    /* Grid layout */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
+table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 4px 0; }
+th, td { border-bottom: 1px solid var(--line); padding: 2px 4px; text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+td code { background: none; padding: 0; }
+.tbl { overflow-x: auto; }
 
-    .grid-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
+footer.foot { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; }
 
-    /* Sections */
-    section {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 8px;
-      break-inside: avoid;
-    }
+@media (max-width: 520px) {
+  body { font-size: 14px; }
+  .top h1 { font-size: 34px; }
+  .actions { width: 100%; }
+  .btn { flex: 1 1 auto; justify-content: center; }
+  .toc { grid-template-columns: 1fr 1fr; }
+}
 
-    section h2 {
-      font-size: 11pt;
-      color: #1e40af;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
-      margin-bottom: 6px;
-    }
-
-    section h3 {
-      font-size: 9pt;
-      color: #475569;
-      margin-top: 6px;
-      margin-bottom: 3px;
-    }
-
-    /* Code blocks */
-    pre, code {
-      font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-      font-size: 8pt;
-      background: #f1f5f9;
-      border-radius: 3px;
-    }
-
-    code {
-      padding: 1px 3px;
-    }
-
-    pre {
-      padding: 6px;
-      overflow-x: auto;
-      margin: 4px 0;
-      border: 1px solid #e2e8f0;
-    }
-
-    /* Lists */
-    ul, ol {
-      margin-left: 14px;
-      margin-bottom: 4px;
-    }
-
-    li {
-      margin-bottom: 2px;
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 8pt;
-      margin: 4px 0;
-    }
-
-    th, td {
-      border: 1px solid #cbd5e1;
-      padding: 3px 5px;
-      text-align: left;
-    }
-
-    th {
-      background: #e2e8f0;
-      font-weight: 600;
-    }
-
-    /* Formula box */
-    .formula {
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
-      border-radius: 4px;
-      padding: 4px 8px;
-      margin: 4px 0;
-      font-family: 'SF Mono', monospace;
-      font-size: 9pt;
-    }
-
-    /* Tip box */
-    .tip {
-      background: #dcfce7;
-      border-left: 3px solid #22c55e;
-      padding: 4px 8px;
-      margin: 4px 0;
-      font-size: 8pt;
-    }
-
-    /* Full width section */
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    /* Span 2 columns */
-    .span-2 {
-      grid-column: span 2;
-    }
-
-    /* Small text */
-    .small {
-      font-size: 7pt;
-      color: #64748b;
-    }
-
-    /* Divider */
-    .divider {
-      grid-column: 1 / -1;
-      border-top: 2px solid #2563eb;
-      margin: 8px 0;
-      padding-top: 8px;
-    }
-
-    .divider h2 {
-      font-size: 12pt;
-      color: #1e40af;
-      text-align: center;
-      background: none;
-      border: none;
-      margin-bottom: 8px;
-    }
-
-    /* Back link + action cluster */
-    .page-actions {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      z-index: 1000;
-    }
-    .back-btn {
-      display: inline-block;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      text-decoration: none;
-      color: #2563eb;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-    }
-    .back-btn:hover { background: #dbeafe; }
-
-    /* Dark mode: match the app instead of flashing white. */
-    @media screen and (prefers-color-scheme: dark) {
-      body { background: #0d1117; color: #d7dbe4; }
-      h1, h2, h3, h4 { color: #e8ebf1 !important; }
-      section, .card, div[style*="background"] { background-color: transparent; }
-      a { color: #9580f0; }
-      .back-btn {
-        color: #b5a8fe;
-        background: rgba(108, 92, 231, 0.12);
-        border-color: rgba(108, 92, 231, 0.35);
-      }
-      .back-btn:hover { background: rgba(108, 92, 231, 0.22); }
-    }
-
-    @media print {
-      .page-actions { display: none; }
-    }
-  </style>
+/* ---------- print ---------- */
+@page { margin: 8mm 7mm 9mm; }
+@media print {
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --bg: #fff; --card: #fff; --ink: #111; --muted: #555b6e; --line: #d9d7e6; --brand: #5a49d6;
+    --brand-ink: #4837b5; --brand-soft: #efecff; --accent: #00806a; --code-bg: #f6f5fb; --code-ink: #1d1c2c;
+    --cmt: #6a6f86; --f-bg: #f5f3ff; --f-line: #b9aef7; --pit-bg: #fff6ec; --pit-line: #e0870f;
+    --pit-ink: #5e3200; --chip-bg: #fff; --shadow: none;
+  }
+  body { font-size: 7.6pt; line-height: 1.32; padding: 0; background: #fff;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  .wrap { max-width: none; }
+  .top { padding-bottom: 5px; margin-bottom: 5px; }
+  .top h1 { font-size: 20pt; }
+  .top .sub { font-size: 7.6pt; max-width: none; }
+  .notation { font-size: 7pt; padding: 3px 6px; margin-bottom: 4px; }
+  .notation code { font-size: 6.8pt; }
+  .toc { display: none; }
+  .flow { columns: 3; column-gap: 7px; }
+  .cols, .cols.masonry { columns: auto; display: block; }
+  .part { margin-top: 0; }
+  .part > h2 { font-size: 12pt; margin: 2px 0 3px; break-after: avoid; page-break-after: avoid; }
+  .card { display: block; }
+  .part > h2 span { font-size: 6.5pt; }
+  .card { border-radius: 5px; padding: 4px 5px 5px; margin-bottom: 5px; }
+  .card > header { padding-bottom: 2px; margin-bottom: 3px; }
+  .card h3 { font-size: 9pt; }
+  .card header a { font-size: 6.6pt; }
+  .card h4 { font-size: 6.2pt; margin: 4px 0 1px; }
+  .f { font-size: 6.7pt; line-height: 1.38; padding: 2px 5px; margin: 2px 0; }
+  .f .n { font-size: 6.7pt; }
+  pre { font-size: 6pt; line-height: 1.32; padding: 3px 4px; margin: 3px 0; white-space: pre-wrap; overflow: visible; }
+  pre[data-lang]::before { font-size: 5.3pt; margin: 0 0 1px; }
+  .pit { font-size: 7pt; padding: 2px 5px; margin-top: 3px; }
+  .ex { font-size: 7pt; margin-top: 2px; }
+  table { font-size: 6.8pt; margin: 2px 0; }
+  th { font-size: 6pt; }
+  th, td { padding: 1px 3px; }
+  footer.foot { font-size: 7pt; margin-top: 2px; padding-top: 3px; display: block; break-inside: avoid; }
+  footer.foot span { display: block; }
+  a { text-decoration: none; }
+}
+</style>
 </head>
 <body>
-  <div class="page-actions no-print">
-    <a class="back-btn" href="/">&larr; Back to ML Grind</a>
-    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <a class="brand" href="https://mlgrind.dev/">ML Grind</a>
+    <h1>ML Coding Cheat Sheet</h1>
+    <p class="sub">Every section of ML Grind on one sheet: the formulas, the NumPy / PyTorch idiom you will actually type, and the bug that costs people the interview. Each block links to its problems.</p>
   </div>
+  <div class="actions no-print">
+    <a class="btn" href="https://mlgrind.dev/">&larr; Back to ML Grind</a>
+    <a class="btn" href="ml-cheatsheet.pdf" download>Download PDF</a>
+    <button class="btn primary" type="button" onclick="window.print()">Print</button>
+  </div>
+</header>
 
-  <header>
-    <h1>ML Interview Cheat Sheet</h1>
-    <p>Essential formulas, algorithms, and concepts for machine learning interviews</p>
-  </header>
+<p class="notation"><b>Notation.</b> <code>N</code> batch / samples · <code>D</code> features or <code>d_model</code> · <code>T</code> sequence length · <code>h</code> heads, <code>d_k = D/h</code> · <code>V</code> vocab · <code>C</code> classes or channels · <code>K</code> clusters · rows are samples, so a linear layer is <code>X @ W</code> with <code>W: (D_in, D_out)</code> (PyTorch stores <code>(out, in)</code>, hence <code>x @ W.T</code>) · <code>log</code> = natural log · <code>⊙</code> elementwise · <code>σ</code> sigmoid.</p>
 
-  <div class="grid">
+<nav class="toc no-print" aria-label="Sections">
+  <div><strong>1 · Foundations</strong><a href="#numpy-fundamentals">NumPy</a> · <a href="#python-basics">Python basics</a> · <a href="#einsum">Einsum</a> · <a href="#pytorch-basics">PyTorch</a></div>
+  <div><strong>2 · Classical ML</strong><a href="#data-preprocessing">Preprocessing</a> · <a href="#supervised-learning">Supervised</a> · <a href="#unsupervised-learning">Unsupervised</a> · <a href="#model-evaluation">Evaluation</a></div>
+  <div><strong>3 · Deep Learning</strong><a href="#deep-learning">Basics</a> · <a href="#neural-networks">Neural nets</a> · <a href="#optimization">Optimization</a> · <a href="#cnn">CNNs</a> · <a href="#sequence-models">RNNs</a></div>
+  <div><strong>4 · Transformers &amp; LLMs</strong><a href="#transformers">Transformer</a> · <a href="#llm-generation">Decoding</a> · <a href="#llm-internals">LLM internals</a> · <a href="#representation-learning">Retrieval</a></div>
+  <div><strong>5 · Generative &amp; RL</strong><a href="#generative-models">Generative</a> · <a href="#reinforcement-learning">RL</a> · <a href="#post-training">Post-training</a></div>
+  <div><strong>6 · Capstone</strong><a href="#e2e-implementations">End-to-end</a> · <a href="#numbers">Numbers to know</a></div>
+</nav>
 
-    <!-- ==================== NUMPY & PYTHON ==================== -->
-    <section>
-      <h2>NumPy Essentials</h2>
-      <h3>Array Creation</h3>
-      <pre>np.array([1,2,3])        # From list
-np.zeros((3,4))          # 3x4 zeros
-np.ones((2,3))           # 2x3 ones
-np.eye(3)                # 3x3 identity
-np.arange(0,10,2)        # [0,2,4,6,8]
-np.linspace(0,1,5)       # 5 points [0,1]
-np.random.randn(3,4)     # Normal dist</pre>
+<main class="flow">
 
-      <h3>Indexing & Slicing</h3>
-      <pre>arr[1:5]          # Elements 1-4
-arr[::2]          # Every 2nd element
-arr[-1]           # Last element
-arr[arr > 0]      # Boolean indexing
-arr[[0,2,4]]      # Fancy indexing
-arr[1, :]         # Row 1, all columns
-arr[:, 2:4]       # All rows, cols 2-3</pre>
-    </section>
+<!-- ======================================================= PART 1 -->
+<section class="part" id="foundations">
+<h2><span>Part 1</span> Foundations</h2>
+<div class="cols">
 
-    <section>
-      <h2>NumPy Operations</h2>
-      <h3>Broadcasting Rules</h3>
-      <pre>(3,4) + (4,)   -> (3,4)  # OK
-(3,1) * (1,4)  -> (3,4)  # OK
-(3,4) + (3,)   -> Error  # Mismatch</pre>
+<article class="card" id="numpy-fundamentals">
+  <header><h3>NumPy Fundamentals</h3><a href="https://mlgrind.dev/section/numpy-fundamentals">Practice ↗</a></header>
+  <div class="f">
+    <div><span class="n">Broadcasting:</span> align shapes from the right; each pair of dims must be equal or 1.</div>
+    <div>(N,D) + (D,) → (N,D) · (N,1) * (1,M) → (N,M) · (N,D) + (N,) → error</div>
+    <div><span class="n">Reductions:</span> axis=k removes dim k. X.sum(0) → per column (D,) · X.sum(1) → per row (N,)</div>
+  </div>
+  <pre data-lang="NumPy">np.zeros((3, 4)); np.eye(3); np.full(5, 7.)
+np.arange(0, 10, 2)    <span class="c"># [0 2 4 6 8]</span>
+np.linspace(0, 1, 5)   <span class="c"># 5 pts, both ends</span>
+x[1:4]; x[::-1]; x[x &gt; 0]; x[[0, 2]]
+X[:, None]             <span class="c"># (N,) -&gt; (N, 1)</span>
+X.reshape(2, -1); X.T; X.swapaxes(-1, -2)
+X - X.mean(0, keepdims=True) <span class="c"># center cols</span>
+X.argmax(axis=1)       <span class="c"># index per row</span></pre>
+  <p class="pit">Slices are <b>views</b>: writing to <code>x[1:4]</code> changes <code>x</code>. Boolean and fancy indexing return <b>copies</b>. <code>ravel()</code> may be a view, <code>flatten()</code> always copies. <code>reshape</code> never transposes: <code>(2,3).reshape(3,2)</code> keeps row-major order.</p>
+</article>
 
-      <h3>Aggregations</h3>
-      <pre>np.sum(arr)           # Total sum
-np.sum(arr, axis=0)   # Column sums
-np.sum(arr, axis=1)   # Row sums
-np.mean(), np.std()   # Statistics
-np.argmax(), np.argmin()  # Indices</pre>
+<article class="card" id="python-basics">
+  <header><h3>Python Basics for ML</h3><a href="https://mlgrind.dev/section/python-basics">Practice ↗</a></header>
+  <div class="f">
+    <div>A @ B: (m,k) @ (k,n) → (m,n), m·k·n multiply-adds</div>
+    <div>batched: (…,m,k) @ (…,k,n) → (…,m,n) · <span class="n"><code>*</code> is elementwise</span></div>
+  </div>
+  <pre data-lang="NumPy">np.sum(X)          <span class="c"># not builtin sum() on 2-D</span>
+A @ B              <span class="c"># == np.matmul(A, B)</span>
+np.dot(u, v)       <span class="c"># 1-D: inner product</span>
+np.outer(u, v)     <span class="c"># (m,), (n,) -&gt; (m, n)</span>
+X + b              <span class="c"># (N,D) + (D,): per column</span>
+X + c[:, None]     <span class="c"># (N,D) + (N,1): per row</span></pre>
+  <p class="pit"><code>(N,)</code> vs <code>(N,1)</code>: <code>y_pred - y</code> with shapes <code>(N,1)</code> and <code>(N,)</code> silently broadcasts to <code>(N,N)</code> and the loss is wrong but finite. Assert shapes before you reduce. A Python loop over elements is ~100× slower than the vectorized call.</p>
+</article>
 
-      <h3>Shape Manipulation</h3>
-      <pre>arr.reshape(2, -1)    # -1 = inferred
-arr.T                 # Transpose
-arr.flatten()         # Copy to 1D
-arr.ravel()           # View to 1D
-np.expand_dims(arr, 0) # Add axis</pre>
-    </section>
+<article class="card" id="einsum">
+  <header><h3>Einstein Summation</h3><a href="https://mlgrind.dev/section/einsum">Practice ↗</a></header>
+  <div class="f"><div>Indices in the inputs but not after <code>-&gt;</code> are summed; the output follows the order you write.</div></div>
+  <div class="tbl"><table>
+    <tr><th>Pattern</th><th>Meaning</th><th>Pattern</th><th>Meaning</th></tr>
+    <tr><td><code>ij-&gt;</code></td><td>sum</td><td><code>ik,kj-&gt;ij</code></td><td>matmul</td></tr>
+    <tr><td><code>ij-&gt;j</code></td><td>column sums</td><td><code>i,i-&gt;</code></td><td>dot</td></tr>
+    <tr><td><code>ij-&gt;ji</code></td><td>transpose</td><td><code>i,j-&gt;ij</code></td><td>outer</td></tr>
+    <tr><td><code>ii-&gt;i</code></td><td>diagonal</td><td><code>ij,ij-&gt;</code></td><td>Frobenius ⟨A,B⟩</td></tr>
+    <tr><td><code>ii-&gt;</code></td><td>trace</td><td><code>bij,bjk-&gt;bik</code></td><td>batched matmul</td></tr>
+  </table></div>
+  <pre data-lang="NumPy · torch.einsum is identical"><span class="c"># attention scores and output, (B,h,T,dk)</span>
+S = np.einsum('bhqd,bhkd-&gt;bhqk', Q, K)
+O = np.einsum('bhqk,bhkd-&gt;bhqd', A, V)</pre>
+  <p class="pit">Without <code>-&gt;</code> (implicit mode) the output indices are sorted alphabetically, so <code>einsum('ji', A)</code> is <code>A.T</code>. Always write the arrow. For 3+ operands pass <code>optimize=True</code>.</p>
+</article>
 
-    <section>
-      <h2>Einstein Summation</h2>
-      <h3>Basic Patterns</h3>
-      <pre>'ij->'      # Sum all elements
-'ij->i'     # Row sums
-'ij->j'     # Column sums
-'ij->ji'    # Transpose
-'ii->i'     # Diagonal
-'ii->'      # Trace</pre>
+<article class="card" id="pytorch-basics">
+  <header><h3>PyTorch Basics</h3><a href="https://mlgrind.dev/section/pytorch-basics">Practice ↗</a></header>
+  <pre data-lang="PyTorch">model.train()
+for x, y in loader:
+    opt.zero_grad()
+    loss = F.cross_entropy(model(x), y)
+    loss.backward()            <span class="c"># fills p.grad</span>
+    opt.step(); sched.step()
+model.eval()
+with torch.no_grad():
+    pred = model(x).argmax(-1)
+t.detach().cpu().numpy()       <span class="c"># back to NumPy</span></pre>
+  <h4>Layers you write from scratch here</h4>
+  <div class="f">
+    <div>GELU(x) = x·Φ(x) ≈ ½x(1 + tanh(√(2/π)(x + 0.044715x³)))</div>
+    <div>SiLU / Swish(x) = x·σ(x) · LeakyReLU = max(αx, x), α = 0.01</div>
+    <div>RMSNorm(x) = x / √(mean(x²) + ε) · g</div>
+    <div>Norm stats: Batch over (N,H,W) per channel · Layer over the feature dims per sample · Instance over (H,W) per sample &amp; channel · Group over (C/G,H,W) per sample &amp; group</div>
+    <div>Label smoothing: y = (1−ε)·onehot + ε/C</div>
+    <div>LoRA: y = xW + (α/r)(xA)B, A: (D_in,r), B: (r,D_out) = 0 at init</div>
+    <div>Warmup + cosine: lr = base·s/warm for s &lt; warm, else min + ½(base−min)(1 + cos(π·prog))</div>
+  </div>
+  <p class="pit"><code>F.cross_entropy</code> wants raw <b>logits</b> <code>(N,C)</code> and int64 class indices <code>(N,)</code>: applying softmax first trains on the wrong loss. <code>.grad</code> <b>accumulates</b> until you zero it. Forgetting <code>model.eval()</code> leaves dropout and BatchNorm in training mode. <code>view</code> needs contiguous memory; <code>reshape</code> copies when it must.</p>
+</article>
 
-      <h3>Matrix Operations</h3>
-      <pre>'ik,kj->ij'   # Matrix multiply
-'ij,ij->ij'   # Element-wise
-'ij,ij->'     # Frobenius product
-'i,j->ij'     # Outer product
-'i,i->'       # Dot product</pre>
+</div>
+</section>
 
-      <h3>Batch Operations</h3>
-      <pre>'bij,bjk->bik'   # Batch matmul
-'bqd,bkd->bqk'   # Attention scores
-'bhqk,bhkd->bhqd' # Multi-head attn</pre>
-      <div class="tip">Letters that disappear are summed over!</div>
-    </section>
+<!-- ======================================================= PART 2 -->
+<section class="part" id="classical-ml">
+<h2><span>Part 2</span> Classical ML</h2>
+<div class="cols">
 
-    <!-- ==================== DATA PREPROCESSING ==================== -->
-    <section>
-      <h2>Data Preprocessing</h2>
-      <h3>Normalization (Min-Max)</h3>
-      <div class="formula">X_norm = (X - X_min) / (X_max - X_min)</div>
-      <pre>X_norm = (X - X.min()) / (X.max() - X.min())</pre>
+<article class="card" id="data-preprocessing">
+  <header><h3>Data Preprocessing</h3><a href="https://mlgrind.dev/section/data-preprocessing">Practice ↗</a></header>
+  <div class="f">
+    <div>Min-max: (X − min₀) / (max₀ − min₀) → [0, 1] per column</div>
+    <div>Z-score: (X − μ₀) / σ₀, per column, σ with ddof = 0</div>
+    <div>One-hot: np.eye(C)[y] → (N, C)</div>
+    <div>Stratified split: per class, shuffle, put round(frac·n_c) in test</div>
+  </div>
+  <pre data-lang="NumPy">mu, sd = X_tr.mean(0), X_tr.std(0)
+sd = np.where(sd == 0, 1.0, sd) <span class="c"># const col</span>
+X_tr = (X_tr - mu) / sd
+X_te = (X_te - mu) / sd          <span class="c"># TRAIN stats</span>
+fill = np.nanmean(X_tr, axis=0)
+X = np.where(np.isnan(X), fill, X)</pre>
+  <p class="pit"><b>Leakage</b>: fitting the scaler, imputer or feature selection on all data (or on the test fold) before splitting inflates every metric. Fit on train, transform the rest. <code>X.mean()</code> with no axis normalizes everything by one global number.</p>
+</article>
 
-      <h3>Standardization (Z-score)</h3>
-      <div class="formula">X_std = (X - mean) / std</div>
-      <pre>X_std = (X - X.mean()) / X.std()</pre>
+<article class="card" id="supervised-learning">
+  <header><h3>Supervised Learning</h3><a href="https://mlgrind.dev/section/supervised-learning">Practice ↗</a></header>
+  <h4>Linear models</h4>
+  <div class="f">
+    <div>ŷ = Xw + b · MSE = (1/N)Σ(ŷ − y)²</div>
+    <div>∇w = (2/N)·Xᵀ(ŷ − y) · ∇b = (2/N)·Σ(ŷ − y)</div>
+    <div>Ridge: w = (XᵀX + λI)⁻¹Xᵀy (don't penalize b)</div>
+    <div>Lasso step: soft(z, λ) = sign(z)·max(|z| − λ, 0)</div>
+    <div>Logistic: p = σ(Xw + b) · BCE = −(1/N)Σ[y log p + (1−y) log(1−p)]</div>
+    <div>∇w = (1/N)·Xᵀ(p − y) <span class="n">(same form as MSE, no factor 2)</span></div>
+    <div>Hinge (y ∈ {−1,+1}): mean max(0, 1 − y·f(x)) + λ‖w‖²</div>
+  </div>
+  <h4>Trees, neighbours, ensembles</h4>
+  <div class="f">
+    <div>Gini = 1 − Σp_k² · Entropy = −Σp_k log₂ p_k</div>
+    <div>Gain = H(parent) − Σ (n_c/n)·H(child_c)</div>
+    <div>kNN: ‖a−b‖² = ‖a‖² + ‖b‖² − 2a·b, vote of the k nearest</div>
+    <div>Gaussian NB: argmax_c log π_c + Σ_j log N(x_j; μ_cj, σ²_cj)</div>
+    <div>Boosting (MSE): F₀ = ȳ; fit h_m to r = y − F_{m−1}; F_m = F_{m−1} + ν·h_m</div>
+    <div>Bagging: bootstrap N rows with replacement (≈63.2% unique), average or vote</div>
+  </div>
+  <pre data-lang="NumPy"><span class="c"># work from logits z: stable for any z</span>
+p   = np.exp(-np.logaddexp(0, -z))  <span class="c"># σ(z)</span>
+bce = np.mean(np.logaddexp(0, z) - y * z)
+w = np.linalg.solve(X.T @ X + lam * np.eye(D),
+                    X.T @ y)</pre>
+  <p class="pit"><code>1/(1+np.exp(-z))</code> overflows for very negative z and <code>log(0) = -inf</code> blows up BCE: use the logit form (PyTorch: <code>F.binary_cross_entropy_with_logits</code>). Hinge needs labels ±1, BCE needs 0/1. Use <code>solve</code>, never <code>inv</code>.</p>
+</article>
 
-      <h3>One-Hot Encoding</h3>
-      <pre>n_classes = len(np.unique(labels))
-one_hot = np.eye(n_classes)[labels]</pre>
+<article class="card" id="unsupervised-learning">
+  <header><h3>Unsupervised Learning</h3><a href="https://mlgrind.dev/section/unsupervised-learning">Practice ↗</a></header>
+  <div class="f">
+    <div>k-means: J = Σᵢ‖xᵢ − μ_{cᵢ}‖²; assign → argmin, update → cluster mean</div>
+    <div>k-means++: next center sampled ∝ D(x)², distance to nearest chosen center</div>
+    <div>PCA: X_c = X − mean = U S Vᵀ; components = Vᵀ[:k]; var ratio = S²/ΣS²</div>
+    <div>GMM E-step: γ_ik = π_k N(xᵢ|μ_k,Σ_k) / Σ_j π_j N(xᵢ|μ_j,Σ_j)</div>
+    <div>M-step: N_k = Σᵢγ_ik, π_k = N_k/N, μ_k = Σᵢγ_ik xᵢ / N_k, Σ_k = Σᵢγ_ik (xᵢ−μ_k)(xᵢ−μ_k)ᵀ / N_k</div>
+    <div>DBSCAN: core if |N_ε(x)| ≥ minPts (x included); grow clusters from cores; border = within ε of a core; rest = noise (−1)</div>
+  </div>
+  <pre data-lang="NumPy">d2 = ((X[:, None] - C[None]) ** 2).sum(-1)
+labels = d2.argmin(1)               <span class="c"># (N,)</span>
+C = np.stack([X[labels == k].mean(0)
+              if (labels == k).any() else C[k]
+              for k in range(K)])
+Xc = X - X.mean(0)
+U, S, Vt = np.linalg.svd(Xc,
+                          full_matrices=False)
+Z = Xc @ Vt[:k].T                   <span class="c"># (N, k)</span></pre>
+  <p class="pit">An <b>empty cluster</b> averages nothing and returns NaN. PCA without centering finds the mean, not the variance. <code>np.linalg.eigh</code> sorts eigenvalues <b>ascending</b>, and eigenvector signs are arbitrary (compare up to ±). Run GMM in log space with <code>logsumexp</code> and add εI to Σ.</p>
+</article>
 
-      <h3>Handle Missing Data</h3>
-      <pre>col_mean = np.nanmean(X, axis=0)
-inds = np.where(np.isnan(X))
-X[inds] = col_mean[inds[1]]</pre>
-    </section>
+<article class="card" id="model-evaluation">
+  <header><h3>Model Evaluation</h3><a href="https://mlgrind.dev/section/model-evaluation">Practice ↗</a></header>
+  <div class="f">
+    <div>Precision = TP/(TP+FP) · Recall = TPR = TP/(TP+FN)</div>
+    <div>FPR = FP/(FP+TN) · Accuracy = (TP+TN)/N</div>
+    <div>F1 = 2PR/(P+R) · F_β = (1+β²)PR/(β²P + R)</div>
+    <div>ROC AUC = P(s⁺ &gt; s⁻) + ½P(s⁺ = s⁻); 0.5 = random</div>
+    <div>AP = Σ_n (R_n − R_{n−1})·P_n over thresholds</div>
+    <div>ECE = Σ_m (|B_m|/N)·|acc(B_m) − conf(B_m)|, equal-width bins</div>
+    <div>R² = 1 − SS_res/SS_tot · MAE = mean|y − ŷ|</div>
+  </div>
+  <pre data-lang="NumPy"><span class="c"># rows = true class, cols = predicted</span>
+cm = np.bincount(C * y + yhat, minlength=C * C
+                 ).reshape(C, C)
+pos, neg = s[y == 1], s[y == 0]
+gt = (pos[:, None] &gt; neg).mean()
+auc = gt + 0.5 * (pos[:, None] == neg).mean()</pre>
+  <p class="pit">Accuracy hides imbalance: with 99% negatives, "always 0" scores 99%. Report PR-AUC, recall at fixed precision or F1. Guard 0/0 when nothing is predicted positive. Tune thresholds on validation, never test, and split CV folds by user/patient when rows are correlated.</p>
+</article>
 
-    <!-- ==================== SUPERVISED LEARNING ==================== -->
-    <div class="divider">
-      <h2>Classical Machine Learning</h2>
-    </div>
+</div>
+</section>
 
-    <section class="span-2">
-      <h2>Linear Regression</h2>
-      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <h3>Model</h3>
-          <div class="formula">y = Xw + b</div>
-          <h3>Loss (MSE)</h3>
-          <div class="formula">L = (1/n) * sum((y - y_pred)^2)</div>
-          <h3>Gradients</h3>
-          <div class="formula">dw = (2/n) * X.T @ (y_pred - y)</div>
-          <div class="formula">db = (2/n) * sum(y_pred - y)</div>
-        </div>
-        <div>
-          <h3>Implementation</h3>
-          <pre>for _ in range(epochs):
-    y_pred = X @ w + b
-    error = y_pred - y
-    dw = (2/n) * X.T @ error
-    db = (2/n) * np.sum(error)
-    w -= lr * dw
-    b -= lr * db</pre>
-        </div>
-      </div>
-    </section>
+<!-- ======================================================= PART 3 -->
+<section class="part" id="deep-learning-part">
+<h2><span>Part 3</span> Deep Learning</h2>
+<div class="cols">
 
-    <section>
-      <h2>Logistic Regression</h2>
-      <h3>Sigmoid Function</h3>
-      <div class="formula">sigma(z) = 1 / (1 + exp(-z))</div>
-      <pre>def sigmoid(z):
-    return 1 / (1 + np.exp(-z))</pre>
+<article class="card" id="deep-learning">
+  <header><h3>Deep Learning Basics</h3><a href="https://mlgrind.dev/section/deep-learning">Practice ↗</a></header>
+  <div class="f">
+    <div>Perceptron: ŷ = 1[w·x + b &gt; 0]; on a mistake w += η(y − ŷ)x, b += η(y − ŷ)</div>
+    <div>Layer Z = XW + b. Given dZ: dW = XᵀdZ · db = dZ.sum(0) · dX = dZ Wᵀ</div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>Act.</th><th>f(x)</th><th>f′(x)</th><th>Range</th></tr>
+    <tr><td>ReLU</td><td><code>max(0,x)</code></td><td><code>1[x&gt;0]</code></td><td>[0, ∞)</td></tr>
+    <tr><td>Sigmoid</td><td><code>1/(1+e⁻ˣ)</code></td><td><code>σ(1−σ)</code> ≤ ¼</td><td>(0, 1)</td></tr>
+    <tr><td>Tanh</td><td><code>tanh x</code></td><td><code>1 − tanh²</code></td><td>(−1, 1)</td></tr>
+    <tr><td>GELU</td><td><code>x·Φ(x)</code></td><td><code>Φ + xφ</code></td><td>[−0.17, ∞)</td></tr>
+    <tr><td>SiLU</td><td><code>x·σ(x)</code></td><td><code>σ(1 + x(1−σ))</code></td><td>[−0.28, ∞)</td></tr>
+  </table></div>
+  <pre data-lang="NumPy">Z1 = X @ W1 + b1; A1 = np.maximum(0, Z1)
+Z2 = A1 @ W2 + b2        <span class="c"># dZ2 from the loss</span>
+dW2 = A1.T @ dZ2; db2 = dZ2.sum(0)
+dZ1 = (dZ2 @ W2.T) * (Z1 &gt; 0)
+dW1 = X.T @ dZ1;  db1 = dZ1.sum(0)</pre>
+  <p class="pit">Every gradient has the <b>shape of what it differentiates</b>: if <code>dW.shape != W.shape</code>, a transpose is wrong. The bias gradient sums over the batch. A perceptron never converges on non-separable data (XOR).</p>
+</article>
 
-      <h3>Binary Cross-Entropy</h3>
-      <div class="formula">L = -[y*log(p) + (1-y)*log(1-p)]</div>
+<article class="card" id="neural-networks">
+  <header><h3>Neural Networks</h3><a href="https://mlgrind.dev/section/neural-networks">Practice ↗</a></header>
+  <div class="f">
+    <div>softmax(z)ᵢ = e^(zᵢ − max z) / Σⱼ e^(zⱼ − max z)</div>
+    <div>CE = −(1/N)Σᵢ log p_{i,yᵢ}; ≈ ln C at init</div>
+    <div>softmax + CE (mean): dZ = (P − Y)/N</div>
+    <div>Xavier: Var(W) = 2/(fan_in + fan_out); uniform ±√(6/(fan_in + fan_out))</div>
+    <div>He (ReLU): Var(W) = 2/fan_in → std = √(2/fan_in)</div>
+    <div>BatchNorm: x̂ = (x − μ_B)/√(σ²_B + ε), y = γx̂ + β; running ← (1−m)·running + m·batch (m = 0.1)</div>
+    <div>Inverted dropout: y = x ⊙ mask/(1−p), mask ~ Bernoulli(1−p); eval: y = x</div>
+  </div>
+  <pre data-lang="NumPy">def softmax(z, axis=-1):
+    e = np.exp(z - z.max(axis, keepdims=True))
+    return e / e.sum(axis, keepdims=True)
+def log_softmax(z):
+    z = z - z.max(-1, keepdims=True)
+    s = np.exp(z).sum(-1, keepdims=True)
+    return z - np.log(s)
+loss = -log_softmax(Z)[np.arange(N), y].mean()
+dZ = softmax(Z)
+dZ[np.arange(N), y] -= 1; dZ /= N</pre>
+  <p class="pit"><code>np.log(softmax(z))</code> underflows to <code>-inf</code>; use log-softmax. Forgetting <code>/N</code> in <code>dZ</code> when the loss is a mean makes gradients N× too large. In masked CE, average over real tokens only (<code>ignore_index=-100</code>), not over all positions.</p>
+</article>
 
-      <h3>Gradients</h3>
-      <div class="formula">dw = (1/n) * X.T @ (y_pred - y)</div>
-      <div class="formula">db = (1/n) * sum(y_pred - y)</div>
+<article class="card" id="optimization">
+  <header><h3>Optimization &amp; Training</h3><a href="https://mlgrind.dev/section/optimization">Practice ↗</a></header>
+  <div class="f">
+    <div>SGD: θ −= lr·g · Momentum: v = μv + g; θ −= lr·v</div>
+    <div>RMSprop: s = ρs + (1−ρ)g²; θ −= lr·g/(√s + ε)</div>
+    <div>Adam: m = β₁m + (1−β₁)g; s = β₂s + (1−β₂)g²</div>
+    <div>m̂ = m/(1−β₁ᵗ), ŝ = s/(1−β₂ᵗ); θ −= lr·m̂/(√ŝ + ε)  (t starts at 1)</div>
+    <div>AdamW: also θ −= lr·λ·θ, decoupled from the gradient</div>
+    <div>Global-norm clip: n = √(Σ‖gᵢ‖²); if n &gt; c: gᵢ *= c/(n + 1e-6)</div>
+    <div>Loss scaling: overflow → skip step, S *= 0.5, reset counter; 2000 clean steps in a row → S *= 2</div>
+    <div>Grad accumulation: loss/k on each of k micro-batches, one step</div>
+  </div>
+  <pre data-lang="PyTorch">scaler.scale(loss).backward()
+scaler.unscale_(opt)              <span class="c"># true grads</span>
+torch.nn.utils.clip_grad_norm_(
+    model.parameters(), max_norm=1.0)
+scaler.step(opt); scaler.update()
+opt.zero_grad()</pre>
+  <p class="ex"><b>Check:</b> grads [3, 4] and [12], c = 1 → n = 13, both scaled by 1/13. Adam's first step is ≈ lr whatever the gradient scale.</p>
+  <p class="pit">Clipping the <b>scaled</b> gradients compares <code>max_norm</code> with S × the true norm: unscale first. Clipping each tensor separately changes the direction. An L2 term in the loss is <b>not</b> weight decay under Adam (use AdamW). Adam keeps 2 extra tensors per parameter.</p>
+</article>
 
-      <div class="tip">Same gradient form as linear regression!</div>
-    </section>
+<article class="card" id="cnn">
+  <header><h3>CNNs &amp; Computer Vision</h3><a href="https://mlgrind.dev/section/cnn">Practice ↗</a></header>
+  <div class="f">
+    <div>H_out = ⌊(H + 2p − k)/s⌋ + 1  (dilation d: k → d(k−1) + 1)</div>
+    <div>params = C_out·(C_in/groups)·k_h·k_w + C_out</div>
+    <div>MACs = (weights without bias)·H_out·W_out per image</div>
+    <div>out[n,o,i,j] = b_o + Σ_{c,a,b} x[n,c,i·s+a, j·s+b]·w[o,c,a,b] <span class="n">(cross-correlation)</span></div>
+    <div>IoU = |A∩B| / (|A| + |B| − |A∩B|) · Dice = 2|A∩B|/(|A| + |B|)</div>
+    <div>Focal: −α_t(1 − p_t)^γ log p_t (α = 0.25, γ = 2)</div>
+    <div>Smooth L1: 0.5x²/β if |x| &lt; β else |x| − 0.5β</div>
+    <div>ResNet: y = ReLU(BN(conv(ReLU(BN(conv x)))) + shortcut(x))</div>
+  </div>
+  <pre data-lang="NumPy"><span class="c"># boxes are xyxy = [x1, y1, x2, y2]</span>
+def iou(a, b):
+    lt = np.maximum(a[:2], b[:2])  <span class="c"># top-left</span>
+    rb = np.minimum(a[2:], b[2:])  <span class="c"># bottom-rt</span>
+    inter = np.prod(np.clip(rb - lt, 0, None))
+    area = lambda z: (z[2]-z[0]) * (z[3]-z[1])
+    return inter / (area(a) + area(b) - inter)
+order, keep = list(np.argsort(-scores)), []
+while order:                       <span class="c"># NMS</span>
+    i = order.pop(0); keep.append(i)
+    order = [j for j in order
+             if iou(B[i], B[j]) &lt;= thr]</pre>
+  <p class="ex"><b>Check:</b> 224 → conv 7×7 s2 p3 → 112 → pool 3×3 s2 p1 → 56. 3×3 conv 64→128 = 73,728 weights.</p>
+  <p class="pit">Clamp intersection width/height at 0 or disjoint boxes "overlap". Frameworks do not flip the kernel. Mixing NCHW (PyTorch) with NHWC, or xyxy with xywh (COCO), gives plausible wrong numbers. In ResNet the final ReLU comes <b>after</b> the add.</p>
+</article>
 
-    <section>
-      <h2>K-Means Clustering</h2>
-      <h3>Algorithm</h3>
-      <ol>
-        <li>Initialize K centroids randomly</li>
-        <li>Assign points to nearest centroid</li>
-        <li>Update centroids = mean of cluster</li>
-        <li>Repeat until convergence</li>
-      </ol>
-      <pre>for _ in range(max_iters):
-    # Assign points
-    dists = np.linalg.norm(
-        X[:, None] - centroids, axis=2)
-    labels = np.argmin(dists, axis=1)
+<article class="card" id="sequence-models">
+  <header><h3>Sequence Models</h3><a href="https://mlgrind.dev/section/sequence-models">Practice ↗</a></header>
+  <div class="f">
+    <div>RNN: h_t = tanh(x_t W_xh + h_{t−1} W_hh + b)  x_t: (N,D), h: (N,H)</div>
+    <div>LSTM gates = xW_ihᵀ + b_ih + hW_hhᵀ + b_hh, split <b>i, f, g, o</b></div>
+    <div>c′ = σ(f)⊙c + σ(i)⊙tanh(g) · h′ = σ(o)⊙tanh(c′)</div>
+    <div>GRU (PyTorch, split <b>r, z, n</b>): r, z = σ(·); n = tanh(xW_inᵀ + b_in + r⊙(hW_hnᵀ + b_hn))</div>
+    <div>h′ = (1 − z)⊙n + z⊙h <span class="n">(z = 1 keeps h)</span></div>
+    <div>Params: RNN DH + H² + H · LSTM 4(HD + H² + 2H) · GRU 3(HD + H² + 2H)</div>
+    <div>BPTT: ∂h_T/∂h_1 = Π_t diag(1 − h_t²)·W_hhᵀ → vanishes or explodes</div>
+  </div>
+  <pre data-lang="NumPy · nn.LSTMCell layout">z = x @ W_ih.T + b_ih + h @ W_hh.T + b_hh
+i, f, g, o = np.split(z, 4, axis=1)
+c = sigmoid(f) * c + sigmoid(i) * np.tanh(g)
+h = sigmoid(o) * np.tanh(c)</pre>
+  <p class="pit"><b>Gate order</b> runs without error and gives wrong numbers: PyTorch is <code>i,f,g,o</code> (LSTM) and <code>r,z,n</code> (GRU), and the GRU reset gate multiplies <i>after</i> the hidden matmul. <code>nn.RNN</code> is <code>(T,N,D)</code> unless <code>batch_first=True</code>. Clipping fixes exploding, not vanishing, gradients.</p>
+</article>
 
-    # Update centroids
-    for k in range(K):
-        centroids[k] = X[labels == k].mean(0)</pre>
-    </section>
+</div>
+</section>
 
-    <section>
-      <h2>PCA</h2>
-      <h3>Steps</h3>
-      <ol>
-        <li>Center data: X = X - mean</li>
-        <li>Covariance: C = (1/n) * X.T @ X</li>
-        <li>Eigendecomposition of C</li>
-        <li>Project onto top k eigenvectors</li>
-      </ol>
-      <pre>X_centered = X - X.mean(axis=0)
-cov = X_centered.T @ X_centered / n
-eigvals, eigvecs = np.linalg.eigh(cov)
-# Sort by descending eigenvalue
-idx = np.argsort(eigvals)[::-1]
-components = eigvecs[:, idx[:k]]
-X_reduced = X_centered @ components</pre>
-    </section>
+<!-- ======================================================= PART 4 -->
+<section class="part" id="transformers-llms">
+<h2><span>Part 4</span> Transformers &amp; LLMs</h2>
+<div class="cols">
 
-    <section>
-      <h2>Decision Trees</h2>
-      <h3>Gini Impurity</h3>
-      <div class="formula">Gini = 1 - sum(p_i^2)</div>
-      <pre>def gini(y):
-    _, counts = np.unique(y, return_counts=True)
-    probs = counts / len(y)
-    return 1 - np.sum(probs ** 2)</pre>
-
-      <h3>Information Gain</h3>
-      <div class="formula">IG = H(parent) - weighted_avg(H(children))</div>
-
-      <h3>Entropy</h3>
-      <div class="formula">H = -sum(p_i * log2(p_i))</div>
-    </section>
-
-    <section>
-      <h2>Evaluation Metrics</h2>
-      <h3>Classification</h3>
-      <div class="formula">Precision = TP / (TP + FP)</div>
-      <div class="formula">Recall = TP / (TP + FN)</div>
-      <div class="formula">F1 = 2 * (P * R) / (P + R)</div>
-      <div class="formula">Accuracy = (TP + TN) / Total</div>
-
-      <h3>Regression</h3>
-      <div class="formula">MSE = (1/n) * sum((y - y_pred)^2)</div>
-      <div class="formula">MAE = (1/n) * sum(|y - y_pred|)</div>
-      <div class="formula">R^2 = 1 - SS_res / SS_tot</div>
-
-      <div class="tip">Use F1 for imbalanced classes!</div>
-    </section>
-
-    <!-- ==================== DEEP LEARNING ==================== -->
-    <div class="divider page-break">
-      <h2>Deep Learning</h2>
-    </div>
-
-    <section>
-      <h2>Activation Functions</h2>
-      <table>
-        <tr><th>Name</th><th>Formula</th><th>Range</th></tr>
-        <tr><td>ReLU</td><td><code>max(0, x)</code></td><td>[0, inf)</td></tr>
-        <tr><td>Sigmoid</td><td><code>1/(1+e^-x)</code></td><td>(0, 1)</td></tr>
-        <tr><td>Tanh</td><td><code>(e^x-e^-x)/(e^x+e^-x)</code></td><td>(-1, 1)</td></tr>
-        <tr><td>LeakyReLU</td><td><code>max(0.01x, x)</code></td><td>(-inf, inf)</td></tr>
-        <tr><td>GELU</td><td><code>x*Phi(x)</code></td><td>(-inf, inf)</td></tr>
-      </table>
-      <h3>Softmax</h3>
-      <div class="formula">softmax(x)_i = exp(x_i) / sum(exp(x_j))</div>
-      <pre>def softmax(x):
-    e_x = np.exp(x - np.max(x))  # Stability
-    return e_x / e_x.sum(axis=-1, keepdims=True)</pre>
-    </section>
-
-    <section>
-      <h2>Loss Functions</h2>
-      <h3>Cross-Entropy (Multi-class)</h3>
-      <div class="formula">L = -sum(y_true * log(y_pred))</div>
-      <pre>def cross_entropy(y_true, y_pred):
-    return -np.sum(y_true * np.log(y_pred + 1e-8))</pre>
-
-      <h3>Binary Cross-Entropy</h3>
-      <div class="formula">L = -[y*log(p) + (1-y)*log(1-p)]</div>
-
-      <h3>MSE Loss</h3>
-      <div class="formula">L = (1/n) * sum((y - y_pred)^2)</div>
-
-      <h3>Softmax + Cross-Entropy Gradient</h3>
-      <div class="formula">dL/dz = y_pred - y_true</div>
-      <div class="tip">Simple gradient when combined!</div>
-    </section>
-
-    <section>
-      <h2>Backpropagation</h2>
-      <h3>Chain Rule</h3>
-      <div class="formula">dL/dw = dL/dy * dy/dz * dz/dw</div>
-
-      <h3>2-Layer MLP Gradients</h3>
-      <pre># Forward
-z1 = X @ W1 + b1
-a1 = relu(z1)
-z2 = a1 @ W2 + b2
-y_pred = softmax(z2)
-
-# Backward
-dz2 = y_pred - y_true
-dW2 = a1.T @ dz2
-db2 = dz2.sum(axis=0)
-
-da1 = dz2 @ W2.T
-dz1 = da1 * (z1 > 0)  # ReLU grad
-dW1 = X.T @ dz1
-db1 = dz1.sum(axis=0)</pre>
-    </section>
-
-    <section>
-      <h2>Weight Initialization</h2>
-      <h3>Xavier/Glorot (tanh, sigmoid)</h3>
-      <div class="formula">W ~ N(0, sqrt(2/(n_in + n_out)))</div>
-      <pre>std = np.sqrt(2 / (n_in + n_out))
-W = np.random.randn(n_in, n_out) * std</pre>
-
-      <h3>He/Kaiming (ReLU)</h3>
-      <div class="formula">W ~ N(0, sqrt(2/n_in))</div>
-      <pre>std = np.sqrt(2 / n_in)
-W = np.random.randn(n_in, n_out) * std</pre>
-
-      <div class="tip">He for ReLU, Xavier for others</div>
-    </section>
-
-    <section>
-      <h2>Batch Normalization</h2>
-      <h3>Forward Pass</h3>
-      <div class="formula">x_norm = (x - mean) / sqrt(var + eps)</div>
-      <div class="formula">y = gamma * x_norm + beta</div>
-      <pre>mean = x.mean(axis=0)
-var = x.var(axis=0)
-x_norm = (x - mean) / np.sqrt(var + 1e-8)
-out = gamma * x_norm + beta</pre>
-
-      <h3>Key Points</h3>
-      <ul>
-        <li>Normalize per feature across batch</li>
-        <li>Learnable gamma (scale) and beta (shift)</li>
-        <li>Use running stats at inference</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Dropout</h2>
-      <h3>Training</h3>
-      <pre>mask = np.random.rand(*x.shape) > p
-out = x * mask / (1 - p)  # Inverted</pre>
-
-      <h3>Inference</h3>
-      <pre>out = x  # No dropout</pre>
-
-      <h3>Key Points</h3>
-      <ul>
-        <li>Randomly zero out neurons</li>
-        <li>Scale by 1/(1-p) during training</li>
-        <li>Prevents co-adaptation</li>
-        <li>Disabled during evaluation</li>
-      </ul>
-    </section>
-
-    <!-- ==================== CNNs ==================== -->
-    <section>
-      <h2>CNN Operations</h2>
-      <h3>Output Size Formula</h3>
-      <div class="formula">out = (in - kernel + 2*pad) / stride + 1</div>
-
-      <h3>Conv2D</h3>
-      <pre>for i in range(out_h):
-    for j in range(out_w):
-        h_start = i * stride
-        w_start = j * stride
-        region = input[h_start:h_start+k,
-                       w_start:w_start+k]
-        out[i,j] = np.sum(region * kernel)</pre>
-
-      <h3>Max Pooling</h3>
-      <pre>for i in range(out_h):
-    for j in range(out_w):
-        region = input[i*s:i*s+k, j*s:j*s+k]
-        out[i,j] = np.max(region)</pre>
-    </section>
-
-    <section>
-      <h2>CNN Architecture</h2>
-      <h3>Typical Structure</h3>
-      <pre>Input Image
-    |
-Conv2D + ReLU
-    |
-MaxPool (reduce size)
-    |
-Conv2D + ReLU
-    |
-MaxPool
-    |
-Flatten
-    |
-Dense + ReLU
-    |
-Dense + Softmax
-    |
-Output (class probs)</pre>
-
-      <h3>Parameter Count</h3>
-      <div class="formula">Conv: k*k*C_in*C_out + C_out</div>
-      <div class="formula">Dense: in_feat*out_feat + out_feat</div>
-    </section>
-
-    <!-- ==================== TRANSFORMERS ==================== -->
-    <section class="span-2">
-      <h2>Attention Mechanism</h2>
-      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <h3>Scaled Dot-Product Attention</h3>
-          <div class="formula">Attention(Q,K,V) = softmax(QK^T / sqrt(d_k)) V</div>
-          <pre>def attention(Q, K, V, mask=None):
+<article class="card" id="transformers">
+  <header><h3>Transformer Architecture</h3><a href="https://mlgrind.dev/section/transformers">Practice ↗</a></header>
+  <div class="f">
+    <div>Attn(Q,K,V) = softmax(QKᵀ/√d_k + M)·V, M_ij = −∞ for j &gt; i (causal)</div>
+    <div>MHA: (B,T,D) → (B,T,h,d_k) → (B,h,T,d_k); attend; merge; @ W_O</div>
+    <div>Sinusoidal: PE[p,2i] = sin(p/10000^(2i/D)), PE[p,2i+1] = cos(…)</div>
+    <div>RoPE: θᵢ = 10000^(−2i/d); rotate pair (x₂ᵢ, x₂ᵢ₊₁) by p·θᵢ → q_m·k_n depends on m − n</div>
+    <div>LayerNorm: γ(x − μ)/√(σ² + ε) + β over the last dim, biased σ²</div>
+    <div>Pre-norm: x += Attn(LN(x)); x += FFN(LN(x)) <span class="n">(2017 paper: post-norm x = LN(x + f(x)))</span></div>
+    <div>GQA: h_q query heads share h_kv K/V heads; np.repeat each KV head h_q/h_kv times</div>
+    <div>Sliding window: j visible iff 0 ≤ i − j &lt; W → O(T·W)</div>
+    <div>Backward: dV = AᵀdO · dA = dO Vᵀ · dS = A ⊙ (dA − rowsum(dA ⊙ A)) · dQ = dS K/√d_k · dK = dSᵀQ/√d_k</div>
+    <div>Cost: O(T²·d) time, O(T²) memory per head · block ≈ 12D² params</div>
+  </div>
+  <pre data-lang="NumPy">def attention(Q, K, V, causal=False):
     d_k = Q.shape[-1]
-    scores = Q @ K.transpose(-2, -1)
-    scores = scores / np.sqrt(d_k)
-    if mask is not None:
-        scores += mask * -1e9
-    weights = softmax(scores, axis=-1)
-    return weights @ V</pre>
-          <div class="tip">Scale by sqrt(d_k) to prevent vanishing gradients in softmax!</div>
-        </div>
-        <div>
-          <h3>Multi-Head Attention</h3>
-          <pre>def multi_head_attention(x, W_q, W_k, W_v, W_o):
-    # Project to multiple heads
-    Q = x @ W_q  # (B, T, n_heads * d_k)
-    K = x @ W_k
-    V = x @ W_v
+    S = Q @ K.swapaxes(-1, -2) / np.sqrt(d_k)
+    if causal:
+        T = S.shape[-1]
+        fut = np.triu(np.ones((T,T), bool), 1)
+        S = np.where(fut, -np.inf, S)
+    A = softmax(S, axis=-1)
+    return A @ V, A
+<span class="c"># (B,T,D) -&gt; (B,T,h,dk) -&gt; (B,h,T,dk)</span>
+xh = x.reshape(B, T, h, dk).transpose(0,2,1,3)</pre>
+  <pre data-lang="PyTorch">F.scaled_dot_product_attention(
+    q, k, v, is_causal=True)   <span class="c"># (B,h,T,dk)</span></pre>
+  <p class="pit">Reshaping straight to <code>(B,h,T,d_k)</code> mixes tokens across heads: reshape, <b>then</b> transpose. Scale by √d_k per head, not √D. On a 4-D NumPy array <code>K.T</code> reverses <b>all</b> axes and <code>K.transpose(-2,-1)</code> is an error (that is PyTorch syntax): use <code>swapaxes(-1,-2)</code>. A fully masked row gives NaN.</p>
+</article>
 
-    # Reshape: (B, n_heads, T, d_k)
-    Q = Q.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
-    K = K.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
-    V = V.reshape(B, T, n_heads, d_k).transpose(0,2,1,3)
-
-    # Attention per head
-    out = attention(Q, K, V)
-
-    # Concat and project
-    out = out.transpose(0,2,1,3).reshape(B, T, -1)
-    return out @ W_o</pre>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Positional Encoding</h2>
-      <h3>Sinusoidal Encoding</h3>
-      <div class="formula">PE(pos,2i) = sin(pos / 10000^(2i/d))</div>
-      <div class="formula">PE(pos,2i+1) = cos(pos / 10000^(2i/d))</div>
-      <pre>def positional_encoding(seq_len, d_model):
-    pos = np.arange(seq_len)[:, None]
-    i = np.arange(d_model)[None, :]
-    angle = pos / (10000 ** (2*(i//2) / d_model))
-
-    pe = np.zeros((seq_len, d_model))
-    pe[:, 0::2] = np.sin(angle[:, 0::2])
-    pe[:, 1::2] = np.cos(angle[:, 1::2])
-    return pe</pre>
-    </section>
-
-    <section>
-      <h2>Transformer Components</h2>
-      <h3>Layer Normalization</h3>
-      <div class="formula">LN(x) = gamma * (x - mean) / sqrt(var + eps) + beta</div>
-      <pre>def layer_norm(x, gamma, beta, eps=1e-5):
-    mean = x.mean(axis=-1, keepdims=True)
-    var = x.var(axis=-1, keepdims=True)
-    return gamma * (x - mean) / np.sqrt(var + eps) + beta</pre>
-
-      <h3>Causal Mask</h3>
-      <pre>mask = np.triu(np.ones((T, T)), k=1)
-# Apply: scores += mask * -1e9</pre>
-
-      <h3>Encoder Block</h3>
-      <pre>x = x + MultiHeadAttn(LN(x))
-x = x + FFN(LN(x))</pre>
-    </section>
-
-    <!-- ==================== GENERATIVE MODELS ==================== -->
-    <div class="divider">
-      <h2>Generative Models</h2>
-    </div>
-
-    <section>
-      <h2>VAE (Variational Autoencoder)</h2>
-      <h3>Architecture</h3>
-      <pre>Input x
-    |
-Encoder -> mu, log_var
-    |
-Sample z (reparameterization)
-    |
-Decoder -> x_reconstructed</pre>
-
-      <h3>Reparameterization Trick</h3>
-      <div class="formula">z = mu + sigma * epsilon</div>
-      <div class="formula">epsilon ~ N(0, 1)</div>
-      <pre>def reparameterize(mu, log_var):
-    std = np.exp(0.5 * log_var)
-    eps = np.random.randn(*mu.shape)
-    return mu + std * eps</pre>
-    </section>
-
-    <section>
-      <h2>VAE Loss (ELBO)</h2>
-      <h3>Loss Components</h3>
-      <div class="formula">L = Reconstruction + KL Divergence</div>
-
-      <h3>Reconstruction Loss</h3>
-      <div class="formula">L_rec = ||x - x_recon||^2 or BCE</div>
-
-      <h3>KL Divergence</h3>
-      <div class="formula">KL = -0.5 * sum(1 + log_var - mu^2 - exp(log_var))</div>
-      <pre>def kl_divergence(mu, log_var):
-    return -0.5 * np.sum(
-        1 + log_var - mu**2 - np.exp(log_var)
-    )</pre>
-
-      <div class="tip">KL regularizes latent space toward N(0,1)</div>
-    </section>
-
-    <section class="span-2">
-      <h2>Diffusion Models (DDPM)</h2>
-      <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <h3>Noise Schedule</h3>
-          <div class="formula">beta_t: Linear from beta_start to beta_end</div>
-          <div class="formula">alpha_t = 1 - beta_t</div>
-          <div class="formula">alpha_bar_t = prod(alpha_1:t)</div>
-          <pre>betas = np.linspace(1e-4, 0.02, T)
-alphas = 1 - betas
-alpha_bars = np.cumprod(alphas)</pre>
-
-          <h3>Forward Process (Add Noise)</h3>
-          <div class="formula">x_t = sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * eps</div>
-          <pre>def forward(x_0, t, alpha_bars):
-    noise = np.random.randn(*x_0.shape)
-    sqrt_ab = np.sqrt(alpha_bars[t])
-    sqrt_1_ab = np.sqrt(1 - alpha_bars[t])
-    return sqrt_ab * x_0 + sqrt_1_ab * noise, noise</pre>
-        </div>
-        <div>
-          <h3>Training Objective</h3>
-          <div class="formula">L = ||eps - eps_theta(x_t, t)||^2</div>
-          <ul>
-            <li>Sample x_0 from data</li>
-            <li>Sample t uniformly from [1, T]</li>
-            <li>Sample noise eps ~ N(0, I)</li>
-            <li>Compute x_t from x_0 and eps</li>
-            <li>Train network to predict eps from x_t</li>
-          </ul>
-
-          <h3>Reverse Process (Denoise)</h3>
-          <pre>for t in reversed(range(T)):
-    eps_pred = model(x_t, t)
-    x_t = denoise_step(x_t, eps_pred, t)</pre>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2>KL Divergence</h2>
-      <h3>Definition</h3>
-      <div class="formula">KL(P||Q) = sum(P(x) * log(P(x)/Q(x)))</div>
-
-      <h3>Properties</h3>
-      <ul>
-        <li>KL >= 0 (always non-negative)</li>
-        <li>KL = 0 iff P = Q</li>
-        <li>Not symmetric: KL(P||Q) != KL(Q||P)</li>
-      </ul>
-
-      <pre>def kl_divergence(p, q, eps=1e-10):
-    p = p + eps
-    q = q + eps
-    return np.sum(p * np.log(p / q))</pre>
-    </section>
-
-    <!-- ==================== QUICK REFERENCE ==================== -->
-    <div class="divider">
-      <h2>Quick Reference</h2>
-    </div>
-
-    <section>
-      <h2>Optimizer Updates</h2>
-      <h3>SGD</h3>
-      <div class="formula">w = w - lr * grad</div>
-
-      <h3>SGD + Momentum</h3>
-      <div class="formula">v = beta * v + grad</div>
-      <div class="formula">w = w - lr * v</div>
-
-      <h3>Adam</h3>
-      <div class="formula">m = b1*m + (1-b1)*grad</div>
-      <div class="formula">v = b2*v + (1-b2)*grad^2</div>
-      <div class="formula">m_hat = m / (1-b1^t)</div>
-      <div class="formula">v_hat = v / (1-b2^t)</div>
-      <div class="formula">w = w - lr * m_hat / (sqrt(v_hat) + eps)</div>
-    </section>
-
-    <section>
-      <h2>Common Dimensions</h2>
-      <table>
-        <tr><th>Symbol</th><th>Meaning</th></tr>
-        <tr><td>B</td><td>Batch size</td></tr>
-        <tr><td>T, L</td><td>Sequence length</td></tr>
-        <tr><td>D, d_model</td><td>Model/embedding dim</td></tr>
-        <tr><td>H</td><td>Number of heads</td></tr>
-        <tr><td>d_k, d_v</td><td>Key/value dim per head</td></tr>
-        <tr><td>C</td><td>Channels (CNN)</td></tr>
-        <tr><td>H, W</td><td>Height, Width</td></tr>
-        <tr><td>K</td><td>Kernel size</td></tr>
-      </table>
-    </section>
-
-    <section>
-      <h2>Interview Tips</h2>
-      <h3>Common Questions</h3>
-      <ul>
-        <li>Implement gradient descent from scratch</li>
-        <li>Explain backprop through a network</li>
-        <li>Why scale attention by sqrt(d_k)?</li>
-        <li>Difference: BatchNorm vs LayerNorm?</li>
-        <li>Why reparameterization trick in VAEs?</li>
-        <li>Explain vanishing/exploding gradients</li>
-        <li>When to use which activation?</li>
-      </ul>
-
-      <h3>Key Concepts</h3>
-      <ul>
-        <li>Bias-variance tradeoff</li>
-        <li>Regularization (L1, L2, Dropout)</li>
-        <li>Overfitting vs underfitting</li>
-        <li>Train/val/test splits</li>
-      </ul>
-    </section>
-
+<article class="card" id="llm-generation">
+  <header><h3>LLM Generation &amp; Decoding</h3><a href="https://mlgrind.dev/section/llm-generation">Practice ↗</a></header>
+  <div class="f">
+    <div>Temperature: p = softmax(z/T); T &lt; 1 sharper, ranking unchanged</div>
+    <div>Top-k: keep the k largest logits, rest −∞, softmax</div>
+    <div>Top-p: sort desc, keep the smallest prefix with cumsum ≥ p (include the crossing token)</div>
+    <div>Repetition penalty θ, each distinct generated token: z/θ if z &gt; 0 else z·θ</div>
+    <div>Beam: score = Σ log p, keep B best; compare finished beams by score/len^α</div>
+    <div>KV cache = 2·L·h_kv·d_head·T·bytes per sequence</div>
+    <div>Speculative: accept draft x w.p. min(1, p(x)/q(x)); on reject sample norm(max(0, p − q)); all K accepted → bonus token from p</div>
   </div>
+  <pre data-lang="NumPy">def top_p_filter(z, p):
+    probs = softmax(z)
+    order = np.argsort(-probs, kind='stable')
+    csum = np.cumsum(probs[order])
+    n = np.searchsorted(csum, p) + 1  <span class="c"># keep n</span>
+    out = np.full_like(z, -np.inf)
+    out[order[:n]] = z[order[:n]]
+    return softmax(out)</pre>
+  <p class="ex"><b>Check:</b> z = [2, 1, 0.1] → T=1: [0.659, 0.242, 0.099]; T=0.5: [0.864, 0.117, 0.019]; top-p 0.8 keeps 2 tokens. LLaMA-2-7B (L=32, h_kv=32, d_head=128) at 4k tokens in fp16: <b>2 GiB</b> of KV cache.</p>
+  <p class="pit">Temperature first, then filter logits to <code>-inf</code> and softmax (or renormalize). Dividing a <b>negative</b> logit by the penalty makes the token more likely. Beam search must add log-probs; multiplying probabilities underflows. Decoding is memory-bandwidth-bound, not FLOP-bound.</p>
+</article>
 
-  <footer style="margin-top: 16px; text-align: center; color: #64748b; font-size: 8pt; border-top: 1px solid #e2e8f0; padding-top: 8px;">
-    ML Grind Cheat Sheet | <a href="https://mlgrind.dev/" style="color: #2563eb;">mlgrind.dev</a>
-  </footer>
+<article class="card" id="llm-internals">
+  <header><h3>LLM Internals</h3><a href="https://mlgrind.dev/section/llm-internals">Practice ↗</a></header>
+  <div class="f">
+    <div>RMSNorm(x) = x/√(mean(x²) + ε)·w <span class="n">(no mean, no bias)</span></div>
+    <div>SwiGLU FFN = (SiLU(xW_gate) ⊙ xW_up)·W_down; d_ff ≈ (8/3)D keeps ≈ 8D² params</div>
+    <div>Online softmax per block S_b: m′ = max(m, max S_b)</div>
+    <div>l = l·e^(m−m′) + Σe^(S_b−m′) · acc = acc·e^(m−m′) + e^(S_b−m′)·V_b · out = acc/l</div>
+    <div>MoE: g = softmax(top-k router logits); y = Σⱼ gⱼ·E_{iⱼ}(x)</div>
+    <div>Load balance: aux = E·Σ_e f_e·P_e (f: fraction routed, P: mean router prob)</div>
+    <div>Perplexity = exp(−(1/N)Σ_t log p(x_t | x_&lt;t)), N = real tokens; uniform over V → V</div>
+  </div>
+  <pre data-lang="NumPy">def rmsnorm(x, w, eps=1e-6):
+    ms = (x * x).mean(-1, keepdims=True)
+    return x / np.sqrt(ms + eps) * w
+silu = lambda z: z / (1 + np.exp(-z))
+n = rmsnorm(x, w)
+x = x + (silu(n @ Wg) * (n @ Wu)) @ Wd
+m, l = -np.inf, 0.0          <span class="c"># online sm</span>
+for b in blocks:
+    m2 = max(m, b.max())
+    l = l*np.exp(m-m2) + np.exp(b - m2).sum()
+    m = m2</pre>
+  <p class="ex"><b>Check:</b> [0, 1, 5, 2, 9] in blocks of 2 → l = 1.3679, 1.0748, 1.0197. Mixtral 8×7B: ≈47B total, ≈13B active (top-2).</p>
+  <p class="pit">When the max changes, rescale <b>acc as well as l</b>, and divide by l only at the end. Perplexity divides by real tokens (mask padding) and is only comparable under the same tokenizer. MoE: f comes from routing counts, P from the full (not top-k) softmax.</p>
+</article>
 
+<article class="card" id="representation-learning">
+  <header><h3>Representation Learning &amp; Retrieval</h3><a href="https://mlgrind.dev/section/representation-learning">Practice ↗</a></header>
+  <div class="f">
+    <div>cos(a, b) = a·b/(‖a‖‖b‖); all pairs: Q̂ D̂ᵀ with rows L2-normalized</div>
+    <div>CLIP / InfoNCE: S = Î T̂ᵀ/τ (N,N); L = ½[CE(S, diag) + CE(Sᵀ, diag)], τ learned, init 0.07</div>
+    <div>BM25 = Σ_t IDF(t)·f(t,d)(k₁+1) / (f(t,d) + k₁(1 − b + b|d|/avgdl))</div>
+    <div>IDF(t) = ln((N − n_t + 0.5)/(n_t + 0.5) + 1); k₁ ≈ 1.2–2, b ≈ 0.75</div>
+    <div>Recall@k = relevant in top k / all relevant · MRR = mean 1/rank of first hit</div>
+    <div>Hybrid: min-max normalize, α·bm25 + (1−α)·cos; or RRF Σ 1/(60 + rank)</div>
+  </div>
+  <pre data-lang="NumPy">def l2n(x):                      <span class="c"># rows</span>
+    return x / np.linalg.norm(x, axis=1,
+                              keepdims=True)
+S = l2n(img) @ l2n(txt).T / tau    <span class="c"># (N, N)</span>
+i = np.arange(N)
+ce = lambda L: -log_softmax(L)[i, i].mean()
+loss = 0.5 * (ce(S) + ce(S.T))
+top = np.argsort(-scores, kind='stable')[:k]</pre>
+  <p class="ex"><b>Check:</b> two perfectly aligned pairs at τ = 1 still give loss 0.3133; smaller τ makes the same gap matter more.</p>
+  <p class="pit">Normalize <b>rows</b> (axis=1), not columns. <code>argsort(s)[::-1]</code> reverses ties; sort <code>-s</code> stably. Raw BM25 is unbounded and cosine is in [−1, 1]: normalize before fusing. Small τ overflows without max-subtraction.</p>
+</article>
+
+</div>
+</section>
+
+<!-- ======================================================= PART 5 -->
+<section class="part" id="generative-rl">
+<h2><span>Part 5</span> Generative Models &amp; RL</h2>
+<div class="cols">
+
+<article class="card" id="generative-models">
+  <header><h3>Generative Models</h3><a href="https://mlgrind.dev/section/generative-models">Practice ↗</a></header>
+  <div class="f">
+    <div>KL(P‖Q) = Σ P log(P/Q) ≥ 0, = 0 iff P = Q, not symmetric</div>
+    <div>KL(N(μ_p,σ_p²)‖N(μ_q,σ_q²)) = log(σ_q/σ_p) + (σ_p² + (μ_p−μ_q)²)/(2σ_q²) − ½</div>
+    <div>VAE: z = μ + exp(½·logσ²)⊙ε, ε ~ N(0, I)</div>
+    <div>KLᵢ = −½Σⱼ(1 + logσ² − μ² − σ²); loss = recon + mean over batch of KLᵢ</div>
+    <div>VQ: e = nearest code; L = ‖sg[z_e] − e‖² + β‖z_e − sg[e]‖²; z_q = z_e + sg(e − z_e)</div>
+    <div>DDPM: α_t = 1 − β_t, ᾱ_t = Π_{s≤t} α_s; x_t = √ᾱ_t·x₀ + √(1−ᾱ_t)·ε; L = ‖ε − ε_θ(x_t,t)‖²</div>
+    <div>Reverse: x_{t−1} = (x_t − β_t/√(1−ᾱ_t)·ε_θ)/√α_t + √β_t·z (no z at t = 0)</div>
+    <div>CFG: ε̂ = ε_u + w(ε_c − ε_u); w = 1 is unguided</div>
+    <div>Flow matching: x_t = (1−t)x₀ + t·x₁ (x₀ noise, x₁ data), target v = x₁ − x₀; sample x += Δt·v_θ(x,t)</div>
+  </div>
+  <pre data-lang="NumPy">betas = np.linspace(1e-4, 0.02, T)
+abar = np.cumprod(1 - betas)   <span class="c"># t from 0</span>
+a = abar[t].reshape(-1, *[1] * (x0.ndim - 1))
+eps = np.random.randn(*x0.shape)
+xt = np.sqrt(a) * x0 + np.sqrt(1 - a) * eps
+kl = (-0.5 * (1 + lv - mu**2 - np.exp(lv))
+      ).sum(axis=1).mean()</pre>
+  <p class="ex"><b>Check:</b> μ = 1, σ = 0.5 → KL = 0.8181. β = [0.1, 0.2, 0.3] → ᾱ = [0.9, 0.72, 0.504].</p>
+  <p class="pit"><code>exp(log_var)</code> is the <b>variance</b>; the sample needs <code>exp(0.5·log_var)</code>. Averaging KL over (batch, latent) divides it by latent_dim. The forward process uses √ᾱ, not ᾱ. Decide 0- vs 1-indexed t once and index β and ᾱ the same way.</p>
+</article>
+
+<article class="card" id="reinforcement-learning">
+  <header><h3>Reinforcement Learning</h3><a href="https://mlgrind.dev/section/reinforcement-learning">Practice ↗</a></header>
+  <div class="f">
+    <div>G_t = r_t + γG_{t+1} · V(s) = Σ_a π(a|s) Σ_s′ P(s′|s,a)[r + γV(s′)]</div>
+    <div>Q-learning: Q += α[r + γ·max_a′ Q(s′,a′)·(1−done) − Q] <span class="n">(off-policy)</span></div>
+    <div>SARSA: target r + γQ(s′,a′) with the a′ actually taken <span class="n">(on-policy)</span></div>
+    <div>TD(0): V(s) += α[r + γV(s′)(1−done) − V(s)]</div>
+    <div>Value iteration: V(s) ← max_a Σ_s′ P(s′|s,a)[r + γV(s′)]</div>
+    <div>n-step: Σ_{k&lt;n} γᵏ r_{t+k} + γⁿ V(s_{t+n})</div>
+    <div>REINFORCE: ∇J = E[Σ_t G_t ∇log π(a_t|s_t)]; softmax: ∇_z log π(a) = onehot(a) − π</div>
+    <div>GAE: δ_t = r_t + γV_{t+1}(1−d_t) − V_t; A_t = δ_t + γλ(1−d_t)A_{t+1}</div>
+    <div>PPO: ρ = e^(logπ − logπ_old); J = E[min(ρA, clip(ρ, 1−ε, 1+ε)A)], ε = 0.2</div>
+    <div>Reward model: L = −log σ(r_chosen − r_rejected)</div>
+    <div>DPO: L = −log σ(β[(logπ_c − logπ_ref,c) − (logπ_r − logπ_ref,r)])</div>
+    <div>RLHF reward: r − β·Σ_t kl_t, kl_t = logπ_θ − logπ_ref (k1)</div>
+  </div>
+  <pre data-lang="NumPy">def gae(r, v, done, g=0.99, lam=0.95):
+    <span class="c"># len(v) = len(r) + 1 (bootstrap value)</span>
+    A, last = np.zeros(len(r)), 0.0
+    for t in reversed(range(len(r))):
+        nd = 1.0 - done[t]
+        d = r[t] + g * v[t + 1] * nd - v[t]
+        A[t] = last = d + g * lam * nd * last
+    return A        <span class="c"># returns = A + v[:-1]</span>
+logsig = lambda x: -np.logaddexp(0, -x)</pre>
+  <p class="ex"><b>Check:</b> Q = 1, r = 5, Q(s′) = [3, 4], γ = 0.9, α = 0.5 → 4.8 (SARSA with a′ = 0 → 4.35).</p>
+  <p class="pit">Don't bootstrap through a <b>terminal</b> state, but do through a time-limit truncation. Objectives are maximized: loss = −J. <code>log(sigmoid(x))</code> underflows; use <code>logaddexp</code> or <code>F.logsigmoid</code>. Put the KL in the reward <b>or</b> in the loss, never both.</p>
+</article>
+
+<article class="card" id="post-training">
+  <header><h3>Post-training &amp; Efficiency</h3><a href="https://mlgrind.dev/section/post-training">Practice ↗</a></header>
+  <div class="f">
+    <div>GRPO: Aᵢ = (rᵢ − mean r)/(std r + ε) over the G samples of one prompt (population std)</div>
+    <div>k3 KL per token: e^(−kl_t) + kl_t − 1 ≥ 0, unbiased</div>
+    <div>J = meanᵢ (1/|oᵢ|)Σ_t [min(ρ_t Aᵢ, clip(ρ_t)Aᵢ) − β·k3_t]</div>
+    <div>Int8 absmax, one scale per output row: s = max|w|/127; q = clip(round(w/s), −127, 127); ŵ = q·s; |w − ŵ| ≤ s/2</div>
+    <div>LoRA trainable params: r(D_in + D_out) vs D_in·D_out</div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>Method</th><th>Needs</th><th>Data</th></tr>
+    <tr><td>PPO-RLHF</td><td>reward model + critic</td><td>online samples</td></tr>
+    <tr><td>DPO</td><td>reference model only</td><td>offline pairs</td></tr>
+    <tr><td>GRPO</td><td>reward/verifier, no critic</td><td>G samples per prompt</td></tr>
+  </table></div>
+  <pre data-lang="NumPy">R = rewards.reshape(-1, G)   <span class="c"># (prompts,G)</span>
+A = (R - R.mean(1, keepdims=True)) / (
+     R.std(1, keepdims=True) + 1e-8)
+<span class="c"># W: (out, in)</span>
+amax = np.abs(W).max(1, keepdims=True)
+s = np.maximum(amax, 1e-8) / 127
+q = np.clip(np.round(W / s), -127, 127)
+q = q.astype(np.int8)</pre>
+  <p class="ex"><b>Check:</b> rewards [1, 0, 0, 1] → A = [1, −1, −1, 1]; [1, 0, 0, 0] → 1.732 and −0.577. Row [0.7, −1.2, 0.3] → q = [74, −127, 32].</p>
+  <p class="pit">Use <code>ddof=0</code> and add ε: a group with identical rewards must give A = 0, not NaN (and it contributes no gradient). Average token terms over real tokens only. Accumulate int8 products in <b>int32</b>. One per-tensor scale lets a single outlier erase small rows.</p>
+</article>
+
+</div>
+</section>
+
+<!-- ======================================================= PART 6 -->
+<section class="part" id="capstone">
+<h2><span>Part 6</span> Capstone</h2>
+<div class="cols">
+
+<article class="card" id="e2e-implementations">
+  <header><h3>End-to-End Implementations</h3><a href="https://mlgrind.dev/section/e2e-implementations">Practice ↗</a></header>
+  <pre data-lang="NumPy · mini GPT forward">x = tok_emb[ids] + pos_emb[:T]     <span class="c"># (B,T,D)</span>
+for blk in blocks:                  <span class="c"># pre-norm</span>
+    x = x + blk.attn(blk.ln1(x), causal=True)
+    x = x + blk.mlp(blk.ln2(x))
+logits = ln_f(x) @ W_vocab          <span class="c"># (B,T,V)</span>
+loss = ce(logits[:, :-1], ids[:, 1:]) <span class="c"># shift</span></pre>
+  <div class="f">
+    <div>ViT patches: (B,C,H,W) → (B, HW/P², C·P²) → linear → prepend CLS → + pos</div>
+    <div>Grad check: (f(θ+h) − f(θ−h))/2h, h ≈ 1e-5 in float64; rel. error |a−n|/max(|a|,|n|) &lt; 1e-6</div>
+  </div>
+  <h4>Sanity checks before you trust a model</h4>
+  <ul>
+    <li>Loss at init ≈ ln C (10 classes: 2.303; GPT-2 vocab: 10.82).</li>
+    <li>It can overfit one small batch to ≈ 0 loss.</li>
+    <li>Shapes printed at every layer of the first forward pass.</li>
+  </ul>
+  <h4>Bug-hunt checklist</h4>
+  <ul>
+    <li>Causal mask missing (loss suspiciously low) or masking the diagonal.</li>
+    <li>Scale √D instead of √d_k; softmax over the wrong axis.</li>
+    <li>Targets not shifted by one, so the model learns to copy.</li>
+    <li>Residual dropped, dropout left on in eval, LayerNorm over the batch axis.</li>
+  </ul>
+  <p class="pit">The capstones reuse every earlier block: when one fails, unit-test the piece (attention, LayerNorm, the loss) against its section before debugging the whole model.</p>
+</article>
+
+<article class="card" id="numbers">
+  <header><h3>Numbers to Know</h3><a href="https://mlgrind.dev/">mlgrind.dev ↗</a></header>
+  <div class="tbl"><table>
+    <tr><td>ln 2 · ln 10 · e</td><td>0.693 · 2.303 · 2.718</td></tr>
+    <tr><td>σ(0) · σ′(0) · σ(2)</td><td>0.5 · 0.25 · 0.881</td></tr>
+    <tr><td>Transformer params</td><td>≈ 12·L·D² + V·D</td></tr>
+    <tr><td>GPT-2 small (L=12, D=768)</td><td>85M blocks + 39M embeddings ≈ 124M</td></tr>
+    <tr><td>Training FLOPs</td><td>≈ 6 · params · tokens</td></tr>
+    <tr><td>Inference FLOPs / token</td><td>≈ 2 · params</td></tr>
+    <tr><td>Chinchilla-optimal data</td><td>≈ 20 tokens per parameter</td></tr>
+    <tr><td>Bytes / param</td><td>fp32 4 · bf16 2 · int8 1 · int4 0.5</td></tr>
+    <tr><td>Mixed-precision Adam</td><td>≈ 16 B/param (2 + 2 + 4 master + 4 + 4)</td></tr>
+    <tr><td>7B weights in fp16</td><td>≈ 14 GB</td></tr>
+    <tr><td>Bootstrap unique rows</td><td>1 − 1/e ≈ 63.2%</td></tr>
+    <tr><td>LoRA r=8 on 4096×4096</td><td>65,536 vs 16.8M params</td></tr>
+    <tr><td>Attention / MLP cost</td><td>O(T²·D) vs O(T·D²) per layer</td></tr>
+  </table></div>
+</article>
+
+</div>
+</section>
+
+<footer class="foot">
+  <span>ML Grind · practise every block above in NumPy or PyTorch at <a href="https://mlgrind.dev/">mlgrind.dev</a></span>
+  <span>Cheat sheet · <a href="https://mlgrind.dev/ml-cheatsheet.html">mlgrind.dev/ml-cheatsheet.html</a></span>
+</footer>
+
+</main>
+
+</div>
+<script>
+/* Masonry: give each card a grid-row span equal to its height, so the cards pack
+   into the shortest column instead of leaving the gaps CSS columns produce. */
+(function () {
+  var grids = Array.prototype.slice.call(document.querySelectorAll('.cols'));
+  if (!window.CSS || !CSS.supports('display', 'grid')) return;
+  function layout() {
+    grids.forEach(function (g) {
+      g.classList.add('masonry');
+      Array.prototype.forEach.call(g.children, function (card) {
+        card.style.gridRowEnd = 'auto';
+        var gap = parseFloat(getComputedStyle(card).marginBottom) || 0;
+        card.style.gridRowEnd = 'span ' + Math.ceil((card.getBoundingClientRect().height + gap) / 2);
+      });
+    });
+  }
+  layout();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  var t;
+  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(layout, 100); });
+  window.addEventListener('afterprint', layout);
+})();
+</script>
 </body>
 </html>
