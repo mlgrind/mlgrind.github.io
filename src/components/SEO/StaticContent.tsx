@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 import { allProblems } from "../../data/problems";
 import { sections } from "../../data/sections";
 import { resolvedGroups } from "../../data/curriculum";
-import { allPaths, problemHref } from "../../data/learningPaths";
+import { allPaths, pathMeta, problemHref } from "../../data/learningPaths";
 import { getCompanyIndex } from "../../data/companyTags";
 import { lectures } from "../../data/lectures";
 
@@ -146,7 +146,7 @@ export function StaticContent({ path }: { path: string }) {
                 >
                   {p.title} →
                 </a>{" "}
-                — {p.description}
+                — {p.tagline}
               </p>
             ))}
             <h2 className="text-2xl">
@@ -220,17 +220,22 @@ export function StaticContent({ path }: { path: string }) {
         )}
         {"learningPath" in content && content.learningPath && (
           <>
-            <p>
-              Estimated time: {content.learningPath.minutes} minutes{path === '/challenge' ? ' per day' : ''}.
-              Prerequisites: {content.learningPath.prerequisites}.
-            </p>
+            <p>{pathMeta(content.learningPath)}. You'll need: {content.learningPath.prerequisites}.</p>
+            <h2 className="text-2xl">By the end you can</h2>
+            <ul>
+              {content.learningPath.outcomes.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+            <h2 className="text-2xl">Steps</h2>
             <ol className="space-y-4">
               {content.learningPath.problems.map((id, i) => (
                 <li key={id}>
                   <a href={problemHref(id)}>
                     {path === "/challenge" ? "Day" : "Step"} {i + 1}:{" "}
                     {allProblems.find((p) => p.id === id)!.title} →
-                  </a>
+                  </a>{" "}
+                  {content.learningPath!.steps[i].why}
                 </li>
               ))}
             </ol>

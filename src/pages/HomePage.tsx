@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { sections } from '../data/sections';
 import { useProgress } from '../context/ProgressContext';
 import SEO from '../components/SEO/SEO';
-import { learningPaths, problemHref, sevenDayChallenge } from '../data/learningPaths';
+import { allPaths, pathHref, pathMeta, problemHref } from '../data/learningPaths';
 import { getProblemById } from '../data/problems';
 import { resolvedGroups, completedInSection } from '../data/curriculum';
 import Dashboard from '../components/Dashboard/Dashboard';
@@ -70,18 +70,18 @@ export default function HomePage() {
               }
             >
               {close => (
-                <div className="w-[min(22rem,calc(100vw-2rem))]">
-                  {[...learningPaths, sevenDayChallenge].map(path => (
+                <div className="w-[min(24rem,calc(100vw-2rem))] py-1">
+                  {allPaths.map(path => (
                     <Link
                       key={path.id}
                       role="menuitem"
-                      to={path.id === sevenDayChallenge.id ? '/challenge' : `/learn/${path.id}`}
+                      to={pathHref(path)}
                       onClick={close}
-                      className="block px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-600 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-dark-600 transition-colors"
+                      className="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-600 focus:outline-none focus-visible:bg-gray-100 dark:focus-visible:bg-dark-600 transition-colors"
                     >
                       <span className="block text-sm font-semibold text-gray-900 dark:text-dark-100">{path.title}</span>
-                      <span className="block mt-0.5 text-xs text-gray-500 dark:text-dark-200">{path.description}</span>
-                      <span className="block mt-1 text-[11px] text-primary-500">{path.minutes} min · {path.prerequisites}</span>
+                      <span className="block mt-0.5 text-[13px] leading-snug text-gray-600 dark:text-dark-200">{path.tagline}</span>
+                      <span className="block mt-1.5 font-mono text-[11px] tracking-wide text-gray-500 dark:text-dark-300">{pathMeta(path)}</span>
                     </Link>
                   ))}
                 </div>
