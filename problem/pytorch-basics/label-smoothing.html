@@ -80,29 +80,29 @@
     </script>
     <style>#boot-splash{z-index:9999;background:#f9fafb;justify-content:center;align-items:center;transition:opacity .2s;animation:.3s 8s forwards boot-hide;display:flex;position:fixed;inset:0}html.dark #boot-splash{background:#0c0f14}#boot-splash span{border:3px solid #6c5ce740;border-top-color:#6c5ce7;border-radius:50%;width:28px;height:28px;animation:.8s linear infinite boot-spin}@keyframes boot-spin{to{transform:rotate(360deg)}}@keyframes boot-hide{to{opacity:0;visibility:hidden}}</style>
     <noscript><style>#boot-splash{display:none}</style></noscript>
-    <script type="module" crossorigin src="/assets/index-AHsnxQNq.js"></script>
+    <script type="module" crossorigin src="/assets/index-C8HBDyXT.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-editor-Dz3xoZoK.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-react-CsUdQhFB.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-D_esIyPZ.js">
-    <link rel="modulepreload" crossorigin href="/assets/problem-data-pAWlGvHv.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-Zvbjj5e4.css">
+    <link rel="modulepreload" crossorigin href="/assets/problem-data-BvH7mUN7.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-WyVfKA2m.css">
   <title>Label Smoothing - PyTorch Basics | ML Grind</title>
-<meta name="description" content="Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="description" content="Implement Label Smoothing from scratch in NumPy or PyTorch. A medium exercise with examples, hints and tests that run in your browser. No install or account needed." data-rh="true" />
 <link rel="canonical" href="https://mlgrind.dev/problem/pytorch-basics/label-smoothing" data-rh="true" />
 <meta property="og:title" content="Label Smoothing - PyTorch Basics | ML Grind" data-rh="true" />
-<meta property="og:description" content="Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta property="og:description" content="Implement Label Smoothing from scratch in NumPy or PyTorch. A medium exercise with examples, hints and tests that run in your browser. No install or account needed." data-rh="true" />
 <meta property="og:url" content="https://mlgrind.dev/problem/pytorch-basics/label-smoothing" data-rh="true" />
 <meta property="og:image" content="https://mlgrind.dev/og-card.png" />
 <meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Label Smoothing - PyTorch Basics | ML Grind" data-rh="true" />
-<meta name="twitter:description" content="Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required." data-rh="true" />
+<meta name="twitter:description" content="Implement Label Smoothing from scratch in NumPy or PyTorch. A medium exercise with examples, hints and tests that run in your browser. No install or account needed." data-rh="true" />
 <meta name="twitter:image" content="https://mlgrind.dev/og-card.png" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Label Smoothing - PyTorch Basics","description":"Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.","url":"https://mlgrind.dev/problem/pytorch-basics/label-smoothing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Label Smoothing - PyTorch Basics","description":"Implement Label Smoothing from scratch in NumPy or PyTorch. A medium exercise with examples, hints and tests that run in your browser. No install or account needed.","url":"https://mlgrind.dev/problem/pytorch-basics/label-smoothing","isAccessibleForFree":true,"inLanguage":"en"}</script></head>
   <body>
     <div id="boot-splash" aria-hidden="true"><span></span></div>
-    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Label Smoothing - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Label Smoothing in Python with NumPy. medium exercise with examples, hints, and instant feedback. No setup or signup required.</p><div class="prose dark:prose-invert max-w-none"><h2>Label Smoothing</h2>
+    <div id="root"><div class="min-h-screen bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-dark-100"><header class="p-6 border-b border-gray-200 dark:border-dark-500"><a href="/" class="font-semibold text-xl">ML Grind</a><nav class="flex flex-wrap gap-5 mt-3 text-sm"><a href="/">Curriculum</a><a href="/challenge">Seven-day challenge</a><a href="/scratchpad">Python scratchpad</a></nav></header><main class="max-w-4xl mx-auto p-6 space-y-6"><h1 class="font-display text-4xl">Label Smoothing - PyTorch Basics</h1><p class="text-lg text-gray-600 dark:text-dark-200">Implement Label Smoothing from scratch in NumPy or PyTorch. A medium exercise with examples, hints and tests that run in your browser. No install or account needed.</p><div class="prose dark:prose-invert max-w-none"><h2>Label Smoothing</h2>
 <p><strong>What you&#x27;ll build:</strong> <code>label_smoothing_loss(logits, targets, num_classes, smoothing)</code>, cross-entropy against softened targets, averaged over the batch.</p>
 <h3>Background</h3>
 <p>With one-hot targets, cross-entropy keeps rewarding the model for pushing the correct logit further above the others, which leads to over-confident, poorly calibrated predictions. Label smoothing (Szegedy et al., 2016) moves a fraction <code>eps</code> of the target mass onto all classes uniformly, so the optimum is a finite logit gap. It is standard in image classification and machine translation, and built into PyTorch as <code>F.cross_entropy(..., label_smoothing=eps)</code>.</p>
